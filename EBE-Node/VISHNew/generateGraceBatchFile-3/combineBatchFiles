@@ -1,0 +1,10 @@
+#! /usr/bin/env bash
+
+if [ $# -lt 2 ]
+then
+	echo "Usage: combineBatchFiles '[\"file1\",\"file2\",...]' '\"output.bat\"'"
+	exit 1
+fi
+
+./generateGraceBatchFile.py combineBatchFiles "$1" "$2"
+

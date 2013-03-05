@@ -1,0 +1,1891 @@
+#include "Bases.h"
+//#include "BSTime.h"
+#include <iostream>
+#include <cstdio>
+#include <cmath>
+#include <algorithm>
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#ifdef ALPHA
+#define abs  fabs
+inline double max(double a, double b) { return a>=b ? a:b;}
+inline double min(double a, double b) { return a<=b ? a:b;}
+#endif
+
+using namespace std;
+
+#define DEBUG
+
+//const int Bases::mxdim=50;
+//const int Bases::ndmx=50;
+//const int Bases::leng= 32768;
+//const int Bases::itm = 50;
+
+
+Bases::Bases()
+{
+    bsrand = new BSRand();
+}
+
+Bases::~Bases()
+{
+    delete bsrand;
+}
+
+/***********************************************************************
+*    ===================                                               *
+      subroutine bsinit
+*    ===================                                               *
+* ((Purpose))                                                          *
+*     Initialization of BASE50/SPRING50.                               *
+*     Function of this routine is                                      *
+*       (0) Set the size of histogram and scatter plot buffers         *
+*       (1) Set the parameters INTV and IPNT                           *
+*             INTV = ( 0 / 1 / any )                                   *
+*                  = ( Batch / Batch(Unix) / Interactive )             *
+*             IPNT = ( 0 / any )                                       *
+*                  = ( IBM Type / Ascii printer )                      *
+*       (2) Set the acceleration factor ALPHA by 1.5                   *
+*            The range of this value is from 0.0 to 2.0.               *
+*            ALPHA = 0.0 results in no grid-optimization.              *
+*       (3) Set the grid-optimization flag IGOPT ( Default value 0 )   *
+*             IGOPT = 0  :  The grid is optimized by VEGAS algorithm   *
+*             IGOPT = 1  :  The grid is optimized so that the accuracy *
+*                           of each iteration be minimized.            *
+*       (4) Set Node-ID number NODEID and the number of nodes NUMNOD   *
+*       (5) Set seed of radom number                                   *
+*       (6) Set the values of BASES paremeters with default ones.      *
+*       (7) Set the values of parameters with non-sense values,        *
+*            which should be set again with the true values by User    *
+*            before running BASES.                                     *
+*                                                                      *
+*        Coded by S.Kawabata         March '94                         *
+*                                                                      *
+************************************************************************/
+void Bases::bsinit()
+{
+//=========================================================
+// (0) Initialization of timer and Histogram buffer
+//     Timer initialization
+       time0 = BSTime::bstime( 0 );
+       timeb1 = time0;
+       timint = 0;
+ 
+//     Histogram buffer initialization
+       //int lu  = 6;
+       //bhinit( lu );
+ 
+//=========================================================
+ 
+// (1) Set the parameters INTV and IPNT
+       //intv  = 2;
+       intv  = 3;
+       ipnt  = 1;
+
+// (2) Set the acceleration factor ALPHA by 1.5
+       alph  = 1.5;
+
+// (3) Set the grid-optimization flag IGOPT
+       itsx=0;
+       //igopt = 0
+
+// (4) Set Node-ID number NODEID and the number of nodes NUMNOD
+           nodeid = 0;
+           numnod = 1;
+ 
+//---------------------------------------------------------------
+// (5)  Set initial seeds of random number generator
+//---------------------------------------------------------------
+       int iseed = 12345;
+       bsrand->drnset( iseed );
+// ---------------------------------------------------------------
+// (6),(7)  Set BASES parameters equal to default values
+// ---------------------------------------------------------------
+
+       ndim   = -1;
+       nwild  =  1;
+       itmx1  = 15;
+       itmx2  = 100;
+       ncall  = 1000;
+       acc1   = 0.2;
+       acc2   = 0.01;
+       for(int i=0;i<mxdim;i++) {
+          ig[i] = 1;
+          xu[i]  = -1.0e+37;
+       }
+ 
+//    Initialization of computing time table of BASES
+          timebs[0] = 0.0;
+          timebs[1] = 0.0;
+ 
+//-------------------------------------------
+//      Don't change IBASES from this value
+//-------------------------------------------
+       ibases =  1;
+ 
+}
+
+
+
+/***********************************************************************
+*    ====================================================              *
+      subroutine bases( fxn, s, sigma, ctime, it1, it2 )
+*    ====================================================              *
+*      Subroutine BASES for the Numerical integration.                 *
+*      In terms of this program Integration can be done, furthermore   *
+*      a probability distribution can be made for the event generation.*
+*      The event with weight one is generated by program SPRING.       *
+* ((Input))                                                            *
+*    from the arguement                                                *
+*      FXN    : Name of function program                               *
+*    from the labeled common /BASE1/                                   *
+*      XL(50) : Lower limits of the integration variabels              *
+*      XU(50) : upper limits of the integration variabels              *
+*      NDIM   : Dimension of the integration                           *
+*      NCALL  : Number of sampling points per iteration                *
+*    from the lebeled common /BASE2/                                   *
+*      ITMX*  : Number of iteration                                    *
+*      ACC*   : Required accuracies                                    *
+* ((Output))                                                           *
+*      S      : Estimate of the integral                               *
+*      SIGMA  : Standard deviation of the estimate                     *
+*      CTIME  : Computing time required for integration                *
+*      IT1    : Number of iterations for the grid defining step        *
+*      IT2    : Number of iterations for the integration step          *
+C*                                                                     *
+C*       Coded by S.Kawabata         April '94                         *
+C*                                                                     *
+C***********************************************************************/
+//     JFLAG =  0 : First trial for defining grids.
+//     JFLAG =  1 : First trial for event accumulation.
+//     JFLAG =  2 : Second or more trial for defining grids.
+//     JFLAG =  3 : Second or more trial for accumulation.
+
+//double Bases::bases( s, sigma, ctime, it1, it2 )
+double Bases::bases()
+{
+//-------------------------------------------------
+//     Check the parameters defined by user
+//------------------------------------------------------
+ 
+    bschck();
+ 
+// ---------------------------------------------------------------
+//          Initialize timer
+// ---------------------------------------------------------------
+ 
+    BSTime::bsdate(idate,itime);
+ 
+    jflag  = 0;
+    if( intv > 2 ) {
+	   bsprnt(1);
+	   intv=2;
+    }
+ 
+//  -----------------------------------------------------
+//     Defining grids
+//  -----------------------------------------------------
+ 
+       for(int i=0;i<nwild;i++)
+          ig[i] = 1;
+ 
+       bsetgu();
+ 
+       if( intv > 1 ) bsprnt(4);
+ 
+       bsutim( 0, 2 );
+ 
+//     ===================
+       bsintg();
+//     ===================        For a parallel computer
+//                                      CALL BSCAST( JFLAG, 1 )
+ 
+//  ----------------------------------------------------
+//     Accumulation to make probability distribution
+//  ----------------------------------------------------
+//     ===================
+       bsintg();
+//     ===================        For a parallel computer
+//                                       CALL BSCAST( JFLAG, 1 )
+       //s     = avgi;
+       //sigma = sd;
+       //ctime = stime;
+       //it1   = itg;
+       //it2   = itf;
+ 
+       bsutim( 0, 2 );
+       timeb2 = rtime;
+
+    if( nerror > 0 ) {
+	cout << " ****************************************";
+	cout << "***************************************" << endl;
+        cout << " * (((( Warning in the integration step ";
+        cout << "))))                                   *" << endl;
+        cout << " *                                      " ;
+        cout << "                                       *" << endl;
+
+	for(int j=0;j<nerror;j++) {
+	    for(int i=0;i<3;i++) {
+		cout << error[i][j].str() << endl;
+	    }
+	}
+
+	cout << " *                                      " ;
+        cout << "                                       *" << endl;
+        cout << " *(( Suggestion ))                      ";
+        cout << "                                       *" << endl;
+        cout << " * (1) Try integration again with larger ";
+        cout << "number of sample points than this job.*" << endl;
+        cout << " * or                                   ";
+        cout << "                                       *" << endl;
+        cout << " * (2) The integral variables are not sui";
+        cout << "ted for the function.                 *" << endl;
+        cout << " *     Take another integral variables !!";
+        cout << "                                      *" << endl;
+        cout << " *                                       ";
+	cout << "                                      *" << endl;
+        cout << " ****************************************";
+        cout << "***************************************" << endl;
+    }
+ 
+    if( intv > 1 ) bsprnt(2);
+    return avgi;
+ 
+}
+
+void Bases::bsutim( int job, int id )
+{
+ 
+//     COMMON/NINFO/ NODEID, NUMNOD
+//      common /btime1/ time0,rtime,timeb1,timeb2,times1
+//      common /btime2/ timebs(0:2),timint,timesp(0:2)
+ 
+//  Prior to call thisroutine, BSTIME( TIME0, 1 ) should be called
+//  for initialize the time offset TIME0.
+//
+      rtime = BSTime::bstime( 1);
+      float dtime      = rtime - time0;
+ 
+      if( job == 0 ) {
+//       For BASES computing time
+//         ID  = 0  : Grid defining step
+//               1  : Integration step
+//               2  : Others
+ 
+          timebs[id] += dtime;
+ 
+          if( id <= 1 )  timint += dtime;
+
+      } else {
+
+//       For SPRING computing time
+//         ID  = 0  : Event generation
+//               1  : Overhead
+//               2  : Others
+ 
+          timesp[id] += dtime;
+
+      }
+ 
+      time0      = rtime;
+ 
+}
+
+/***********************************************************************
+*    ===================                                               *
+      subroutine bschck
+*    ===================                                               *
+* ((Purpose))                                                          *
+*     To check user's initialization parameters.                       *
+*                                                                      *
+*        Coded by S.Kawabata        Oct. '85                           *
+*                                                                      *
+************************************************************************/
+void Bases::bschck()
+{
+ 
+    lock  = 1;
+ 
+      if( ibases !=  1 ) {
+          cout << "     *************************************************\n";
+          cout << "     *                                               *\n";
+          cout << "     *   BSINIT was not called before calling BASES  *\n";
+          cout << "     *                                               *\n";
+          cout << "     *   Process was terminated due to this error.   *\n";
+          cout << "     *                                               *\n";
+          cout << "     *************************************************\n";
+          exit(1);
+      }
+ 
+      if( ndim < 1) {
+          cout << "     *************************************************\n";
+          cout << "     *                                               *\n";
+          cout << "     *   NDIM was not set before calling BASES.      *\n";
+          cout << "     *                                               *\n";
+          cout << "     *   Process was terminated due to this error.   *\n";
+          cout << "     *                                               *\n";
+          cout << "     *************************************************\n";
+          exit(1);
+      }
+ 
+      for(int i=0;i<ndim;i++) {
+         if( xu[i] <= -1.0e37) {
+            cout << "     *************************************************\n";
+            cout << "     *                                               *\n";
+            cout << "     *   XL("<<i<<" ).  XU("<<i<<" ) were not set    *\n";
+            cout << "     *    before calling BASES.                      *\n";
+            cout << "     *   Process was terminated due to this error.   *\n";
+            cout << "     *                                               *\n";
+            cout << "     *************************************************\n";
+          exit(1);
+	 }
+ 
+      }
+ 
+//  Change the maximum number of the wild variables
+// 10 ===> 15
+      if( nwild <  0) {
+        nwild = min( ndim, 15);
+        cout << "     *************************************************\n";
+        cout << "     *                                               *\n";
+        cout << "     *   NWILD was not set before calling BASES.     *\n";
+        cout << "     *                                               *\n";
+        cout << "     *   NWILD is set equal to the value("<<nwild<<" ).   *\n";
+        cout << "     *                                               *\n";
+        cout << "     *************************************************\n";
+
+      }else if( nwild > 15) {
+
+        int nwildo = nwild;
+        nwild  = min( ndim, 15);
+        cout << "     *************************************************\n";
+        cout << "     *                                               *\n";
+        cout << "     *   NWILD("<<nwildo<<") was too large number.        *\n";
+        cout << "     *                                               *\n";
+        cout << "     *   NWILD is set equal to the value("<<nwild<<" ).   *\n";
+        cout << "     *                                               *\n";
+        cout << "     *************************************************\n";
+      }
+ 
+}
+
+/***********************************************************************
+C*                                                                     *
+C*========================                                             *
+C*    SUBROUTINE BSETGU                                                *
+C*========================                                             *
+C*((Function))                                                         *
+C*     Initialization of Bases progam                                  *
+C*     This is called only when IFLAG=0.                               *
+C*     ( IFLAG = 0 ; First Trial of Defining Grid step )               *
+C*                                                                     *
+C*    Changed by S.Kawabata    Aug. 1984 at Nagoya Univ.               *
+C*    Last update              Oct. 1985 at KEK                        *
+C*                                                                     *
+C***********************************************************************/
+void Bases::bsetgu()
+{
+    double xin[ndmx];
+ 
+//---------------------------------------------------------------
+//           Define the number of grids and sub-regions
+//---------------------------------------------------------------
+//==> Determine NG : Number of grids
+          ng    = (int)(pow(ncall/2.0,1.0/nwild));
+         if(ng > 25) ng  = 25;
+L100:
+         if(ng <  2) ng  =  1;
+         if(pow((double)ng,nwild) > leng) {
+            ng--;
+            goto L100;
+	 }
+
+//==> Determine ND : Number of sub-regions
+          int m     = ndmx/ng;
+          nd = m*ng;
+	  if(nd >mxdim) {
+	      cerr << " nd funny " << nd << endl;
+	      exit(1);
+	  }
+ 
+//==> Determine NPG: Number of sampling points per subhypercube
+          long int nsp   = (int)( pow((double)ng,nwild));
+          npg   = ncall/nsp;
+ 
+          xi[0][0]= 1.0;
+          ma[0]  = 1;
+          dx[0]  = xu[0]-xl[0];
+ 
+          if( ndim > 1 ) {
+              //do 130 j = 2,ndim
+              for(int j = 1;j<ndim;j++) {
+                 xi[0][j]= 1.0;
+                 dx[j]  = xu[j]-xl[j];
+                 if( j < nwild ) ma[j]  = ng*ma[j-1];
+	      }
+	  }
+ 
+//---------------------------------------------------------------
+//           Set size of subregions uniform
+//---------------------------------------------------------------
+          int ndm   = nd-1;
+          double rc    = 1.0/nd;
+          //do 155 j =1,ndim
+	  for(int j=0; j<ndim; j++) {
+             int k     = 0;
+             double xn    = 0.0;
+             double dr    = xn;
+             int i     = k;
+L140:
+             k++;
+             dr += 1.0;
+             double xo    = xn;
+             xn    = xi[k-1][j];
+L145:
+            if(rc > dr) goto L140;
+             i++;
+             dr    -= rc;
+             xin[i-1]= xn-(xn-xo)*dr;
+             if(i < ndm) goto L145;
+
+             //do 150 i  = 1,ndm
+	     for(int i=0; i<ndm; i++) {
+                xi[i][j]= xin[i];
+	     }
+             xi[nd-1][j]  = 1.0;
+	  }
+
+//******************************************** Updated Feb.08 '94
+          if( itsx > 0 ) {
+              //ipsave = 1;
+              xacc    = 1.0e+37;
+              xti     = 0.0;
+              xtsi    = xacc;
+              itsx    = 1;
+              //do 200 j = 1, ndim
+              //do 200 i = 1, nd
+		  for(int j=0;j<ndim;j++)
+		  for(int i=0;i<nd;i++)
+                 xsave[i][j] = xi[i][j];
+	  }
+}
+
+
+
+
+/**********************************************************************
+*                                                                     *
+*    ==========================                                       *
+      subroutine bsintg( fxn )
+*    ==========================                                       *
+*((Function))                                                         *
+*    Subroutine performs N-dimensional Monte Carlo integration        *
+*    for four vector generation of simulated events                   *
+*                                                                     *
+*       JFLAG = 0 ; First Trial of Defining Grid                      *
+*       JFLAG = 1 ; First Trial of Data Accumulation                  *
+*       JFLAG = 2 ; Second Trial of Defining Grid                     *
+*       JFLAG = 3 ; Second Trial of Data Accumulation                 *
+*                                                                     *
+*    Coded   by S.Kawabata    July 1980 at DESY, Hamburg              *
+*    Last update              March 1994                              *
+*                                                                     *
+***********************************************************************/
+void Bases::bsintg()
+{ 
+      //real*8  x(mxdim)
+      //integer kg(mxdim),ia(mxdim)
+    double x[mxdim];
+    int kg[mxdim],ia[mxdim];
+    int ncnode[2][512],npnode[2][512];
+ 
+ 
+//     Parameters for checking convergency
+    static const double aclmt=25.0;
+    static const double fc=5.0;
+ 
+/************************************************************************
+*                       Initialization Part
+************************************************************************/
+//=======================================================================
+//          Determine the number of hypercubes NSP
+//=======================================================================
+ 
+      double xnd     = nd;
+      int nsp     = (int)(pow((double)ng,nwild));
+      double xjac    = 1.0;
+      for(int i=0;i<ndim;i++) xjac *= dx[i];
+      double calls   = nsp*npg;
+      double dxg     = 1.0/ng;
+      double dv2g    = pow(dxg,2*nwild)/npg/npg/(npg-1);
+      dxg *= xnd;
+ 
+      if( nsp == 1 ) {
+//=======================================================================
+//           Determination of the number of sampling points
+//               per node in the single hypercube case
+//=======================================================================
+          int mex     = npg % numnod;
+          int npercp  = npg/numnod;
+          int npgt    = 0;
+	  for(int nodex=0;nodex<numnod;nodex++) {
+             int npgs  = npgt + 1;
+             npgt  += npercp;
+             //if( nodex <= mex ) npgt++;
+             if( nodex < mex ) npgt++;
+             ncnode[0][nodex] = 1;
+             ncnode[1][nodex] = 1;
+             npnode[0][nodex] = npgs;
+             npnode[1][nodex] = npgt;
+	  }
+      } else {
+//=======================================================================
+//          Determination of the number of hypercubes
+//              per node in many hypercubes case
+//=======================================================================
+          int mex     = nsp % numnod;
+          int npercp  = nsp/numnod;
+          int nspt    = 0;
+          //do  15 nodex = 1,numnod
+	  for(int nodex=0;nodex<numnod;nodex++) {
+             int nsps  = nspt + 1;
+             nspt  += npercp;
+             //if( nodex <= mex ) nspt++;
+             if( nodex < mex ) nspt++;
+             ncnode[0][nodex] = nsps;
+             ncnode[1][nodex] = nspt;
+             npnode[0][nodex] = 1;
+             npnode[1][nodex] = npg;
+	  }
+      }
+
+//=======================================================================
+      int nend    = 0;
+      //atacc   = 0.0;
+      double tacc   = 0.0;
+      nerror  = 0;
+      int ner1    = 0;
+      int ner2    = 0;
+      int ner3    = 0;
+      double sumti   = 0.0;
+      double sumtsi  = 0.0;
+      double avti=0.0;
+      double fdevi=0.0;
+      double si=0.0;
+      double si2=0.0;
+      double swgt=0.0;
+      double schi=0.0;
+      int istep=jflag;
+      int it1=1;
+ 
+      if(jflag == 0 || jflag == 1 ) {
+//-----------------------------------------------------------------------
+//        JFLAG = 0  : The first trial of the grid optim. step
+//        JFLAG = 1  : The first trial of the integration step
+//-----------------------------------------------------------------------
+         //do 10 j  = 1,nsp
+	 for(int j=0;j<nsp;j++) {
+           dxd[j] = 0.0;
+           dxp[j] = 0.0;
+	 }
+//       -----------------
+         istep   = jflag;
+//       -----------------
+         it1   = 1;
+         si    = 0.0;
+         si2   = 0.0;
+         swgt  = 0.0;
+         schi  = 0.0;
+//       =============
+         //bhrset();
+//       =============
+         //nsu     = 0;
+         scalls= 0.0;
+      }
+ 
+//------- Set the expected accuracy and the max. iteration number -------
+ 
+      int itmx   = itmx1;
+      double acc    = acc1*0.01;
+      if( istep == 1 ) {
+         itmx = itmx2;
+         acc  = acc2*0.01;
+      }
+ 
+//-------- Print the title of the convergency behavior table -----------
+//                  in the interactive mode
+      if( intv > 1 ) {
+//         -----------------------------------
+           bsprnt(5, istep );
+//         -----------------------------------
+      }
+      int negflg     = 0;
+ 
+//    =====================
+      bsutim( 0, 2 );
+//    =====================
+ 
+//********************************************************************
+//               Main Integration Loop
+//********************************************************************
+//    ========
+      //do 500  it = it1,itmx
+      for(it = it1; it<=itmx; it++) {
+//    ========
+//=======================================================================
+//                 Initialization for the iteration
+//=======================================================================
+ 
+         scalls  = scalls + calls;
+         int ngood   = 0;
+         int negtiv  = 0;
+         ti      = 0.0;
+         tsi     = ti;
+ 
+         if( istep == 0 ) {
+	     for(int j=0;j<ndim;j++)
+	     for(int i=0;i<nd;i++) {
+                d[i][j]= ti;
+	    }
+	 }
+ 
+         int nodex  = nodeid;
+         if( nodeid == 0 )  nodex = numnod;
+ 
+//---------------------------------------------------------------------
+//        Distributing hyper cubes to NumNode nodes
+//           NCNODE(1,NODEX)   : 1st cube number for the node NODEX
+//           NCNODE(2,NODEX)   : Last cube number for the node NODEX
+//                    NODEX    : node number 1 => NumNode(=0)
+//                    NODEX    : node number 1 => NumNode(=0)
+//---------------------------------------------------------------------
+ 
+         int nsp1  = ncnode[0][nodex-1];
+         int nsp2  = ncnode[1][nodex-1];
+
+//                                 Dummy loopfor a parallel processor
+//                                 IF( NSP1 .GT. 1 ) THEN
+//                                     CALL DRLOOP( NDIM*NPG*(NSP1-1) )
+//                                 ENDIF
+ 
+//=====================================================================
+//      Loop for hypercube from NSP1 to NSP2 in the NodeX-th node
+//=====================================================================
+//       ========
+         //do 400 ncb = nsp1, nsp2
+         for(int ncb = nsp1; ncb<= nsp2; ncb++) {
+//       ========
+            double fb      = 0.0;
+            double f2b     = 0.0;
+            int np      = ncb - 1;
+            if( nwild > 1 ) {
+                //do 210 j = 1,nwild-1
+		for(int j=0; j<nwild-1; j++) {
+                   int num   = (int) (np % ma[j+1]);
+                   kg[j] = num/ma[j] + 1;
+		}
+	    }
+            kg[nwild-1] = np/ma[nwild-1] + 1;
+
+	    //cout << " ma= " << ma[nwild-1] << " np= " << np << endl;
+	    //cout << "nwild=" << nwild << " kg= " << kg[nwild-1] << endl;
+ 
+//---------------------------------------------------------------------
+//       If number of hypercubes is only one,
+//        Distributing sampling points to NumNode nodes
+//           NPNODE(1,NODEX)   : 1st sample point for the node NODEX
+//           NPNODE(2,NODEX)   : Last sample point for the node NODEX
+//                    NODEX    : node number 1 => NumNode(=0)
+//---------------------------------------------------------------------
+ 
+            int npg1  = npnode[0][nodex-1];
+            int npg2  = npnode[1][nodex-1];
+//                                 Dummy loop for a parallel processor
+//                                 IF( NPG1 .GT. 1 ) THEN
+//                                     CALL DRLOOP( NDIM*(NPG1-1) )
+//                                 ENDIF
+ 
+//=====================================================================
+//          Loop for sampling points from NPG1 to NPG2
+//                in the single hypercube case
+//=====================================================================
+//          ========
+            //do 300 nty = npg1,npg2
+            for(int nty = npg1; nty<=npg2; nty++) {
+//          ========
+//---------------------------------------------------------------------
+//        Determine the integration variables by random numbers
+//---------------------------------------------------------------------
+ 
+		double xn,xo,rc;
+               wgt   = xjac;
+	       //cout << "xjac=" << xjac << endl;
+               //do 250 j= 1,ndim
+               for(int j= 0; j<ndim; j++) {
+                  if( j < nwild ) {
+                      xn  = (kg[j]-bsrand->drn())*dxg;
+		  } else {
+                      xn  = nd*bsrand->drn();
+		  }
+                  ia[j]   = (int) xn;
+                  int iaj     = ia[j];
+
+		      if(iaj>=ndmx) {
+		          cout << "iaj= " << iaj << " j= " << j << endl;
+		          cout << " dxg= " << dxg << endl;
+			  cerr << "kg= " << kg[j] << endl;
+			  exit(1);
+		      }
+
+                  if( iaj == 0) {
+                      xo  = xi[iaj][j];
+                      rc  = (xn-ia[j])*xo;
+		  } else {
+                      xo  = xi[iaj][j]-xi[iaj-1][j];
+                      rc  = xi[iaj-1][j]+(xn-iaj)*xo;
+		  }
+
+		  if(rc > 1.0 || rc < 0.0) {
+		      cerr << " rc funny rc= " << rc
+			  << " j= " << j
+			  << " iaj= " << iaj
+			  << " xi= " << xi[iaj][j]
+			  << " xo= " << xo
+			  << endl;
+		  }
+
+                  x[j]    = xl[j]+rc*dx[j];
+                  wgt     *= (xo*xnd);
+		  //cout << " iaj= " << iaj;
+		  //cout << "  wgt= " << wgt << " xo= " << xo
+		   //  << " xnd= " << xnd
+		    //<< " rc= " << rc << endl;
+		  if(x[j] < -10 || x[j] > 10 ) {
+		      cerr << " x funny " << x[j]
+			  << " xl= " << xl[j]
+			  << " j= " << j
+			  << " dx= " << dx[j]
+			  << " rc= " << rc
+			  << endl;
+		      exit(1);
+		  }
+	       }
+//-----------------------------------------------------------------------
+//                     =======
+               double fxg  =  func(x)*wgt;
+
+	       //cout << "fxg= " << fxg << " x1= " << x[0] << " x2= " << x[1]
+		 //  << endl;
+	       //cout << "wgt= "<< wgt << endl;
+	       //cin.get();
+//                     =======
+//-----------------------------------------------------------------------
+//             Check the value of the integrand
+//-----------------------------------------------------------------------
+ 
+               if( fxg != 0.0 ) {
+                   ngood++;
+                   if( istep == 1 ) {
+                       dxd[ncb-1] += fxg;
+                       if( fxg > dxp[ncb-1] ) dxp[ncb-1] = fxg;
+		   }
+                   if( fxg < 0.0 ) {
+		       //cerr << " x0= " << x[0] << " x[1]= " << x[1]
+			//   << " fxg= " << fxg << endl;
+                       negtiv++;
+                       if( negflg == 0 ) {
+			  cout << " ******* WARNING FROM BASES ********";
+                          cout <<"***********"<<endl;
+                          cout <<" *  Negative FUNCTION at IT =";
+			  cout << it << " node = " << nodeid << " *"<<endl;
+                          cout <<" ***********************************";
+                          cout <<"***********" << endl;
+                          negflg  = 1;
+		       }
+		   }
+	       }
+ 
+//-----------------------------------------------------------------------
+//              Accumulation of FXG and FXG*FXG
+//-----------------------------------------------------------------------
+ 
+               double f2    = fxg*fxg;
+               fb   += fxg;
+               f2b   += f2;
+ 
+               if( istep == 0 ) {
+                   //do 260  j = 1,ndim
+                   for(int j = 0; j<ndim; j++) {
+                      d[ia[j]][j] += f2;
+		   }
+	       }
+//======
+	    }
+  //300       continue
+//======
+//------------------------------------------- for a parallel processor
+//                                 Dummy loop for a parallel processor
+//                                 IF( NPG2 .LT. NPG ) THEN
+//                                     CALL DRLOOP(NDIM*(NPG-NPG1))
+//                                 ENDIF
+//                                 Global sum of FB and F2B
+//                                 IF( NSP .EQ. 1 ) THEN
+//                                     CALL BSDSUM(  FB, 1 )
+//                                     CALL BSDSUM( F2B, 1 )
+//                                 ENDIF
+//-----------------------------------------------------------------------
+ 
+//-----------------------------------------------------------------------
+//         Calculate the estimate and variance in the hypercube
+//-----------------------------------------------------------------------
+ 
+            f2b   = sqrt(f2b*npg);
+            ti    += fb;
+            tsi   += (f2b-fb)*(f2b+fb);
+ 
+//======
+	 }
+  //400    continue
+//======
+/*------------------------------------------- for a parallel processor
+*                                 Dummy loop
+C                                 IF( NSP2 .LT. NSP ) THEN
+C                                     CALL DRLOOP(NDIM*NPG*(NSP-NSP2))
+C                                 ENDIF
+ 
+*                                 Global sum of efficiency and frequency
+*                                     of negative valued function
+C                                 NEFF(1) = NGOOD
+C                                 NEFF(2) = NEGTIV
+C                                 CALL BSISUM( NEFF, 2 )
+ 
+C                                 TX(1) = TI
+C                                 TX(2) = TSI
+C                                 IF( NSP .EQ. 1 ) THEN
+C                                     CALL BSDSUM(   TX, 2 )
+C                                 ENDIF
+ 
+*                                 Global sum of grid information
+C                                 IF( ISTEP .EQ. 0 ) THEN
+C                                     NOWORK = NDMX*NDIM
+C                                     CALL BSDSUM(    D, NOWORK )
+C                                 ENDIF
+*/ 
+//=====================================================================
+//           Compute Result of this Iteration
+//=====================================================================
+//--------------------------------------------------------------------
+//           Accumulate the histogram entries
+//--------------------------------------------------------------------
+//       -------------
+         //bhsave();
+//       -------------
+//--------------------------------------------------------------------
+ 
+//        TI     = TX(1)
+//        TSI    = TX(2)
+//        NGOOD  = NEFF(1)
+//        NEGTIV = NEFF(2)
+ 
+         ti    /= calls;
+         tsi   *= dv2g;
+//*
+         if( tsi <= 1.0e-37 ) tsi = 1.0e-37;
+//*
+         double ti2   = ti*ti;
+ 
+         if( ngood <= 10 ) {
+//           --------------------------------
+             //bsprnt(9);
+//           --------------------------------
+	    avgi=0.0;
+	    sd=0.0;
+	    return;
+//            *****************
+//                   exit(1);
+//            *****************
+ 
+	 }
+ 
+//--------------------------------------------------------------------
+//               Calculate the cumulative result
+//--------------------------------------------------------------------
+ 
+         wgt   = 1.0/tsi;
+         si    += ti*wgt;
+         swgt  += wgt;
+         schi  += ti2*wgt;
+         avgi  = si/swgt;
+         chi2a = 0.0;
+         if(it > 1 ) chi2a = (schi - si*avgi)/(it-.999);
+         sd    = sqrt(1.0/swgt);
+ 
+//---------------------------------------------------------------------
+//             Save the results in the buffer
+//---------------------------------------------------------------------
+ 
+         tsi   = sqrt(tsi);
+         int itx         =  it % itm;
+         //if( itx == 0 ) itx = itm;  ???
+         itrat[itx][istep]  = it;
+         eff  [itx][istep]  = (float)(ngood/calls*100.0);
+         wrong[itx][istep]  = (float)(negtiv/calls*100.0);
+         reslt[itx][istep]  = avgi;
+         acstd[itx][istep]  = sd;
+         trslt[itx][istep]  = (float)ti;
+         tacc              = abs(tsi/ti*100.0);
+         tstd [itx][istep]  = (float)tacc;
+         pcnt [itx][istep]  = (float)(abs(sd/avgi*100.0));
+ 
+//----------------------------------------------------------------------
+//                  Check cumulative accuracy
+//----------------------------------------------------------------------
+ 
+         if( nodeid == 0 ) {
+ 
+//-------------------  Check cumulative accuracy -----------------------
+ 
+             double sdav  = sd/avgi;
+             if(fabs(sdav) <= acc) nend = 1;
+ 
+             if( istep == 1 ) {
+                 if( tacc > aclmt ) {
+                     if( ner1 == 0 ) {
+                         error[0][nerror] << "* (" << nerror
+			                 << ") Temp. accuracy of it-#"
+                             <<  it << " is too large comparing to" <<
+                               aclmt << " percent." << "      *";
+
+                         error[1][nerror] << "*       Temp. accuracy ("
+			     << tacc << " % )  >>   ("
+			     << aclmt << " % )"
+			     << "                      " << "*";
+
+		         error[2][nerror] << "*                   "
+		           << "                                           *";
+                         ner1  = 1;
+                         nerror++;
+		     }
+		 }
+                 if( it > 1 ) {
+                     if(( ti > avti+fdevi ) || ( ti < avti-fdevi ) ) {
+                          if( ner2 == 0 ) {
+
+                              error[0][nerror] << "* (" << nerror
+				  << ") Temp. estimate of " << 
+                              "it-#" << it << " fluctuates more than " << 
+                                     fc << "*average-sigma." << "     *";
+
+                              double re = ti;
+                              double are = fabs(re);
+			      double fx2,order,ordr1;
+			      int iordr,iordr1;
+                              bsordr( are, fx2, order, iordr );
+                              re = ti/order;
+                              double re1 = avti;
+                              double ac  = fdevi; 
+                              double are1 = abs(avti);
+                              double aac  = abs(fdevi);
+                              if( are1 >= aac ) {
+                                  bsordr( are1, fx2, ordr1, iordr1);
+			      } else {
+                                  bsordr( aac, fx2, ordr1, iordr1);
+			      }
+                              re1 = avti/ordr1;
+                              ac  = ac/ordr1;
+
+                              error[1][nerror] << "*        Temp. Estimate ("
+				  << re << " E" << iordr << ")  >  ("
+				  << re1 << "+" << ac << " ) E" << iordr1
+				  << ", or" << " *";
+
+                              error[2][nerror] << "*        Temp. Estimate ("
+				  << re <<" E" <<iordr <<")  <  ("
+				  << re1 <<"-" << ac << " ) E"
+				  << iordr1 <<"    *";
+                              ner2 = 1;
+                              nerror++;
+			  }
+		     }
+                     if( tsi > fdevi ) {
+                         if( ner3 == 0 ) {
+                             error[0][nerror]
+				 << " * (" << nerror << ") Error of it-#"
+                                 <<  it << " fluctuates more than" << fc
+				 << " *average-sigma.               *";
+
+                             double re1 = tsi;
+                             double are1 = abs(tsi);
+			     double fx2,order,ordr1;
+			     int iordr,iordr1;
+                             bsordr( are1, fx2, order, iordr);
+                             re1 = tsi/order;
+                             double ac  = fdevi;
+                             double aac  = abs(fdevi);
+                             bsordr( aac, fx2, ordr1, iordr1);
+                             ac  /= ordr1;
+
+                             error[1][nerror] << " *        Temp. Error ("
+				 << re1 << " E" << iordr << ")  >  ("
+				 << ac << " E" << iordr1
+				 << ")                 *";
+			    error[2][nerror]
+			       	<< "*                                     "
+				<< "                                         *";
+                             ner3  = 1;
+                             nerror++;
+			 }
+		     }
+		 }
+                 sumtsi = sumtsi + tsi;
+                 sumti  = sumti  + ti;
+                 double avtsi  = sumtsi/float(it);
+                 avti   = sumti/float(it);
+                 fdevi  = fc*avtsi;
+
+		 /*
+		 if(nerror>0) {
+		     cout << error[0][nerror-1].str() << endl;
+		     cout << error[1][nerror-1].str() << endl;
+		     cout << error[2][nerror-1].str() << endl;
+		 }
+		 */
+	    }
+	}
+ 
+//------------------------------------------- for a parallel processor
+ 
+//                                  Broadcast
+//                                  CALL BSCAST( NEND, 1 )
+ 
+//----------------------------------------------------------------------
+//        Smoothing the Distribution D(I,J) and refine the grids
+//----------------------------------------------------------------------
+ 
+         if( istep <= 0 ) {
+             if( it == itmx ) nend = 1;
+//           ---------------------
+             bsetgv( nend );
+//           ---------------------
+	 }
+//       ==========================
+         bsutim( 0, istep );
+//       ==========================
+ 
+         time [itx][istep]  = timint;
+         stime             = timint;
+ 
+//---- Print the convergency behavior table in the interactive mode ----
+         if( intv > 1 ) {
+//            ---------------------------------
+              bsprnt (6, istep );
+//            ---------------------------------
+	 }
+ 
+         //if( nend == 1 ) go to 600
+         if( nend == 1 ) break;
+ 
+//       ======================
+         bsutim( 0, 2 );
+//       ======================
+//*======
+      }
+//  500 continue
+//*======
+
+      it    = it - 1;
+      nend  = 1;
+ 
+/**********************************************************************
+*                   Termination of BASES
+***********************************************************************/
+//======
+// 600 continue
+//======
+//---------------------------------------------- For a parallel computer
+ 
+/*                                 Global sum of histograms
+C                                 CALL BHSUM
+*                                 Global sum of probabilities
+C                                 CALL BSDSUM(  DXD, NSP )
+*                                 Global sum of the max.value in each HC
+C                                 CALL BSDSUM(  DXP, NSP )
+*/ 
+ 
+//======================= End of the step ? ============================
+ 
+      if( nend == 1 ) {
+          if( intv > 1 ) {
+//            ---------------------------------
+              bsprnt (7);
+//            ---------------------------------
+	  }
+          if( istep == 0) {
+              jflag   = 1;
+              itg     = it;
+	  } else {
+              jflag   = 0;
+              itf     = it;
+	  }
+      }
+//    ======================
+       bsutim( 0, 2 );
+//    ======================
+ 
+}
+
+
+/***********************************************************************
+C*                                                                     *
+C*=============================================                        *
+C*    SUBROUTINE BSORDR( VAL, F2, ORDER, IORDR)                        *
+C*=============================================                        *
+C*((Function))                                                         *
+C*    To resolve the real number VAL into mantester and exponent parts.*
+C*  When VAL = 1230.0 is given, output are                             *
+C*        F2 = 1.2  and ORDER = 4.0.                                   *
+C*((Input))                                                            *
+C*  VAL  : Real*8 value                                                *
+C*((Output))                                                           *
+C*  F2   : The upper two digits is given                               *
+C*  ORDER: Order is given                                              *
+C*  IORDR: Exponent is given                                           *
+C*((Author))                                                           *
+C*  S.Kawabata                                                         *
+C*                                                                     *
+C***********************************************************************/
+ 
+void Bases::bsordr(double val, double& f2, double& order, int& iordr)
+{
+      if( val != 0.0 ) {
+          order    =  log10( val );
+          iordr    =  (int)( order );
+          if( order < 0.0 ) iordr = iordr - 1;
+          order  = pow(10.0,iordr);
+          f2     = val/order;
+      } else {
+          iordr  = 0;
+          order  = 1.0;
+          f2    = 0.0;
+      }
+ 
+}
+
+
+/**********************************************************************
+*    =======================================                          *
+      subroutine bsprnt( lu, id, ip1, ip2 )
+*    =======================================                          *
+* ((purpose))                                                         *
+*     Print out routine of BASES.                                     *
+*  (Argument)                                                         *
+*     ID  : Identity number of printouts.                             *
+*     IP1... IP2 : Integer                                            *
+*  (Author)                                                           *
+*     S. Kawabata   May 1992                                          *
+*     Last update   March 1994                                        *
+***********************************************************************/
+void Bases::bsprnt( int id, int ip1, int ip2 )
+{
+    int ih,mn,is1,is2;
+    static const string ich[2]={
+	"Convergency Behavior for the Grid Optimization Step",
+	"Convergency Behavior for the Integration Step      "};
+ 
+    if( nodeid != 0 ) return;
+
+    int nsp,mcall,istep,itx,itj,ndev;
+    int itst=0;
+    int itfn=0;
+    float xtime,extim;
+    double re,ac,are;
+    double f2,order;
+    char cn = 0xc;
+    //cn = char(12)
+ 
+    //static char* s55="                                                      ";
+    string s55="                                                      ";
+    string s8="        ";
+    string s10="          ";
+
+    switch(id) {
+//----------------------------------------------------------- BSMAIN
+ 
+    case 1:
+	cout << cn << endl;
+      cout << s55 << "Date: " << idate[0];
+      cout << "/" << idate[1] << "/" << idate[2];
+      cout << "  " << itime[0] << ":" << itime[1] <<endl;
+
+     cout <<s8<<"**********************************************************\n";
+     cout <<s8<<"*                                                        *\n";
+     cout <<s8<<"*     BBBBBBB     AAAA     SSSSSS   EEEEEE   SSSSSS      *\n";
+     cout <<s8<<"*     BB    BB   AA  AA   SS    SS  EE      SS    SS     *\n";
+     cout <<s8<<"*     BB    BB  AA    AA  SS        EE      SS           *\n";
+     cout <<s8<<"*     BBBBBBB   AAAAAAAA   SSSSSS   EEEEEE   SSSSSS      *\n";
+     cout <<s8<<"*     BB    BB  AA    AA        SS  EE            SS     *\n";
+     cout <<s8<<"*     BB    BB  AA    AA  SS    SS  EE      SS    SS     *\n";
+     cout <<s8<<"*     BBBB BB   AA    AA   SSSSSS   EEEEEE   SSSSSS      *\n";
+     cout <<s8<<"*                                                        *\n";
+     cout <<s8<<"*                   BASES Version 5.1                    *\n";
+     cout <<s8<<"*           coded by S.Kawabata KEK, March 1994          *\n";
+     cout <<s8<<"**********************************************************\n";
+ 
+          return;
+//----------------------------------------------------------- BSMAIN
+ 
+  case 2:
+	  cout << cn << endl;
+	  cout << "                   "
+	       << "****** END OF BASES *********" << endl;
+ 
+//----------------------------------------------------------- BSMAIN
+ 
+  case 3:
+	  cout << endl << endl
+	      << "     Computing Time Information   >>" << endl;
+ 
+ printf("\n               (1) For BASES              H: M:  Sec\n");
+
+      bstcnv(timebs[2],ih,mn,is1,is2);
+    printf("                  Overhead           : %3d:%3d:%3d.%2.2d\n",
+	ih,mn,is1,is2);
+
+      bstcnv(timebs[0],ih,mn,is1,is2);
+ printf("                  Grid Optim. Step   : %3d:%3d:%2d.%2.2d\n",
+      ih, mn, is1, is2);
+
+      bstcnv(timebs[1],ih,mn,is1,is2);
+ printf("                  Integration Step   : %3d:%3d:%2d.%2.2d\n",
+      ih, mn, is1, is2);
+
+      xtime = timeb2 - timeb1;
+      bstcnv(xtime,ih,mn,is1,is2);
+ printf("                  Go time for all    : %3d:%3d:%2d.%2.2d\n",
+      ih, mn, is1, is2);
+
+      extim  = timebs[1]*1000.0/scalls/0.7;
+ printf("\n               (2) Expected event generation time\n");
+
+printf("                  Expected time for 1000 events :%10.2f Sec\n",extim);
+      return;
+ 
+//----------------------------------------------------------- BASES
+ 
+case 4:
+      nsp   = (int)(pow((double)ng,nwild));
+      mcall = nsp*npg;
+    printf("\n\n");
+    printf("    <<   Parameters for BASES    >>\n\n");
+    printf("     (1) Dimensions of integration etc.\n");
+    printf("     # of dimensions :    Ndim    = %9d   ( 50 at max.)\n",ndim);
+    printf("     # of Wilds      :    Nwild   = %9d   ( 15 at max.)\n",nwild);
+    printf("     # of sample points : Ncall   =  %9d (real) %9d  (given)\n",
+	    mcall,ncall);
+    printf("     # of subregions    : Ng      = %9d / variable\n",nd);
+    printf("     # of regions       : Nregion = %9d / variable\n",ng);
+    printf("     # of Hypercubes    : Ncube   = %9d\n\n",nsp);
+
+    printf("     (2) About the integration variables\n");
+printf("%s------+---------------------+---------------+-------+-------\n",s10.c_str());
+printf("%s   i            XL(i)             XU(i)       IG(i)   Wild\n",s10.c_str());
+printf("%s------+---------------------+---------------+-------+-------\n",s10.c_str());
+
+     for(int i=0;i<ndim;i++){
+         if( i < nwild ) {
+	 printf("%s  %5d  %14.6e   %14.6e  %1d  yes\n",s10.c_str(),i,xl[i],xu[i],ig[i]);
+	 } else {
+	 printf("%s  %5d  %14.6e   %14.6e  %1d  no\n",s10.c_str(),i,xl[i],xu[i],ig[i]);
+	 }
+     }
+
+printf("%s------+---------------------+---------------+-------+-------\n",s10.c_str());
+
+     printf("\n");
+     printf("     (3) Parameters for the grid optimization step\n");
+     printf("         Max.# of iterations: ITMX1 = %9d\n",itmx1);
+     printf("         Expected accuracy  : Acc1  = %9.4f %%\n",acc1);
+     printf("\n\n");
+     printf("     (4) Parameters for the integration step\n");
+     printf("         Max.# of iterations: ITMX2 = %9d\n",itmx2);
+     printf("         Expected accuracy  : Acc2  = %9.4f %%\n",acc2);
+ 
+          return;
+//----------------------------------------------------------- BASES
+ 
+ case 5:
+         if( intv <= 1 )    return;
+
+         istep  = ip1;
+	 cout << cn << endl;
+
+    printf("%sDate: %2d/%2d/%2d  %2.2d:%2.2d\n",s55.c_str(),idate[0],idate[1],idate[2],
+	    itime[0],itime[1]);
+
+         printf("              %s\n",ich[istep].c_str());
+
+ printf(" --------------------------------");
+ printf("----------------------------------------------\n");
+ printf(" <- Result of  each iteration ->");
+ printf("  <-     Cumulative Result     ->< CPU  time >\n");
+ printf("  IT Eff R_Neg   Estimate   Acc%%");
+ printf("  Estimate(+- Error )order  Acc%%");
+ printf(" ( H: M: Sec )\n");
+ printf(" --------------------------------");
+ printf("----------------------------------------------\n");
+
+         return;
+ 
+//----------------------------------------------------------- BASES
+ 
+ case 6:
+         if( intv <= 1 ) return;
+         istep  = ip1;
+         itx =  it % itm;
+         //if( itx == 0 ) itx = itm;
+         bslist( itx, istep );
+         return;
+ 
+ case 7:
+         if( intv <= 1 ) return;
+	printf("--------------------------------");
+	printf("----------------------------------------------\n");
+ 
+         return;
+//----------------------------------------------------------- BASES
+ 
+ case 8:
+         itj    = ip1;
+         istep  = ip2;
+         itx  = itj % itm;
+         //if( itx == 0 ) itx = itm;
+ 
+         if( itrat[0][istep] == 1 ) {
+             ndev   = 1;
+	 } else {
+             ndev   = 2;
+             itfn   = itm;
+             int itmn   = 10000;
+             //do 610 i = 1,itm
+	     for(int i=0;i<itm;i++) {
+                if( itrat[i][istep] < itmn ) {
+                    itst = i;
+                    itmn = itrat[i][istep];
+		}
+	     }
+             //if( itst == 1 ) ndev = 1;
+             if( itst == 0 ) ndev = 1;
+	 }
+ 
+	     cout << cn <<endl;
+    printf("%sDate: %2d/%2d/%2d  %2.2d:%2.2d\n",s55.c_str(),idate[0],idate[1],idate[2],
+	    itime[0],itime[1]);
+         printf("              %s\n",ich[istep].c_str());
+
+ printf("--------------------------------");
+ printf("----------------------------------------------\n");
+ printf(" <- Result of  each iteration ->");
+ printf("  <-     Cumulative Result     ->< CPU  time >\n");
+ printf("  IT Eff R_Neg   Estimate   Acc%%");
+ printf("  Estimate(+- Error )order  Acc%%");
+ printf(" ( H: M: Sec )\n");
+ printf("--------------------------------");
+ printf("----------------------------------------------\n");
+
+L625:
+         if( ndev == 1 ) {
+             itst = 1;
+             itfn = itx;
+	 }
+ 
+         //do 650 i = itst, itfn
+         for(int i=itst; i<= itfn; i++) {
+            bslist( i-1, istep );
+	 }
+         ndev--;
+         if( ndev > 0 ) goto L625;
+
+ printf("--------------------------------");
+ printf("----------------------------------------------\n");
+ 
+      return;
+ 
+//----------------------------------------------------------- BASES
+ 
+ case 9:
+    printf("# ******** FATAL ERROR IN BASES **************\n");
+    printf("# There are no enough good points in this iteration.\n");
+    printf("# Process was terminated due to this error.\n");
+    return;
+ 
+//-----------------------------------------------------------------
+ case 10:
+      if( ip2 != 0 ) {
+	  cout << cn << endl;
+    printf("%sDate: %2d/%2d/%2d  %2.2d:%2.2d\n",s55.c_str(),idate[0],idate[1],idate[2],
+	    itime[0],itime[1]);
+
+          printf("                    Results of Integration\n");
+          printf("         '----------------------------------------");
+	  printf("----------------\n");
+          printf("         Loop#  Estimate(+- Error )order");
+          printf("  It1  It2 ( H: M: Sec )\n");
+          printf("         '----------------------------------------");
+	  printf("----------------\n");
+      }
+ 
+      re  = avgi;
+      ac  = abs(sd);
+      are = abs(re);
+      int iordr;
+      if( are >= ac) {
+          bsordr( are, f2, order, iordr);
+      } else {
+          bsordr(  ac, f2, order, iordr );
+      }
+      re  /= order;
+      ac  /= order;
+
+      bstcnv( stime, ih, mn, is1, is2);
+
+      printf(
+      "          %6d %10.6f  (+- %8.6f)E  %3.2d %5d %5d %3d:%2d:%2d.%2.2d\n",
+      ip1,re,ac,iordr,itg,it,ih,mn,is1,is2);
+          printf("         '----------------------------------------");
+	  printf("----------------\n");
+
+	  return;
+
+	default:
+	  cerr << "(bsprnt::) id= " << id << endl;
+	  exit(1);
+
+    }
+ 
+}
+
+/***********************************************************************
+* (Purpose)
+*    Resolve TIME in second into IH, MN, IS1, IS2
+* (Input)
+*    TIME : in the unit of second
+* (Output)
+*    IH   : Hours
+*    MN   : Minute
+*    IS1  : Second
+*    IS2  : 0.xx Second
+* (Author)
+*    S.Kawabata 1992 June 15
+************************************************************************/
+void Bases::bstcnv( float time, int& ih, int& mn, int& is1, int& is2 )
+{
+    static const int  hour=360000;
+    static const int minut = 6000;
+ 
+    int isec  = (int)(time*100);
+    ih    = 0;
+    mn    = ih;
+    if( isec >= minut ) {
+          int itime = isec;
+          if( isec >= hour ) {
+              ih    = itime/hour;
+              int ihx   = ih*hour;
+              itime -= ihx;
+              isec  -= ihx;
+	  }
+          mn    = itime/minut;
+          isec  -= mn*minut;
+    }
+    is1  = isec/100;
+    is2  = isec % 100;
+
+}
+ 
+/**********************************************************************
+*    ===================================                              *
+      subroutine bslist( lu, i, istep )
+*    ===================================                              *
+* ((purpose))                                                         *
+*     Print out results of each iteration and cumulative result       *
+* ((Argument))                                                        *
+*  (Input)                                                            *
+*     LU      : Logical unit number for the printer                   *
+*     I       : Address in the arrays of common /BASE5/               *
+*     ISTEP   : The Set-Identifier                                    *
+*               ISTEP = ( 0 / 1 ) = ( Grid opt. / Integration step )  *
+*                                                                     *
+*     S. Kawabata   March '94                                         *
+***********************************************************************/
+void Bases::bslist(int i, int istep )
+{
+    int ih,mn,is1,is2;
+    bstcnv( time[i][istep], ih, mn, is1, is2 );
+ 
+      double re  = reslt[i][istep];
+      double ac  = abs(acstd[i][istep]);
+      double are = abs(re);
+      int iordr;
+      double order,f2;
+      if( are >= ac) {
+          bsordr( are, f2, order, iordr);
+      } else {
+          bsordr(  ac, f2, order, iordr );
+      }
+      re  /= order;
+      ac  /= order;
+      int ieff = (int)eff[i][istep];
+
+    printf(
+"%4d%4d %6.2f%11.3e %6.3f%10.6f(+-%8.6f)E%3.2d %6.3f %3d:%2d:%2d.%2.2d\n",
+      itrat[i][istep],ieff,wrong[i][istep],
+                    trslt[i][istep],tstd[i][istep],
+                    re,ac,iordr,pcnt[i][istep],ih,mn,is1,is2);
+ 
+ 
+}
+
+/***********************************************************************
+C*                                                                     *
+C*========================                                             *
+C*    SUBROUTINE BSETGV( IFLAG )                                       *
+C*========================                                             *
+C*((Function))                                                         *
+C*    Refine the grid sizes                                            *
+C*                                                                     *
+C*    Coded   by S.Kawabata    Aug. 1984 at Nagoya Univ.               *
+C*    Last update              Oct. 1985 at KEK                        *
+C*                                                                     *
+C***********************************************************************/
+void Bases::bsetgv( int iflag )
+{
+    /*
+      common /base1/ xl(mxdim),xu(mxdim),ndim,nwild,
+     .               ig(mxdim),ncall
+      common /base4/ xi(ndmx,mxdim),dx(mxdim),dxd(leng),dxp(leng),
+     .               nd,ng,npg,ma(mxdim)
+      common /base3/ scalls,wgt,ti,tsi,tacc,it
+      common /base6/ d(ndmx,mxdim),
+     .               alph,xsave(ndmx,mxdim),xti,xtsi,xacc,itsx
+      real*4 stime
+      common /bsrslt/avgi,sd,chi2a,stime,itg,itf
+ 
+    */
+ 
+    double xin[ndmx],r[ndmx],dt[mxdim],ddx[ndmx];
+
+//========= Save the grid information for the best accuracy ===========
+ 
+      if( itsx > 0 ) {
+          if( iflag == 0 ) {
+              if( it >= 5 ) {
+                  if( ( ti > avgi+sd) && tsi < xtsi ) {
+		      for(int j=0; j<ndim; j++)
+		      for(int i=0; i<nd; i++) {
+                         xsave[i][j] = xi[i][j];
+		      }
+                      xacc         = tacc;
+                      itsx         = it;
+                      xti          = ti;
+                      xtsi         = tsi;
+		  }
+	      }
+	  } else {
+              if( ( xti > ti) && xtsi < tsi ) {
+		  for(int j=0; j<ndim; j++)
+		  for(int i=0; i<nd; i++) {
+                     xi[i][j] = xsave[i][j];
+		  }
+//                ==========
+                   return;
+//                ==========
+	      }
+	  }
+      }
+ 
+//======= SMOOTHING THE FUNCTION D(I,J)
+
+        double cloge   = 1.0/log(10.0);
+ 
+        int ndm     = nd-1;
+        //do 780 j= 1,ndim
+        for(int j= 0; j<ndim; j++) {
+         if( ig[j] == 1 ) {
+
+          ddx[0]= 0.5*(d[0][j] + d[1][j]);
+          //do 710 i=2,ndm
+          for(int i=1; i<ndm; i++) {
+            ddx[i]= (d[i+1][j] + d[i][j] + d[i-1][j])/3.0;
+	  }
+          ddx[nd-1] = 0.5*(d[ndm-1][j] + d[nd-1][j]);
+
+          dt[j] = 0.0;
+
+          //do 720 i = 1, nd
+          for(int i = 0; i<nd; i++) {
+             d[i][j] = ddx[i];
+             dt[j]  = dt[j]+d[i][j];
+	  }
+
+//=========== REDEFINE THE GRID
+ 
+          double dtlog   = log(dt[j]);
+          double dt10    = cloge*dtlog;
+          double rc    = 0.0;
+	  double xo;
+          //do 730 i= 1,nd
+          for(int i= 0; i<nd; i++) {
+            r[i]  = 0.0;
+            if(d[i][j] > 0.0) {
+               double dilog = log(d[i][j]);
+               if( dt10 - cloge*dilog  <= 70.0 ) {
+                   xo    = dt[j]/d[i][j];
+                   r[i]  = pow((xo-1.0)/(xo*(dtlog-dilog)),alph);
+	       } else {
+//                  XO    = DT(J)/D(I,J)
+                   r[i]  = pow(dtlog-dilog,-alph);
+	       }
+	    }
+            rc += r[i];
+	  }
+
+
+          rc  /= nd;
+          int k     = 0;
+          double xn    = 0;
+          double dr    = xn;
+          int i     = k;
+L740:
+          k++;
+	  if(k > nd) {
+	      cerr << " k funny " << k << " nd= " << nd << endl;
+	  }
+          dr    += r[k-1];
+          xo    = xn;
+          xn    = xi[k-1][j];
+L750:
+      if(rc>dr) goto L740;
+          i++;
+          dr -= rc;
+          xin[i-1]= xn-(xn-xo)*dr/r[k-1];
+      if(i<ndm) goto L750;
+
+
+          //do 760 i= 1,ndm;
+          for(int i= 0; i<ndm; i++) {
+            xi[i][j]= xin[i];
+	  }
+          xi[nd-1][j]= 1.0;
+
+	 }
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+/**********************************************************************
+C*============================                                        *
+C* Subroutine DRNSET( ISEED )                                         *
+C*============================                                        *
+C*((Purpose))                                                         *
+C*  Initialization routine of                                         *
+C*         Machine-independent Random number generator                *
+C*         General purpose Version,  OK as long as >= 32 bits         *
+C*((Arguement))                                                       *
+C*  ISEED: SEED                                                       *
+C*                                                                    *
+C**********************************************************************/
+ 
+void BSRand::drnset( int iseed )
+{
+    seed = iseed;
+      ia1 =    1279;
+      ic1 =  351762;
+      m1  = 1664557;
+      ia2 =    2011;
+      ic2 =  221592;
+      m2  = 1048583;
+      ia3 =   15091;
+      ic3 =    6171;
+      m3  =   29201;
+ 
+// Initialization
+ 
+    ix1  =  iseed % m1;
+    ix1  =  (ia1*ix1+ic1) % m1;
+    ix2  =  ix1 % m2;
+    ix1  =  (ia1*ix1+ic1) % m1;
+    ix3  =  ix1 %m3;
+
+    rm1  = 1.0/(float)(m1);
+    rm2  = 1.0/(float)(m2);
+    for(int j=0;j<31;j++) {
+         ix1   = (ia1*ix1+ic1) %  m1;
+         ix2   = (ia2*ix2+ic2) %  m2;
+         rdm[j]= ( (float)(ix1)+(float)(ix2)*rm2 )*rm1;
+    }
+ 
+}
+
+
+/**********************************************************************
+C*======================                                              *
+C* FUNCTION DRN( ISEED)                                               *
+C*======================                                              *
+C*  Machine-independent Random number generator                       *
+C*     General purpose Version,  OK as long as >= 32 bits             *
+C*((Arguement))                                                       *
+C*  ISEED: Seed                                                       *
+C*                                                                    *
+C**********************************************************************/
+ 
+double BSRand::drn()
+{
+// Generate Next number in sequence
+ 
+      ix1    = (ia1*ix1+ic1) % m1;
+      ix2    = (ia2*ix2+ic2) % m2;
+      ix3    = (ia3*ix3+ic3) % m3;
+      int j      = (31*ix3)/m3;
+      double drn1    = rdm[j];
+      rdm[j] = ( float(ix1)+float(ix2)*rm2 )*rm1;
+ 
+// Omit following statement if function arguement passed by value:
+ 
+      seed = ix1;
+      return drn1;
+
+}
+
+
+float BSTime::time_init = 0.0;
+
+//CMZ :          24/06/94  10.51.47  by  Unknown
+//-- Author :
+/***********************************************************************
+C*=================================                                    *
+C* SUBROUTINE BSTIME( TIME, IFLG )                                     *
+C*=================================                                    *
+C*((Purpose))                                                          *
+C*        Interface routine to get used CPU time from FORTRAN          *
+C*        Library routine CLOCK etc.                                   *
+C*((Input))                                                            *
+C*        IFLG  : Flag                                                 *
+C*          IFLG = 0 : Initialization of clock routine.                *
+C*          IFLG = 1 : Get used CPU time.                              *
+C*((Output))                                                           *
+C*        TIME  : Used CPU time in second.                             *
+C*                                                                     *
+C*       Coded by S.Kawabata        Oct. '85                           *
+C*                                                                     *
+C***********************************************************************/
+
+
+float  BSTime::bstime(int iflg )
+{
+    float time;
+    if( iflg != 0 ) {
+
+//     iutime.c should be compiled.
+
+	time = uxtime() - time_init;
+
+//*         CALL TIMEX(TIME)
+
+    } else {
+ 
+        time_init = uxtime();
+//         CALL TIMEST(9999999.)
+        time      = 0.0;
+ 
+    }
+
+    return time;
+}
+
+#include <sys/times.h>
+#include <unistd.h>
+float BSTime::uxtime() 
+{
+	struct	tms q;
+	long 	t;
+	//long    sysconf();
+	long    ticks;
+	//float   uxtime;
+
+        ticks = sysconf(_SC_CLK_TCK);
+	times(&q);
+        t = q.tms_utime + q.tms_cutime
+           +q.tms_stime + q.tms_cstime;
+	return (float) t/ (float) ticks;
+}
+
+
+void BSTime::bsdate(int* idate, int* itime)
+{
+/***********************************************************************
+C*=======================                                              *
+       subroutine bsdate
+C*=======================                                              *
+C*((Purpose))                                                          *
+C*    Changethe format of the time stamp.                              *
+C*    This program should be modified according to the machine.        *
+C*((Author))                                                           *
+C*    S.Kawabata  Nov. '91 at KEK                                      *
+C*    For HP      Jul. '92 at KEK                                      *
+C***********************************************************************/
+//       common /bdate/ idate(3),itime(2)
+//       common /slate/ is(40)
+
+//            IDATE(1) : year        ITIME(1) : hour
+//            IDATE(2) : month       ITIME(2) : minute
+//            IDATE(3) : day
+ 
+    int iy,im,id,ihh,imm;
+    uxdate(iy,im,id,ihh,imm);
+//CERN   call datime(id,it)
+//CERN   CALL UCOPY(IS(1),IDATE(1),5)
+//CERN   IDATE(1) = MOD(IDATE(1),1900)
+//*      IDATE(1) = IY
+//*Y2K
+       idate[0] = iy % 100;
+       idate[1] = im;
+       idate[2] = id;
+       itime[0] = ihh;
+       itime[1] = imm;
+}
+
+#include <time.h>
+/* long	iutime() */
+/*main()*/
+void BSTime::uxdate(int& year,int& mon,int& day,int& hour,int& min)
+//int	*year, *mon, *day, *hour, *min;
+{
+	struct	tm q;
+        //struct  tm *localtime();
+        time_t  tp;
+        //time_t  mktime();
+        //time_t  time();
+        //char    *ctime();
+	char    *date;
+        
+        time(&tp);
+        date = ctime(&tp);
+        q = *localtime(&tp);
+        year = q.tm_year;
+        mon  = q.tm_mon + 1;
+        day  = q.tm_mday;
+        hour = q.tm_hour;
+        min  = q.tm_min;
+
+}
+

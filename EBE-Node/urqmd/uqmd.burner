@@ -1,0 +1,19 @@
+# this is a sample input-file for uqmd
+#   
+tim 8000  8000
+#     
+ctp 22 1.0
+# 
+#    random seed (only needed for error back-tracing)
+#rsd 1944955121
+#
+# let particles decay without collisions
+# cto 16 -1 
+#f13
+f14
+f15
+f16
+f18
+f19
+#  end of file
+xxx      

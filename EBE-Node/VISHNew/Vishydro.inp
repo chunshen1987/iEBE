@@ -1,0 +1,38 @@
+7           !IEOS                  set type for EOS (EOSQ:0  EOSI: 2, SM-EOSQ: 5, EOSL: 4(Katz05 data) )
+0.0         !b                     fm impact parameter (unit: fm)
+0.6         !T0                    initial time (unit: fm/c)
+30          !EK                    initial energy density e0(b=0, r=0) (unit: GeV/fm^3)
+0.18       !Edec                  Decoupling energy density (unit: GeV/fm^3)
+1           !IEOS2dec              only for IEOS=2 (EOSI)  0: decouple by gluon 1: decouple by pions
+*
+*
+2           !IInitialization     initializion by Gaussian, Glauber, or CGC  (0: Gaussian, 1: Glauber, 2:read from Initial/InitialEd.dat)
+1           !IEin                  type of initialization  0:initialize by energy density 1: initialize by entropy density (1 doesn't work)
+1.0         !HWN                   % of WN   (1-HWN) % of BC, for optical Glauber initial condition only
+197.0       !A                     mass of atom
+4.0         !Si0                   cross section for NN (unit: fm^2) 40mb, sqrt(SNN)=130GeV
+0.17        !TRo0                  nuclear density  (unit: fm^-3)
+0.54        !TEta                  diffusion parameter of nuclear radii  (unit: fm)
+6.37        !TRA                   nuclear radii (unit: fm)
+*
+*
+0.0         !ViscousC              eta/s (const.) (0: no shear viscosity)
+0.5         !VisBeta               \tau_Pi=VisBeta*6.0\eta /(ST)
+0.0         !VisBulk               VisBulk=C;  Xi/s= C* (Xi/S)_min  (C=0, no bulk vis; or C>1 )
+2           !IRelaxBulk            type of bulk relaxation time (0: critical slowing down; 1: constant relaxation time; 2: 1.5/(2 Pi T))
+5.0         !BulkTau               constant relaxation time (fm/c) (require input IRelaxBulk=1)
+*
+*
+2,2         !NXD,NYD               freeze-out step in x and y direction
+5           !NTD                   freeze-out step in \tau direction
+*
+*
+0.02        !dT_1                    time step
+4.0,6.0     !Rx2,Ry2               <x^2> and <y^2>, for Gaussian initialization only
+*
+*
+130         !lattice size (in positive direction)
+12.5        !boundary R0
+*
+0           !Ifreez                 0: standard; non-zero: with initial thermal freezeout   
+0.03        !Edec0                  lowest freeze-out energy for Ifreez=2   T=70

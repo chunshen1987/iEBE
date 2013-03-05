@@ -1,0 +1,14 @@
+==============================
+CHANGELOG FOR InputEOS.for
+==============================
+Ver 1.3
+------------------------
+- Jan. 10, 2012        -
+------------------------
+.: The table of equation of state is standardized into four data files. Look at EOS/EOS_tables/ for details. InputEOS.for is modified to read in the EOS tables from this new standard table format (major changes are in subroutine InputRegulatedEOS). For other functions, PEOSL7, SEOSL7, and TEOSL7, common block is added for the extrapolation parameters (Pcoeff1, Pcoeff2, Scoeff1, Scoeff2, Tcoeff1, Tcoeff2) for ultra high energy density.
+
+Ver 1.1
+------------------------
+- Nov. 10, 2010        -
+------------------------
+.: Bug fixed: the parameter EOSe0 changed to 0.001d0, which is the beginning value of the table value.

@@ -1,0 +1,461 @@
+#! /usr/bin/env python
+# This package performs a sequential calculations of a given number of events,
+# after reading parameters from ParameterDict.py. The most important control
+# parameters are set in controlParameterList, for other parameters see
+# allParameterLists. This package is intended to be working-at-background thus
+# only basic output are generated. When necessary, other functions given in the
+# package for single executables can be invoked individually for more
+# flexibilities.
+# The main entry is the sequentialEventDriverShell function.
+
+from os import path, getcwd, remove, makedirs
+from shutil import move, copy, rmtree
+from glob import glob
+from subprocess import call
+
+stopExecutionExceptionString = "StopExecutionSignal"
+
+# set global default parameters
+allParameterLists = [
+    'controlParameterList',
+    'superMCControl',
+    'superMCParameters',
+    'hydroControl',
+    'hydroParameters',
+    'iSSControl',
+    'iSSParameters',
+    'osc2uControl',
+    'osc2uParameters',
+    'urqmdControl',
+    'urqmdParameters',
+    'binUtilitiesControl',
+    'binUtilitiesParameters',
+]
+
+controlParameterList = {
+    'numberOfEvents'        :   10, # how many sequential calculations
+    'rootDir'               :   path.abspath('../'),
+    'resultDir'             :   path.abspath('../finalResults'), # final results will be saved here, absolute
+    'eventResultDir'        :   None, # used to pass event result folder from sequentialEventDriverShell to others
+    'combinedUrqmdFile'     :   'urqmdCombined.txt', # urqmd from all events will be combined into this file
+    'buildCMD'              :   'make build',
+    'cleanCMD'              :   'make clean',
+}
+
+superMCControl = {
+    'mainDir'                       :   'superMC',
+    'dataDir'                       :   'data', # where initial conditions are stored, relative
+    'dataFiles'                     :   '*.dat', # data filenames
+    'numberOfEventsParameterName'   :   'nev',
+    'executable'                    :   'superMC.e',
+}
+superMCParameters = {
+    'which_mc_model'                :   5,
+    'sub_model'                     :   1,
+    'Npmin'                         :   0,
+    'Npmax'                         :   1000,
+    'bmin'                          :   0,
+    'bmax'                          :   20,
+    'ecm'                           :   2760,
+    'finalFactor'                   :   56.763,
+    'use_ed'                        :   0,
+    'alpha'                         :   0.118,
+    'lambda'                        :   0.288,
+    'operation'                     :   1,
+}
+
+hydroControl = {
+    'mainDir'               :   'VISHNew',
+    'initialConditionDir'   :   'Initial', # hydro initial condition folder, relative
+    'initialConditionFile'  :   'InitialSd.dat', # IC filename
+    'resultDir'             :   'results', # hydro results folder, relative
+    'resultFiles'           :   '*.dat', # results files
+    'saveICFile'            :   True, # whether to save initial condition file
+    'saveResultGlobs'       :   ['surface.dat', 'dec*.dat', 'ecc*.dat'], # files match these globs will be saved
+    'executable'            :   'VISHNew.e',
+}
+hydroParameters = {
+    'IINIT'     :   2,
+    'IEOS'      :   7,
+    'iEin'      :   1,
+    'vis'       :   0.08,
+    'iLS'       :   130,
+    'T0'        :   0.6, # tau_0
+    'Edec'      :   0.18,
+    'factor'    :   1.0
+}
+
+iSSControl = {
+    'mainDir'           :   'iSS',
+    'operationDir'      :   'results',
+    'saveResultGlobs'   :   ['*vn*.dat'], # files in the operation directory matching these globs will be saved
+    'OSCARFile'         :   'OSCAR.DAT',
+    'executable'        :   'iSS.e',
+}
+iSSParameters = {
+    'calculate_vn'                  :   0,
+    'MC_sampling'                   :   2,
+    'number_of_repeated_sampling'   :   10,
+    'y_LB'                          :   -2.5,
+    'y_RB'                          :   2.5,
+}
+
+osc2uControl = {
+    'mainDir'           :   'osc2u',
+    'outputFilename'    :   'fort.14',
+    'saveOSCAR'         :   True, # whether to save OSCAR file
+    'executable'        :   'osc2u.e',
+}
+osc2uParameters = {}
+
+urqmdControl = {
+    'mainDir'           :   'urqmd',
+    'controlFilename'   :   'uqmd.burner',
+    'ICFilename'        :   'OSCAR.input',
+    'outputFilename'    :   'particle_list.dat',
+    'saveOutputFile'    :   True, # whether to save the output file
+    'executable'        :   'runqmd.sh',
+}
+urqmdParameters = {}
+
+binUtilitiesControl = {
+    'mainDir'               :   'binUtilities',
+    'operationDir'          :   'results',
+    'saveResultGlobs'       :   ['*flow*.dat'], # files in the operation directory matching these globs will be saved
+    'executable'            :   'urqmdBinShell.py',
+}
+binUtilitiesParameters = {}
+
+def readInParameters():
+    """ Overwrite default parameter lists with those in ParameterDict. """
+    try:
+        import ParameterDict
+        for aParameterList in allParameterLists:
+            if aParameterList in dir(ParameterDict):
+                exec("%s.update(ParameterDict.%s)" % (aParameterList, aParameterList))
+    except (IOError, SyntaxError):
+        print("There are errors when open/read the ParameterDict.py file.")
+        raise NameError(stopExecutionExceptionString)
+
+
+def generateSuperMCInitialConditions(numberOfEvents):
+    """
+        Generate initial conditions using superMC. It then yield the absolute
+        path for all the initial conditions.
+    """
+    # set directory strings
+    superMCDirectory = path.join(controlParameterList['rootDir'], superMCControl['mainDir'])
+    superMCDataDirectory = path.join(superMCDirectory, superMCControl['dataDir'])
+    superMCExecutable = superMCControl['executable']
+
+    # clean up the data subfolder for output
+    cleanUpFolder(superMCDataDirectory)
+
+    # check executable
+    checkExistenceOfExecutable(path.join(superMCDirectory, superMCExecutable))
+
+    # set "nev=#" in superMCParameters
+    superMCParameters[superMCControl['numberOfEventsParameterName']] = numberOfEvents
+    # form assignment string
+    assignments = formAssignmentStringFromDict(superMCParameters)
+    # form executable string
+    executableString = "./" + superMCExecutable + assignments
+    # execute!
+    run(executableString, cwd=superMCDirectory)
+
+    # yield initial conditions
+    for aFile in glob(path.join(superMCDataDirectory, superMCControl['dataFiles'])):
+        # then yield it
+        yield path.join(superMCDataDirectory, aFile)
+
+
+def hydroWithInitialCondition(aFile):
+    """
+        Perform a single hydro calculation with the given absolute path to an
+        initial condition. Yield the result files.
+    """
+    # set directory strings
+    hydroDirectory = path.join(controlParameterList['rootDir'], hydroControl['mainDir'])
+    hydroICDirectory = path.join(hydroDirectory, hydroControl['initialConditionDir'])
+    hydroResultsDirectory = path.join(hydroDirectory, hydroControl['resultDir'])
+    hydroExecutable = hydroControl['executable']
+
+    # check executable
+    checkExistenceOfExecutable(path.join(hydroDirectory, hydroExecutable))
+
+    # clean up initial and results folder
+    cleanUpFolder(hydroICDirectory)
+    cleanUpFolder(hydroResultsDirectory)
+
+    # check existence of the initial conditions
+    if not path.exists(aFile):
+        print("Hydro initial condition file %s not found." % aFile)
+        raise NameError(stopExecutionExceptionString)
+
+    # storing initial condition file
+    if hydroControl['saveICFile']:
+        copy(aFile, controlParameterList['eventResultDir'])
+
+    # move initial condition to the designated folder
+    move(aFile, path.join(hydroICDirectory, hydroControl['initialConditionFile']))
+
+    # form assignment string
+    assignments = formAssignmentStringFromDict(hydroParameters)
+    # form executable string
+    executableString = "./" + hydroExecutable + assignments
+    # execute!
+    run(executableString, cwd=hydroDirectory)
+
+    # yield result files
+    worthStoring = []
+    for aGlob in hydroControl['saveResultGlobs']:
+        worthStoring.extend(glob(path.join(hydroResultsDirectory, aGlob)))
+    for aFile in glob(path.join(hydroResultsDirectory, hydroControl['resultFiles'])):
+        # check if this file worth storing, then copy to event result folder
+        if aFile in worthStoring:
+            copy(aFile, controlParameterList['eventResultDir'])
+        # yield it
+        yield path.join(hydroResultsDirectory, aFile)
+
+
+def iSSWithHydroResultFiles(fileList):
+    """
+        Perform iSS calculation using the given list of hydro result files.
+        Return the path to the OSCAR file.
+    """
+    # set directory strings
+    iSSDirectory = path.join(controlParameterList['rootDir'], iSSControl['mainDir'])
+    iSSOperationDirectory = path.join(iSSDirectory, iSSControl['operationDir']) # for both input & output
+    iSSOSCARFilepath = path.join(iSSDirectory, iSSControl['OSCARFile'])
+    iSSExecutable = iSSControl['executable']
+
+    # check executable
+    checkExistenceOfExecutable(path.join(iSSDirectory, iSSExecutable))
+
+    # clean up operation folder
+    cleanUpFolder(iSSOperationDirectory)
+
+    # check existence of hydro result files and move them to operation folder
+    for aFile in fileList:
+        if not path.exists(aFile):
+            print("Hydro result file %s not found." % aFile)
+            raise NameError(stopExecutionExceptionString)
+        else:
+            move(aFile, iSSOperationDirectory)
+
+    # form assignment string
+    assignments = formAssignmentStringFromDict(iSSParameters)
+    # form executable string
+    executableString = "./" + iSSExecutable + assignments
+    # execute!
+    run(executableString, cwd=iSSDirectory)
+
+    # save some of the important result files
+    worthStoring = []
+    for aGlob in iSSControl['saveResultGlobs']:
+        worthStoring.extend(glob(path.join(iSSOperationDirectory, aGlob)))
+    for aFile in glob(path.join(iSSOperationDirectory, "*")):
+        if aFile in worthStoring:
+            move(aFile, controlParameterList['eventResultDir'])
+
+    # return OSCAR file path
+    return iSSOSCARFilepath
+
+
+def osc2uFromOSCARFile(OSCARFilePath):
+    """
+        Execute osc2u program using the given path to the OSCAR file. Return the
+        path to the output file.
+    """
+    # set directory strings
+    osc2uDirectory = path.join(controlParameterList['rootDir'], osc2uControl['mainDir'])
+    osc2uOutputFilePath = path.join(osc2uDirectory, osc2uControl['outputFilename'])
+    osc2uExecutable = osc2uControl['executable']
+
+    # check executable
+    checkExistenceOfExecutable(path.join(osc2uDirectory, osc2uExecutable))
+
+    # remove output file if already exists
+    if path.exists(osc2uOutputFilePath):
+        remove(osc2uOutputFilePath)
+
+    # check existence of the OSCAR file then execute
+    if path.exists(OSCARFilePath):
+        run("./"+osc2uExecutable + " < " + OSCARFilePath, cwd=osc2uDirectory)
+
+    # save OSCAR file
+    if osc2uControl['saveOSCAR']:
+        move(OSCARFilePath, controlParameterList['eventResultDir'])
+
+    # return the output file path
+    return osc2uOutputFilePath
+
+
+def urqmdFromOsc2uOutputFile(osc2uFilePath):
+    """
+        Perform urqmd using osc2u output file. Return the path to the output
+        file.
+    """
+    # set directory strings
+    urqmdDirectory = path.join(controlParameterList['rootDir'], urqmdControl['mainDir'])
+    urqmdOutputFilePath = path.join(urqmdDirectory, urqmdControl['outputFilename'])
+    urqmdExecutable = urqmdControl['executable']
+
+    # check executable
+    checkExistenceOfExecutable(path.join(urqmdDirectory, urqmdExecutable))
+
+    # remove output file if already exists
+    if path.exists(urqmdOutputFilePath):
+        remove(urqmdOutputFilePath)
+
+    # clean up IC
+    urqmdIC = path.join(urqmdDirectory, urqmdControl['ICFilename'])
+    if path.exists(urqmdIC):
+        remove(urqmdIC)
+
+    # check existence of the osc2u output, move it then execute urqmd
+    if path.exists(osc2uFilePath):
+        move(osc2uFilePath, urqmdIC)
+        run("./"+urqmdExecutable, cwd=urqmdDirectory)
+
+    # save output file
+    if urqmdControl['saveOutputFile']:
+        copy(urqmdOutputFilePath, controlParameterList['eventResultDir'])
+
+    # return the output file path
+    return urqmdOutputFilePath
+
+
+def binUrqmdResultFiles(urqmdOutputFile):
+    """
+        Bin the output from URQMD to generate flows etc.
+    """
+    # set directory strings
+    binUDirectory = path.join(controlParameterList['rootDir'], binUtilitiesControl['mainDir'])
+    binUOperationDirectory = path.join(binUDirectory, binUtilitiesControl['operationDir'])
+    binUExecutable = binUtilitiesControl['executable']
+
+    # clean up operation folder
+    cleanUpFolder(binUOperationDirectory)
+
+    # check existence urqmd output file
+    if not path.exists(urqmdOutputFile):
+        print("URQMD output file %s not found." % urqmdOutputFile)
+        raise NameError(stopExecutionExceptionString)
+
+    # form executable string
+    executableString = "./" + binUExecutable + " " + urqmdOutputFile
+    # execute!
+    run(executableString, cwd=binUDirectory)
+
+    # save some of the important result files
+    worthStoring = []
+    for aGlob in binUtilitiesControl['saveResultGlobs']:
+        worthStoring.extend(glob(path.join(binUOperationDirectory, aGlob)))
+    for aFile in glob(path.join(binUOperationDirectory, "*")):
+        if aFile in worthStoring:
+            move(aFile, controlParameterList['resultDir'])
+
+
+def formAssignmentStringFromDict(aDict):
+    """
+        Generate a parameter-equals-value string from the given dictionary. The
+        generated string has a leading blank.
+    """
+    result = ""
+    for aParameter in aDict.keys():
+        result += " {}={}".format(aParameter, aDict[aParameter])
+    return result
+
+
+def cleanUpFolder(aDir):
+    """ Delete all data files in the given directory. """
+    if path.exists(aDir):
+        try:
+            run("rm -rf *", cwd=aDir, echo=False)
+        except OSError:
+            pass # very likely the the folder is already empty
+    else:
+        raise NameError(stopExecutionExceptionString)
+
+
+def checkExistenceOfExecutable(executableFilename):
+    """ Check the existence of the executable file, and compile if not. """
+    if not path.exists(executableFilename):
+        # build then clean
+        pass
+        # if still cannot find the executable
+        if not path.exists(executableFilename):
+            print("Cannot generate executable "+executableFilename)
+            raise NameError(stopExecutionExceptionString)
+
+
+def run(command, cwd=getcwd(), echo=True):
+    """ Invoke a command and wait for it to stop. """
+    if echo:
+        print("-"*80)
+        print("In "+cwd)
+        print("Executing command: "+command)
+        print("-"*80)
+    return call(command, shell=True, cwd=cwd)
+
+
+def sequentialEventDriverShell():
+    """
+        Perform a sequential calculations for a given number of events.
+        Parameters are read from dictionaries given by allParameterList.
+    """
+    try:
+        # read parameters
+        readInParameters()
+
+        # create result folder
+        resultDir = controlParameterList['resultDir']
+        if path.exists(resultDir):
+            rmtree(resultDir)
+            makedirs(resultDir)
+
+        # generate initial conditions then loop over initial conditions
+        event_id = 0
+        for aInitialConditionFile in generateSuperMCInitialConditions(controlParameterList['numberOfEvents']):
+            # get the result folder name for storing results, then create it if necessary
+            event_id += 1
+            eventResultDir = path.join(resultDir, 'event-%d' % event_id)
+            controlParameterList['eventResultDir'] = eventResultDir
+            if path.exists(eventResultDir):
+                rmtree(eventResultDir)
+            makedirs(eventResultDir)
+
+
+            # perform hydro calculations and get a list of all the result filenames
+            hydroResultFiles = [aFile for aFile in hydroWithInitialCondition(aInitialConditionFile)]
+
+            # perform iSS calculation and return the path to the OSCAR file
+            OSCARFilePath = iSSWithHydroResultFiles(hydroResultFiles)
+
+            # perform osc2u
+            osc2uOutputFilePath = osc2uFromOSCARFile(OSCARFilePath)
+
+            # now urqmd
+            urqmdOutputFilePath = urqmdFromOsc2uOutputFile(osc2uOutputFilePath)
+
+            # copy and concatnate final results from all events into one file
+            combinedUrqmdFile = path.join(controlParameterList['resultDir'], controlParameterList['combinedUrqmdFile'])
+            file(combinedUrqmdFile, 'aw').writelines(file(urqmdOutputFilePath).readlines())
+
+            # bin the combined result file to get flows
+            binUrqmdResultFiles(combinedUrqmdFile)
+
+
+    except NameError as e:
+        if str(e)==stopExecutionExceptionString:
+            print("Errors encountered during execution, aborting.")
+        else:
+            raise
+        return
+    finally:
+        print("Thank you for using. Zhi Qiu, 2013-02")
+
+
+if __name__ == "__main__":
+    sequentialEventDriverShell()

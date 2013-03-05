@@ -1,0 +1,348 @@
+                    ==============================
+                      CHANGELOG FOR InputFun.for
+                    ==============================
+Ver 1.29RC6
+------------------------
+- May, 20. 2011        -
+------------------------
+.: The trace anomaly in the regulatePi subroutine has changed from (e-3p) to max(e-3p, e*1D-3).
+
+
+Ver 1.29RC5
+------------------------
+- May, 09. 2011        -
+------------------------
+.: All "Aeps" initialization is moved to the subroutine readInputFromCML2. It is initialized to 0.05 (with R0Bdry=12.5 in Vishydro.inp).
+
+
+Ver 1.29RC4
+------------------------
+- March, 15. 2011      -
+------------------------
+.: Bug fix: in regulatePi subroutine, the code "zero = 1D-2/regStr" is changed to "zero = 1D-2/(regStr+1D0)".
+
+Ver 1.29RC3
+------------------------
+- March, 14. 2011      -
+------------------------
+.: In readFromCML2 subroutine, support to the parameter sFactor is added. This parameter is used by InitializationAll subroutine since version 1.03. Its effect is to multiply the initial entropy density by this factor. Note that due to the root finding inaccuracy of the EOS, the resulted entropy has the correct multiplicity factor only in the non-dilute region.
+
+Ver 1.29RC2
+------------------------
+- March, 10. 2011      -
+------------------------
+.: The trace of pi is compared with zero*MaxPiRatio*(trace anomaly), but the transversality of pi are changed to be compared with zero*MaxPiRatio*(energy density).
+
+
+Ver 1.29RC
+------------------------
+- March, 05. 2011      -
+------------------------
+.: The regulatePi function now determines regulation strength based on several factors:
+1) Largeness: sqrt(Tr(pi^2)) is checked against e+p.
+2) Traceless: Tr(pi) is checked against traceanomaly;
+3) Transversality: pi^{mu,nu}u_mu is check against traceanomaly for each component.
+The checks on largeness is looser compared to the other two. The MaxPiRatio parameter in extraParas file can be set to 10 to allow more viscous effects.
+.: The regulatePi function accepts an additional parameter regStr to control the the regulation strength. The larger the value, the more strict the regulation.
+.: The "zero" parameter should be set to a value such that zero*MaxPiRatio~1D-2 for efficient calculation without too much pi regulation.
+
+
+Ver 1.27RC
+------------------------
+- February, 20. 2011   -
+------------------------
+<< ==1.26test3 >>
+
+
+Ver 1.25, 1.26: test versions. All modifications are in regualtePi function, around determining TrPi2.
+
+
+Ver 1.24
+------------------------
+- December, 21. 2010   -
+------------------------
+.: Bug fix: file checkE is opened as file# 310 but closed as file# 230.
+
+
+Ver 1.23
+------------------------
+- December, 18. 2010   -
+------------------------
+.: The ratio of number of lattice points on which Pi regulation is required over number of all lattice points are now outputted to PiTrace.dat. The column 6,7,8,9 gives ratio of number of lattice points inside the freeze-out surface on which the required regulation is more than 10%, 30%, 50%, 70% over total number of lattice points inside the freeze-out surface.
+.: Bug fix: In readInputFromCML2, in the recognition of the parameter <y^2>, one identifying string should be "y2" instead of "ry2".
+
+
+Ver 1.22
+------------------------
+- November, 17. 2010   -
+------------------------
+.: Output files are declared with status "replace" instead of "new" so that the folders need not to be cleared between runs.
+
+
+Ver 1.21
+------------------------
+- November, 04. 2010   -
+------------------------
+.: Parameters "IEin" can now be read from command line.
+.: The pameter "Ek" read from command line now have alias "Sk", used to initial Glauber initial condition using entropy density. They are the same but "Sk" is cleaner.
+
+
+Ver 1.20
+------------------------
+- October, 28. 2010    -
+------------------------
+.: A new subroutine readFromCML2 for reading parameters from CML is added, together with a subroutine processAssignment which it depends on. This new subroutine use grammar variable=value to read input parameters from CML. If the variable has a name starts with "I" or "N", then it is integer-valued. The order of case of the variables do not matter. The version that uses this new subroutine is 1.5.8.
+.: Spelling fixed: NXD->NDX, NYD->NDY, and NTD->NDT.
+
+
+Ver 1.14
+------------------------
+- October, 21. 2010    -
+------------------------
+.: Bug fixed (thanks to Scott): when no argument is given, the variable readFromCML should be set to 0.
+
+
+Ver 1.13
+------------------------
+- October 07. 2010     -
+------------------------
+.: The average value for Pi tensor is now being monitored for NaN's. (See PiAvg and PiCheckFlag.)
+.: Variable readedFromCML renamed to readFromCML.
+
+
+Ver 1.12
+------------------------
+- July, 14. 2010       -
+------------------------
+.: More PiTrace contours are outputted, includes those inside which pi(mu,nu) components are regulated within 10%, 30%, 50%, 70%.
+.: The constant used to make maxPi non zero changed from 1e-10 to 1e-30.
+
+
+Ver 1.11
+------------------------
+- July, 09. 2010       -
+------------------------
+.: All radius are now calculated using ddx and ddy, instead of assuming that they are 0.1 each.
+
+
+Ver 1.10
+------------------------
+- July, 08. 2010       -
+------------------------
+.: Now the program has the option to read tau_pi from CML.
+
+
+Ver 1.09
+------------------------
+- June, 25. 2010       -
+------------------------
+.: Now the tanh regulation method compares Tr(pi^2) to e+p.
+
+
+Ver 1.08
+------------------------
+- June, 25. 2010       -
+------------------------
+.: Now the tanh regulation method compares the sum of pi tensor (with pi33 replaced by pi33*tau*tau for dimensionality purpose) with e+p. The difference between 1.07 is that there the array Pi33 is treated as the physical pi33 (which is wrong) but in this version it is treated as pi33*tau*tau.
+.: Many unnecessary debug codes are cleaned.
+.: Interface of subroutine regualtePi changed, unnecessary arguments removed.
+.: Interface of subroutine doOtherOutputs changed, Sd removed from arguments.
+
+
+Ver 1.07
+------------------------
+- June, 24. 2010       -
+------------------------
+.: Now the tanh regulation method compares the sum of pi tensor (with pi33 replaced by pi33*tau*tau for dimensionality purpose) with e+p. I still need to confirm that the array Pi33 is the physical pi^(3,3).
+
+
+Ver 1.06
+------------------------
+- June, 24. 2010       -
+------------------------
+.: According to Huichao, Pi33 is the physical pi^(3,3), not pi^(3,3)*tau*tau, the program is fixed accordingly.
+.: Bugs fixed: There should be no PI's in the calculation for T_eq.
+
+
+Ver 1.05
+------------------------
+- June, 24. 2010       -
+------------------------
+.: Bugs fixed: T33 = (e+p)*u3*u3 + p*g33, not "-p*g33".
+
+
+
+Ver 1.04
+------------------------
+- June, 23. 2010       -
+------------------------
+.: A new way to regulate pi(mu,nu) tensor based on comparison ratio between pi and T_{eq} and tanh is implemented.
+
+
+Ver 1.02
+-----------------------
+- May, 23. 2010       -
+-----------------------
+.: An attempt to fix Pi33 by first dividing it by tau*tau then regulate in implemented since I think Pi33 actually means pi^(3,3)*tau*tau in the program.
+
+
+Ver 1.01
+-----------------------
+- May, 23. 2010       -
+-----------------------
+.: Flag checkE added with corresponding outputs.
+
+
+Ver 1.00
+-----------------------
+- May, 11. 2010       -
+-----------------------
+.: Subroutine readInputFromCML uses a stranger criteria: there can only be either 11 arguments or 13 arguments.
+
+
+Ver 0.99
+-----------------------
+- May, 06. 2010       -
+-----------------------
+.: Support to read LS and R0Bdry from command line added.
+
+
+Ver 0.98
+-----------------------
+- May, 05. 2010       -
+-----------------------
+.: A check whether PiAvg is fine by NaN is generated in PiRegAvg is added.
+
+
+Ver 0.95
+-----------------------
+- Apr, 22. 2010       -
+-----------------------
+.: Precision for outputted data increased from 3 digits to 8 digits.
+.: A check whether PiAvg and PiRegAvg is NaN is added.
+
+
+Ver 0.94
+-----------------------
+- Apr, 19. 2010       -
+-----------------------
+.: Max starting value for R0 changed from 300 to NX*2.
+
+
+Ver 0.93
+-----------------------
+- Mar, 19. 2010       -
+-----------------------
+.: Values of energy density on x and y axes are exported to movie/eOnX.dat and movie/eOnY.dat.
+.: Some file indices are changed to avoid conflict with the main program.
+
+
+Ver 0.90
+-----------------------
+- Mar, 19. 2010       -
+-----------------------
+.: Starting value for rTotal in regulatePi function has been changed to NX+10.
+.: Nonessential outputs have been moved to doOtherOutputs function.
+.: Can now output info for all components of Pi tensor.
+
+
+Ver 0.86
+-----------------------
+- Mar, 15. 2010       -
+-----------------------
+.: Starting value for RMin in determineR0 function has been changed to NX+10.
+.: The function regulatePi now require parameters NXPhy0, NXPhy, NYPhy0, and NYPhy.
+
+
+Ver 0.85
+-----------------------
+- Mar, 15. 2010       -
+-----------------------
+.: Pi_avg/(e+p) on X axis is outputed.
+
+
+Ver 0.80
+-----------------------
+- Mar, 15. 2010       -
+-----------------------
+.: Parameters from extraParas file are echoed.
+
+
+Ver 0.79
+-----------------------
+- Jan, 16. 2010       -
+-----------------------
+.: Comparison with Gaussian profile for different t added.
+
+
+Ver 0.77
+-----------------------
+- Jan, 16. 2010       -
+-----------------------
+.: Output total energy and total energy*tau density in regulatePi subroutine.
+
+
+Ver 0.75
+-----------------------
+- Jan, 16. 2010       -
+-----------------------
+.: Output center energy density in regulatePi subroutine.
+
+
+Ver 0.73
+-----------------------
+- Jan, 16. 2010       -
+-----------------------
+.: The integer control parameter outputPiMovie changed to double precision
+   parameter outputPiMovieDt. Now the snapshots of Pi tensor are done at times
+   with (roughly) equal interval.
+
+
+Ver 0.70
+-----------------------
+- Jan, 14. 2010       -
+-----------------------
+.: More components of Pi tensor are regulated in regulatePi subroutine.
+.: Add more possible debug outputs.
+.: Indention rearranged.
+
+
+Ver 0.65
+-----------------------
+- Jan, 13. 2010       -
+-----------------------
+.: A new flag "outputPiMovie" and the associated code added.
+
+
+Ver 0.6
+-----------------------
+- Jan, 13. 2010       -
+-----------------------
+.: Subroutine "regulatePi" completed.
+.: Several flags (debug, outputPiTrace) added and at least half implemented.
+
+
+Ver 0.5
+-----------------------
+- Jan, 12. 2010       -
+-----------------------
+.: Subroutines "prepareInputFun", "determineR0", and "regulatePi" (half) implemented.
+.: The subroutine "prepareInputFun" reads parameters from newly added "extraParas.inp" file.
+.: Change the function "readInputFromCML" to a subroutine. Now the result is return
+   through common block "readedFromCML".
+
+
+Ver 0.2
+-----------------------
+- Jan, 12. 2010       -
+-----------------------
+.: Added new subroutines (frame only): determineR0, GetInitialR0, regulatePi
+.: Completed GetInitialR0 subroutine.
+.: A frame of subroutine "prepareInputFun" added.
+
+
+Ver 0.1
+-----------------------
+- Jan, 11. 2010       -
+-----------------------
+.: Fix a bug: NXD,NYD,NTD should be declared as integer.

@@ -1,0 +1,2 @@
+anisotropy:
+time-tau_0, <v_p>, epsilon_x, epsilon_p, epsilon_p', total_S (in transverse plane)
