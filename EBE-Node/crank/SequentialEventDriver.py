@@ -354,7 +354,7 @@ def binUrqmdResultFiles(urqmdOutputFile):
         worthStoring.extend(glob(path.join(binUOperationDirectory, aGlob)))
     for aFile in glob(path.join(binUOperationDirectory, "*")):
         if aFile in worthStoring:
-            move(aFile, controlParameterList['resultDir'])
+            move(aFile, controlParameterList['eventResultDir'])
 
 
 def formAssignmentStringFromDict(aDict):
@@ -444,7 +444,7 @@ def sequentialEventDriverShell():
             file(combinedUrqmdFile, 'aw').writelines(file(urqmdOutputFilePath).readlines())
 
             # bin the combined result file to get flows
-            binUrqmdResultFiles(combinedUrqmdFile)
+            binUrqmdResultFiles(urqmdOutputFilePath)
 
 
     except NameError as e:
