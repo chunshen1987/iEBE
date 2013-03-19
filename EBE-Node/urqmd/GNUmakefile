@@ -1,5 +1,5 @@
 # ===========================================================================
-#  Makefile urQMD                                    Henning Weber 10.09.1996
+#  Makefile urQMD                                    Chun Shen Mar. 19, 2013
 # ===========================================================================
 ##
 ##  Environments :	MAIN	= 	main sourcefile		[uqmd.f]
@@ -15,54 +15,25 @@
 
 # ----------------------------------------- 
 
-ifeq "$(TYPE)" ""
-   TYPE := $(shell uname)
+FC := $(shell which ifort)
+LD := $(shell which ifort)
+FFLAGS= -O3 -fast -heap-arrays -cpp -Wall -Wsurprising
+ifeq "$(FC)" ""
+  FC := $(shell which gfortran)
+  LD := $(shell which gfortran)
+  FFLAGS= -O3 -cpp -Wall -Wsurprising
 endif
 
-
-
-ifeq "$(TYPE)" "Linux" 
-
-FC              =       gfortran
-LD              =       gfortran
-RM              =       rm 
+RM		=	rm -f
 O               =       .o
-FFLAGS		=	-O -Wsurprising 
-LDFLAGS         =       -O  -Wsurprising -lgfortran
+LDFLAGS         =       -O3 -Wall -Wsurprising
 SYSTEMFILES     =       $(SRCGNU)
 
-endif
-
-
-ifeq "$(TYPE)" "Darwin"
-
-FC              =       gfortran
-LD		=	gfortran
-RM		=	rm
-O               =       .o
-FFLAGS          =       -O -Wall -Wsurprising
-LDFLAGS         =       -O -Wall -Wsurprising
-SYSTEMFILES     =       $(SRCGNU)
-
-endif
-
-
-# -------------- Plot option ---------------------
-
-PLOT = pdummy.f
-LIBS = 
-ifeq "$(LINK)" "PGPLOT"
-  PLOT = plotit.f
-  ifeq "$(PGPLOT_DIR)" ""
-    PGPLOT_DIR = /usr/local/lib/pgplot-5.2.0
-  endif
-LIBS = $(PGPLOT_DIR)/libpgplot.a -lX11
-endif
 
 # --------------- Files involved ------------------
 
 ifeq "$(MAIN)" ""
-MAIN		=	urqmd
+MAIN		=	urqmd.e
 endif
 
 SRC 		= 	addpart.f angdis.f anndec.f blockres.f cascinit.f \
@@ -70,7 +41,7 @@ SRC 		= 	addpart.f angdis.f anndec.f blockres.f cascinit.f \
 	   		getmass.f getspin.f init.f input.f ityp2pdg.f error.f\
 	   		make22.f numrec.f output.f paulibl.f jdecay2.f iso.f\
 	   		proppot.f saveinfo.f scatter.f siglookup.f string.f \
-	   		tabinit.f whichres.f boxprg.f shine.f $(MAIN).f $(PLOT)
+	   		tabinit.f whichres.f boxprg.f shine.f urqmd.f pdummy.f
 INC		= 	colltab.f comnorm.f complot.f coms.f comres.f comwid.f \
 			freezeout.f inputs.f newpart.f options.f boxinc.f \
 			outcom.f 
@@ -80,12 +51,12 @@ SRCGNU		=	genranf.f
 
 # -------------------------------------------------
 
-OBJDIR		=	obj_$(TYPE)
+OBJDIR		=	obj
 SRCFILES 	= 	$(SRC) $(INC) $(SYSTEMFILES) GNUmakefile
 OBJECTS		=	$(addprefix $(OBJDIR)/, $(addsuffix $O, \
 			$(basename $(SRC) $(SYSTEMFILES))))
-TARGET		=	$(MAIN).$(TYPE)
-INSTPATH	=	$(HOME)/local/bin.$(TYPE)
+TARGET		=	$(MAIN)
+INSTPATH	=	$(HOME)/local/bin
 
 # --------------- Pattern rules -------------------
 

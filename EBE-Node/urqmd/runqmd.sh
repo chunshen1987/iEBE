@@ -9,4 +9,4 @@ export ftn16=particle_list.f16
 export ftn19=particle_list.f19
 export ftn20=particle_list.f20
 
-time ./urqmd.$(uname)
+time ./urqmd.e
