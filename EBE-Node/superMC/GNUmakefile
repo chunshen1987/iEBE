@@ -104,5 +104,3 @@ install:	$(TARGET)
 ./TableFunction.cpp: arsenal.h Table.h 
 ./main.cpp: MakeDensity.h ParamDefs.h ParameterReader.h
 ./rcBKfunc.cpp: ParamDefs.h UnintegPartonDist.h
-
-
