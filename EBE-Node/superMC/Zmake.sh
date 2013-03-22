@@ -1,14 +1,14 @@
 #! /usr/bin/env bash
 
 # C compiler
-CC=`which icpc`; CFLAGS=" -O3"
+CC=`which icpc`; CFLAGS=" -O3 -fast"
 if [ "$CC" == "" ]; then
   CC=`which g++`; CFLAGS=" -O3 -fast"
 fi
 # use next line on tranditional system:
-#CFLAGS="$CFLAGS `gsl-config --cflags --libs`"
+CFLAGS="$CFLAGS `gsl-config --cflags --libs`"
 # use next line on newest Ubuntu
-CFLAGS="$CFLAGS `gsl-config --cflags --libs` -B/usr/lib/i386-linux-gnu -I/usr/include/i386-linux-gnu"
+# CFLAGS="$CFLAGS `gsl-config --cflags --libs` -B/usr/lib/i386-linux-gnu -I/usr/include/i386-linux-gnu"
 
 # FORTRAN compiler
 FC=`which ifort`; FFLAGS=" -O3 -fast -heap-arrays -cpp"

@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
 CC=`which icpc`;
-CFLAGS=" -O3 -fast"
+CFLAGS=" -O3"
 if [ "$CC" == "" ]; then
    CC=`which g++`;
    CFLAGS=" -O3"
