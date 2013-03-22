@@ -13,7 +13,7 @@ from shutil import move, copy, rmtree
 from glob import glob
 from subprocess import call
 
-stopExecutionExceptionString = "StopExecutionSignal"
+class ExecutionError(Exception): pass # used to signal my own exception
 
 # set global default parameters
 allParameterLists = [
@@ -114,7 +114,8 @@ urqmdControl = {
     'ICFilename'        :   'OSCAR.input',
     'outputFilename'    :   'particle_list.dat',
     'saveOutputFile'    :   True, # whether to save the output file
-    'executable'        :   'runqmd.sh',
+    'executable'        :   'urqmd.e',
+    'entryShell'        :   'runqmd.sh',
 }
 urqmdParameters = {}
 
@@ -134,8 +135,7 @@ def readInParameters():
             if aParameterList in dir(ParameterDict):
                 exec("%s.update(ParameterDict.%s)" % (aParameterList, aParameterList))
     except (IOError, SyntaxError):
-        print("There are errors when open/read the ParameterDict.py file.")
-        raise NameError(stopExecutionExceptionString)
+        raise ExecutionError("Errors trying to open/read the ParameterDict.py file!")
 
 
 def generateSuperMCInitialConditions(numberOfEvents):
@@ -189,8 +189,7 @@ def hydroWithInitialCondition(aFile):
 
     # check existence of the initial conditions
     if not path.exists(aFile):
-        print("Hydro initial condition file %s not found." % aFile)
-        raise NameError(stopExecutionExceptionString)
+        raise ExecutionError("Hydro initial condition file %s not found!" % aFile)
 
     # storing initial condition file
     if hydroControl['saveICFile']:
@@ -238,8 +237,7 @@ def iSSWithHydroResultFiles(fileList):
     # check existence of hydro result files and move them to operation folder
     for aFile in fileList:
         if not path.exists(aFile):
-            print("Hydro result file %s not found." % aFile)
-            raise NameError(stopExecutionExceptionString)
+            raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
             move(aFile, iSSOperationDirectory)
 
@@ -300,6 +298,7 @@ def urqmdFromOsc2uOutputFile(osc2uFilePath):
     urqmdDirectory = path.join(controlParameterList['rootDir'], urqmdControl['mainDir'])
     urqmdOutputFilePath = path.join(urqmdDirectory, urqmdControl['outputFilename'])
     urqmdExecutable = urqmdControl['executable']
+    urqmdExecutionEntry = urqmdControl['entryShell']
 
     # check executable
     checkExistenceOfExecutable(path.join(urqmdDirectory, urqmdExecutable))
@@ -316,7 +315,7 @@ def urqmdFromOsc2uOutputFile(osc2uFilePath):
     # check existence of the osc2u output, move it then execute urqmd
     if path.exists(osc2uFilePath):
         move(osc2uFilePath, urqmdIC)
-        run("./"+urqmdExecutable, cwd=urqmdDirectory)
+        run("./"+urqmdExecutionEntry, cwd=urqmdDirectory)
 
     # save output file
     if urqmdControl['saveOutputFile']:
@@ -340,8 +339,7 @@ def binUrqmdResultFiles(urqmdOutputFile):
 
     # check existence urqmd output file
     if not path.exists(urqmdOutputFile):
-        print("URQMD output file %s not found." % urqmdOutputFile)
-        raise NameError(stopExecutionExceptionString)
+        raise ExecutionError("URQMD output file %s not found!" % urqmdOutputFile)
 
     # form executable string
     executableString = "./" + binUExecutable + " " + urqmdOutputFile
@@ -376,22 +374,22 @@ def cleanUpFolder(aDir):
         except OSError:
             pass # very likely the the folder is already empty
     else:
-        raise NameError(stopExecutionExceptionString)
+        makedirs(aDir)
 
 
 def checkExistenceOfExecutable(executableFilename):
     """ Check the existence of the executable file, and compile if not. """
     if not path.exists(executableFilename):
         # build then clean
-        pass
+        exec_path, exec_filename = path.split(executableFilename)
+        run("make", cwd=exec_path)
         # if still cannot find the executable
         if not path.exists(executableFilename):
-            print("Cannot generate executable "+executableFilename)
-            raise NameError(stopExecutionExceptionString)
+            raise ExecutionError("Cannot generate executable %s!" % executableFilename)
 
 
 def run(command, cwd=getcwd(), echo=True):
-    """ Invoke a command and wait for it to stop. """
+    """ Invoke a command from terminal and wait for it to stop. """
     if echo:
         print("-"*80)
         print("In "+cwd)
@@ -447,11 +445,9 @@ def sequentialEventDriverShell():
             binUrqmdResultFiles(urqmdOutputFilePath)
 
 
-    except NameError as e:
-        if str(e)==stopExecutionExceptionString:
-            print("Errors encountered during execution, aborting.")
-        else:
-            raise
+    except ExecutionError as e:
+        print e
+        print("Errors encountered during execution, aborting.")
         return
     finally:
         print("Thank you for using. Zhi Qiu, 2013-02")

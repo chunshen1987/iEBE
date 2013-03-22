@@ -2,5 +2,5 @@
 
 for ii in `ls -p | grep /`
     do
-    (cd $ii; rm *.e)
+    (cd $ii; rm *.e, rm *.pyc)
 done
