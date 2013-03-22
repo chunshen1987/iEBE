@@ -15,8 +15,8 @@
 
 # ----------------------------------------- 
 
-FC := $(shell ../crank/configure_compiler_fortran.sh)
-FFLAGS= $(shell ../crank/configure_compiler_fortran_Flags.sh)
+FC := gfortran
+FFLAGS = -O3 -cpp
 
 RM		=	rm -f
 O               =       .o
