@@ -10,18 +10,12 @@
 ##			distclean	remove all objectsfiles and binaries
 ##  
 
-FC := $(shell which ifort)
-LD := $(shell which ifort)
-FFLAGS= -O3 -fast -heap-arrays -cpp
-ifeq "$(FC)" ""
-  FC := $(shell which gfortran)
-  LD := $(shell which gfortran)
-  FFLAGS= -O3 -cpp
-endif
+FC := $(shell ../crank/configure_compiler_fortran.sh)
+FFLAGS= $(shell ../crank/configure_compiler_fortran_Flags.sh)
 
 RM		=	rm -f
 O               =       .o
-LDFLAGS         =       -O3 -Wall
+LDFLAGS         =       $(FFLAGS)
 SYSTEMFILES     =       $(SRCGNU)
 
 # --------------- Files involved ------------------
@@ -66,7 +60,7 @@ mkobjdir:
 		-@mkdir -p $(OBJDIR)
 
 $(TARGET):	$(OBJECTS)	
-		$(LD) $(LDFLAGS) $(OBJECTS) -o $(TARGET)
+		$(FC) $(LDFLAGS) $(OBJECTS) -o $(TARGET)
 #		strip $(TARGET)
 
 clean:		

@@ -15,18 +15,12 @@
 # ----------------------------------------- 
 
 
-FC := $(shell which ifort)
-LD := $(shell which ifort)
-FFLAGS= -O3 -fast -heap-arrays -cpp -Wall -Wsurprising
-ifeq "$(FC)" ""
-  FC := $(shell which gfortran)
-  LD := $(shell which gfortran)
-  FFLAGS= -O3 -cpp -Wall -Wsurprising
-endif
+FC := $(shell ../crank/configure_compiler_fortran.sh)
+FFLAGS= $(shell ../crank/configure_compiler_fortran_Flags.sh)
 
 RM		=	rm -f
 O               =       .o
-LDFLAGS         =       -O3 -Wall -Wsurprising
+LDFLAGS         =       $(FFLAGS)
 SYSTEMFILES     =       $(SRCGNU)
 
 
@@ -72,15 +66,15 @@ mkobjdir:
 		-@mkdir -p $(OBJDIR)
 
 $(TARGET):	$(OBJECTS)	
-		$(LD) $(LDFLAGS) $(OBJECTS) -o $(TARGET)
+		$(FC) $(LDFLAGS) $(OBJECTS) -o $(TARGET)
 #		strip $(TARGET)
 
 clean:		
-		-rm $(OBJECTS) loadmap.out
+		-rm $(OBJECTS)
 
 distclean:	
-		-rm $(TARGET) loadmap.out
-		-rm -r obj_*
+		-rm $(TARGET)
+		-rm -r obj*
 
 install:	$(TARGET)
 		cp $(TARGET) $(INSTPATH)
