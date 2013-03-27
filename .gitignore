@@ -7,4 +7,3 @@ results/
 obj/
 *.pyc
 tests/
-*.txt
