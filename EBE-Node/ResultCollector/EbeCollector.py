@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 """
-    This module consists of functions dealing with collection and processing of
-    data files generated during e-by-e calculations into databases.
-
-    ***** eccentricity *****:
-    This table has the format:
-    event_id (int), harmonic_order (smallint), ecc_real (double), ecc_imag (double)
+    This module consists of functions dealing with the collection event-by-event
+    results into databases.
 
 """
 
@@ -17,18 +13,24 @@ import numpy as np
 
 
 class EbeCollector:
-    pass
+    """
+        This class contains functions that collect results from event-by-event
+        calculations into databases.
+    """
+
+    def collectEccentricitiesAndRIntegrals(self, sqliteDBDatabase, folder, eventId):
+        """
+            This function collects initial eccentricities and r-integrals into
+            the specified SqliteDB object "sqliteDBDatabase". More specifically,
+            this functions fills table "ecc_id_lookup", "eccentricity", and
+            "r_integrals".
+
+            Eccentricity and r-integral files will be looked for in "folder" and
+            when filling tables the specified event_id="eventId" will be used.
+        """
+        # sd and ed eccentricity file names have the following patterns
+        sd_ecc_file_re = "ecc-init-sd-r-power-(\d*).dat"
+        ed_ecc_file_re = "ecc-init-r-power-(\d*).dat"
 
 
 
-#------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("----------------------------------------------------")
-    print("Welcome! -- Zhi Qiu")
-    print("----------------------------------------------------")
-    if len(argv) == 1:
-        print("Use one of the following:\n")
-        print("See the source file.")
-    else:
-        print("Executing: "+argv[1]+"('"+"','".join(argv[2:])+"')\n")
-        exec(argv[1]+"('"+"','".join(argv[2:])+"')")

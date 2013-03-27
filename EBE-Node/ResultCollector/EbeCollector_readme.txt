@@ -27,15 +27,15 @@ The generated database contains the following tables and fields. Note that since
 
 First are a few tables storing quantities related to initial states of events.
 
-1) Table "ecc_id_list". This table stores the correspondence between the type of weight function used in eccentricity calculation and a unique ecc_id.
+1) Table "ecc_id_lookup". This table stores the correspondence between the type of weight function used in eccentricity calculation and a unique ecc_id.
 -- ecc_id (integer)
 -- ecc_type_name (text)
 
-2) Table "sd_ecc".
+2) Table "eccentricity".
 -- event_id (integer primary key)
 -- ecc_id (integer). This determines the weight function.
 -- r_power (integer). This is the m value.
--- order (integer). This is the n value.
+-- n (integer). This is the harmonic order.
 -- ecc_real (real)
 -- ecc_imag (real)
 
@@ -51,20 +51,20 @@ First are a few tables storing quantities related to initial states of events.
 
 The final states of events contains dependence of particle species and various pT values. Since sometimes pT needs to be compared it is better to use interger values so each pT will be associated to a corresponding "pT_id" value, and similarly each particle is associated to a particle identification number (pid), and these two correspondence are recorded in the next two tables.
 
-5) Table "pT_id_list". This table records the correspondence between "pT_id" the real "pT" value, so in other tables the presense of "pT" will be replaced by "pT_id".
+5) Table "pT_id_lookup". This table records the correspondence between "pT_id" the real "pT" value, so in other tables the presense of "pT" will be replaced by "pT_id".
 -- pT_id (integer)
 -- pT (real)
 
-6) Table "pid_list". This table assoicate each particle to a unique number "pid", which is used to identify particle species in other tables.
+6) Table "pid_lookup". This table assoicate each particle to a unique number "pid", which is used to identify particle species in other tables.
 -- pid (integer)
 -- name (text)
 
-The rest of the tables store information regarding the final states of the events.
+The rest of the tables store information regarding the final states of the events, where the harmonic order is denoted as "n".
 
 7) Table "inte_vn".
 -- event_id (interger primary key)
 -- pid (integer). This is the particle index value.
--- order (integer)
+-- n (integer)
 -- vn_real (real)
 -- vn_imag (real)
 
@@ -72,7 +72,7 @@ The rest of the tables store information regarding the final states of the event
 -- event_id (integer primary key)
 -- pid (integer). This is the particle index value.
 -- pT_id (integer). This is the pT index value.
--- order (integer)
+-- n (integer)
 -- vn_real (real)
 -- vn_imag (real)
 
@@ -92,9 +92,10 @@ The rest of the tables store information regarding the final states of the event
 2. Structure of the package
 -------------------------------
 
-The main class is the EbeCollector class, which has several member functions, each used to collect data of a certain type (not necessarily corresponding to one table). Each of the collector function accepts an argument specifying the path where the data files are stored. The filenames of the data file that will be collected, as well as the format of these datafiles, are all internal to these functions. The following explains them in details.
+The main class is the EbeCollector class, which has several member functions, each used to collect data of certain types (not necessarily corresponding to one table). Each of the collector function accepts an argument specifying the path where the data files are stored. The filenames of the data file that will be collected, as well as the format of these datafiles, are all internal to these functions. The following explains them in details.
 
-
+1) collectEccentricitiesAndRIntegrals
+This function has
 
 
 
