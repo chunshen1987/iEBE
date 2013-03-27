@@ -13,8 +13,9 @@ Most of the member function try to hide the details of how to write a correct SQ
 1. Registering a database
 -----------------------------
 
-The module is designed not to constantly keep a connection to preserve resources and a connection is only opened before operations and will be closed immediately afterwards. Since each open operation to the database may potentially fail, the SqliteDB class will not check the validity of the database upon initilization, but only "register" the name of the database. The registered name will be used to any following database operations. To create a SqliteDB object and register a database filename at the same time just pass the filename to the constructor, and the registered database name can be echoed vis the getRegisteredDatabase member function, for example:
+The module is designed to constantly keep a connection open for efficient data reading/writing. A connection is open when a database file is "registered", which can be done during initialization or by calling the registerDatabase function. Once a database file is registered, it will keep open until it is been closed explicitly, or when another registration is issued (by the registerDatabase function). Changes are only written to the database file upon closing so a close action *MUST* be performed (either via closeConnection function or registerDatabase function) in order to make changes to the real database files. See the section "commit changes" for more information.
 
+To create a SqliteDB object and register a database filename at the same time just pass the filename to the constructor, and the registered database name can be echoed vis the getRegisteredDatabase member function, for example:
 >>> from DBR import *
 >>> db = SqliteDB("myDatabase.db")
 >>> db.getRegisteredDatabase() == "myDatabase.db"
@@ -74,15 +75,11 @@ Traceback (most recent call last):
     ...
 OperationalError: table employee has 2 columns but 1 values were supplied
 
-If the given table has not been created yet, the insertIntoTable function provide the possibility to first create the table then perform data insertion, but which requires two additional arguments: a list of column names, and a list of data types; they are exactly the same as those used in createTableIfNotExists function. For example:
->>> db.insertIntoTable("numerical", [(1.3,), (2.4,), (3.7,)], ["value"], ["float"]) # doctest: +ELLIPSIS
-<sqlite3.Cursor object ...>
-
-However if the table does not exist and name/type list is not given, it will raise a SqliteDBError exception:
->>> db.insertIntoTable("IDONOTEXIST", [(1.3,), (2.4,), (3.7,)])
+If the given table has not been created yet, the insertIntoTable function raise an exception. For example:
+>>> db.insertIntoTable("numerical", [(1.3,), (2.4,), (3.7,)])
 Traceback (most recent call last):
     ...
-SqliteDBError: table does not exist and cannot be created because name/type list not given
+OperationalError: no such table: numerical
 
 Reading from table is via the member function selectFromTable. Its 1st argument is the name of the table, and its 2nd argument is a list of name of columns (fields) to be read from the table, which defaults to "*" (all fields). It also has an optional named whereClause argument allows to pass any valid SQL where clause (without the keyword "where") to the query. The following are a few examples:
 
@@ -134,33 +131,56 @@ For convenience another function unpackDatabase is also provided. It role is to 
 4. Deletion
 ---------------
 
-Deletion should always be proceeded by caution. In a real sqlite system there is a command "commit" to actually write changes to the physical database. For the SqliteDB class all operations are automatically followed by a "commit" statement therefore there is no turning back once a disastrous delete operation is issued.
+In a real sqlite system there is a command "commit" to actually write changes to the physical database. For the SqliteDB class, all operations are written to the database upon closing (however, see the section "commit changes") and there is no explicit commit operation.
 
-Because of the danger, the SqliteDB class has an internal lock _deletionSafety that is initialized to True. This lock has can be either released or overriden, otherwise a DeletionLockedError will be raised. This lock will be enforced everytime a new database is registered.
-
-The deletion of a table is done through the dropTable function, the following is an example for deletion without the lock:
->>> db._deletionSafety = False # release the safety lock
->>> db.dropTable("employee") # perform deletion
+The deletion of a table is done through the dropTable function, the following is an example:
+>>> db.dropTable("employee")
 True
->>> db.getAllTableNames() == ['numerical'] # table "employee" is gone
+>>> db.getAllTableNames() == [] # table "employee" is gone
 True
 >>> db.dropTable("employee") # delete a non-existing table will return false
 False
 
-Next is an example of deletion with the lock:
->>> db._deletionSafety = True # relock it
->>> db.dropTable("numerical") # cannot delete a table anymore
-Traceback (most recent call last):
-    ...
-SqliteDBError: deletion prevented by the internal lock
-
->>> db.dropTable("numerical", overrideSafety=True) # override the safety lock
+Finally, to delete a database simply delete the file that is "registered" with it, or by calling the deleteDatabase function, which needs a named "confirmation" argument as a warning.
+>>> db.deleteDatabase(confirmation=True)
 True
 
-Finally, to delete a database simply delete the file that is "registered" with it, or by calling the deleteDatabase function:
->>> db.deleteDatabase(overrideSafety=True)
+---------------------
+5. Commit changes
+---------------------
+
+As mentioned upon closing of a connection all changes will ge written to the database file, which will happen either when the closeConnection is explicitly called or when another database file is registered. However if changes are not meant to be written to the database the function, the function closeConnection function also accepts a named argument "discardChanges" which, when setting to True, will close the connection without commit changes (however if a table is created, this action is recorded; though any write action follows it will be discarded). The following examples show this behavior.
+
+First is an example that writes to a database before closing.
+>>> db.registerDatabase("myDatabase.db") # this opens a connection
+>>> db.createTableIfNotExists("integer", ("i",), ("int",)) # creates a single table #doctest: +ELLIPSIS
+<sqlite3.Cursor object at ...>
+>>> db.insertIntoTable("integer", ((1,), (2,), (3,), (4,), (5,))) # insert values into the table #doctest: +ELLIPSIS
+<sqlite3.Cursor object at ...>
+>>> db.closeConnection() # changes are written to the database file
+>>> db.unpackDatabase() # this action will re-open the connection to the same database file and unpack it
+>>> open("integer.dat").readlines() == ['#i\n', '1\n', '2\n', '3\n', '4\n', '5\n']
+True
+>>> db.deleteDatabase(confirmation=True)
+True
+
+Next is an example that discard changes upon closing.
+>>> db.registerDatabase("myDatabase.db") # this opens a connection
+>>> db.createTableIfNotExists("integer", ("i",), ("int",)) # creates a single table #doctest: +ELLIPSIS
+<sqlite3.Cursor object at ...>
+>>> db.insertIntoTable("integer", ((1,), (2,), (3,), (4,), (5,))) # insert values into the table #doctest: +ELLIPSIS
+<sqlite3.Cursor object at ...>
+>>> db.closeConnection(discardChanges=True) # changes discarded
+>>> db.unpackDatabase() # this action will re-open the connection to the same database file and unpack it
+>>> open("integer.dat").readlines() == ['#i\n'] # only the table is visible, no data
+True
+>>> db.deleteDatabase(confirmation=True)
 True
 
 
+-------------
+Clean ups
+-------------
+>>> unlink("myAnotherDatabase.db")
 
 The END

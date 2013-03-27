@@ -57,13 +57,14 @@ class SqliteDB(object):
         if not self._dbCon:
             self._dbCon = sqlite3.connect(self._registeredDatabase)
 
-    def closeConnection(self):
+    def closeConnection(self, discardChanges=False):
         """
-            Close the current connection. Returns False if no connection was
-            opened. All modification will be saved upon closure.
+            Close the current connection. All modification will be saved upon
+            closing, unless "discardChanges" is set to True.
         """
         if self._dbCon:
-            self._dbCon.commit() # write to disk only upon closure
+            if not discardChanges:
+                self._dbCon.commit() # write to disk only upon closure
             self._dbCon.close()
             self._dbCon = None
 
@@ -78,7 +79,7 @@ class SqliteDB(object):
         """
         # check if the connection is open
         if not self._dbCon:
-            self.openConnection()
+            self._openConnection()
         # execute,and throw exceptions if error occurs
         try:
             if not many:
@@ -192,7 +193,7 @@ class SqliteDB(object):
         self._executeSQL("drop table %s" % tableName)
         return True
 
-    def deleteDatabase(self, confirmation=True):
+    def deleteDatabase(self, confirmation=False):
         """
             Delete the file associated to the currently registered database. The
             argument confirmation needs to be set to True in order for deletion
