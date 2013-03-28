@@ -41,50 +41,42 @@ First are a few tables storing quantities related to initial states of events.
 
 3) Table "r_integrals".
 -- event_id (integer)
+-- ecc_id (integer). Determines the weight function.
 -- r_power (integer). This is the m value.
 -- r_inte (real) (integral of r^m)
 
-4) Table "singles". This table is used to store those quantities whose only dependence is "event_id".
--- event_id (integer)
--- dSdy (real)
--- dEdy (real)
+The final states of events depend on particle species, and we associate the name of each particle to a particle identification number (pid), recorded in the following table:
 
-The final states of events contains dependence of particle species and various pT values. Since sometimes pT needs to be compared it is better to use interger values so each pT will be associated to a corresponding "pT_id" value, and similarly each particle is associated to a particle identification number (pid), and these two correspondence are recorded in the next two tables.
-
-5) Table "pT_id_lookup". This table records the correspondence between "pT_id" the real "pT" value, so in other tables the presense of "pT" will be replaced by "pT_id".
--- pT_id (integer)
--- pT (real)
-
-6) Table "pid_lookup". This table assoicate each particle to a unique number "pid", which is used to identify particle species in other tables.
+4) Table "pid_lookup". This table assoicate each particle to a unique number "pid", which is used to identify particle species in other tables.
 -- pid (integer)
 -- name (text)
 
 The rest of the tables store information regarding the final states of the events, where the harmonic order is denoted as "n".
 
-7) Table "inte_vn".
+5) Table "inte_vn".
 -- event_id (interger)
 -- pid (integer). This is the particle index value.
 -- n (integer)
 -- vn_real (real)
 -- vn_imag (real)
 
-8) Table "diff_vn".
+6) Table "diff_vn".
 -- event_id (integer)
 -- pid (integer). This is the particle index value.
--- pT_id (integer). This is the pT index value.
+-- pT (real)
 -- n (integer)
 -- vn_real (real)
 -- vn_imag (real)
 
-9) Table "multiplicities".
+7) Table "multiplicities".
 -- event_id (integer)
 -- pid (integer)
 -- N (real)
 
-10) Table "spectra".
+8) Table "spectra".
 -- event_id (integer)
 -- pid (integer). This is the particle index value.
--- pT_id (integer). This is the pT index value.
+-- pT (real)
 -- N (real)
 
 
@@ -112,7 +104,7 @@ We can inspect the eccentricity data via different ways, for example, assume we 
 >>> db.selectFromTable("eccentricity", "ecc_real", whereClause="ecc_real>0.4")
 [(0.4266273,), (0.41968203,), (0.42908949,), (0.40137673,)]
 
->>> db.deleteDatabase(confirmation=True)
+>> db.deleteDatabase(confirmation=True)
 True
 
 The End.
