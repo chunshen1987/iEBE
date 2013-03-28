@@ -32,7 +32,7 @@ First are a few tables storing quantities related to initial states of events.
 -- ecc_type_name (text)
 
 2) Table "eccentricity".
--- event_id (integer primary key)
+-- event_id (integer)
 -- ecc_id (integer). This determines the weight function.
 -- r_power (integer). This is the m value.
 -- n (integer). This is the harmonic order.
@@ -40,12 +40,12 @@ First are a few tables storing quantities related to initial states of events.
 -- ecc_imag (real)
 
 3) Table "r_integrals".
--- event_id (integer primary key)
+-- event_id (integer)
 -- r_power (integer). This is the m value.
 -- r_inte (real) (integral of r^m)
 
 4) Table "singles". This table is used to store those quantities whose only dependence is "event_id".
--- event_id (integer primary key)
+-- event_id (integer)
 -- dSdy (real)
 -- dEdy (real)
 
@@ -62,14 +62,14 @@ The final states of events contains dependence of particle species and various p
 The rest of the tables store information regarding the final states of the events, where the harmonic order is denoted as "n".
 
 7) Table "inte_vn".
--- event_id (interger primary key)
+-- event_id (interger)
 -- pid (integer). This is the particle index value.
 -- n (integer)
 -- vn_real (real)
 -- vn_imag (real)
 
 8) Table "diff_vn".
--- event_id (integer primary key)
+-- event_id (integer)
 -- pid (integer). This is the particle index value.
 -- pT_id (integer). This is the pT index value.
 -- n (integer)
@@ -77,12 +77,12 @@ The rest of the tables store information regarding the final states of the event
 -- vn_imag (real)
 
 9) Table "multiplicities".
--- event_id (integer primary key)
+-- event_id (integer)
 -- pid (integer)
 -- N (real)
 
 10) Table "spectra".
--- event_id (integer primary key)
+-- event_id (integer)
 -- pid (integer). This is the particle index value.
 -- pT_id (integer). This is the pT index value.
 -- N (real)
@@ -94,10 +94,25 @@ The rest of the tables store information regarding the final states of the event
 
 The main class is the EbeCollector class, which has several member functions, each used to collect data of certain types (not necessarily corresponding to one table). Each of the collector function accepts an argument specifying the path where the data files are stored. The filenames of the data file that will be collected, as well as the format of these datafiles, are all internal to these functions. The following explains them in details.
 
-1) collectEccentricitiesAndRIntegrals
-This function has
+1) collectEccentricitiesAndRIntegrals(folder, event_id, db)
+This function read eccentricity files from the folder "folder", then write the eccentricity and r-integral results associated to this event to the SqliteDB database "db" using event id "event_id".
 
+For example, assuming that the "testData" folder exists (should be included in the package), the following call collect the eccentricity data from it:
+>>> import EbeCollector
+>>> import DBR
+>>> db = DBR.SqliteDB("tmp.db")
+>>> collector = EbeCollector.EbeCollector()
+>>> collector.collectEccentricitiesAndRIntegrals("testData", 1, db)
 
+We can check the tables it contains by do the following:
+>>> db.getAllTableNames()
+[u'ecc_id_lookup', u'eccentricity', u'r_integrals']
 
+We can inspect the eccentricity data via different ways, for example, assume we want all those real parts of the eccentricities whose value is bigger than 0.4:
+>>> db.selectFromTable("eccentricity", "ecc_real", whereClause="ecc_real>0.4")
+[(0.4266273,), (0.41968203,), (0.42908949,), (0.40137673,)]
+
+>>> db.deleteDatabase(confirmation=True)
+True
 
 The End.

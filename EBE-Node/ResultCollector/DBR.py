@@ -144,18 +144,17 @@ class SqliteDB(object):
             "dataTypeStringList". For example:
 
             tableName = "test"
-            valueList = [(1), (2), (3)]
+            valueList = [(1,), (2,), (3,)]
             nameList = ["id"]
             dataTypeStringList = ["int"]
 
             The table has to be already created (not checked).
-
         """
         # make valueList doubly nested
         if not ListRNew.isIterable(valueList):
             valueList = [valueList]
         if not ListRNew.isIterable(valueList[0]):
-            valueList = [[x] for x in valueList] # nest the level 1 list to level 2
+            valueList = [valueList] # nest the level 1 list to level 2 assuming we are given a single value list
 
         # perform SQL
         dataLength = len(valueList[0]) # get number of elements in a row

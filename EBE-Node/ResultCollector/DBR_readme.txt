@@ -13,7 +13,7 @@ Most of the member function try to hide the details of how to write a correct SQ
 1. Registering a database
 -----------------------------
 
-The module is designed to constantly keep a connection open for efficient data reading/writing. A connection is open when a database file is "registered", which can be done during initialization or by calling the registerDatabase function. Once a database file is registered, it will keep open until it is been closed explicitly, or when another registration is issued (by the registerDatabase function). Changes are only written to the database file upon closing so a close action *MUST* be performed (either via closeConnection function or registerDatabase function) in order to make changes to the real database files. See the section "commit changes" for more information.
+The module is designed to constantly keep a connection open for efficient data reading/writing. A connection is open when a database file is "registered", which can be done during initialization or by calling the registerDatabase function. Once a database file is registered, it will keep open until it is been closed explicitly, or when another registration is issued (by the registerDatabase function). If a connection is closed, the database file is still registered and any subsequenctial read/write operations will re-open the connection. Changes are only written to the database file upon closing so a close action *MUST* be performed (either via closeConnection function or registerDatabase function) in order to make changes to the real database files. See the section "commit changes" for more information.
 
 To create a SqliteDB object and register a database filename at the same time just pass the filename to the constructor, and the registered database name can be echoed vis the getRegisteredDatabase member function, for example:
 >>> from DBR import *
@@ -69,6 +69,10 @@ Writing to tables is done via the the member function insertIntoTable, named aft
 >>> db.insertIntoTable("employee", [(1, "Alice"), (2, "Bob"), (3, "Cauchy")]) # doctest: +ELLIPSIS
 <sqlite3.Cursor object ...>
 
+When writing only one value entry (row) into the database, the value list does not need to be doubly nested, for example:
+>>> db.insertIntoTable("employee", (4, "David")) # doctest: +ELLIPSIS
+<sqlite3.Cursor object ...>
+
 It will generate an OperationError if given value does not match the type of the table:
 >>> db.insertIntoTable("employee", [(4,), (5,), (6,)])
 Traceback (most recent call last):
@@ -84,13 +88,13 @@ OperationalError: no such table: numerical
 Reading from table is via the member function selectFromTable. Its 1st argument is the name of the table, and its 2nd argument is a list of name of columns (fields) to be read from the table, which defaults to "*" (all fields). It also has an optional named whereClause argument allows to pass any valid SQL where clause (without the keyword "where") to the query. The following are a few examples:
 
 >>> db.selectFromTable("employee")
-[(1, u'Alice'), (2, u'Bob'), (3, u'Cauchy')]
+[(1, u'Alice'), (2, u'Bob'), (3, u'Cauchy'), (4, u'David')]
 
 >>> db.selectFromTable("employee", "name")
-[(u'Alice',), (u'Bob',), (u'Cauchy',)]
+[(u'Alice',), (u'Bob',), (u'Cauchy',), (u'David',)]
 
 >>> db.selectFromTable("employee", whereClause="id>=2")
-[(2, u'Bob'), (3, u'Cauchy')]
+[(2, u'Bob'), (3, u'Cauchy'), (4, u'David')]
 
 All syntax errors with be feedbacked via exceptions:
 
@@ -111,12 +115,12 @@ OperationalError: near "world": syntax error
 
 Any valid SQL syntax will be passed along to the underlayer, for example, to shift up all the employees' id by 1 we can do:
 >>> db.selectFromTable("employee", ["name", "id+1"])
-[(u'Alice', 2), (u'Bob', 3), (u'Cauchy', 4)]
+[(u'Alice', 2), (u'Bob', 3), (u'Cauchy', 4), (u'David', 5)]
 
 For a more fancy example, the following code return name and id for all the employees, but in such a way that their id's are shifted up by the max id in the existing database:
 >>> max_id = db.selectFromTable("employee", "max(id)")[0][0]
 >>> db.selectFromTable("employee", ["name", "id+%d" % max_id])
-[(u'Alice', 4), (u'Bob', 5), (u'Cauchy', 6)]
+[(u'Alice', 5), (u'Bob', 6), (u'Cauchy', 7), (u'David', 8)]
 
 To obtain a list of all the fields in a table, use the getTableInfo function. It returns a list of tuples of the form (field name, field type). For example:
 >>> db.getTableInfo("employee")
@@ -125,7 +129,7 @@ To obtain a list of all the fields in a table, use the getTableInfo function. It
 For convenience another function unpackDatabase is also provided. It role is to write out all the tables from a database into separated files. Each file assumes the name of the table it contains; other details for tunable via arguments, like the string used to separate data, whether to include a header, etc. For example:
 >>> db.unpackDatabase(sep=",", ext=".dat")
 >>> open("employee.dat").readlines()
-['#id,name\n', '1,Alice\n', '2,Bob\n', '3,Cauchy\n']
+['#id,name\n', '1,Alice\n', '2,Bob\n', '3,Cauchy\n', '4,David\n']
 
 ---------------
 4. Deletion
