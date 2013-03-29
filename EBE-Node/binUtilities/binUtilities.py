@@ -295,6 +295,8 @@ class BinProcess():
                 col_idx += 1
                 format_file.write(aString + default_std_string + default_real_part_string + " = %d\n" % col_idx)
             if self.useCplx:
+                col_idx += 1
+                format_file.write(default_count_string + "_imag = %d\n" % col_idx)
                 for aString in strings_to_be_appended:
                     col_idx += 1
                     format_file.write(aString + default_avg_string + default_imag_part_string + " = %d\n" % col_idx)
@@ -325,7 +327,7 @@ def binDataStream(dataStream, dataFormat, BinProcesses, level_of_output=5):
 
 
 
-###################################################################################bin
+###################################################################################
 def splitDataStream(dataStream, dataFormat, binObject, tmpDirectory="split"):
     """
         This function goes over the data stream and split it into separated files.
@@ -342,3 +344,10 @@ def splitDataStream(dataStream, dataFormat, binObject, tmpDirectory="split"):
         else:
             already_opened[bin_idx] = file(tmp_filename % bin_idx, 'w')
             already_opened[bin_idx].write(aLine)
+
+####################################################################################
+# 03-28-2013:
+# Bug fix: In BinProcesses.saveAvgAndCount, when using complex file format, a
+# column corresponding to the imaginary part of "count " (=0) should also have a
+# corresponding format label in the corresponding format file; previous this was
+# overlooked.

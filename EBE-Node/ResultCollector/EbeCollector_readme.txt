@@ -48,14 +48,15 @@ First are a few tables storing quantities related to initial states of events.
 The final states of events depend on particle species, and we associate the name of each particle to a particle identification number (pid), recorded in the following table:
 
 4) Table "pid_lookup". This table assoicate each particle to a unique number "pid", which is used to identify particle species in other tables.
--- pid (integer)
 -- name (text)
+-- pid (integer)
 
-The rest of the tables store information regarding the final states of the events, where the harmonic order is denoted as "n".
+The rest of the tables store information regarding the final states of the events, where the harmonic order is denoted as "n". The "pT" field in the following is either the mean pT value for a given bin (for differential quantities), or the mean pT value for all particles (for integrated quantities). Note that the structure of table "inte_vn" and "diff_vn", "multiplicities" and "spectra" are exactly the same.
 
 5) Table "inte_vn".
 -- event_id (interger)
 -- pid (integer). This is the particle index value.
+-- pT (real)
 -- n (integer)
 -- vn_real (real)
 -- vn_imag (real)
@@ -71,6 +72,7 @@ The rest of the tables store information regarding the final states of the event
 7) Table "multiplicities".
 -- event_id (integer)
 -- pid (integer)
+-- pT (real). This is the mean pT value.
 -- N (real)
 
 8) Table "spectra".
@@ -84,10 +86,11 @@ The rest of the tables store information regarding the final states of the event
 2. Structure of the package
 -------------------------------
 
-The main class is the EbeCollector class, which has several member functions, each used to collect data of certain types (not necessarily corresponding to one table). Each of the collector function accepts an argument specifying the path where the data files are stored. The filenames of the data file that will be collected, as well as the format of these datafiles, are all internal to these functions. The following explains them in details.
+The main class is the EbeCollector class, which has several member functions, each used to collect data of certain types (not necessarily corresponding to one table). Each of the collector function accepts an argument specifying the path where the data files are stored. The filenames of the data file that will be collected, as well as the format of these datafiles, are all hardcoded to these functions. The following explains them in details.
 
 1) collectEccentricitiesAndRIntegrals(folder, event_id, db)
-This function read eccentricity files from the folder "folder", then write the eccentricity and r-integral results associated to this event to the SqliteDB database "db" using event id "event_id".
+
+This function read eccentricity files from the folder "folder", then write the eccentricity and r-integral results associated to this event to the SqliteDB database "db" using event id "event_id". The eccentricity files should have names that match either "ecc-init-sd-r_power-(\d*).dat" (entropy-weighted) or "ecc-init-r_power-(\d*).dat" (energy-weighted).
 
 For example, assuming that the "testData" folder exists (should be included in the package), the following call collect the eccentricity data from it:
 >>> import EbeCollector
@@ -101,10 +104,75 @@ We can check the tables it contains by do the following:
 [u'ecc_id_lookup', u'eccentricity', u'r_integrals']
 
 We can inspect the eccentricity data via different ways, for example, assume we want all those real parts of the eccentricities whose value is bigger than 0.4:
->>> db.selectFromTable("eccentricity", "ecc_real", whereClause="ecc_real>0.4")
-[(0.4266273,), (0.41968203,), (0.42908949,), (0.40137673,)]
+>>> db.selectFromTable("eccentricity", "ecc_real", whereClause="ecc_real>0.6")
+[(0.61667342,), (0.60969422,), (0.62655439,), (0.61452488,)]
 
->> db.deleteDatabase(confirmation=True)
+Check the lookup table:
+>>> db.selectFromTable("ecc_id_lookup") == [(1, u'sd'), (2, u'ed')]
+True
+
+2) collectFLowsAndMultiplicities_binUtilityFormat(folder, event_id, db, multiplicityFactor)
+
+This function read flow files from the folder "folder", then write the flow and multiplicity results associated to this event to the SqliteDB database "db" using event id "event_id". The multiplicity will be multiplied by the factor "multiplicityFactor" (with oversampling, the counted number of particles is not the actual multiplicity). Acceptable file names should match "([a-zA-z]*)_flow_([a-zA-Z+]*).dat" (e.g. "integrated_flow_Charged.dat"), where the first () can be either "integrated" or "differential", and the second () should be the particle type name.
+
+For example, assuming that the "testData" folder exists (should be included in the package), the following call collect the flow and multiplicity data from it:
+
+>>> collector.collectFLowsAndMultiplicities_binUtilityFormat("testData", 1, db, multiplicityFactor=0.1)
+
+We can check the tables it contains by do the following:
+>>> db.getAllTableNames()
+[u'ecc_id_lookup', u'eccentricity', u'r_integrals', u'pid_lookup', u'inte_vn', u'diff_vn', u'multiplicities', u'spectra']
+
+>>> db.selectFromTable("pid_lookup") == [(u'Kaon', 321), (u'Proton', 2212), (u'Pion', 212), (u'Charged', 0)]
+True
+
+Get averaged pT and integrated v_3:
+>>> db.selectFromTable("inte_vn", ("pT", "vn_real", "vn_imag"), whereClause="n=3")
+[(0.36973879757754774, -0.010069782011460445, 0.02379270360546618)]
+
+Get multiplicity for total charged particles:
+>>> db.selectFromTable("multiplicities", ("N",), whereClause="pid=0")
+[(67.7,)]
+
+Get (pT, real(vn)) table for differential v_2:
+>>> db.selectFromTable("diff_vn", ("pT", "vn_real"), whereClause="n=2")
+[(0.09254586959349598, -0.0865085498282089), (0.2230454975609756, 0.05519660023016902), (0.3697138657718121, 0.08226567254348736), (0.5221993366336635, 0.17146781471001163), (0.670072, 0.006136178587808401), (0.8232357499999998, -0.004128786702717842), (0.9717935714285714, 0.09468668983488557), (1.081035, 0.32262107326181566), (1.26097, 0.35379764449038165), (1.4127966666666665, -0.5539404886975925), (1.5787820000000001, 0.03421922411074727)]
+
+>>> db.selectFromTable("spectra", ("pT", "N"))
+[(0.09254586959349598, 12.3), (0.2230454975609756, 20.5), (0.3697138657718121, 14.9), (0.5221993366336635, 10.100000000000001), (0.670072, 4.5), (0.8232357499999998, 2.4000000000000004), (0.9717935714285714, 1.4000000000000001), (1.081035, 0.2), (1.26097, 0.6000000000000001), (1.4127966666666665, 0.30000000000000004), (1.5787820000000001, 0.5)]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-------------
+Clean ups
+-------------
+
+>>> db.deleteDatabase(confirmation=True)
 True
 
 The End.

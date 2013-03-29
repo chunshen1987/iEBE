@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2
 # This package performs a sequential calculations of a given number of events,
 # after reading parameters from ParameterDict.py. The most important control
 # parameters are set in controlParameterList, for other parameters see
