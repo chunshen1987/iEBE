@@ -150,8 +150,12 @@ Get (pT, real(vn)) table for differential v_2:
 This is the high level "entry function" that collects results from "folder"'s subfolder that match the pattern "subfolderPattern", then write them into the datase under "folder" with the name "databaseFilename". The argument "collectMode" controls how data are collected. If data are from a hybrid calculation (hydro+urqmd), set it to "fromUrQMD". If data are from old pure hydrodynamics calculation, set it to "fromPureHydro". For details of what exactly this parameter affects see the docstring.
 
 Assuming that the "testData_newStyle" folder exists (should be included in the package), the following call collect the flow and multiplicity data from its two folders and create a database:
->>> collector.createDatabaseFromEventFolders("testData_newStyle")
+>>> collector.createDatabaseFromEventFolders("testData_newStyle", multiplicityFactor=0.1)
 
+The created database file "CollectedResults.db" can be examined in various ways. The following is just a simple peek:
+>>> db_tmp = DBR.SqliteDB("testData_newStyle/CollectedResults.db")
+>>> db_tmp.selectFromTable("multiplicities", ("event_id", "N"))
+[(1, 286.7), (2, 67.7)]
 
 
 
@@ -181,6 +185,8 @@ Clean ups
 -------------
 
 >>> db.deleteDatabase(confirmation=True)
+True
+>>> db_tmp.deleteDatabase(confirmation=True)
 True
 
 The End.

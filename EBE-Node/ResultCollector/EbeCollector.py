@@ -110,7 +110,7 @@ class EbeCollector:
         # collection of file name patterns, pid, and particle name. The file format is determined from the "filename_format.dat" file
         pidDict = {
             "Charged"       : 0, # particle name, pid
-            "Pion"          : 212,
+            "Pion"          : 211,
             "Kaon"          : 321,
             "Proton"        : 2212,
         }
@@ -201,7 +201,7 @@ class EbeCollector:
         pass
 
 
-    def createDatabaseFromEventFolders(self, folder, subfolderPattern="event-(\d*)", databaseFilename="CollectedResults.db", collectMode="fromUrQMD"):
+    def createDatabaseFromEventFolders(self, folder, subfolderPattern="event-(\d*)", databaseFilename="CollectedResults.db", collectMode="fromUrQMD", multiplicityFactor=1.0):
         """
             This function collect all results (ecc+flow) from subfolders
             whose name have pattern "subfolderPattern" to a database
@@ -222,16 +222,16 @@ class EbeCollector:
             "oldStyleStorage=False" in the
             collectEccentricitiesAndRIntegrals function; for flows
             collectFLowsAndMultiplicities_urqmdBinUtilityFormat will be
-            called. Also the total number of folders that match
-            subfolderPattern will be used calculated the
-            "multiplicityFactor" argument.
+            called. In this mode "multiplicityFactor" will be passed
+            along to collectFLowsAndMultiplicities_urqmdBinUtilityFormat
+            function.
 
             -- "fromPureHydro": For eccentricity it will set
             "oldStyleStorage=True" in the
             collectEccentricitiesAndRIntegrals function; for flows
             collectFLowsAndMultiplicities_iSFormat will be called.
         """
-        # get number of matched subfolders
+        # get list of (matched subfolders, event id)
         matchPattern = re.compile(subfolderPattern)
         matchedSubfolders = []
         for folder_index, aSubfolder in enumerate(listdir(folder)):
@@ -244,14 +244,13 @@ class EbeCollector:
                 else:
                     event_id = folder_index
                 matchedSubfolders.append((fullPath, event_id)) # matched!
-        numberOfIds = len(matchedSubfolders)
 
         # the data collection loop
         db = SqliteDB(path.join(folder, databaseFilename))
         if collectMode == "fromUrQMD":
             for aSubfolder, event_id in matchedSubfolders:
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db) # collect ecc
-                self.collectFLowsAndMultiplicities_urqmdBinUtilityFormat(aSubfolder, event_id, db, 1.0/numberOfIds) # collect flow
+                self.collectFLowsAndMultiplicities_urqmdBinUtilityFormat(aSubfolder, event_id, db, multiplicityFactor) # collect flow
         elif collectMode == "fromPureHydro":
             for aSubfolder, event_id in matchedSubfolders:
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=True) # collect ecc
