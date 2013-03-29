@@ -1,11 +1,9 @@
 #! /usr/bin/env bash
 
-for ii in `ls -p | grep /`
+for ii in superMC VISHNew iSS osc2u urqmd
     do
-    (cd $ii; bash ./Zmake.sh)
+    (cd $ii; make)
 done
 
-echo
-echo
 echo "Compiling finished."
 echo "Next generate jobs using generate-jobs-XXX.sh."

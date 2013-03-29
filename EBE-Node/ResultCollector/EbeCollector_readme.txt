@@ -88,6 +88,7 @@ The rest of the tables store information regarding the final states of the event
 
 The main class is the EbeCollector class, which has several member functions, each used to collect data of certain types (not necessarily corresponding to one table). Each of the collector function accepts an argument specifying the path where the data files are stored. The filenames of the data file that will be collected, as well as the format of these datafiles, are all hardcoded to these functions. The following explains them in details.
 
+
 1) collectEccentricitiesAndRIntegrals(folder, event_id, db)
 
 This function read eccentricity files from the folder "folder", then write the eccentricity and r-integral results associated to this event to the SqliteDB database "db" using event id "event_id". The eccentricity files should have names that match either "ecc-init-sd-r_power-(\d*).dat" (entropy-weighted) or "ecc-init-r_power-(\d*).dat" (energy-weighted).
@@ -105,19 +106,20 @@ We can check the tables it contains by do the following:
 
 We can inspect the eccentricity data via different ways, for example, assume we want all those real parts of the eccentricities whose value is bigger than 0.4:
 >>> db.selectFromTable("eccentricity", "ecc_real", whereClause="ecc_real>0.6")
-[(0.61667342,), (0.60969422,), (0.62655439,), (0.61452488,)]
+[(0.61452488,), (0.62655439,), (0.60969422,), (0.61667342,)]
 
 Check the lookup table:
 >>> db.selectFromTable("ecc_id_lookup") == [(1, u'sd'), (2, u'ed')]
 True
 
-2) collectFLowsAndMultiplicities_binUtilityFormat(folder, event_id, db, multiplicityFactor)
+
+2) collectFLowsAndMultiplicities_urqmdBinUtilityFormat(folder, event_id, db, multiplicityFactor)
 
 This function read flow files from the folder "folder", then write the flow and multiplicity results associated to this event to the SqliteDB database "db" using event id "event_id". The multiplicity will be multiplied by the factor "multiplicityFactor" (with oversampling, the counted number of particles is not the actual multiplicity). Acceptable file names should match "([a-zA-z]*)_flow_([a-zA-Z+]*).dat" (e.g. "integrated_flow_Charged.dat"), where the first () can be either "integrated" or "differential", and the second () should be the particle type name.
 
 For example, assuming that the "testData" folder exists (should be included in the package), the following call collect the flow and multiplicity data from it:
 
->>> collector.collectFLowsAndMultiplicities_binUtilityFormat("testData", 1, db, multiplicityFactor=0.1)
+>>> collector.collectFLowsAndMultiplicities_urqmdBinUtilityFormat("testData", 1, db, multiplicityFactor=0.1)
 
 We can check the tables it contains by do the following:
 >>> db.getAllTableNames()
@@ -138,11 +140,17 @@ Get (pT, real(vn)) table for differential v_2:
 >>> db.selectFromTable("diff_vn", ("pT", "vn_real"), whereClause="n=2")
 [(0.09254586959349598, -0.0865085498282089), (0.2230454975609756, 0.05519660023016902), (0.3697138657718121, 0.08226567254348736), (0.5221993366336635, 0.17146781471001163), (0.670072, 0.006136178587808401), (0.8232357499999998, -0.004128786702717842), (0.9717935714285714, 0.09468668983488557), (1.081035, 0.32262107326181566), (1.26097, 0.35379764449038165), (1.4127966666666665, -0.5539404886975925), (1.5787820000000001, 0.03421922411074727)]
 
+
 >>> db.selectFromTable("spectra", ("pT", "N"))
 [(0.09254586959349598, 12.3), (0.2230454975609756, 20.5), (0.3697138657718121, 14.9), (0.5221993366336635, 10.100000000000001), (0.670072, 4.5), (0.8232357499999998, 2.4000000000000004), (0.9717935714285714, 1.4000000000000001), (1.081035, 0.2), (1.26097, 0.6000000000000001), (1.4127966666666665, 0.30000000000000004), (1.5787820000000001, 0.5)]
 
 
+3) createDatabaseFromEventFolders(folder, subfolderPattern, databaseFilename, collectMode)
 
+This is the high level "entry function" that collects results from "folder"'s subfolder that match the pattern "subfolderPattern", then write them into the datase under "folder" with the name "databaseFilename". The argument "collectMode" controls how data are collected. If data are from a hybrid calculation (hydro+urqmd), set it to "fromUrQMD". If data are from old pure hydrodynamics calculation, set it to "fromPureHydro". For details of what exactly this parameter affects see the docstring.
+
+Assuming that the "testData_newStyle" folder exists (should be included in the package), the following call collect the flow and multiplicity data from its two folders and create a database:
+>>> collector.createDatabaseFromEventFolders("testData_newStyle")
 
 
 
