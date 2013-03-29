@@ -116,9 +116,9 @@ class EbeCollector:
         }
         filePattern = re.compile("([a-zA-z]*)_flow_([a-zA-Z+]*).dat") # filename pattern, the 2nd matched string needs to be among the pidTable above in order to be considered "matched"; the 1st matched string will either be "integrated" or "differential"
         tableChooser = { # will be used to decide which table to write to
-                "integrated"    :   ("inte_vn", "multiplicities"),
-                "differential"  :   ("diff_vn", "spectra"),
-            }
+            "integrated"    :   ("inte_vn", "multiplicities"),
+            "differential"  :   ("diff_vn", "spectra"),
+        }
 
         # next read in file format, which is assumed to be stored in the file "integrated_flow_format.dat" and "differential_flow_format.dat" (same)
         fmt = assignmentExprStream2IndexDict(open(path.join(folder, "integrated_flow_format.dat"))) # column index will automatically be 0-based
@@ -180,7 +180,6 @@ class EbeCollector:
 
         # close connection to commit changes
         db.closeConnection()
-
 
 
     def collectFLowsAndMultiplicities_iSFormat(self, folder, event_id, db):
