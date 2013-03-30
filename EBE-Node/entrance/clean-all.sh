@@ -1,5 +1,5 @@
 #! /usr/bin/env bash
-
+(cd ..
 for ii in `ls -p | grep /`
     do
     (cd $ii
@@ -7,3 +7,4 @@ for ii in `ls -p | grep /`
         if [ -e GNUmakefile ]; then make distclean; fi
     )
 done
+)

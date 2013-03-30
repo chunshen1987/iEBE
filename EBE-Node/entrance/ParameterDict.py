@@ -1,5 +1,5 @@
 controlParameterList = {
-    'numberOfEvents'        :   1, # how many sequential calculations
+    'numberOfEvents'        :   10, # how many sequential calculations
 }
 
 superMCParameters = {

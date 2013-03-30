@@ -36,6 +36,7 @@ controlParameterList = {
     'numberOfEvents'        :   10, # how many sequential calculations
     'rootDir'               :   path.abspath('../'),
     'resultDir'             :   path.abspath('../finalResults'), # final results will be saved here, absolute
+    'eventResultDirPattern' :   'event-%d', # %d->event_id, where event results are saved
     'eventResultDir'        :   None, # used to pass event result folder from sequentialEventDriverShell to others
     'combinedUrqmdFile'     :   'urqmdCombined.txt', # urqmd from all events will be combined into this file
     'buildCMD'              :   'make build',
@@ -126,6 +127,15 @@ binUtilitiesControl = {
     'executable'            :   'urqmdBinShell.py',
 }
 binUtilitiesParameters = {}
+
+EbeCollectorControl = {
+    'mainDir'               :   'EbeCollector',
+    'executable'            :   'EbeCollectorShell_hydroWithUrQMD.py',
+}
+EbeCollectorParameters = {
+    'subfolderPattern'      :   '"event-(\d*)"',
+    'databaseFilename'      :   'collected.db',
+}
 
 def readInParameters():
     """ Overwrite default parameter lists with those in ParameterDict. """
@@ -354,6 +364,18 @@ def binUrqmdResultFiles(urqmdOutputFile):
         if aFile in worthStoring:
             move(aFile, controlParameterList['eventResultDir'])
 
+def collectEbeResultsToDatabaseFrom(folder):
+    """
+        Collect the mostly used results from subfolders that contain hydro
+        results into a database, including ecc and flow etc.
+    """
+    # set directory strings
+    collectorDirectory = path.join(controlParameterList['rootDir'], EbeCollectorControl['mainDir'])
+    collectorExecutable = EbeCollectorControl['executable']
+
+    # for executable string
+    executableString = "./" + collectorExecutable + " %s %g %s %s" % (folder, 1.0/iSSParameters['number_of_repeated_sampling'], EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+    run(executableString, cwd=collectorDirectory)
 
 def formAssignmentStringFromDict(aDict):
     """
@@ -418,7 +440,7 @@ def sequentialEventDriverShell():
         for aInitialConditionFile in generateSuperMCInitialConditions(controlParameterList['numberOfEvents']):
             # get the result folder name for storing results, then create it if necessary
             event_id += 1
-            eventResultDir = path.join(resultDir, 'event-%d' % event_id)
+            eventResultDir = path.join(resultDir, controlParameterList['eventResultDirPattern'] % event_id)
             controlParameterList['eventResultDir'] = eventResultDir
             if path.exists(eventResultDir):
                 rmtree(eventResultDir)
@@ -444,6 +466,8 @@ def sequentialEventDriverShell():
             # bin the combined result file to get flows
             binUrqmdResultFiles(urqmdOutputFilePath)
 
+        # collect mostly used data into a database
+        collectEbeResultsToDatabaseFrom(resultDir)
 
     except ExecutionError as e:
         print e
