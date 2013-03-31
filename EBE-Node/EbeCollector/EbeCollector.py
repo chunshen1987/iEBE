@@ -136,7 +136,7 @@ class EbeCollector:
 
         # first write the pid_lookup table, makes sure there is only one such table
         if db.createTableIfNotExists("pid_lookup", ("name", "pid"), ("text","integer")):
-            db.insertIntoTable("pid_lookup", pidDict.items())
+            db.insertIntoTable("pid_lookup", list(pidDict.items()))
 
         # next create various tables
         db.createTableIfNotExists("inte_vn",

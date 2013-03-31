@@ -40,8 +40,8 @@ use_bin_processes = {
 
 #-----------------------------------------------------------------------------------
 # define reusable bins
-pTBin = binUtilities.SingleVarBin(FLL(strStream2BlockStream(file(pTBin_table_filename))),  pT_has_name) # for differential
-pTAll = binUtilities.SingleVarBin(FLL(strStream2BlockStream(file(pTAll_table_filename))),  pT_has_name) # for integrated
+pTBin = binUtilities.SingleVarBin(FLL(strStream2BlockStream(open(pTBin_table_filename))),  pT_has_name) # for differential
+pTAll = binUtilities.SingleVarBin(FLL(strStream2BlockStream(open(pTAll_table_filename))),  pT_has_name) # for integrated
 
 # define reuable actions
 returnPT = binUtilities.SingleVarValue(pT_has_name) # generate mean pT
@@ -117,7 +117,7 @@ def binISSDataFile(data_filename, format_filename, data_block_size_filename=None
     if use_bin_processes["calculate integrated flow"]: useBinProcesses.extend([integratedFlow])
     if use_bin_processes["count particles in pT range"]: useBinProcesses.extend([countParticleNumberInPTRange])
     # get data format
-    raw_format = assignmentFormat.assignmentExprStream2IndexDict(file(format_filename))
+    raw_format = assignmentFormat.assignmentExprStream2IndexDict(open(format_filename))
 
     # call binDataStream function to finish the binning
-    binUtilities.binDataStream(file(data_filename), raw_format, useBinProcesses)
+    binUtilities.binDataStream(open(data_filename), raw_format, useBinProcesses)

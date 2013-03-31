@@ -21,7 +21,7 @@ def formatUrqmdOutputFile(urqmdOutputFilePath, formattedFilePath):
         return False
 
     # check output file
-    formattedFileHandler = file(formattedFilePath, 'w')
+    formattedFileHandler = open(formattedFilePath, 'w')
     if not formattedFileHandler:
         print("Cannot create file "+formattedFileHandler+" for output.")
         return False
@@ -30,7 +30,7 @@ def formatUrqmdOutputFile(urqmdOutputFilePath, formattedFilePath):
     read_mode = "header_first_part"
     header_count = 1 # the first read line is already part of the header line
     data_row_count = 0
-    for aLine in file(urqmdOutputFilePath):
+    for aLine in open(urqmdOutputFilePath):
         if read_mode=="header_first_part":
             if header_count <= 14: # skip first 14 lines
                 header_count += 1

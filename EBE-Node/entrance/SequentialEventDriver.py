@@ -325,7 +325,7 @@ def urqmdFromOsc2uOutputFile(osc2uFilePath):
     # check existence of the osc2u output, move it then execute urqmd
     if path.exists(osc2uFilePath):
         move(osc2uFilePath, urqmdIC)
-        run("./"+urqmdExecutionEntry, cwd=urqmdDirectory)
+        run("bash ./"+urqmdExecutionEntry, cwd=urqmdDirectory)
 
     # save output file
     if urqmdControl['saveOutputFile']:
@@ -352,7 +352,7 @@ def binUrqmdResultFiles(urqmdOutputFile):
         raise ExecutionError("URQMD output file %s not found!" % urqmdOutputFile)
 
     # form executable string
-    executableString = "./" + binUExecutable + " " + urqmdOutputFile
+    executableString = "python ./" + binUExecutable + " " + urqmdOutputFile
     # execute!
     run(executableString, cwd=binUDirectory)
 
@@ -374,7 +374,7 @@ def collectEbeResultsToDatabaseFrom(folder):
     collectorExecutable = EbeCollectorControl['executable']
 
     # for executable string
-    executableString = "./" + collectorExecutable + " %s %g %s %s" % (folder, 1.0/iSSParameters['number_of_repeated_sampling'], EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+    executableString = "python ./" + collectorExecutable + " %s %g %s %s" % (folder, 1.0/iSSParameters['number_of_repeated_sampling'], EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     run(executableString, cwd=collectorDirectory)
 
 def formAssignmentStringFromDict(aDict):
@@ -461,7 +461,7 @@ def sequentialEventDriverShell():
 
             # copy and concatnate final results from all events into one file
             combinedUrqmdFile = path.join(controlParameterList['resultDir'], controlParameterList['combinedUrqmdFile'])
-            file(combinedUrqmdFile, 'aw').writelines(file(urqmdOutputFilePath).readlines())
+            open(combinedUrqmdFile, 'a').writelines(open(urqmdOutputFilePath).readlines())
 
             # bin the combined result file to get flows
             binUrqmdResultFiles(urqmdOutputFilePath)
@@ -470,9 +470,8 @@ def sequentialEventDriverShell():
         collectEbeResultsToDatabaseFrom(resultDir)
 
     except ExecutionError as e:
-        print e
         print("Errors encountered during execution, aborting.")
-        return
+        raise
     finally:
         print("Thank you for using. Zhi Qiu, 2013-02")
 
