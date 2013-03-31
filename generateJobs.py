@@ -5,7 +5,6 @@
     be compiled.
 """
 
-
 from sys import argv, exit
 from os import makedirs, path
 from shutil import copytree, copy, rmtree
@@ -45,18 +44,22 @@ if not path.exists(resultsFolder): makedirs(resultsFolder)
 if path.exists(workingFolder): rmtree(workingFolder)
 makedirs(workingFolder)
 
-# copy parameter file into the entrance folder
-copy("./ParameterDict.py", "./EBE-Node/entrance")
+ebeNodeFolder = "EBE-Node"
+crankFolderName = "crank"
+crankFolder = path.join(ebeNodeFolder, crankFolderName)
+
+# copy parameter file into the crank folder
+copy("ParameterDict.py", crankFolder)
 
 # backup parameter files to the result folder
-copy("./EBE-Node/entrance/SequentialEventDriver.py", resultsFolder)
-copy("./EBE-Node/entrance/ParameterDict.py", resultsFolder)
+copy(path.join(crankFolder, "SequentialEventDriver.py"), resultsFolder)
+copy(path.join(crankFolder, "ParameterDict.py"), resultsFolder)
 
 # duplicate EBE-Node folder to working directory, write .pbs file
 for i in range(1, numberOfJobs+1):
     targetWorkingFolder = path.join(workingFolder, "job-%d" % i)
     # copy folder
-    copytree("./EBE-Node", targetWorkingFolder)
+    copytree(ebeNodeFolder, targetWorkingFolder)
     open(path.join(targetWorkingFolder, "job-%d.pbs" % i), "w").write(
 """
 #!/usr/bin/env bash
@@ -64,18 +67,18 @@ for i in range(1, numberOfJobs+1):
 #PBS -l walltime=%s
 #PBS -j oe
 #PBS -S /bin/bash
-(cd entrance
-    python ./SequentialEventDriver_shell.py %d | tee RunRecord.txt
-    mv RunRecord.txt ../finalResults/
+(cd %s
+    python ./SequentialEventDriver_shell.py %d 1> RunRecord.txt 2>ErrorRecord.txt
+    cp RunRecord.txt ErrorRecord.txt ../finalResults/
 )
 mv ./finalResults %s/job-%d
-""" % (i, walltime, numberOfEventsPerJob, resultsFolder, i)
+""" % (i, walltime, crankFolderName, numberOfEventsPerJob, resultsFolder, i)
     )
     if compressResultsFolderAnswer == "yes":
         open(path.join(targetWorkingFolder, "job-%d.pbs" % i), "a").write(
 """
 (cd %s
-zip -r -m job-%d.zip job-%d
+zip -r -m job-%d.zip job-%d &>> ZipRecord.txt
 )
 """ % (resultsFolder, i, i)
         )

@@ -437,6 +437,8 @@ def sequentialEventDriverShell():
 
         # generate initial conditions then loop over initial conditions
         event_id = 0
+        # print current progress to terminal
+        print("PROGRESS: %d events out of %d finished." % (event_id, controlParameterList['numberOfEvents']))
         for aInitialConditionFile in generateSuperMCInitialConditions(controlParameterList['numberOfEvents']):
             # get the result folder name for storing results, then create it if necessary
             event_id += 1
@@ -446,6 +448,8 @@ def sequentialEventDriverShell():
                 rmtree(eventResultDir)
             makedirs(eventResultDir)
 
+            # print current progress to terminal
+            print("Starting event %d..." % event_id)
 
             # perform hydro calculations and get a list of all the result filenames
             hydroResultFiles = [aFile for aFile in hydroWithInitialCondition(aInitialConditionFile)]
@@ -465,6 +469,9 @@ def sequentialEventDriverShell():
 
             # bin the combined result file to get flows
             binUrqmdResultFiles(urqmdOutputFilePath)
+
+            # print current progress to terminal
+            print("PROGRESS: %d events out of %d finished." % (event_id, controlParameterList['numberOfEvents']))
 
         # collect mostly used data into a database
         collectEbeResultsToDatabaseFrom(resultDir)
