@@ -10,9 +10,6 @@ import re
 from DBR import SqliteDB
 from assignmentFormat import assignmentExprStream2IndexDict
 
-dbHolder = SqliteDB()
-
-
 class EbeCollector:
     """
         This class contains functions that collect results from event-by-event
@@ -54,19 +51,13 @@ class EbeCollector:
         r_inte_col = 3 # r-integral
 
         # first write the ecc_id_lookup table, makes sure there is only one such table
-        if db.createTableIfNotExists("ecc_id_lookup", ("ecc_id", "ecc_type_name"), ("integer", "text")):
+        if db.createTableIfNotExists("ecc_id_lookup", (("ecc_id","integer"), ("ecc_type_name","text"))):
             for pattern, ecc_id, ecc_type_name in typeCollections:
                 db.insertIntoTable("ecc_id_lookup", (ecc_id, ecc_type_name))
 
         # next create the eccentricity and r_integrals table, if not existing
-        db.createTableIfNotExists("eccentricity",
-                                    ("event_id", "ecc_id", "r_power", "n", "ecc_real", "ecc_imag"),
-                                    ("integer", "integer", "integer", "integer", "real", "real")
-                                )
-        db.createTableIfNotExists("r_integrals",
-                                    ("event_id", "ecc_id", "r_power", "r_inte"),
-                                    ("integer", "integer", "integer", "real", "real")
-                                )
+        db.createTableIfNotExists("eccentricity", (("event_id","integer"), ("ecc_id", "integer"), ("r_power", "integer"), ("n","integer"), ("ecc_real","real"), ("ecc_imag","real")))
+        db.createTableIfNotExists("r_integrals", (("event_id","integer"), ("ecc_id","integer"), ("r_power","integer"), ("r_inte","real")))
 
         # the big loop
         for aFile in listdir(folder): # get all file names
@@ -135,26 +126,14 @@ class EbeCollector:
             largest_n += 1
 
         # first write the pid_lookup table, makes sure there is only one such table
-        if db.createTableIfNotExists("pid_lookup", ("name", "pid"), ("text","integer")):
+        if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
             db.insertIntoTable("pid_lookup", list(pidDict.items()))
 
         # next create various tables
-        db.createTableIfNotExists("inte_vn",
-                                    ("event_id", "pid", "pT", "n", "vn_real", "vn_imag"),
-                                    ("integer", "integer", "real", "integer", "real", "real")
-                                )
-        db.createTableIfNotExists("diff_vn",
-                                    ("event_id", "pid", "pT", "n", "vn_real", "vn_imag"),
-                                    ("integer", "integer", "real", "integer", "real", "real")
-                                )
-        db.createTableIfNotExists("multiplicities",
-                                    ("event_id", "pid", "pT", "N"),
-                                    ("integer", "integer", "real", "real")
-                                )
-        db.createTableIfNotExists("spectra",
-                                    ("event_id", "pid", "pT", "N"),
-                                    ("integer", "integer", "real", "real")
-                                )
+        db.createTableIfNotExists("inte_vn", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("diff_vn", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("multiplicities", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("N","real")))
+        db.createTableIfNotExists("spectra", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("N","real")))
 
         # the big loop
         for aFile in listdir(folder): # get all file names
@@ -256,6 +235,28 @@ class EbeCollector:
                 self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db) # collect flow
 
 
+    def mergeDatabases(self, toDB, fromDB):
+        """
+            Meger the database "fromDB" to "toDB"; both are assumed to be
+            databases created from ebe calculations, meaning that they only
+            contain tables specified in EbeCollector_readme.
+        """
+        for aTable in fromDB.getAllTableNames():
+            # first copy table structure
+            firstCreation = toDB.createTableIfNotExists(aTable, fromDB.getTableInfo(aTable))
+            if firstCreation:
+                # just copy
+                toDB.insertIntoTable(aTable, fromDB.selectFromTable(aTable))
+            else: # treatment depends on table type
+                if "lookup" in aTable: continue # if it's a lookup table, nothing to be done
+                # not a lookup table: shift up event_id by the current existing max
+                currentEventIdMax = toDB.selectFromTable(aTable, "max(event_id)")[0][0]
+                def shiftEID(row):
+                    newRow = list(row)
+                    newRow[0] += currentEventIdMax
+                    return newRow
+                toDB.insertIntoTable(aTable, list(map(shiftEID, fromDB.selectFromTable(aTable))))
+        toDB.closeConnection() # commit
 
 
 if __name__ == '__main__':

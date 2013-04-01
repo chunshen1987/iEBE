@@ -104,9 +104,9 @@ We can check the tables it contains by do the following:
 >>> db.getAllTableNames()
 [u'ecc_id_lookup', u'eccentricity', u'r_integrals']
 
-We can inspect the eccentricity data via different ways, for example, assume we want all those real parts of the eccentricities whose value is bigger than 0.4:
->>> db.selectFromTable("eccentricity", "ecc_real", whereClause="ecc_real>0.6")
-[(0.61452488,), (0.62655439,), (0.60969422,), (0.61667342,)]
+We can inspect the eccentricity data via different ways, for example, assume we want all those real parts of the eccentricities whose value is bigger than 0.6:
+>>> set(db.selectFromTable("eccentricity", "ecc_real", whereClause="ecc_real>0.6")) == set([(0.61667342,), (0.60969422,), (0.62655439,), (0.61452488,)])
+True
 
 Check the lookup table:
 >>> db.selectFromTable("ecc_id_lookup") == [(1, u'sd'), (2, u'ed')]
@@ -125,8 +125,8 @@ We can check the tables it contains by do the following:
 >>> db.getAllTableNames()
 [u'ecc_id_lookup', u'eccentricity', u'r_integrals', u'pid_lookup', u'inte_vn', u'diff_vn', u'multiplicities', u'spectra']
 
->>> db.selectFromTable("pid_lookup") == [(u'Kaon', 321), (u'Proton', 2212), (u'Pion', 212), (u'Charged', 0)]
-True
+>>> db.selectFromTable("pid_lookup")
+[(u'Kaon', 321), (u'Proton', 2212), (u'Pion', 211), (u'Charged', 0)]
 
 Get averaged pT and integrated v_3:
 >>> db.selectFromTable("inte_vn", ("pT", "vn_real", "vn_imag"), whereClause="n=3")
@@ -154,10 +154,24 @@ Assuming that the "testData_newStyle" folder exists (should be included in the p
 
 The created database file "CollectedResults.db" can be examined in various ways. The following is just a simple peek:
 >>> db_tmp = DBR.SqliteDB("testData_newStyle/CollectedResults.db")
->>> db_tmp.selectFromTable("multiplicities", ("event_id", "N"))
-[(1, 286.7), (2, 67.7)]
+>>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"))) == set([(1, 286.7), (2, 67.7)])
+True
 
 
+4) mergeDatabases(toDatabase, fromDatabase)
+
+This function merges the database "fromDatabase" into "toDatabase". The rule is that is a table is a lookup table (name contains "lookup"), then it is copied only if it does not exist in the target database already; otherwise the table must have a field called "event_id" and this field will be shifted up by the previous max value before merging.
+
+For example, we first create another copy of the database using data under testData_newStyle:
+>>> from shutil import copy
+>>> copy("testData_newStyle/CollectedResults.db", "testData_newStyle/CollectedResults_copy.db")
+
+Then we merge them:
+>>> collector.mergeDatabases(DBR.SqliteDB("testData_newStyle/CollectedResults.db"), DBR.SqliteDB("testData_newStyle/CollectedResults_copy.db"))
+
+Then examine it:
+>>> set(DBR.SqliteDB("testData_newStyle/CollectedResults.db").selectFromTable("multiplicities", ("event_id", "N"))) == set([(2, 67.7), (1, 286.7), (4, 67.7), (3, 286.7)])
+True
 
 
 
@@ -186,7 +200,9 @@ Clean ups
 
 >>> db.deleteDatabase(confirmation=True)
 True
->>> db_tmp.deleteDatabase(confirmation=True)
+>>> DBR.SqliteDB("testData_newStyle/CollectedResults.db").deleteDatabase(confirmation=True)
+True
+>>> DBR.SqliteDB("testData_newStyle/CollectedResults_copy.db").deleteDatabase(confirmation=True)
 True
 
 The End.

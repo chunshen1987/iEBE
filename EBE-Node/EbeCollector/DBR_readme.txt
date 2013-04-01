@@ -36,7 +36,7 @@ True
 To create a table with a given name use the createTableIfNotExists function, to check if a table exists use the doesTableExist function, and to return a list of all the table names use the getAllTableNames member function. For example:
 
 >>> db.registerDatabase("tmp_test_database.db")
->>> db.createTableIfNotExists("employee", ("id", "name"), ("int primary key", "char(20)")) # doctest: +ELLIPSIS
+>>> db.createTableIfNotExists("employee", (("id", "integer"), ("name", "text"))) # doctest: +ELLIPSIS
 <sqlite3.Cursor object ...>
 >>> db.doesTableExist("employee")
 True
@@ -45,20 +45,20 @@ False
 >>> db.getAllTableNames() == ['employee']
 True
 
-The createTableIfNotExists function accepts a table name, a list of column names, and a list of column data types. Inside the type string any valid SQL commands can be used (otherwise an OperationalError exception will be raised). For example, when creating tables, the table name cannot contain blank spaces:
->>> db.createTableIfNotExists("id and name", ("id", "name"), ("int primary key", "char(20)"))
+The createTableIfNotExists function accepts a table name, a field name-type list. Both strings must be valid SQL commands, otherwise an OperationalError exception will be raised. For example, when creating tables, the table name cannot contain blank spaces:
+>>> db.createTableIfNotExists("id and name", (("id", "integer"), ("name", "text")))
 Traceback (most recent call last):
     ...
 OperationalError: SQL table name cannot contain blanks
 
 For another example an exception will be raised when there a SQL syntax error:
->>> db.createTableIfNotExists("tableWillNotBeCreated", ("id"), ("int primary keys")) # should be "key", not "keys"
+>>> db.createTableIfNotExists("tableWillNotBeCreated", ("id", "int primary keys")) # should be "key", not "keys"
 Traceback (most recent call last):
     ...
 OperationalError: near "keys": syntax error
 
 The createTableIfNotExists function, as its name suggests, will only create a table when it does not exist:
->>> db.createTableIfNotExists("employee", ("id", "name"), ("int primary key", "char(20)"))
+>>> db.createTableIfNotExists("employee", (("id", "integer"), ("name", "text")))
 False
 
 ----------------------------
@@ -124,7 +124,7 @@ For a more fancy example, the following code return name and id for all the empl
 
 To obtain a list of all the fields in a table, use the getTableInfo function. It returns a list of tuples of the form (field name, field type). For example:
 >>> db.getTableInfo("employee")
-[(u'id', u'int'), (u'name', u'char(20)')]
+[(u'id', u'integer'), (u'name', u'text')]
 
 For convenience another function unpackDatabase is also provided. It role is to write out all the tables from a database into separated files. Each file assumes the name of the table it contains; other details for tunable via arguments, like the string used to separate data, whether to include a header, etc. For example:
 >>> db.unpackDatabase(sep=",", ext=".dat")
@@ -157,7 +157,7 @@ As mentioned upon closing of a connection all changes will ge written to the dat
 
 First is an example that writes to a database before closing.
 >>> db.registerDatabase("myDatabase.db") # this opens a connection
->>> db.createTableIfNotExists("integer", ("i",), ("int",)) # creates a single table #doctest: +ELLIPSIS
+>>> db.createTableIfNotExists("integer", ("i", "int")) # creates a single table #doctest: +ELLIPSIS
 <sqlite3.Cursor object at ...>
 >>> db.insertIntoTable("integer", ((1,), (2,), (3,), (4,), (5,))) # insert values into the table #doctest: +ELLIPSIS
 <sqlite3.Cursor object at ...>
@@ -170,7 +170,7 @@ True
 
 Next is an example that discard changes upon closing.
 >>> db.registerDatabase("myDatabase.db") # this opens a connection
->>> db.createTableIfNotExists("integer", ("i",), ("int",)) # creates a single table #doctest: +ELLIPSIS
+>>> db.createTableIfNotExists("integer", ("i", "int")) # creates a single table #doctest: +ELLIPSIS
 <sqlite3.Cursor object at ...>
 >>> db.insertIntoTable("integer", ((1,), (2,), (3,), (4,), (5,))) # insert values into the table #doctest: +ELLIPSIS
 <sqlite3.Cursor object at ...>
@@ -186,5 +186,7 @@ True
 Clean ups
 -------------
 >>> unlink("myAnotherDatabase.db")
+>>> unlink("employee.dat")
+>>> unlink("integer.dat")
 
 The END

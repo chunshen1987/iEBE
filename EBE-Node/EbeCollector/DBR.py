@@ -112,28 +112,24 @@ class SqliteDB(object):
         """
         return tableName in self.getAllTableNames()
 
-    def createTableIfNotExists(self, tableName, nameList, dataTypeStringList):
+    def createTableIfNotExists(self, tableName, nameAndTypeList):
         """
             Create a table with name "tableName" if it does not exist already.
-            The argument "nameList" is a list of strings that specifies the
-            names of the columns, and the argument "dataTypeStringList" is a
-            list of strings that specifies the corresponding data types. For
-            example:
-            nameList=["id", "name"], dataTypeStringList=["int", "char(8)"].
-            Returns True if the table already exists, otherwise False.
+            The argument "nameAndTypeList" is a list of pair of strings that
+            specifies the names and data type of the columns. For example:
+            (("id", "integer"), ("name", "text")).
+            Returns False if the table already exists.
         """
         # check if table name is legal
         tableName = tableName.strip()
         if " " in tableName:
             raise sqlite3.OperationalError("SQL table name cannot contain blanks")
         # refine input arguments
-        if not ListRNew.isIterable(nameList):
-            nameList = [nameList]
-        if not ListRNew.isIterable(dataTypeStringList):
-            dataTypeStringList = [dataTypeStringList]
+        if not ListRNew.isIterable(nameAndTypeList[0]):
+            nameAndTypeList = [nameAndTypeList]
         # create the table
         if not self.doesTableExist(tableName):
-            return self._executeSQL( "create table %s (%s)" % (tableName, ",".join(map(" ".join, zip(nameList, dataTypeStringList)))) )
+            return self._executeSQL( "create table %s (%s)" % (tableName, ",".join(map(" ".join, nameAndTypeList))) )
         else:
             return False
 
