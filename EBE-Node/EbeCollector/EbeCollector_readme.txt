@@ -1,7 +1,7 @@
 
-================================
-    Document for EBER Module
-================================
+========================================
+    Document for EbeCollector Module
+========================================
 
 The EBER module is designed to collect various text data files generated during event-by-event hybrid calculations into a single database file, which contains several tables for different quantities of interest, for all events.
 

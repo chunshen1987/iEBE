@@ -10,9 +10,11 @@
 """
 
 from sys import argv, exit
+from os import path, listdir, remove, removedirs
+from subprocess import call
 
 try:
-    parentFolder = argv[1]
+    parentFolder = path.abspath(argv[1])
 except:
     print("Usage: combineEbeDatabases.py parent_folder [database_filename]")
     exit()
@@ -23,8 +25,6 @@ if len(argv)>=3:
 else:
     databaseFilename = "collected.db"
 
-from os import path, listdir, remove, removedirs
-from subprocess import call
 # loop over subdirectories and extract zip files
 toBeDeleted = [] # will remove these directories
 for aZipFile in listdir(parentFolder):

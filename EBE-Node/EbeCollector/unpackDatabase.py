@@ -11,11 +11,12 @@ if len(argv)<2:
     exit(-1)
 
 # next call the function from SqliteDB
+from os import path
 from DBR import SqliteDB
 
 # get write-to folder
 if len(argv)>=3:
-    unpackToFolder = argv[2]
+    unpackToFolder = path.abspath(argv[2])
 else:
     unpackToFolder = "."
 

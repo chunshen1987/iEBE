@@ -4,14 +4,21 @@
     path.
 """
 
-from sys import argv
+from sys import argv, exit
 from os import path, listdir
 
 # get optional arguments
 if len(argv)>=2:
-    targetWorkingDirectory = argv[1]
+    targetWorkingDirectory = path.abspath(argv[1])
 else:
     targetWorkingDirectory = "PlayGround"
+
+# check existence of target working directory
+if path.exists(targetWorkingDirectory):
+    print("Start submitting jobs from %s" % targetWorkingDirectory)
+else:
+    print("Usage: submitJobs [from_directory=PlayGround]")
+    exit()
 
 from subprocess import Popen
 

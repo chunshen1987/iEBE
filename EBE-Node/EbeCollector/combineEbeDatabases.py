@@ -8,14 +8,14 @@
 """
 
 from sys import argv, exit
+from os import path, listdir
 
 try:
-    parentFolder = argv[1]
+    parentFolder = path.abspath(argv[1])
 except:
     print("Usage: combineEbeDatabases.py parent_folder")
     exit()
 
-from os import path, listdir
 from DBR import SqliteDB
 from EbeCollector import EbeCollector
 collector = EbeCollector()
