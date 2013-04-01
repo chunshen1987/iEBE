@@ -69,7 +69,7 @@ if not checkCommand("zip --help", "zip") or not checkCommand("unzip --help", "un
 
 # check numpy
 if not checkModule("numpy"):
-    finalMsgs.append("You need to install the python numpy package.")
+    finalMsgs.append("You need to install python numpy package.")
 
 # print final messages
 print("-"*80)
