@@ -68,7 +68,7 @@ for i in range(1, numberOfJobs+1):
 #PBS -j oe
 #PBS -S /bin/bash
 (cd %s
-    python ./SequentialEventDriver_shell.py %d 1> RunRecord.txt 2>ErrorRecord.txt
+    stdbuf -o100 python ./SequentialEventDriver_shell.py %d 1> RunRecord.txt 2>ErrorRecord.txt
     cp RunRecord.txt ErrorRecord.txt ../finalResults/
 )
 mv ./finalResults %s/job-%d

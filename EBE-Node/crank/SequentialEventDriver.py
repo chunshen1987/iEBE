@@ -82,7 +82,7 @@ hydroParameters = {
     'vis'       :   0.08,
     'iLS'       :   130,
     'T0'        :   0.6, # tau_0
-    'Edec'      :   0.18,
+    'Edec'      :   0.3, # 0.3->160 MeV, 0.18->120 MeV
     'factor'    :   1.0
 }
 

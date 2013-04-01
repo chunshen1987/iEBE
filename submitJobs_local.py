@@ -15,7 +15,7 @@ else:
 
 # check existence of target working directory
 if path.exists(targetWorkingDirectory):
-    print("Start submitting jobs from %s" % targetWorkingDirectory)
+    print("Start submitting jobs from %s..." % targetWorkingDirectory)
 else:
     print("Usage: submitJobs [from_directory=PlayGround]")
     exit()
