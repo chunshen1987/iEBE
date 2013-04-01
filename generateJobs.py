@@ -68,7 +68,7 @@ for i in range(1, numberOfJobs+1):
 #PBS -j oe
 #PBS -S /bin/bash
 (cd %s
-    stdbuf -o100 python ./SequentialEventDriver_shell.py %d 1> RunRecord.txt 2>ErrorRecord.txt
+    python ./SequentialEventDriver_shell.py %d 1> RunRecord.txt 2>ErrorRecord.txt
     cp RunRecord.txt ErrorRecord.txt ../finalResults/
 )
 mv ./finalResults %s/job-%d
@@ -78,7 +78,7 @@ mv ./finalResults %s/job-%d
         open(path.join(targetWorkingFolder, "job-%d.pbs" % i), "a").write(
 """
 (cd %s
-zip -r -m job-%d.zip job-%d &>> ZipRecord.txt
+zip -r -m -q job-%d.zip job-%d
 )
 """ % (resultsFolder, i, i)
         )
