@@ -7,6 +7,7 @@
 
 from os import path, listdir
 import re
+import numpy as np
 from DBR import SqliteDB
 from assignmentFormat import assignmentExprStream2IndexDict
 
@@ -15,6 +16,25 @@ class EbeCollector:
         This class contains functions that collect results from event-by-event
         calculations into databases.
     """
+    def __init__(self):
+        """
+            Define class-wise constants and tables.
+        """
+        self.pidDict = { # particle_name, pid
+            "charged"           :   1,
+            "pion_p"            :   6,
+            "kaon_m"            :   11,
+            "proton"            :   16,
+
+            "charged_hydro"     :   101,
+            "pion_p_hydro"      :   106,
+            "kaon_m_hydro"      :   111,
+            "proton_hydro"      :   116,
+
+            "pion_p_thermal"    :   206,
+            "kaon_m_thermal"    :   211,
+            "proton_thermal"    :   216,
+        }
 
     def collectEccentricitiesAndRIntegrals(self, folder, event_id, db, oldStyleStorage=False):
         """
@@ -99,13 +119,14 @@ class EbeCollector:
             for urqmd.
         """
         # collection of file name patterns, pid, and particle name. The file format is determined from the "filename_format.dat" file
-        pidDict = {
-            "Charged"       : 0, # particle name, pid
-            "Pion"          : 211,
-            "Kaon"          : 321,
-            "Proton"        : 2212,
+        toCollect = {
+            "Charged"       :   "charged", # string in filename, particle name
+            "pion_p"        :   "pion_p",
+            "Kaon_m"        :   "kaon_m",
+            "proton"        :   "proton",
         }
-        filePattern = re.compile("([a-zA-z]*)_flow_([a-zA-Z+]*).dat") # filename pattern, the 2nd matched string needs to be among the pidTable above in order to be considered "matched"; the 1st matched string will either be "integrated" or "differential"
+        toCollect_keys = toCollect.keys()
+        filePattern = re.compile("([a-zA-z]*)_flow_([a-zA-Z+]*).dat") # filename pattern, the 2nd matched string needs to be among the toCollect.keys() above in order to be considered "matched"; the 1st matched string will either be "integrated" or "differential"
         tableChooser = { # will be used to decide which table to write to
             "integrated"    :   ("inte_vn", "multiplicities"),
             "differential"  :   ("diff_vn", "spectra"),
@@ -127,41 +148,52 @@ class EbeCollector:
 
         # first write the pid_lookup table, makes sure there is only one such table
         if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
-            db.insertIntoTable("pid_lookup", list(pidDict.items()))
+            db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
 
         # next create various tables
-        db.createTableIfNotExists("inte_vn", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("inte_vn", (("event_id","integer"), ("pid","integer"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
         db.createTableIfNotExists("diff_vn", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
-        db.createTableIfNotExists("multiplicities", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("N","real")))
+        db.createTableIfNotExists("multiplicities", (("event_id","integer"), ("pid","integer"), ("N","real")))
         db.createTableIfNotExists("spectra", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("N","real")))
 
         # the big loop
         for aFile in listdir(folder): # get all file names
             matchResult = filePattern.match(aFile) # try to match file names
             if not matchResult: continue # not matched!
-            flow_type, particle_name = matchResult.groups() # indicated by the file name
-            if particle_name not in pidDict.keys(): continue # dont know about this particle
-            pid = pidDict[particle_name] # get pid
+            flow_type, particle_string_infile = matchResult.groups() # indicated by the file name
+            if particle_string_infile not in toCollect_keys: continue # dont know about this particle
+            pid = self.pidDict[toCollect[particle_string_infile]] # get pid
             filename = matchResult.group() # get the file to be opened
             flow_table, multiplicity_table = tableChooser[flow_type] # choose tables to write to
             # read the flow file and write results
             for aLine in open(path.join(folder, filename)):
                 data = aLine.split()
-                # write flow table
-                for n in range(1, largest_n):
-                    db.insertIntoTable(flow_table,
-                                        (event_id, pid, float(data[pT_col]), n, float(data[vn_real_cols[n]]), float(data[vn_imag_cols[n]]))
-                                    )
-                # write multiplicity table
-                db.insertIntoTable(multiplicity_table,
-                                        (event_id, pid, float(data[pT_col]), float(data[N_col])*multiplicityFactor)
-                                    )
+                if flow_type == "integrated": # for integrated flow and multiplicity; no pT info
+                    # write flow table
+                    for n in range(1, largest_n):
+                        db.insertIntoTable(flow_table,
+                                            (event_id, pid, n, float(data[vn_real_cols[n]]), float(data[vn_imag_cols[n]]))
+                                        )
+                    # write multiplicity table
+                    db.insertIntoTable(multiplicity_table,
+                                            (event_id, pid, float(data[N_col])*multiplicityFactor)
+                                        )
+                elif flow_type == "differential": # for differential flow and multiplicity
+                    # write flow table
+                    for n in range(1, largest_n):
+                        db.insertIntoTable(flow_table,
+                                            (event_id, pid, float(data[pT_col]), n, float(data[vn_real_cols[n]]), float(data[vn_imag_cols[n]]))
+                                        )
+                    # write spectra table
+                    db.insertIntoTable(multiplicity_table,
+                                            (event_id, pid, float(data[pT_col]), float(data[N_col])*multiplicityFactor)
+                                        )
 
         # close connection to commit changes
         db.closeConnection()
 
 
-    def collectFLowsAndMultiplicities_iSFormat(self, folder, event_id, db):
+    def collectFLowsAndMultiplicities_iSFormat(self, folder, event_id, db, useSubfolder="spectra"):
         """
             This function collects integrated and differential flows data
             and multiplicity and spectra data from "folder" into the
@@ -173,10 +205,75 @@ class EbeCollector:
             This funtion should only be applied to a folder where flow
             files are generated by the iS (or iSS with calculate flow
             mode) module as in pure hydro calculations. As such, the
-            subfolder name "spectra" will be appended to "folder"
+            subfolder name "useSubfolder" will be appended to "folder"
             automatically.
         """
-        pass
+        # add one more sub-directory
+        folder = path.join(folder, useSubfolder)
+
+        # collection of file name patterns, pid, and particle name. The file format is determined from the "filename_format.dat" file
+        toCollect = {
+            "Charged"       :   "charged_hydro", # string in filename, particle name
+            "Pion"          :   "pion_p_hydro",
+            "Kaon"          :   "kaon_m_hydro",
+            "Proton"        :   "proton_hydro",
+            "thermal_211"   :   "pion_p_thermal",
+            "thermal_321"   :   "kaon_m_thermal",
+            "thermal_2212"  :   "proton_thermal",
+        }
+        filename_inte = "%s_integrated_vndata.dat" # filename for integrated flow files, %s is the "string in filename" defined in toCollect
+        filename_diff = "%s_vndata.dat" # filename for differential flow files
+
+        # first write the pid_lookup table, makes sure there is only one such table
+        if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
+            db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
+
+        # next create various tables
+        db.createTableIfNotExists("inte_vn", (("event_id","integer"), ("pid","integer"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("diff_vn", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("multiplicities", (("event_id","integer"), ("pid","integer"), ("N","real")))
+        db.createTableIfNotExists("spectra", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("N","real")))
+
+        # the big loop
+        for particle_string_infile in toCollect.keys():
+            pid = self.pidDict[toCollect[particle_string_infile]]
+
+            # first, differential flow
+            particle_filename = path.join(folder, filename_diff % particle_string_infile)
+            if path.exists(particle_filename):
+                # extract differential flow and spectra information
+                diff_flow_block = np.loadtxt(particle_filename)
+                largest_n = diff_flow_block.shape[1]/3 # should be an integer
+                # write flow table
+                for aRow in diff_flow_block:
+                    for n in range(1, largest_n):
+                        db.insertIntoTable("diff_vn",
+                            (event_id, pid, aRow[0], n, aRow[3*n], aRow[3*n+1])
+                        )
+                    # write spectra table
+                    db.insertIntoTable("spectra",
+                        (event_id, pid, aRow[0], aRow[2])
+                    )
+
+
+            # next, integrated flow
+            particle_filename = path.join(folder, filename_inte % particle_string_infile)
+            if path.exists(particle_filename):
+                # extract integrated flow and multiplicity information
+                inte_flow_block = np.loadtxt(particle_filename)
+                largest_n = inte_flow_block.shape[0]
+                # write flow table
+                for n in range(1, largest_n):
+                    db.insertIntoTable("inte_vn",
+                        (event_id, pid, n, inte_flow_block[n,3], inte_flow_block[n,4])
+                    )
+                # write multiplicity table
+                db.insertIntoTable("multiplicities",
+                    (event_id, pid, inte_flow_block[0,1])
+                )
+
+        # close connection to commit changes
+        db.closeConnection()
 
 
     def createDatabaseFromEventFolders(self, folder, subfolderPattern="event-(\d*)", databaseFilename="CollectedResults.db", collectMode="fromUrQMD", multiplicityFactor=1.0):
@@ -208,6 +305,11 @@ class EbeCollector:
             "oldStyleStorage=True" in the
             collectEccentricitiesAndRIntegrals function; for flows
             collectFLowsAndMultiplicities_iSFormat will be called.
+
+            -- "fromPureHydroNewStoring": For eccentricity it will set
+            "oldStyleStorage=False" in the collectEccentricitiesAndRIntegrals
+            function; for flows collectFLowsAndMultiplicities_iSFormat will be
+            called with "useSubfolder=''"
         """
         # get list of (matched subfolders, event id)
         matchPattern = re.compile(subfolderPattern)
@@ -215,13 +317,18 @@ class EbeCollector:
         for folder_index, aSubfolder in enumerate(listdir(folder)):
             fullPath = path.join(folder, aSubfolder)
             if not path.isdir(fullPath): continue # want only folders, not files
-            matchResult = matchPattern.match(aSubfolder)
-            if matchResult: # matched!
-                if len(matchResult.groups()): # folder name contains id
-                    event_id = matchResult.groups()[0]
-                else:
-                    event_id = folder_index
-                matchedSubfolders.append((fullPath, event_id)) # matched!
+            if collectMode == "fromPureHydro":
+                # no matching is needed; try all folders
+                matchedSubfolders.append((fullPath, len(matchedSubfolders)+1))
+            else:
+                # for new-style calculations, folder name must match
+                matchResult = matchPattern.match(aSubfolder)
+                if matchResult: # matched!
+                    if len(matchResult.groups()): # folder name contains id
+                        event_id = matchResult.groups()[0]
+                    else:
+                        event_id = folder_index
+                    matchedSubfolders.append((fullPath, event_id)) # matched!
 
         # the data collection loop
         db = SqliteDB(path.join(folder, databaseFilename))
@@ -233,6 +340,10 @@ class EbeCollector:
             for aSubfolder, event_id in matchedSubfolders:
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=True) # collect ecc
                 self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db) # collect flow
+        elif collectMode == "fromPureHydroNewStoring":
+            for aSubfolder, event_id in matchedSubfolders:
+                self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
+                self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db, useSubfolder="") # collect flow
 
 
     def mergeDatabases(self, toDB, fromDB):
