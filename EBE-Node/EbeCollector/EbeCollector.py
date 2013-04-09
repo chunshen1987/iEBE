@@ -21,19 +21,59 @@ class EbeCollector:
             Define class-wise constants and tables.
         """
         self.pidDict = { # particle_name, pid
+            "total"             :   0,
             "charged"           :   1,
-            "pion_p"            :   6,
-            "kaon_m"            :   11,
-            "proton"            :   16,
+            "pion"              :   6, # sum(7, 8, -7)
+            "pion_p"            :   7,
+            "pion_0"            :   8,
+            "pion_m"            :   -7,
+            "kaon"              :   11, # sum(12, 13)
+            "kaon_p"            :   12,
+            "kaon_0"            :   13,
+            "anti_kaon"         :   -11, # sum(-12, -13)
+            "kaon_m"            :   -12,
+            "anti_kaon_0"       :   -13,
+            "nucleon"           :   16, # sum(17, 18)
+            "proton"            :   17,
+            "neutron"           :   18,
+            "anti_nucleon"      :   -16, # sum(-17, -18)
+            "anti_proton"       :   -17,
+            "anit_neutron"      :   -18,
 
-            "charged_hydro"     :   101,
-            "pion_p_hydro"      :   106,
-            "kaon_m_hydro"      :   111,
-            "proton_hydro"      :   116,
+            "charged_hydro"           :   301,
+            "pion_hydro"              :   306, # sum(7, 8, -7)
+            "pion_p_hydro"            :   307,
+            "pion_0_hydro"            :   308,
+            "pion_m_hydro"            :   -307,
+            "kaon_hydro"              :   311, # sum(12, 13)
+            "kaon_p_hydro"            :   312,
+            "kaon_0_hydro"            :   313,
+            "anti_kaon_hydro"         :   -311, # sum(-12, -13)
+            "kaon_m_hydro"            :   -312,
+            "anti_kaon_0_hydro"       :   -313,
+            "nucleon_hydro"           :   316, # sum(17, 18)
+            "proton_hydro"            :   317,
+            "neutron_hydro"           :   318,
+            "anti_nucleon_hydro"      :   -316, # sum(-17, -18)
+            "anti_proton_hydro"       :   -317,
+            "anit_neutron_hydro"      :   -318,
 
-            "pion_p_thermal"    :   206,
-            "kaon_m_thermal"    :   211,
-            "proton_thermal"    :   216,
+            "pion_thermal"              :   606, # sum(7, 8, -7)
+            "pion_p_thermal"            :   607,
+            "pion_0_thermal"            :   608,
+            "pion_m_thermal"            :   -607,
+            "kaon_thermal"              :   611, # sum(12, 13)
+            "kaon_p_thermal"            :   612,
+            "kaon_0_thermal"            :   613,
+            "anti_kaon_thermal"         :   -611, # sum(-12, -13)
+            "kaon_m_thermal"            :   -612,
+            "anti_kaon_0_thermal"       :   -613,
+            "nucleon_thermal"           :   616, # sum(17, 18)
+            "proton_thermal"            :   617,
+            "neutron_thermal"           :   618,
+            "anti_nucleon_thermal"      :   -616, # sum(-17, -18)
+            "anti_proton_thermal"       :   -617,
+            "anit_neutron_thermal"      :   -618,
         }
 
     def collectEccentricitiesAndRIntegrals(self, folder, event_id, db, oldStyleStorage=False):
@@ -120,10 +160,10 @@ class EbeCollector:
         """
         # collection of file name patterns, pid, and particle name. The file format is determined from the "filename_format.dat" file
         toCollect = {
-            "Charged"       :   "charged", # string in filename, particle name
-            "pion_p"        :   "pion_p",
-            "Kaon_m"        :   "kaon_m",
-            "proton"        :   "proton",
+            "total"         :   "total", # string in filename, particle name
+            "pion"          :   "pion",
+            "kaon"          :   "kaon",
+            "nucleon"       :   "nucleon",
         }
         toCollect_keys = toCollect.keys()
         filePattern = re.compile("([a-zA-z]*)_flow_([a-zA-Z+]*).dat") # filename pattern, the 2nd matched string needs to be among the toCollect.keys() above in order to be considered "matched"; the 1st matched string will either be "integrated" or "differential"
@@ -214,11 +254,11 @@ class EbeCollector:
         # collection of file name patterns, pid, and particle name. The file format is determined from the "filename_format.dat" file
         toCollect = {
             "Charged"       :   "charged_hydro", # string in filename, particle name
-            "Pion"          :   "pion_p_hydro",
-            "Kaon"          :   "kaon_m_hydro",
-            "Proton"        :   "proton_hydro",
+            "pion_p"        :   "pion_p_hydro",
+            "Kaon_p"        :   "kaon_p_hydro",
+            "proton"        :   "proton_hydro",
             "thermal_211"   :   "pion_p_thermal",
-            "thermal_321"   :   "kaon_m_thermal",
+            "thermal_321"   :   "kaon_p_thermal",
             "thermal_2212"  :   "proton_thermal",
         }
         filename_inte = "%s_integrated_vndata.dat" # filename for integrated flow files, %s is the "string in filename" defined in toCollect
@@ -333,15 +373,27 @@ class EbeCollector:
         # the data collection loop
         db = SqliteDB(path.join(folder, databaseFilename))
         if collectMode == "fromUrQMD":
+            print("-"*60)
+            print("Using fromUrQMD mode")
+            print("-"*60)
             for aSubfolder, event_id in matchedSubfolders:
+                print("Collecting %s as with event-id: %s" % (aSubfolder, event_id))
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db) # collect ecc
                 self.collectFLowsAndMultiplicities_urqmdBinUtilityFormat(aSubfolder, event_id, db, multiplicityFactor) # collect flow
         elif collectMode == "fromPureHydro":
+            print("-"*60)
+            print("Using fromPureHydro mode")
+            print("-"*60)
             for aSubfolder, event_id in matchedSubfolders:
+                print("Collecting %s as with event-id: %s" % (aSubfolder, str(event_id)))
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=True) # collect ecc
                 self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db) # collect flow
         elif collectMode == "fromPureHydroNewStoring":
+            print("-"*60)
+            print("Using fromPureHydro mode")
+            print("-"*60)
             for aSubfolder, event_id in matchedSubfolders:
+                print("Collecting %s as with event-id: %s" % (aSubfolder, event_id))
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
                 self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db, useSubfolder="") # collect flow
 

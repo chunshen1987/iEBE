@@ -123,7 +123,7 @@ We can check the tables it contains by do the following:
 >>> db.getAllTableNames()
 [u'ecc_id_lookup', u'eccentricity', u'r_integrals', u'pid_lookup', u'inte_vn', u'diff_vn', u'multiplicities', u'spectra']
 
->>> ('pion_p_hydro', 106) in db.selectFromTable("pid_lookup")
+>>> ('pion_p_hydro', 307) in db.selectFromTable("pid_lookup")
 True
 
 >>> ('charged', 1) in db.selectFromTable("pid_lookup")
@@ -158,6 +158,11 @@ This is the high level "entry function" that collects results from "folder"'s su
 
 Assuming that the "testData_newStyle" folder exists (should be included in the package), the following call collect the flow and multiplicity data from its two folders and create a database:
 >>> collector.createDatabaseFromEventFolders("testData_newStyle", multiplicityFactor=0.1)
+------------------------------------------------------------
+Using fromUrQMD mode
+------------------------------------------------------------
+Collecting testData_newStyle/event-2 as with event-id: 2
+Collecting testData_newStyle/event-1 as with event-id: 1
 
 The created database file "CollectedResults.db" can be examined in various ways. The following is just a simple peek:
 >>> db_tmp = DBR.SqliteDB("testData_newStyle/CollectedResults.db")
@@ -166,18 +171,28 @@ True
 
 Assuming that the "testData_oldStyle" folder exists (should be included in the package), the following call collect the flow and multiplicity data from its two folders and create a database:
 >>> collector.createDatabaseFromEventFolders("testData_oldStyle", collectMode="fromPureHydro")
+------------------------------------------------------------
+Using fromPureHydro mode
+------------------------------------------------------------
+Collecting testData_oldStyle/5-9-VISH2p1V1.9.0.e-IINIT=2-IEOS=7-iEin=1-iLS=130-T0=0.6-Edec=0.18-vis=0.08-factor=1.0--2012-07-24@07:52:19 as with event-id: 1
+Collecting testData_oldStyle/5-98-VISH2p1V1.9.0.e-IINIT=2-IEOS=7-iEin=1-iLS=130-T0=0.6-Edec=0.18-vis=0.08-factor=1.0--2012-07-24@09:59:06 as with event-id: 2
 
 The created database file "CollectedResults.db" can be examined in various ways. The following is just a simple peek:
 >>> db_tmp = DBR.SqliteDB("testData_oldStyle/CollectedResults.db")
->>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"), whereClause="pid=101")) == set([(1, 1904.27097), (2, 1843.95785)])
+>>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"), whereClause="pid=301")) == set([(1, 1904.27097), (2, 1843.95785)])
 True
 
 Assuming that the "testData_PureHydroNewStyle" folder exists (should be included in the package), the following call collect the flow and multiplicity data from its two folders and create a database:
 >>> collector.createDatabaseFromEventFolders("testData_PureHydroNewStyle", collectMode="fromPureHydroNewStoring")
+------------------------------------------------------------
+Using fromPureHydro mode
+------------------------------------------------------------
+Collecting testData_PureHydroNewStyle/event-2 as with event-id: 2
+Collecting testData_PureHydroNewStyle/event-1 as with event-id: 1
 
 The created database file "CollectedResults.db" can be examined in various ways. The following is just a simple peek:
 >>> db_tmp = DBR.SqliteDB("testData_PureHydroNewStyle/CollectedResults.db")
->>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"), whereClause="pid=101")) == set([(1, 1904.27097), (2, 1843.95785)])
+>>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"), whereClause="pid=301")) == set([(1, 1904.27097), (2, 1843.95785)])
 True
 
 

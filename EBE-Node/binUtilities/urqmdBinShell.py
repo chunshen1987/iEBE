@@ -11,17 +11,17 @@ if len(argv) < 2:
     print("Usage: shell.py urqmd_output_file")
     exit(-1)
 
-# format urqmd output file; so far only produce results for charged particle
+# format urqmd output file
 UrqmdOutputFormatter.formatUrqmdOutputFile(argv[1], tmpFile)
 
 # binning
-binISS.use_bin_processes["calculate integrated flow"] = True
-binISS.use_bin_processes["calculate differential flow"] = True
-binISS.use_bin_processes["count particles in pT range"] = False
-binISS.binISSDataFile(tmpFile, "./formats/binUrqmd_default_format.dat") # note that the format needs to agree with those dumped by UrqmdOutputFormatter.formatUrqmdOutputFile
-
-rename("results/integrated_flow.dat", "results/integrated_flow_Charged.dat")
-rename("results/differential_flow.dat", "results/differential_flow_Charged.dat")
+useBinProcesses = []
+useBinProcesses.append(binISS.differentialFlowCharged)
+useBinProcesses.append(binISS.integratedFlowCharged)
+useBinProcesses.extend(binISS.generateFlowActionsForPids(
+        ( ("pion", 101), ("kaon", 106), ("nucleon", 1) )
+    ))
+binISS.binISSDataFileSimple(tmpFile, "./formats/binUrqmd_default_format.dat", useBinProcesses) # note that the format needs to agree with those dumped by UrqmdOutputFormatter.formatUrqmdOutputFile
 
 # delete temp file
 unlink(tmpFile)
