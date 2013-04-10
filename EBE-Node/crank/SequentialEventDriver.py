@@ -9,6 +9,7 @@
 # The main entry is the sequentialEventDriverShell function.
 
 from os import path, getcwd, remove, makedirs
+from sys import stdout
 from shutil import move, copy, rmtree
 from glob import glob
 from subprocess import call
@@ -438,7 +439,8 @@ def sequentialEventDriverShell():
         # generate initial conditions then loop over initial conditions
         event_id = 0
         # print current progress to terminal
-        print("PROGRESS: %d events out of %d finished." % (event_id, controlParameterList['numberOfEvents']))
+        stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
+        stdout.flush()
         for aInitialConditionFile in generateSuperMCInitialConditions(controlParameterList['numberOfEvents']):
             # get the result folder name for storing results, then create it if necessary
             event_id += 1
@@ -471,7 +473,8 @@ def sequentialEventDriverShell():
             binUrqmdResultFiles(urqmdOutputFilePath)
 
             # print current progress to terminal
-            print("PROGRESS: %d events out of %d finished." % (event_id, controlParameterList['numberOfEvents']))
+            stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
+            stdout.flush()
 
         # collect mostly used data into a database
         collectEbeResultsToDatabaseFrom(resultDir)
