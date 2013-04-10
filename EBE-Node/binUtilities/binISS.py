@@ -19,23 +19,18 @@ particle_count_pT_range_filename = "bin_tables/particle_count_pT_range.dat" # us
 
 pT_has_name = "pT"
 phi_has_name = "phi"
+pid_has_name = "PID"
 
 calculate_flow_from_order = 1
 calculate_flow_to_order = 9
 
-differential_flow_saveTo = "results/differential_flow.dat"
+differential_flow_saveTo = "results/differential_flow_%s.dat"
 differential_flow_format_saveTo = "results/differential_flow_format.dat"
 
-integrated_flow_saveTo = "results/integrated_flow.dat"
+integrated_flow_saveTo = "results/integrated_flow_%s.dat"
 integrated_flow_format_saveTo = "results/integrated_flow_format.dat"
 
 count_particle_number_in_pT_range = "results/event_number_of_particles_in_pT_range.dat"
-
-use_bin_processes = {
-    "calculate differential flow" : True, # differential flow, differential mean pT, spectra (1st column)
-    "calculate integrated flow": True, # integrated flow, total mean pT
-    "count particles in pT range": True, # count how many particles lie in given pT range
-}
 
 
 #-----------------------------------------------------------------------------------
@@ -66,7 +61,7 @@ class CalculateFlow(binUtilities.ActionObject):
         self.storeResult[1:] = numpy.exp(self.cplxOrderList*sample[int(sampleFormat[self.phi_name])])
         self.storeResult[0] = sample[sampleFormat[self.pT_name]]
         return self.storeResult
-    
+
     def getDataFormatStrings(self):
         """
             Return a list of strings describing flows.
@@ -79,16 +74,53 @@ flowAction = CalculateFlow(calculate_flow_from_order, calculate_flow_to_order, p
 
 #------------------------------------------------------------------------------------
 # combine bin and action to processes
-differentialFlow = binUtilities.BinProcess(pTBin, flowAction)
-differentialFlow.saveTo = differential_flow_saveTo
-differentialFlow.saveFormatTo = differential_flow_format_saveTo
-differentialFlow.useCplx = True
+differentialFlowCharged = binUtilities.BinProcess(pTBin, flowAction)
+differentialFlowCharged.saveTo = differential_flow_saveTo % "total"
+differentialFlowCharged.saveFormatTo = differential_flow_format_saveTo
+differentialFlowCharged.useCplx = True
 
-integratedFlow = binUtilities.BinProcess(pTAll, flowAction)
-integratedFlow.saveTo = integrated_flow_saveTo
-integratedFlow.saveFormatTo = integrated_flow_format_saveTo
-integratedFlow.useCplx = True
+integratedFlowCharged = binUtilities.BinProcess(pTAll, flowAction)
+integratedFlowCharged.saveTo = integrated_flow_saveTo % "total"
+integratedFlowCharged.saveFormatTo = integrated_flow_format_saveTo
+integratedFlowCharged.useCplx = True
 
+
+def generateFlowActionsForPids(Pid_table):
+    """
+        Generate BinProcess objects for all particles given in the Pid_table
+        list. The list should contain elements of type (particle_name,
+        pid_value). The "particle_name" will be fed into the %s for
+        differential_flow_saveTo and integrated_flow_saveTo strings.
+    """
+    binProcess = []
+    for particle_name, pid in Pid_table:
+        # differential flow
+        tmpProcess = binUtilities.BinProcess(
+            binUtilities.SingleVarBinCheckingField(FLL(strStream2BlockStream(open(pTBin_table_filename))), pT_has_name, pid, pid_has_name),
+            flowAction
+        )
+        tmpProcess.saveTo = differential_flow_saveTo % particle_name
+        tmpProcess.saveFormatTo = differential_flow_format_saveTo
+        tmpProcess.useCplx = True
+        binProcess.append(tmpProcess)
+        # integrated flow
+        tmpProcess = binUtilities.BinProcess(
+            binUtilities.SingleVarBinCheckingField(FLL(strStream2BlockStream(open(pTAll_table_filename))), pT_has_name, pid, pid_has_name),
+            flowAction
+        )
+        tmpProcess.saveTo = integrated_flow_saveTo % particle_name
+        tmpProcess.saveFormatTo = integrated_flow_format_saveTo
+        tmpProcess.useCplx = True
+        binProcess.append(tmpProcess)
+    return binProcess
+
+
+# fillin the to-use binProcess list
+useBinProcesses = []
+# extend the list before calling the function below, like:
+#if use_bin_processes["calculate differential flow"]: useBinProcesses.extend([differentialFlow])
+#if use_bin_processes["calculate integrated flow"]: useBinProcesses.extend([integratedFlow])
+#if use_bin_processes["count particles in pT range"]: useBinProcesses.extend([countParticleNumberInPTRange])
 
 
 #-------------------------------------------------------------------------------------
@@ -111,11 +143,18 @@ def binISSDataFile(data_filename, format_filename, data_block_size_filename=None
         countParticleNumberInPTRange = binUtilities.BinProcess(generateBlocks, countNumberInPTRangeAction)
         countParticleNumberInPTRange.saveTo = count_particle_number_in_pT_range
 
-    # fillin the to-use binProcess list
-    useBinProcesses = []
-    if use_bin_processes["calculate differential flow"]: useBinProcesses.extend([differentialFlow])
-    if use_bin_processes["calculate integrated flow"]: useBinProcesses.extend([integratedFlow])
-    if use_bin_processes["count particles in pT range"]: useBinProcesses.extend([countParticleNumberInPTRange])
+    # get data format
+    raw_format = assignmentFormat.assignmentExprStream2IndexDict(open(format_filename))
+
+    # call binDataStream function to finish the binning
+    binUtilities.binDataStream(open(data_filename), raw_format, useBinProcesses)
+
+
+# Main function used to bin data
+def binISSDataFileSimple(data_filename, format_filename, useBinProcesses):
+    """
+        Simpler version of binISSDataFile
+    """
     # get data format
     raw_format = assignmentFormat.assignmentExprStream2IndexDict(open(format_filename))
 

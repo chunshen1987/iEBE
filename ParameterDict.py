@@ -3,7 +3,7 @@ superMCParameters = {
     'sub_model'                     :   1,
     'Npmin'                         :   0,
     'Npmax'                         :   1000,
-    'bmin'                          :   0,
+    'bmin'                          :   13,
     'bmax'                          :   20,
     'ecm'                           :   2760,
     'finalFactor'                   :   56.763,

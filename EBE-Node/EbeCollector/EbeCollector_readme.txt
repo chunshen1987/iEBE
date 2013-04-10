@@ -56,7 +56,6 @@ The rest of the tables store information regarding the final states of the event
 5) Table "inte_vn".
 -- event_id (interger)
 -- pid (integer). This is the particle index value.
--- pT (real)
 -- n (integer)
 -- vn_real (real)
 -- vn_imag (real)
@@ -72,7 +71,6 @@ The rest of the tables store information regarding the final states of the event
 7) Table "multiplicities".
 -- event_id (integer)
 -- pid (integer)
--- pT (real). This is the mean pT value.
 -- N (real)
 
 8) Table "spectra".
@@ -125,15 +123,18 @@ We can check the tables it contains by do the following:
 >>> db.getAllTableNames()
 [u'ecc_id_lookup', u'eccentricity', u'r_integrals', u'pid_lookup', u'inte_vn', u'diff_vn', u'multiplicities', u'spectra']
 
->>> db.selectFromTable("pid_lookup")
-[(u'Kaon', 321), (u'Proton', 2212), (u'Pion', 211), (u'Charged', 0)]
+>>> ('pion_p_hydro', 307) in db.selectFromTable("pid_lookup")
+True
+
+>>> ('charged', 1) in db.selectFromTable("pid_lookup")
+True
 
 Get averaged pT and integrated v_3:
->>> db.selectFromTable("inte_vn", ("pT", "vn_real", "vn_imag"), whereClause="n=3")
-[(0.36973879757754774, -0.010069782011460445, 0.02379270360546618)]
+>>> db.selectFromTable("inte_vn", ("vn_real", "vn_imag"), whereClause="n=3")
+[(-0.010069782011460445, 0.02379270360546618)]
 
 Get multiplicity for total charged particles:
->>> db.selectFromTable("multiplicities", ("N",), whereClause="pid=0")
+>>> db.selectFromTable("multiplicities", "N", whereClause="pid=1")
 [(67.7,)]
 
 Get (pT, real(vn)) table for differential v_2:
@@ -145,20 +146,57 @@ Get (pT, real(vn)) table for differential v_2:
 [(0.09254586959349598, 12.3), (0.2230454975609756, 20.5), (0.3697138657718121, 14.9), (0.5221993366336635, 10.100000000000001), (0.670072, 4.5), (0.8232357499999998, 2.4000000000000004), (0.9717935714285714, 1.4000000000000001), (1.081035, 0.2), (1.26097, 0.6000000000000001), (1.4127966666666665, 0.30000000000000004), (1.5787820000000001, 0.5)]
 
 
-3) createDatabaseFromEventFolders(folder, subfolderPattern, databaseFilename, collectMode)
+3) collectFLowsAndMultiplicities_iSFormat(folder, event_id, db, useSubfolder="spectra")
+This function read flow files from the folder "folder/spectra", then write the flow and multiplicity results associated to this event to the SqliteDB database "db" using event id "event_id". This function looks for files that have name "(particle_string_infile)_vndata.dat" for differential flow and spectra data and files that have name "(particle_string_infile)_integrated_vndata.dat" for integrated flow and multiplicity data.
 
-This is the high level "entry function" that collects results from "folder"'s subfolder that match the pattern "subfolderPattern", then write them into the datase under "folder" with the name "databaseFilename". The argument "collectMode" controls how data are collected. If data are from a hybrid calculation (hydro+urqmd), set it to "fromUrQMD". If data are from old pure hydrodynamics calculation, set it to "fromPureHydro". For details of what exactly this parameter affects see the docstring.
+This function provides similar functionality to the collectFLowsAndMultiplicities_urqmdBinUtilityFormat function but for particle data generated from iS (or flow mode of iSS) program directly. Tests for this function is provided in the test section for createDatabaseFromEventFolders.
+
+
+4) createDatabaseFromEventFolders(folder, subfolderPattern, databaseFilename, collectMode)
+
+This is the high level "entry function" that collects results from "folder"'s subfolder that match the pattern "subfolderPattern", then write them into the datase under "folder" with the name "databaseFilename". The argument "collectMode" controls how data are collected. If data are from a hybrid calculation (hydro+urqmd), set it to "fromUrQMD". If data are from old pure hydrodynamics calculation, set it to "fromPureHydro". If data are generated from new run but for pure hydrodynamics calculation, use "fromPureHydroNewStoring". For details of what exactly this parameter affects see the docstring.
 
 Assuming that the "testData_newStyle" folder exists (should be included in the package), the following call collect the flow and multiplicity data from its two folders and create a database:
 >>> collector.createDatabaseFromEventFolders("testData_newStyle", multiplicityFactor=0.1)
+------------------------------------------------------------
+Using fromUrQMD mode
+------------------------------------------------------------
+Collecting testData_newStyle/event-2 as with event-id: 2
+Collecting testData_newStyle/event-1 as with event-id: 1
 
 The created database file "CollectedResults.db" can be examined in various ways. The following is just a simple peek:
 >>> db_tmp = DBR.SqliteDB("testData_newStyle/CollectedResults.db")
->>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"))) == set([(1, 286.7), (2, 67.7)])
+>>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"), whereClause="pid=1")) == set([(1, 286.7), (2, 67.7)])
+True
+
+Assuming that the "testData_oldStyle" folder exists (should be included in the package), the following call collect the flow and multiplicity data from its two folders and create a database:
+>>> collector.createDatabaseFromEventFolders("testData_oldStyle", collectMode="fromPureHydro")
+------------------------------------------------------------
+Using fromPureHydro mode
+------------------------------------------------------------
+Collecting testData_oldStyle/5-9-VISH2p1V1.9.0.e-IINIT=2-IEOS=7-iEin=1-iLS=130-T0=0.6-Edec=0.18-vis=0.08-factor=1.0--2012-07-24@07:52:19 as with event-id: 1
+Collecting testData_oldStyle/5-98-VISH2p1V1.9.0.e-IINIT=2-IEOS=7-iEin=1-iLS=130-T0=0.6-Edec=0.18-vis=0.08-factor=1.0--2012-07-24@09:59:06 as with event-id: 2
+
+The created database file "CollectedResults.db" can be examined in various ways. The following is just a simple peek:
+>>> db_tmp = DBR.SqliteDB("testData_oldStyle/CollectedResults.db")
+>>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"), whereClause="pid=301")) == set([(1, 1904.27097), (2, 1843.95785)])
+True
+
+Assuming that the "testData_PureHydroNewStyle" folder exists (should be included in the package), the following call collect the flow and multiplicity data from its two folders and create a database:
+>>> collector.createDatabaseFromEventFolders("testData_PureHydroNewStyle", collectMode="fromPureHydroNewStoring")
+------------------------------------------------------------
+Using fromPureHydro mode
+------------------------------------------------------------
+Collecting testData_PureHydroNewStyle/event-2 as with event-id: 2
+Collecting testData_PureHydroNewStyle/event-1 as with event-id: 1
+
+The created database file "CollectedResults.db" can be examined in various ways. The following is just a simple peek:
+>>> db_tmp = DBR.SqliteDB("testData_PureHydroNewStyle/CollectedResults.db")
+>>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"), whereClause="pid=301")) == set([(1, 1904.27097), (2, 1843.95785)])
 True
 
 
-4) mergeDatabases(toDatabase, fromDatabase)
+5) mergeDatabases(toDatabase, fromDatabase)
 
 This function merges the database "fromDatabase" into "toDatabase". The rule is that is a table is a lookup table (name contains "lookup"), then it is copied only if it does not exist in the target database already; otherwise the table must have a field called "event_id" and this field will be shifted up by the previous max value before merging.
 
@@ -203,6 +241,10 @@ True
 >>> DBR.SqliteDB("testData_newStyle/CollectedResults.db").deleteDatabase(confirmation=True)
 True
 >>> DBR.SqliteDB("testData_newStyle/CollectedResults_copy.db").deleteDatabase(confirmation=True)
+True
+>>> DBR.SqliteDB("testData_oldStyle/CollectedResults.db").deleteDatabase(confirmation=True)
+True
+>>> DBR.SqliteDB("testData_PureHydroNewStyle/CollectedResults.db").deleteDatabase(confirmation=True)
 True
 
 The End.

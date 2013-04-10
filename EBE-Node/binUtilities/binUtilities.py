@@ -83,7 +83,7 @@ class DataBinner():
 
 
 #####################################################################################
-class BinObject():
+class BinObject(object):
     """ This class defines a bin. Its interface is given below.
     """
     def decideBin(self, sample, sampleFormat):
@@ -129,6 +129,35 @@ class SingleVarBin(BinObject):
         """ Inherit the interface.
         """
         return self.decideBin_kernal(self, sample, sampleFormat)
+
+
+#####################################################################################
+class SingleVarBinCheckingField(SingleVarBin):
+    """
+        This class extend the SingleVarBin class by first performing a check on
+        a field, then only return a positive bin number when the passed-in data
+        agrees with the registered one for the desired field.
+    """
+    def __init__(self, bins, variableName, desiredValue, fieldName):
+        """
+            Register fieldName and its desiredValue; call superclass's
+            constructor.
+        """
+        super(SingleVarBinCheckingField, self).__init__(bins, variableName)
+        self.fieldName = fieldName
+        self.desiredValue = desiredValue
+
+    def decideBin(self, sample, sampleFormat):
+        """
+            First check the value for the registered field then call the
+            superclass' decideBin method. The check is:
+            sample[sampleFormat[fieldName]] == desiredValue.
+        """
+        if sample[sampleFormat[self.fieldName]] == self.desiredValue:
+            return self.decideBin_kernal(self, sample, sampleFormat)
+        else:
+            return -1
+
 
 #####################################################################################
 class BlockBin(BinObject):
