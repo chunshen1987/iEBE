@@ -25,6 +25,8 @@ allParameterLists = [
     'hydroParameters',
     'iSSControl',
     'iSSParameters',
+    'iSControl',
+    'iSParameters',
     'osc2uControl',
     'osc2uParameters',
     'urqmdControl',
@@ -34,6 +36,7 @@ allParameterLists = [
 ]
 
 controlParameterList = {
+    'simulation_type'       :   'hybrid', # 'hybrid' or 'hydro'
     'numberOfEvents'        :   10, # how many sequential calculations
     'rootDir'               :   path.abspath('../'),
     'resultDir'             :   path.abspath('../finalResults'), # final results will be saved here, absolute
@@ -102,6 +105,15 @@ iSSParameters = {
     'y_RB'                          :   2.5,
 }
 
+iSControl = {
+    'mainDir'           :   'iS',
+    'operationDir'      :   'results',
+    'saveResultGlobs'   :   ['*_vndata.dat'], # files in the operation directory matching these globs will be saved
+    'executables'       :   ('iS.e', 'resonance.e', 'iInteSp.e'),
+    'entryShell'        :   'iS_withResonance.sh',
+}
+iSParameters = {}
+
 osc2uControl = {
     'mainDir'           :   'osc2u',
     'outputFilename'    :   'fort.14',
@@ -131,7 +143,8 @@ binUtilitiesParameters = {}
 
 EbeCollectorControl = {
     'mainDir'               :   'EbeCollector',
-    'executable'            :   'EbeCollectorShell_hydroWithUrQMD.py',
+    'executable_hybrid'     :   'EbeCollectorShell_hydroWithUrQMD.py',
+    'executable_hydro'      :   'EbeCollectorShell_pureHydro.py'
 }
 EbeCollectorParameters = {
     'subfolderPattern'      :   '"event-(\d*)"',
@@ -271,6 +284,42 @@ def iSSWithHydroResultFiles(fileList):
     return iSSOSCARFilepath
 
 
+def iSWithResonancesWithHydroResultFiles(fileList):
+    """
+        Perform iS calculation using the given list of hydro result files,
+        followed by resonance calculations and iInteSp calculations.
+    """
+    # set directory strings
+    iSDirectory = path.join(controlParameterList['rootDir'], iSControl['mainDir'])
+    iSOperationDirectory = path.join(iSDirectory, iSControl['operationDir']) # for both input & output
+    iSExecutables = iSControl['executables']
+    iSExecutionEntry = iSControl['entryShell']
+
+    # check executable
+    checkExistenceOfExecutables([path.join(iSSDirectory, aExe) for aExe in iSExecutables])
+
+    # clean up operation folder
+    cleanUpFolder(iSOperationDirectory)
+
+    # check existence of hydro result files and move them to operation folder
+    for aFile in fileList:
+        if not path.exists(aFile):
+            raise ExecutionError("Hydro result file %s not found!" % aFile)
+        else:
+            move(aFile, iSOperationDirectory)
+
+    # execute!
+    run("bash ./"+iSExecutionEntry, cwd=iSDirectory)
+
+    # save some of the important result files
+    worthStoring = []
+    for aGlob in iSControl['saveResultGlobs']:
+        worthStoring.extend(glob(path.join(iSOperationDirectory, aGlob)))
+    for aFile in glob(path.join(iSOperationDirectory, "*")):
+        if aFile in worthStoring:
+            move(aFile, controlParameterList['eventResultDir'])
+
+
 def osc2uFromOSCARFile(OSCARFilePath):
     """
         Execute osc2u program using the given path to the OSCAR file. Return the
@@ -372,10 +421,17 @@ def collectEbeResultsToDatabaseFrom(folder):
     """
     # set directory strings
     collectorDirectory = path.join(controlParameterList['rootDir'], EbeCollectorControl['mainDir'])
-    collectorExecutable = EbeCollectorControl['executable']
 
     # for executable string
-    executableString = "python ./" + collectorExecutable + " %s %g %s %s" % (folder, 1.0/iSSParameters['number_of_repeated_sampling'], EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+    simulationType = controlParameterList['simulation_type']
+    if simulationType == 'hybrid':
+        collectorExecutable = EbeCollectorControl['executable_hybrid']
+        executableString = "python ./" + collectorExecutable + " %s %g %s %s" % (folder, 1.0/iSSParameters['number_of_repeated_sampling'], EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+    elif simulationType == 'hydro':
+        collectorExecutable = EbeCollectorParameters['executable_hydro']
+        executableString = "python ./" + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+    
+    # execute
     run(executableString, cwd=collectorDirectory)
 
 def formAssignmentStringFromDict(aDict):
@@ -410,6 +466,14 @@ def checkExistenceOfExecutable(executableFilename):
         if not path.exists(executableFilename):
             raise ExecutionError("Cannot generate executable %s!" % executableFilename)
 
+def checkExistenceOfExecutables(executableFilenames):
+    """
+        Check the existences of the executable files, and compile them if not.
+        Will call the checkExistenceOfExecutable function.
+    """
+    for executableFilename in executableFilenames:
+        checkExistenceOfExecutable(executableFilename)
+
 
 def run(command, cwd=getcwd(), echo=True):
     """ Invoke a command from terminal and wait for it to stop. """
@@ -418,6 +482,7 @@ def run(command, cwd=getcwd(), echo=True):
         print("In "+cwd)
         print("Executing command: "+command)
         print("-"*80)
+        stdout.flush()
     return call(command, shell=True, cwd=cwd)
 
 
@@ -435,6 +500,9 @@ def sequentialEventDriverShell():
         if path.exists(resultDir):
             rmtree(resultDir)
             makedirs(resultDir)
+            
+        # get simulation type
+        simulationType = controlParameterList['simulation_type']
 
         # generate initial conditions then loop over initial conditions
         event_id = 0
@@ -455,22 +523,28 @@ def sequentialEventDriverShell():
 
             # perform hydro calculations and get a list of all the result filenames
             hydroResultFiles = [aFile for aFile in hydroWithInitialCondition(aInitialConditionFile)]
-
-            # perform iSS calculation and return the path to the OSCAR file
-            OSCARFilePath = iSSWithHydroResultFiles(hydroResultFiles)
-
-            # perform osc2u
-            osc2uOutputFilePath = osc2uFromOSCARFile(OSCARFilePath)
-
-            # now urqmd
-            urqmdOutputFilePath = urqmdFromOsc2uOutputFile(osc2uOutputFilePath)
-
-            # copy and concatnate final results from all events into one file
-            combinedUrqmdFile = path.join(controlParameterList['resultDir'], controlParameterList['combinedUrqmdFile'])
-            open(combinedUrqmdFile, 'a').writelines(open(urqmdOutputFilePath).readlines())
-
-            # bin the combined result file to get flows
-            binUrqmdResultFiles(urqmdOutputFilePath)
+            
+            # fork simulation type here
+            if simulationType == 'hybrid':
+                # perform iSS calculation and return the path to the OSCAR file
+                OSCARFilePath = iSSWithHydroResultFiles(hydroResultFiles)
+    
+                # perform osc2u
+                osc2uOutputFilePath = osc2uFromOSCARFile(OSCARFilePath)
+    
+                # now urqmd
+                urqmdOutputFilePath = urqmdFromOsc2uOutputFile(osc2uOutputFilePath)
+    
+                # copy and concatnate final results from all events into one file
+                combinedUrqmdFile = path.join(controlParameterList['resultDir'], controlParameterList['combinedUrqmdFile'])
+                open(combinedUrqmdFile, 'a').writelines(open(urqmdOutputFilePath).readlines())
+    
+                # bin the combined result file to get flows
+                binUrqmdResultFiles(urqmdOutputFilePath)
+                
+            elif simulationType == 'hydro':
+                # perform iS calculation and resonance decays
+                iSWithResonancesWithHydroResultFiles(hydroResultFiles)
 
             # print current progress to terminal
             stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))

@@ -1,9 +1,13 @@
+controlParameterList = {
+    'simulation_type'       :   'hybrid', # 'hybrid' or 'hydro'
+}
+
 superMCParameters = {
     'which_mc_model'                :   5,
     'sub_model'                     :   1,
     'Npmin'                         :   0,
     'Npmax'                         :   1000,
-    'bmin'                          :   0,
+    'bmin'                          :   13,
     'bmax'                          :   20,
     'ecm'                           :   2760,
     'finalFactor'                   :   56.763,
