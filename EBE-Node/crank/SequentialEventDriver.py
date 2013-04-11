@@ -108,7 +108,7 @@ iSSParameters = {
 iSControl = {
     'mainDir'           :   'iS',
     'operationDir'      :   'results',
-    'saveResultGlobs'   :   ['*_vndata.dat'], # files in the operation directory matching these globs will be saved
+    'saveResultGlobs'   :   ['*_vndata.dat', 'v2data*'], # files in the operation directory matching these globs will be saved
     'executables'       :   ('iS.e', 'resonance.e', 'iInteSp.e'),
     'entryShell'        :   'iS_withResonance.sh',
 }

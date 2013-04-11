@@ -39,42 +39,37 @@ class EbeCollector:
             "anti_nucleon"      :   -16, # sum(-17, -18)
             "anti_proton"       :   -17,
             "anit_neutron"      :   -18,
-
-            "charged_hydro"           :   301,
-            "pion_hydro"              :   306, # sum(7, 8, -7)
-            "pion_p_hydro"            :   307,
-            "pion_0_hydro"            :   308,
-            "pion_m_hydro"            :   -307,
-            "kaon_hydro"              :   311, # sum(12, 13)
-            "kaon_p_hydro"            :   312,
-            "kaon_0_hydro"            :   313,
-            "anti_kaon_hydro"         :   -311, # sum(-12, -13)
-            "kaon_m_hydro"            :   -312,
-            "anti_kaon_0_hydro"       :   -313,
-            "nucleon_hydro"           :   316, # sum(17, 18)
-            "proton_hydro"            :   317,
-            "neutron_hydro"           :   318,
-            "anti_nucleon_hydro"      :   -316, # sum(-17, -18)
-            "anti_proton_hydro"       :   -317,
-            "anit_neutron_hydro"      :   -318,
-
-            "pion_thermal"              :   606, # sum(7, 8, -7)
-            "pion_p_thermal"            :   607,
-            "pion_0_thermal"            :   608,
-            "pion_m_thermal"            :   -607,
-            "kaon_thermal"              :   611, # sum(12, 13)
-            "kaon_p_thermal"            :   612,
-            "kaon_0_thermal"            :   613,
-            "anti_kaon_thermal"         :   -611, # sum(-12, -13)
-            "kaon_m_thermal"            :   -612,
-            "anti_kaon_0_thermal"       :   -613,
-            "nucleon_thermal"           :   616, # sum(17, 18)
-            "proton_thermal"            :   617,
-            "neutron_thermal"           :   618,
-            "anti_nucleon_thermal"      :   -616, # sum(-17, -18)
-            "anti_proton_thermal"       :   -617,
-            "anit_neutron_thermal"      :   -618,
+            "sigma"             :   21, # sum(22, 23, 24)
+            "sigma_p"           :   22,
+            "sigma_0"           :   23,
+            "sigma_m"           :   24,
+            "anti_sigma"        :   -21,
+            "anti_simga_p"      :   -22,
+            "anti_sigma_0"      :   -23,
+            "anti_simga_m"      :   -24,
+            "xi"                :   26, # sum(27, 28)
+            "xi_0"              :   27,
+            "xi_m"              :   28,
+            "anti_xi"           :   -26,
+            "anti_xi_0"         :   -27,
+            "anti_xi_m"         :   -28,
+            "lambda"            :   31,
+            "anti_lambda"       :   -31,
+            "omega"             :   36,
+            "anti_omega"        :   -36,
+            "phi"               :   41,
         }
+
+        for aParticle in self.pidDict.keys():
+            if self.pidDict[aParticle]>=0:
+                self.pidDict[aParticle+"_hydro"] = self.pidDict[aParticle]+1000
+            else:
+                self.pidDict[aParticle+"_hydro"] = self.pidDict[aParticle]-1000
+            if self.pidDict[aParticle]>=0:
+                self.pidDict[aParticle+"_thermal"] = self.pidDict[aParticle]+2000
+            else:
+                self.pidDict[aParticle+"_thermal"] = self.pidDict[aParticle]-2000
+
 
     def collectEccentricitiesAndRIntegrals(self, folder, event_id, db, oldStyleStorage=False):
         """
@@ -164,6 +159,11 @@ class EbeCollector:
             "pion"          :   "pion",
             "kaon"          :   "kaon",
             "nucleon"       :   "nucleon",
+            "sigma"         :   "sigma",
+            "xi"            :   "xi",
+            "lambda"        :   "lambda",
+            "omega"         :   "omega",
+            "phi"           :   "phi",
         }
         toCollect_keys = toCollect.keys()
         filePattern = re.compile("([a-zA-z]*)_flow_([a-zA-Z+]*).dat") # filename pattern, the 2nd matched string needs to be among the toCollect.keys() above in order to be considered "matched"; the 1st matched string will either be "integrated" or "differential"
@@ -257,6 +257,11 @@ class EbeCollector:
             "pion_p"        :   "pion_p_hydro",
             "Kaon_p"        :   "kaon_p_hydro",
             "proton"        :   "proton_hydro",
+            "Sigma_p"       :   "sigma_p_hydro",
+            "Xi_m"          :   "xi_m_hydro",
+            "Omega"         :   "omega_hydro",
+            "Lambda"        :   "lambda_hydro",
+            "Phi"           :   "phi_hydro",
             "thermal_211"   :   "pion_p_thermal",
             "thermal_321"   :   "kaon_p_thermal",
             "thermal_2212"  :   "proton_thermal",
@@ -396,6 +401,10 @@ class EbeCollector:
                 print("Collecting %s as with event-id: %s" % (aSubfolder, event_id))
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
                 self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db, useSubfolder="") # collect flow
+        else:
+            print("!"*60)
+            print("Mode string not found")
+            print("!"*60)
 
 
     def mergeDatabases(self, toDB, fromDB):
