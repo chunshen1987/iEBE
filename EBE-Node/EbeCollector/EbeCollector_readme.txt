@@ -31,7 +31,7 @@ First are a few tables storing quantities related to initial states of events.
 -- ecc_id (integer)
 -- ecc_type_name (text)
 
-2) Table "eccentricity".
+2) Table "eccentricities".
 -- event_id (integer)
 -- ecc_id (integer). This determines the weight function.
 -- r_power (integer). This is the m value.

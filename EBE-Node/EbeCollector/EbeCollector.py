@@ -75,7 +75,7 @@ class EbeCollector:
         """
             This function collects initial eccentricities and r-integrals into
             the specified SqliteDB object "db". More specifically,
-            this functions fills table "ecc_id_lookup", "eccentricity", and
+            this functions fills table "ecc_id_lookup", "eccentricities", and
             "r_integrals".
 
             Eccentricity and r-integral files will be looked for in "folder" and
@@ -111,7 +111,7 @@ class EbeCollector:
                 db.insertIntoTable("ecc_id_lookup", (ecc_id, ecc_type_name))
 
         # next create the eccentricity and r_integrals table, if not existing
-        db.createTableIfNotExists("eccentricity", (("event_id","integer"), ("ecc_id", "integer"), ("r_power", "integer"), ("n","integer"), ("ecc_real","real"), ("ecc_imag","real")))
+        db.createTableIfNotExists("eccentricities", (("event_id","integer"), ("ecc_id", "integer"), ("r_power", "integer"), ("n","integer"), ("ecc_real","real"), ("ecc_imag","real")))
         db.createTableIfNotExists("r_integrals", (("event_id","integer"), ("ecc_id","integer"), ("r_power","integer"), ("r_inte","real")))
 
         # the big loop
@@ -125,7 +125,7 @@ class EbeCollector:
                 for n, aLine in enumerate(open(path.join(folder, filename))): # row index is "n"
                     data = aLine.split()
                     # insert into eccentricity table
-                    db.insertIntoTable("eccentricity",
+                    db.insertIntoTable("eccentricities",
                                         (event_id, ecc_id, r_power, n, float(data[ecc_real_col]), float(data[ecc_imag_col]))
                                     )
                     # insert into r-integrals table but only once
