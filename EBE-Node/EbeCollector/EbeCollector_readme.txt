@@ -134,7 +134,7 @@ Get averaged pT and integrated v_3:
 [(-0.010069782011460445, 0.02379270360546618)]
 
 Get multiplicity for total charged particles:
->>> db.selectFromTable("multiplicities", "N", whereClause="pid=1")
+>>> db.selectFromTable("multiplicities", "N", whereClause="pid=0")
 [(67.7,)]
 
 Get (pT, real(vn)) table for differential v_2:
@@ -166,7 +166,7 @@ Collecting testData_newStyle/event-1 as with event-id: 1
 
 The created database file "CollectedResults.db" can be examined in various ways. The following is just a simple peek:
 >>> db_tmp = DBR.SqliteDB("testData_newStyle/CollectedResults.db")
->>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"), whereClause="pid=1")) == set([(1, 286.7), (2, 67.7)])
+>>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"), whereClause="pid=0")) == set([(1, 286.7), (2, 67.7)])
 True
 
 Assuming that the "testData_oldStyle" folder exists (should be included in the package), the following call collect the flow and multiplicity data from its two folders and create a database:

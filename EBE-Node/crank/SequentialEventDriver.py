@@ -144,7 +144,7 @@ binUtilitiesParameters = {}
 EbeCollectorControl = {
     'mainDir'               :   'EbeCollector',
     'executable_hybrid'     :   'EbeCollectorShell_hydroWithUrQMD.py',
-    'executable_hydro'      :   'EbeCollectorShell_pureHydro.py'
+    'executable_hydro'      :   'EbeCollectorShell_pureHydro.py',
 }
 EbeCollectorParameters = {
     'subfolderPattern'      :   '"event-(\d*)"',
@@ -296,7 +296,7 @@ def iSWithResonancesWithHydroResultFiles(fileList):
     iSExecutionEntry = iSControl['entryShell']
 
     # check executable
-    checkExistenceOfExecutables([path.join(iSSDirectory, aExe) for aExe in iSExecutables])
+    checkExistenceOfExecutables([path.join(iSDirectory, aExe) for aExe in iSExecutables])
 
     # clean up operation folder
     cleanUpFolder(iSOperationDirectory)
@@ -428,7 +428,7 @@ def collectEbeResultsToDatabaseFrom(folder):
         collectorExecutable = EbeCollectorControl['executable_hybrid']
         executableString = "python ./" + collectorExecutable + " %s %g %s %s" % (folder, 1.0/iSSParameters['number_of_repeated_sampling'], EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     elif simulationType == 'hydro':
-        collectorExecutable = EbeCollectorParameters['executable_hydro']
+        collectorExecutable = EbeCollectorControl['executable_hydro']
         executableString = "python ./" + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     
     # execute
@@ -535,12 +535,13 @@ def sequentialEventDriverShell():
                 # now urqmd
                 urqmdOutputFilePath = urqmdFromOsc2uOutputFile(osc2uOutputFilePath)
     
-                # copy and concatnate final results from all events into one file
+                # copy and concatnate final results from all hydro events into one file
                 combinedUrqmdFile = path.join(controlParameterList['resultDir'], controlParameterList['combinedUrqmdFile'])
                 open(combinedUrqmdFile, 'a').writelines(open(urqmdOutputFilePath).readlines())
     
                 # bin the combined result file to get flows
                 binUrqmdResultFiles(urqmdOutputFilePath)
+                #!!!!!!!!!!!!!
                 
             elif simulationType == 'hydro':
                 # perform iS calculation and resonance decays

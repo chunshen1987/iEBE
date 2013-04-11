@@ -283,7 +283,7 @@ class EbeCollector:
             if path.exists(particle_filename):
                 # extract differential flow and spectra information
                 diff_flow_block = np.loadtxt(particle_filename)
-                largest_n = diff_flow_block.shape[1]/3 # should be an integer
+                largest_n = int(diff_flow_block.shape[1]/3) # should be an integer
                 # write flow table
                 for aRow in diff_flow_block:
                     for n in range(1, largest_n):

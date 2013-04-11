@@ -10,7 +10,6 @@ from os import path
 
 try:
     from_folder = path.abspath(argv[1])
-    multiplicity_factor = float(argv[2])
 except:
     print("Usage: shell from_folder [sub_folder_pattern] [database_filename]")
     exit()
