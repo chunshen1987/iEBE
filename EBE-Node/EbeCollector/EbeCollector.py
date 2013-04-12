@@ -464,6 +464,8 @@ class EbeDBReader(object):
             -- where: the "where" clause.
             -- orderBy: the "order by" clause.
         """
+        !!!!!!!
+
         whereClause = "order=%d" % order
         if where:
             whereClause += " and " + where
