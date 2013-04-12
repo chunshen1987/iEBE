@@ -158,13 +158,14 @@ class SqliteDB(object):
         return returnValue
 
 
-    def selectFromTable(self, tableName, columnNameList="*", whereClause=""):
+    def selectFromTable(self, tableName, columnNameList="*", whereClause="", orderByClause=""):
         """
             Return the specified columns with names given in columnNameList from
             the table with name tableName. The columnNameList will be joined
             with a space to be inserted into the SQL query command. The
             whereClause string argument is appended to the query after the
-            keyword "where".
+            keyword "where"; the orderByClause string argument is appended to
+            the query after the keyword "order by".
         """
         if not ListRNew.isIterable(columnNameList):
             columnNameList = [columnNameList]
@@ -173,6 +174,8 @@ class SqliteDB(object):
         sqlCommand = "select %s from %s" % (columnNameListSQLString, tableName)
         if whereClause:
             sqlCommand += " where " + whereClause
+        if orderByClause:
+            sqlCommand += " order by " + orderByClause
         returnValue = self._executeSQL(sqlCommand).fetchall()
         return returnValue
 
