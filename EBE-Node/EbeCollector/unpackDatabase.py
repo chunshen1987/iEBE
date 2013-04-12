@@ -24,9 +24,9 @@ else:
 if len(argv)>=4:
     useHeader = (True, argv[3])
 else:
-    useHeader = (False, "")
+    useHeader = (True, "# ")
 
-SqliteDB(argv[1]).unpackDatabase(sep="   ", writeToFolder=unpackToFolder, writeHeader=useHeader)
+SqliteDB(argv[1]).unpackDatabase(sep="\t", writeToFolder=unpackToFolder, writeHeader=useHeader)
 
 print("Thanks for using. Zhi Qiu 03/2013")
 

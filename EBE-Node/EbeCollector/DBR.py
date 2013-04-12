@@ -211,7 +211,7 @@ class SqliteDB(object):
         unlink(db)
         return True
 
-    def unpackDatabase(self, sep=" ", writeToFolder=".", ext=".dat", writeHeader=(True, "#")):
+    def unpackDatabase(self, sep="\t", writeToFolder=".", ext=".dat", writeHeader=(True, "# ")):
         """
             This function writes all content of of a database into files. Each
             table will be written into a single file with table name as the
