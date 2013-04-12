@@ -9,6 +9,8 @@ from sys import argv, exit
 from os import makedirs, path
 from shutil import copytree, copy, rmtree
 
+from check_prerequisites import checkEnvironment, checkExecutables
+
 # check argv
 try:
     # set parameters
@@ -38,6 +40,21 @@ try:
 except:
     print('Usage: generateJobs.py number_of_jobs number_of_events_per_job [results_folder="./RESULTS"] [walltime="03:00:00"] [working_folder="./PlayGround"] [compress_results_folder="yes"]')
     exit()
+
+# check prerequisites
+print("\n>>>>> Checking required libraries <<<<<\n")
+if not checkEnvironment():
+    print("Prerequisites not met. Install the required library first please. Aborting.")
+    exit()
+
+# check existence of executables
+print("\n>>>>> Checking existence of executables <<<<<\n")
+if not checkExecutables():
+    print("Not all executables can be generated. Aborting.")
+    exit()
+
+# generate events
+print("\n>>>>> Generating events <<<<<\n")
 
 # prepare directories
 if not path.exists(resultsFolder): makedirs(resultsFolder)
