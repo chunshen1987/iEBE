@@ -24,7 +24,7 @@ if len(argv)>=3:
     databaseFilename = argv[2]
 else:
     databaseFilename = "collected.db"
-
+    
 # loop over subdirectories and extract zip files
 toBeDeleted = [] # will remove these directories
 for aZipFile in listdir(parentFolder):

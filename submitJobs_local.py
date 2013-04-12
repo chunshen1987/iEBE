@@ -22,6 +22,7 @@ else:
 
 from subprocess import Popen
 
+# submit jobs
 for aFolder in listdir(targetWorkingDirectory):
     subFolder = path.join(targetWorkingDirectory, aFolder)
     for aFile in listdir(subFolder):
@@ -31,4 +32,3 @@ for aFolder in listdir(targetWorkingDirectory):
             Popen(commandString, shell=True, cwd=subFolder)
 
 print("Job submittion done. See RunRecord.txt file in each job folder for progress.")
-

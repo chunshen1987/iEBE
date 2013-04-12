@@ -14,30 +14,30 @@ try:
     # set parameters
     numberOfJobs = int(argv[1])
     numberOfEventsPerJob = int(argv[2])
+
+    # set optional parameters
+    if len(argv)>=4: # folder to store results
+        resultsFolder = path.abspath(argv[3])
+    else:
+        resultsFolder = path.abspath("./RESULTS")
+
+    if len(argv)>=5: # set wall time
+        walltime = argv[4]
+    else:
+        walltime = "30:00:00"
+
+    if len(argv)>=6: # set working folder
+        workingFolder = path.abspath(argv[5])
+    else:
+        workingFolder = path.abspath("./PlayGround")
+
+    if len(argv)>=7: # whether to compress final results folder
+        compressResultsFolderAnswer = argv[6]
+    else:
+        compressResultsFolderAnswer = "yes"
 except:
     print('Usage: generateJobs.py number_of_jobs number_of_events_per_job [results_folder="./RESULTS"] [walltime="03:00:00"] [working_folder="./PlayGround"] [compress_results_folder="yes"]')
     exit()
-
-# set optional parameters
-if len(argv)>=4: # folder to store results
-    resultsFolder = path.abspath(argv[3])
-else:
-    resultsFolder = path.abspath("./RESULTS")
-
-if len(argv)>=5: # set wall time
-    walltime = argv[4]
-else:
-    walltime = "30:00:00"
-
-if len(argv)>=6: # set working folder
-    workingFolder = path.abspath(argv[5])
-else:
-    workingFolder = path.abspath("./PlayGround")
-
-if len(argv)>=7: # whether to compress final results folder
-    compressResultsFolderAnswer = argv[6]
-else:
-    compressResultsFolderAnswer = "yes"
 
 # prepare directories
 if not path.exists(resultsFolder): makedirs(resultsFolder)
@@ -79,9 +79,31 @@ mv ./finalResults %s/job-%d
         open(path.join(targetWorkingFolder, "job-%d.pbs" % i), "a").write(
 """
 (cd %s
-zip -r -m -q job-%d.zip job-%d >> LastZipRecord.txt
+    zip -r -m -q job-%d.zip job-%d >> LastZipRecord.txt
 )
 """ % (resultsFolder, i, i)
         )
+
+# add a data collector watcher
+if compressResultsFolderAnswer == "yes":
+    EbeCollectorFolder = "EbeCollector"
+    utilitiesFolder = "utilities"
+    watcherDirectory = path.join(workingFolder, "watcher")
+    makedirs(path.join(watcherDirectory, ebeNodeFolder))
+    copytree(path.join(ebeNodeFolder, EbeCollectorFolder), path.join(watcherDirectory, ebeNodeFolder, EbeCollectorFolder))
+    copytree(utilitiesFolder, path.join(watcherDirectory, utilitiesFolder))
+    open(path.join(watcherDirectory, "watcher.pbs"), "w").write(
+"""
+#!/usr/bin/env bash
+#PBS -N watcher
+#PBS -l walltime=%s
+#PBS -j oe
+#PBS -S /bin/bash
+(cd %s
+    python autoZippedResultsCombiner.py %s %d "job-(\d*).zip" 10 1> WatcherReport.txt
+    mv WatcherReport.txt %s
+)
+""" % (walltime, utilitiesFolder, resultsFolder, numberOfJobs, resultsFolder)
+    )
 
 print("Jobs generated. Submit them using submitJobs scripts.")
