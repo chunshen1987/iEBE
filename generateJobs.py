@@ -79,7 +79,7 @@ mv ./finalResults %s/job-%d
         open(path.join(targetWorkingFolder, "job-%d.pbs" % i), "a").write(
 """
 (cd %s
-    zip -r -m -q job-%d.zip job-%d >> LastZipRecord.txt
+    zip -r -m -q job-%d.zip job-%d
 )
 """ % (resultsFolder, i, i)
         )
