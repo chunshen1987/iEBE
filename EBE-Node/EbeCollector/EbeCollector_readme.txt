@@ -176,17 +176,18 @@ The created database file "CollectedResults.db" can be examined in various ways.
 True
 
 Assuming that the "testData_oldStyle" folder exists (should be included in the package), the following call collect the flow and multiplicity data from its two folders and create a database:
->>> collector.createDatabaseFromEventFolders("testData_oldStyle", collectMode="fromPureHydro")
+>>> collector.createDatabaseFromEventFolders("testData_oldStyle", collectMode="fromPureHydro") # doctest: +ELLIPSIS
 ------------------------------------------------------------
 Using fromPureHydro mode
 ------------------------------------------------------------
-Collecting testData_oldStyle/5-9-VISH2p1V1.9.0.e-IINIT=2-IEOS=7-iEin=1-iLS=130-T0=0.6-Edec=0.18-vis=0.08-factor=1.0--2012-07-24@07:52:19 as with event-id: 1
-Collecting testData_oldStyle/5-98-VISH2p1V1.9.0.e-IINIT=2-IEOS=7-iEin=1-iLS=130-T0=0.6-Edec=0.18-vis=0.08-factor=1.0--2012-07-24@09:59:06 as with event-id: 2
+Collecting testData_oldStyle/5-9... as with event-id: ...
+Collecting testData_oldStyle/5-9... as with event-id: ...
 
 The created database file "CollectedResults.db" can be examined in various ways. The following is just a simple peek:
 >>> db_tmp = DBR.SqliteDB("testData_oldStyle/CollectedResults.db")
->>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"), whereClause="pid=301")) == set([(1, 1904.27097), (2, 1843.95785)])
-True
+>>> set(db_tmp.selectFromTable("multiplicities", "N", whereClause="pid=1001", orderByClause="N"))
+set([(1843.95785,), (1904.27097,)])
+
 
 Assuming that the "testData_PureHydroNewStyle" folder exists (should be included in the package), the following call collect the flow and multiplicity data from its two folders and create a database:
 >>> collector.createDatabaseFromEventFolders("testData_PureHydroNewStyle", collectMode="fromPureHydroNewStoring")
@@ -198,7 +199,7 @@ Collecting testData_PureHydroNewStyle/event-1 as with event-id: 1
 
 The created database file "CollectedResults.db" can be examined in various ways. The following is just a simple peek:
 >>> db_tmp = DBR.SqliteDB("testData_PureHydroNewStyle/CollectedResults.db")
->>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"), whereClause="pid=301")) == set([(1, 1904.27097), (2, 1843.95785)])
+>>> set(db_tmp.selectFromTable("multiplicities", ("event_id", "N"), whereClause="pid=1001")) == set([(1, 1904.27097), (2, 1843.95785)])
 True
 
 
@@ -227,12 +228,31 @@ The constructor takes either a SqliteDB database or a string for a SQLite databa
 >>> reader = EbeCollector.EbeDBReader("testDB/collected.db")
 
 
-1) getEccentricities(eccType="ed", order=2, where="", orderBy="event_id")
+1) getEccentricities(eccType="ed", r_power=2, order=2, where="", orderBy="event_id")
 
 This function return (ecc_real, ecc_imag) tuple from the eccentricities table for all events, and by default order them by the event_id. Additional requirement can be added by modifying the "where" argument and the "orderBy" argument. The following are a few examples.
 
 To take all energy density defined 2nd order eccentricities:
 >>> reader.getEccentricities()
+[(-0.0636864, 0.036426619), (-0.19172864, 0.057076314), (-0.0636864, 0.036426619), (-0.19172864, 0.057076314)]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -438,7 +438,7 @@ class EbeDBReader(object):
         EbeCollector class.
         The database is assumed to have the exact structure as explained in the documentation of the EbeCollector class.
     """
-    def __init__(sefl, database):
+    def __init__(self, database):
         """
             Register a SqliteDB database.
         """
@@ -447,8 +447,22 @@ class EbeDBReader(object):
             self.db = database
         else:
             raise TypeError("EbeDBReader.__init__: the input argument must be a string or a SqliteDB database.")
+        self.ecc_lookup = dict((item[1], item[0]) for item in self.db.selectFromTable("ecc_id_lookup"))
+        self.pid_loopup = dict(self.db.selectFromTable("pid_lookup"))
 
-    def getEccentricities(eccType="ed", order=2, where="", orderBy="event_id"):
+    def _ecc_id(self, ecc_type_name):
+        """
+            Return "ecc_id" from "ecc_type_name".
+        """
+        return self.ecc_lookup[ecc_type_name]
+
+    def _pid(self, name):
+        """
+            Return "pid" from particle "name".
+        """
+        return self.pid_lookup(name)
+
+    def getEccentricities(self, eccType="ed", r_power=2, order=2, where="", orderBy="event_id"):
         """
             Return (real, imag) list for eccentricities of a given "eccType" for
             the given "order" from the eccentricities table with additional
@@ -456,20 +470,15 @@ class EbeDBReader(object):
             argument.
 
             -- eccType: the type of eccentricity; it is the "ecc_type_name"
-                field in the "ecc_id_lookup" table. Because this function first
-                loop up the "ecc_id" field from "ecc_id_loopup" table using the
-                given eccType, do NOT use this function for repeated query for
-                small number of events.
+                field in the "ecc_id_lookup" table.
             -- order: the harmonic order "n".
             -- where: the "where" clause.
             -- orderBy: the "order by" clause.
         """
-        !!!!!!!
-
-        whereClause = "order=%d" % order
+        whereClause = "ecc_id=%d and r_power=%d and n=%d" % (self._ecc_id(eccType), r_power, order)
         if where:
             whereClause += " and " + where
-        self.db.selectFromTable("eccentricities", ("ecc_real, ecc_imag"), whereClause=whereClause, orderByClause=orderBy)
+        return self.db.selectFromTable("eccentricities", ("ecc_real, ecc_imag"), whereClause=whereClause, orderByClause=orderBy)
 
 
 

@@ -8,3 +8,6 @@ collector = EbeCollector.EbeCollector()
 db = DBR.SqliteDB("tmp.db")
 collector.collectFLowsAndMultiplicities_urqmdBinUtilityFormat("testData", 1, db, multiplicityFactor=0.1)
 db.selectFromTable("inte_vn", ("vn_real", "vn_imag"), whereClause="n=3")
+
+reader = EbeCollector.EbeDBReader("testDB/collected.db")
+reader.getEccentricities()
