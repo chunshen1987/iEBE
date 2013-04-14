@@ -129,7 +129,7 @@ To obtain a list of all the fields in a table, use the getTableInfo function. It
 For convenience another function unpackDatabase is also provided. It role is to write out all the tables from a database into separated files. Each file assumes the name of the table it contains; other details for tunable via arguments, like the string used to separate data, whether to include a header, etc. For example:
 >>> db.unpackDatabase(sep=",", ext=".dat")
 >>> open("employee.dat").readlines()
-['#id,name\n', '1,Alice\n', '2,Bob\n', '3,Cauchy\n', '4,David\n']
+['# id,name\n', '1,Alice\n', '2,Bob\n', '3,Cauchy\n', '4,David\n']
 
 ---------------
 4. Deletion
@@ -163,8 +163,9 @@ First is an example that writes to a database before closing.
 <sqlite3.Cursor object at ...>
 >>> db.closeConnection() # changes are written to the database file
 >>> db.unpackDatabase() # this action will re-open the connection to the same database file and unpack it
->>> open("integer.dat").readlines() == ['#i\n', '1\n', '2\n', '3\n', '4\n', '5\n']
-True
+>>> open("integer.dat").readlines()
+['# i\n', '1\n', '2\n', '3\n', '4\n', '5\n']
+
 >>> db.deleteDatabase(confirmation=True)
 True
 
@@ -176,7 +177,7 @@ Next is an example that discard changes upon closing.
 <sqlite3.Cursor object at ...>
 >>> db.closeConnection(discardChanges=True) # changes discarded
 >>> db.unpackDatabase() # this action will re-open the connection to the same database file and unpack it
->>> open("integer.dat").readlines() == ['#i\n'] # only the table is visible, no data
+>>> open("integer.dat").readlines() == ['# i\n'] # only the table is visible, no data
 True
 >>> db.deleteDatabase(confirmation=True)
 True

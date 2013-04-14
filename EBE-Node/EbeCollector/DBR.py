@@ -158,7 +158,7 @@ class SqliteDB(object):
         return returnValue
 
 
-    def selectFromTable(self, tableName, columnNameList="*", whereClause="", orderByClause=""):
+    def selectFromTable(self, tableName, columnNameList="*", whereClause="", groupByClause="", orderByClause=""):
         """
             Return the specified columns with names given in columnNameList from
             the table with name tableName. The columnNameList will be joined
@@ -174,6 +174,8 @@ class SqliteDB(object):
         sqlCommand = "select %s from %s" % (columnNameListSQLString, tableName)
         if whereClause:
             sqlCommand += " where " + whereClause
+        if groupByClause:
+            sqlCommand += " group by " + groupByClause
         if orderByClause:
             sqlCommand += " order by " + orderByClause
         returnValue = self._executeSQL(sqlCommand).fetchall()

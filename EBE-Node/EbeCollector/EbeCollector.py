@@ -10,6 +10,7 @@ import re
 import numpy as np
 from DBR import SqliteDB
 from assignmentFormat import assignmentExprStream2IndexDict
+from ListRNew import isIterable
 
 class EbeCollector(object):
     """
@@ -448,7 +449,7 @@ class EbeDBReader(object):
         else:
             raise TypeError("EbeDBReader.__init__: the input argument must be a string or a SqliteDB database.")
         self.ecc_lookup = dict((item[1], item[0]) for item in self.db.selectFromTable("ecc_id_lookup"))
-        self.pid_loopup = dict(self.db.selectFromTable("pid_lookup"))
+        self.pid_lookup = dict(self.db.selectFromTable("pid_lookup"))
 
     def _ecc_id(self, ecc_type_name):
         """
@@ -460,17 +461,18 @@ class EbeDBReader(object):
         """
             Return "pid" from particle "name".
         """
-        return self.pid_lookup(name)
+        return self.pid_lookup[name]
 
     def getEccentricities(self, eccType="ed", r_power=2, order=2, where="", orderBy="event_id"):
         """
-            Return (real, imag) list for eccentricities of a given "eccType" for
-            the given "order" from the eccentricities table with additional
-            criteria given by the "where" string argument and "orderBy" string
-            argument.
+            Return (real, imag) list for eccentricities for a given "eccType",
+            "r_power", and for the given harmonic "order" from the
+            eccentricities table with additional criteria given by the "where"
+            string argument and "orderBy" string argument.
 
             -- eccType: the type of eccentricity; it is the "ecc_type_name"
                 field in the "ecc_id_lookup" table.
+            -- r_power: power of r in the weight function.
             -- order: the harmonic order "n".
             -- where: the "where" clause.
             -- orderBy: the "order by" clause.
@@ -478,8 +480,155 @@ class EbeDBReader(object):
         whereClause = "ecc_id=%d and r_power=%d and n=%d" % (self._ecc_id(eccType), r_power, order)
         if where:
             whereClause += " and " + where
-        return self.db.selectFromTable("eccentricities", ("ecc_real, ecc_imag"), whereClause=whereClause, orderByClause=orderBy)
+        return np.asarray(self.db.selectFromTable("eccentricities", ("ecc_real, ecc_imag"), whereClause=whereClause, orderByClause=orderBy))
 
+    def get_ecc_n(self, eccType="ed", r_power=2, order=2, where="", orderBy="event_id"):
+        """
+            Return the complex eccentricity vector from the getEccentricities
+            function.
+        """
+        eccArray = self.getEccentricities(eccType=eccType, r_power=r_power, orderBy=orderBy)
+        return eccArray[:,0] + 1j*eccArray[:,1]
+
+    def getRIntegrals(self, eccType="ed", r_power=2, where="", orderBy="event_id"):
+        """
+            Return a list of the r-integrals for a given "eccType" for the given
+            "r_power". Additional criteria can be provided by the "where" and
+            "orderBy" string arguments.
+
+            -- eccType: the type of weight function; it is the "ecc_type_name"
+                field in the "ecc_id_lookup" table.
+            -- r_power: power of r in the weight function.
+            -- where: the "where" clause.
+            -- orderBy: the "order by" clause.
+        """
+        whereClause = "ecc_id=%d and r_power=%d" % (self._ecc_id(eccType), r_power)
+        if where:
+            whereClause += " and " + where
+        return np.asarray(self.db.selectFromTable("r_integrals", "r_inte", whereClause=whereClause, orderByClause=orderBy))
+
+    def getIntegratedFlows(self, particleName="pion", order=2, where="", orderBy="event_id"):
+        """
+            Return (real, imag) list for integrated flows for the species of
+            particle with name "particleName", for the given harmonic "order"
+            from the integrated flow table with additional criteria given by the
+            "where" string argument and "orderBy" string argument.
+
+            -- particleName: name of particle; "name" field in the "pid_lookup"
+                table.
+            -- order: the harmonic order "n".
+            -- where: the "where" clause.
+            -- orderBy: the "order by" clause.
+        """
+        whereClause = "pid=%d and n=%d" % (self._pid(particleName), order)
+        if where:
+            whereClause += " and " + where
+        return np.asarray(self.db.selectFromTable("inte_vn", ("vn_real, vn_imag"), whereClause=whereClause, orderByClause=orderBy))
+
+    def get_V_n(self, particleName="pion", order=2, where="", orderBy="event_id"):
+        """
+            Return the complex V_n vector from the getIntegratedFlows function.
+        """
+        VnArray = self.getIntegratedFlows(particleName=particleName, order=order, where=where, orderBy=orderBy)
+        return VnArray[:,0] + 1j*VnArray[:,1]
+
+    def getMultiplicities(self, particleName="pion", where="", orderBy="event_id"):
+        """
+            Return the multiplicities for the particle with name "particleName".
+            Additional criteria can be added by the "where" and "orderBy"
+            arguments.
+        """
+        whereClause = "pid=%d" % self._pid(particleName)
+        if where:
+            whereClause += " and " + where
+        return np.asarray(self.db.selectFromTable("multiplicities", "N", whereClause=whereClause, orderByClause=orderBy))
+
+    get_dNdy = getMultiplicities
+
+    def getDifferentialFlowDataForOneEvent(self, event_id=1, particleName="pion", order=2, pT_range=None, where="", orderBy="pT"):
+        """
+            Return the (p_T, real(v_n), imag(v_n)) list for the differential
+            flow of order "order" for event with id "event_id", for particle
+            with name "particleName". Only those data inside the given
+            "pT_range" will be returned, otherwise only those satisfying
+            pT_range(0)<=pT<=pT_range(1) will be returned.
+        """
+        whereClause = "event_id=%d and pid=%d and n=%d" % (event_id, self._pid(particleName), order)
+        if pT_range:
+            whereClause += " and %g<=pT and pT<=%g" % (pT_range[0], pT_range[1])
+        if where:
+            whereClause += " and " + where
+        return np.asarray(self.db.selectFromTable("diff_vn", ("pT", "vn_real", "vn_imag"), whereClause=whereClause, orderByClause=orderBy))
+
+    def getInterpretedComplexDifferentialFlowForOneEvent(self, event_id=1, particleName="pion", order=2, pTs=np.linspace(0,2.5,10)):
+        """
+            Return the interpreted complex differential flow for event with
+            id="event_id" on pT points pTs, for order="order" and event
+            id="event_id", and for particle name="particleName". The argument
+            pTs must be iterable and it will not be checked.
+        """
+        diffVnData = self.getDifferentialFlowDataForOneEvent(event_id=event_id, particleName=particleName, order=order)
+        return np.interp(pTs, diffVnData[:,0], diffVnData[:,1]) + 1j*np.interp(pTs, diffVnData[:,0], diffVnData[:,2])
+
+    def getInterpretedComplexDifferentialFlowsForAllEvents(self, particleName="pion", order=2, pTs=np.linspace(0,2.5,10), where="", orderBy="event_id"):
+        """
+            Return the interpreted values of complex differential flow for all
+            events on pT points pTs, for order="order" and event id="event_id",
+            and for particle name="particleName". The argument pTs must be
+            iterable and it will be checked. Additional criteria can be added
+            with "where" and "orderBy" arguments. Returned value will be a numpy
+            matrix so that each row is a differential flow vector for an event.
+        """
+        if not isIterable(pTs): pTs = [pTs]
+        event_ids = self.db.selectFromTable("diff_vn", "event_id", whereClause=where, groupByClause="event_id", orderByClause=orderBy)
+        collectedResults = []
+        for event_id_tuple in event_ids:
+            collectedResults.append(self.getInterpretedComplexDifferentialFlowForOneEvent(event_id=event_id_tuple[0], particleName=particleName, order=order, pTs=pTs))
+        return np.asarray(collectedResults)
+
+    get_diff_V_n = getInterpretedComplexDifferentialFlowsForAllEvents
+
+    def getSpectraDataForOneEvent(self, event_id=1, particleName="pion", pT_range=None, where="", orderBy="pT"):
+        """
+            Return the (p_T, dN/dy) spectra list for event with id "event_id",
+            for particle with name "particleName". Only those data inside the
+            given "pT_range" will be returned, otherwise only those satisfying
+            pT_range(0)<=pT<=pT_range(1) will be returned.
+        """
+        whereClause = "event_id=%d and pid=%d" % (event_id, self._pid(particleName))
+        if pT_range:
+            whereClause += " and %g<=pT and pT<=%g" % (pT_range[0], pT_range[1])
+        if where:
+            whereClause += " and " + where
+        return np.asarray(self.db.selectFromTable("spectra", ("pT", "N"), whereClause=whereClause, orderByClause=orderBy))
+
+    def getInterpretedSpectraForOneEvent(self, event_id=1, particleName="pion", pTs=np.linspace(0,2.5,10)):
+        """
+            Return the interpreted spectra values for event with id="event_id"
+            on pT points pTs, for event id="event_id" and for particle
+            name="particleName". The argument pTs must be iterable and it will
+            not be checked.
+        """
+        diffVnData = self.getSpectraDataForOneEvent(event_id=event_id, particleName=particleName)
+        return np.interp(pTs, diffVnData[:,0], diffVnData[:,1])
+
+    def getInterpretedSpectraForAllEvents(self, particleName="pion", pTs=np.linspace(0,2.5,10), where="", orderBy="event_id"):
+        """
+            Return the interpreted spectra for all events on pT points pTs, for
+            event id="event_id", and for particle name="particleName". The
+            argument pTs must be iterable and it will be checked. Additional
+            criteria can be added with "where" and "orderBy" arguments. Returned
+            value will be a numpy matrix so that each row is a spectra vector
+            for an event.
+        """
+        if not isIterable(pTs): pTs = [pTs]
+        event_ids = self.db.selectFromTable("diff_vn", "event_id", whereClause=where, groupByClause="event_id", orderByClause=orderBy)
+        collectedResults = []
+        for event_id_tuple in event_ids:
+            collectedResults.append(self.getInterpretedSpectraForOneEvent(event_id=event_id_tuple[0], particleName=particleName, pTs=pTs))
+        return np.asarray(collectedResults)
+
+    get_dNdypTdpT = getInterpretedSpectraForAllEvents
 
 
 

@@ -10,4 +10,4 @@ collector.collectFLowsAndMultiplicities_urqmdBinUtilityFormat("testData", 1, db,
 db.selectFromTable("inte_vn", ("vn_real", "vn_imag"), whereClause="n=3")
 
 reader = EbeCollector.EbeDBReader("testDB/collected.db")
-reader.getEccentricities()
+reader.getInterpretedComplexDifferentialFlowsForAllEvents(pTs=[0.5, 1.5])

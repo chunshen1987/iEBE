@@ -47,7 +47,7 @@ First are a few tables storing quantities related to initial states of events.
 
 The final states of events depend on particle species, and we associate the name of each particle to a particle identification number (pid), recorded in the following table:
 
-4) Table "pid_lookup". This table assoicate each particle to a unique number "pid", which is used to identify particle species in other tables.
+4) Table "pid_lookup". This table assoicate each particle to a unique number "pid", which is used to identify particle species in other tables. The particles are categorized into 3 groups: the 1st group contains final particles after UrQMD; the 2nd group contains particles after resonance decay from pure hydrodynamics calculation; and the 3rd group contains thermal particles. Note that depending on the type of calculations, not all of the categories will eventually be filled.
 -- name (text)
 -- pid (integer)
 
@@ -105,8 +105,8 @@ For example, assuming that the "testData" folder exists (should be included in t
 >>> collector.collectEccentricitiesAndRIntegrals("testData", 1, db)
 
 We can check the tables it contains by do the following:
->>> db.getAllTableNames()
-[u'ecc_id_lookup', u'eccentricities', u'r_integrals']
+>>> set(db.getAllTableNames()) == set([u'ecc_id_lookup', u'eccentricities', u'r_integrals'])
+True
 
 We can inspect the eccentricity data via different ways, for example, assume we want all those real parts of the eccentricities whose value is bigger than 0.6:
 >>> set(db.selectFromTable("eccentricities", "ecc_real", whereClause="ecc_real>0.6")) == set([(0.61667342,), (0.60969422,), (0.62655439,), (0.61452488,)])
@@ -126,8 +126,8 @@ For example, assuming that the "testData" folder exists (should be included in t
 >>> collector.collectFLowsAndMultiplicities_urqmdBinUtilityFormat("testData", 1, db, multiplicityFactor=0.1)
 
 We can check the tables it contains by do the following:
->>> db.getAllTableNames()
-[u'ecc_id_lookup', u'eccentricities', u'r_integrals', u'pid_lookup', u'inte_vn', u'diff_vn', u'multiplicities', u'spectra']
+>>> set(db.getAllTableNames()) == set([u'ecc_id_lookup', u'eccentricities', u'r_integrals', u'pid_lookup', u'inte_vn', u'diff_vn', u'multiplicities', u'spectra'])
+True
 
 >>> ('pion_p_hydro', 1007) in db.selectFromTable("pid_lookup")
 True
@@ -228,13 +228,107 @@ The constructor takes either a SqliteDB database or a string for a SQLite databa
 >>> reader = EbeCollector.EbeDBReader("testDB/collected.db")
 
 
-1) getEccentricities(eccType="ed", r_power=2, order=2, where="", orderBy="event_id")
+1) Eccentricities.
 
-This function return (ecc_real, ecc_imag) tuple from the eccentricities table for all events, and by default order them by the event_id. Additional requirement can be added by modifying the "where" argument and the "orderBy" argument. The following are a few examples.
+the getEccentricities(eccType="ed", r_power=2, order=2, where="", orderBy="event_id") function returns (real(ecc_n), imag(ecc_n)) tuple from the "eccentricities" table for all events, and by default order them by "event_id". Additional requirements can be added by modifying the "where" argument and the "orderBy" argument. The following are a few examples.
 
-To take all energy density defined 2nd order eccentricities:
+To take all energy density defined 2nd order eccentricity matrix:
 >>> reader.getEccentricities()
-[(-0.0636864, 0.036426619), (-0.19172864, 0.057076314), (-0.0636864, 0.036426619), (-0.19172864, 0.057076314)]
+array([[-0.00016182, -0.00449052],
+       [-0.01112089, -0.03613683],
+       [-0.13409214,  0.09590283],
+       [ 0.00110106,  0.00146287]])
+
+This function has a getEccn variant that returns the complex eccentricity factor instead of the the (real, imag) matrix. For example:
+>>> reader.get_ecc_n()
+array([-0.00016182-0.00449052j, -0.01112089-0.03613683j,
+       -0.13409214+0.09590283j,  0.00110106+0.00146287j])
+
+
+2) R-integrals.
+
+The getRIntegrals(eccType="ed", r_power=2, where="", orderBy="event_id") function returns a list of r-integral value from the "r_integrals" table for all events, and by default order them by "event_id". Additional requirements can be added by modifying the "where" and "orderBy" arguments. For example:
+>>> reader.getRIntegrals()
+array([[   51.429047],
+       [ 1628.8231  ],
+       [  675.07625 ],
+       [   45.966488]])
+
+
+3) Integrated flows.
+
+The getIntegratedFlows(particleName="pion_p", order=2, where="", orderBy="event_id") function returns (real(V_n), imag(V_n)) tuple from the "inte_vn" table for all events, and by default order them by "event_id". Additional requirements can be added by modifying the "where" argument and the "orderBy" argument. The following are a few example.
+
+To take all 2nd order total Pion integrated flow matrix:
+>>> reader.getIntegratedFlows()
+array([[ 0.01927809,  0.05239437],
+       [-0.00390843,  0.05045172],
+       [ 0.07518625,  0.02788557],
+       [-0.03141065, -0.01320664]])
+
+Similarly this function has a getVn variant returning the complex vector:
+>>> reader.get_V_n()
+array([ 0.01927809+0.05239437j, -0.00390843+0.05045172j,
+        0.07518625+0.02788557j, -0.03141065-0.01320664j])
+
+
+4) Multiplicities.
+
+The getMultiplicities(particleName="pion", where="", orderBy="event_id") function returns a list of multiplicities from the "multiplicities" table for all events, and by default order by "event_id". Additional requirements can be added by modifying the "where" and "orderBy" arguments. For example:
+>>> reader.getMultiplicities()
+array([[  22.8],
+       [ 290.4],
+       [  84. ],
+       [  26.6]])
+
+This function is also aliased as the get_dNdy function.
+
+
+5) Differential flows.
+
+The getDifferentialFlowDataForOneEvent(event_id=1, particleName="pion", order=2, pT_range=None, where="", orderBy="pT") function returns the raw (p_T, real(v_n), imag(v_n)) list for the given event with id "event_id", and for all p_T that lies in the range [pT_range[0], pT_range[1]]. Additional requirements can be added by modifying the "where" and "orderBy" arguments. For example:
+>>> reader.getDifferentialFlowDataForOneEvent(pT_range=(1,2))
+array([[ 1.07688333,  0.02276404,  0.33534406],
+       [ 1.22453   , -0.95678683, -0.29079023],
+       [ 1.83739   ,  0.14930991,  0.98879045]])
+
+The getInterpretedComplexDifferentialFlowForOneEvent(event_id=1, particleName="pion", order=2, pTs=np.linspace(0,2.5,10)) function returns the interpreted complex differential flows for pT points in pTs. For example:
+>>> reader.getInterpretedComplexDifferentialFlowForOneEvent(pTs=[0.5, 1.5])
+array([ 0.11968908-0.06324814j, -0.45961542+0.28435922j])
+
+Use the getInterpretedComplexDifferentialFlowsForAllEvents(self, particleName="pion", order=2, pTs=np.linspace(0,2.5,10), where="", orderBy="event_id") to return the interpreted complex differential flow from all events.
+>>> reader.getInterpretedComplexDifferentialFlowsForAllEvents(pTs=[0.5, 1.5])
+array([[ 0.11968908-0.06324814j, -0.45961542+0.28435922j],
+       [-0.04217610+0.07601679j,  0.05340598+0.10338167j],
+       [ 0.23127808+0.05106764j, -0.23767418+0.57741666j],
+       [-0.21871027-0.25311593j,  0.08848211+0.16774454j]])
+
+The getInterpretedComplexDifferentialFlowsForAllEvents function is also aliased as get_diff_V_n function, and this alias is the recommended function for accessing differential flows.
+
+
+6) Spectra.
+
+The getSpectraDataForOneEvent(event_id=1, particleName="pion", pT_range=None, where="", orderBy="pT") function returns the raw (p_T, dN/(dy p_T dp_T dphi)) list for the given event with id "event_id", and for all p_T that lies in the range [pT_range[0], pT_range[1]]. Additional requirements can be added by modifying the "where" and "orderBy" arguments. For example:
+>>> reader.getSpectraDataForOneEvent(pT_range=(1,2))
+array([[ 1.07688333,  0.3       ],
+       [ 1.22453   ,  0.1       ],
+       [ 1.83739   ,  0.1       ]])
+
+Similarly to differential flow there is a getInterpretedSpectraForOneEvent(event_id=1, particleName="pion", pTs=np.linspace(0,2.5,10)) function that perform interpolation and another getInterpretedSpectraForAllEvents(particleName="pion", pTs=np.linspace(0,2.5,10), where="", orderBy="event_id") that does so for all events. The later is aliased as get_dNdypTdpT function, which is recommended way for accessing spectra. For example:
+>>> reader.get_dNdypTdpT(pTs=[0.5, 1.5])
+array([[  3.37855688,   0.1       ],
+       [ 48.18746303,   1.91488976],
+       [ 11.62703839,   0.31319786],
+       [  3.81290396,   0.24769716]])
+
+
+
+
+
+
+
+
+
 
 
 

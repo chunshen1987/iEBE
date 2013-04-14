@@ -7,14 +7,21 @@
 from sys import argv
 from os import path, listdir
 
-# get optional arguments
-if len(argv)>=2:
-    targetWorkingDirectory = argv[1]
+# check for existing saved_configs.py file
+if path.exists("saved_configs.py"):
+    # use saved config file
+    import saved_configs
+    targetWorkingDirectory = saved_configs.iEbeConfigs["working_folder"]
 else:
-    targetWorkingDirectory = "PlayGround"
+    # use CML arguments
+    if len(argv)>=2:
+        targetWorkingDirectory = path.abspath(argv[1])
+    else:
+        targetWorkingDirectory = "PlayGround"
 
 from subprocess import call
 
+print("Checking progress of events in %s:" % targetWorkingDirectory)
 for aFolder in listdir(targetWorkingDirectory):
     subFolder = path.join(targetWorkingDirectory, aFolder, "crank")
     recordFile = path.join(subFolder, "RunRecord.txt")

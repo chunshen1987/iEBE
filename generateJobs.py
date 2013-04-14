@@ -18,43 +18,73 @@ try:
     numberOfEventsPerJob = int(argv[2])
 
     # set optional parameters
-    if len(argv)>=4: # folder to store results
-        resultsFolder = path.abspath(argv[3])
-    else:
-        resultsFolder = path.abspath("./RESULTS")
+    argId = 2
 
-    if len(argv)>=5: # set wall time
-        walltime = argv[4]
-    else:
-        walltime = "30:00:00"
-
-    if len(argv)>=6: # set working folder
-        workingFolder = path.abspath(argv[5])
+    argId += 1
+    if len(argv)>=argId+1: # set working folder
+        workingFolder = path.abspath(argv[argId])
     else:
         workingFolder = path.abspath("./PlayGround")
 
-    if len(argv)>=7: # whether to compress final results folder
-        compressResultsFolderAnswer = argv[6]
+    argId += 1
+    if len(argv)>=argId+1: # folder to store results
+        resultsFolder = path.abspath(argv[argId])
+    else:
+        resultsFolder = path.abspath("./RESULTS")
+
+    argId += 1
+    if len(argv)>=argId+1: # set wall time
+        walltime = argv[argId]
+    else:
+        walltime = "%d:00:00" % (3*numberOfEventsPerJob) # 3 hours per job
+
+    argId += 1
+    if len(argv)>=argId+1: # whether to compress final results folder
+        compressResultsFolderAnswer = argv[argId]
     else:
         compressResultsFolderAnswer = "yes"
 except:
-    print('Usage: generateJobs.py number_of_jobs number_of_events_per_job [results_folder="./RESULTS"] [walltime="03:00:00"] [working_folder="./PlayGround"] [compress_results_folder="yes"]')
+    print('Usage: generateJobs.py number_of_jobs number_of_events_per_job [working_folder="./PlayGround"] [results_folder="./RESULTS"] [walltime="03:00:00" (per event)] [compress_results_folder="yes"]')
     exit()
 
+# save config files
+open("saved_configs.py", "w").writelines("""
+iEbeConfigs = {
+    "number_of_jobs"            :   %d,
+    "number_of_events_per_job"  :   %d,
+    "working_folder"            :   "%s",
+    "results_folder"            :   "%s",
+    "walltime"                  :   "%s",
+    "compress_results_folder"   :   "%s",
+}
+""" % (numberOfJobs, numberOfEventsPerJob, workingFolder, resultsFolder, walltime, compressResultsFolderAnswer)
+)
+
+# define colors
+purple = "\033[95m"
+green = "\033[92m"
+blue = "\033[94m"
+yellow = "\033[93m"
+red = "\033[91m"
+normal = "\033[0m"
+
+# print welcome message
+print(yellow + "\n" + "-"*80 + "\n>>>>> Welcome to the event generator! <<<<<\n" + "-"*80 + normal)
+
 # check prerequisites
-print("\n>>>>> Checking required libraries <<<<<\n")
+print(green + "\n>>>>> Checking for required libraries <<<<<\n" + normal)
 if not checkEnvironment():
     print("Prerequisites not met. Install the required library first please. Aborting.")
     exit()
 
 # check existence of executables
-print("\n>>>>> Checking existence of executables <<<<<\n")
+print(green + "\n>>>>> Checking for existence of executables <<<<<\n" + normal)
 if not checkExecutables():
     print("Not all executables can be generated. Aborting.")
     exit()
 
 # generate events
-print("\n>>>>> Generating events <<<<<\n")
+print(green + "\n>>>>> Generating events <<<<<\n" + normal)
 
 # prepare directories
 if not path.exists(resultsFolder): makedirs(resultsFolder)

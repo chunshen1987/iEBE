@@ -7,11 +7,17 @@
 from sys import argv, exit
 from os import path, listdir
 
-# get optional arguments
-if len(argv)>=2:
-    targetWorkingDirectory = path.abspath(argv[1])
+# check for existing saved_configs.py file
+if path.exists("saved_configs.py"):
+    # use saved config file
+    import saved_configs
+    targetWorkingDirectory = saved_configs.iEbeConfigs["working_folder"]
 else:
-    targetWorkingDirectory = "PlayGround"
+    # use CML arguments
+    if len(argv)>=2:
+        targetWorkingDirectory = path.abspath(argv[1])
+    else:
+        targetWorkingDirectory = "PlayGround"
 
 # check existence of target working directory
 if path.exists(targetWorkingDirectory):

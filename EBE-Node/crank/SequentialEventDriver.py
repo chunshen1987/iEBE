@@ -426,7 +426,7 @@ def collectEbeResultsToDatabaseFrom(folder):
     simulationType = controlParameterList['simulation_type']
     if simulationType == 'hybrid':
         collectorExecutable = EbeCollectorControl['executable_hybrid']
-        executableString = "python ./" + collectorExecutable + " %s %g %s %s" % (folder, 1.0/iSSParameters['number_of_repeated_sampling'], EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+        executableString = "python ./" + collectorExecutable + " %s %g %s %s" % (folder, 1.0/(iSSParameters['number_of_repeated_sampling']*(iSSParameters["y_RB"]-iSSParameters["y_LB"])), EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     elif simulationType == 'hydro':
         collectorExecutable = EbeCollectorControl['executable_hydro']
         executableString = "python ./" + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])

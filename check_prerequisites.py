@@ -114,20 +114,21 @@ def checkExecutables():
         else:
             print("Executable %s found." % exe)
 
-    # compile if necessary
+    # compile if necessary and check again
     if not existenceFlag:
         print("Start building executables...")
         call("./compile_all.sh &> CompileRecord.txt", shell=True, cwd="utilities")
         unlink(path.join("utilities", "CompileRecord.txt"))
 
-    # check for existence of all executables again
-    existenceFlag = True
-    print("Checking again existence of executables.")
-    for exe in executables:
-        if not path.exists(path.join(ebeNodeFolder, exe)):
-            print("Executable %s still not found." % exe)
-            existenceFlag = False
-            return False
+        # check for existence of all executables again
+        existenceFlag = True
+        print("Checking again existence of executables.")
+        for exe in executables:
+            if not path.exists(path.join(ebeNodeFolder, exe)):
+                print("Executable %s still not found." % exe)
+                existenceFlag = False
+                return False
+
     print("All executables found.")
     return True
 
