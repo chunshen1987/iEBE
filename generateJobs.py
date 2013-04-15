@@ -9,7 +9,7 @@ from sys import argv, exit
 from os import makedirs, path
 from shutil import copytree, copy, rmtree
 
-from check_prerequisites import checkEnvironment, checkExecutables
+from check_prerequisites import checkEnvironment, checkExecutables, greetings
 
 # check argv
 try:
@@ -69,7 +69,9 @@ red = "\033[91m"
 normal = "\033[0m"
 
 # print welcome message
-print(yellow + "\n" + "-"*80 + "\n>>>>> Welcome to the event generator! <<<<<\n" + "-"*80 + normal)
+print(yellow)
+greetings(3)
+print(purple + "\n" + "-"*80 + "\n>>>>> Welcome to the event generator! <<<<<\n" + "-"*80 + normal)
 
 # check prerequisites
 print(green + "\n>>>>> Checking for required libraries <<<<<\n" + normal)
