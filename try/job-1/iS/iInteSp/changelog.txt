@@ -1,0 +1,41 @@
+*-------------*
+*  iInteSp    *
+*-------------*
+Zhi Qiu & Chun Shen  --- 04/2013
+
+
+----------------------
+Ver 1.1.2, 08-06-2012
+----------------------
+.: Two more tables added: particle_eta_uni_0.5_2.5_table.dat and particle_eta_uni_0.5_4.8_table.dat. The flowFromResonance.sh is modified according to include these two additional eta treatments.
+
+
+----------------------
+Ver 1.1.1, 06-27-2012
+----------------------
+.: The flowFromResonance.sh script now can skip a folder triggered by the non-existence of a file or the existence of another file.
+
+----------------------
+Ver 1.1.0, 06-27-2012
+----------------------
+.: Bugfix: the previous |eta|<2.5 table file was indeed the table for |eta|<0.25.
+.: The default eta table file set to "tables/particle_eta_table.dat" to allow late-stage manipulation using scripts. The default table is set to |eta|<0.5.
+.: Added pT cut: 300 MeV, and 300 MeV<pT<3 GeV.
+.: Script flowFromResonance.sh updated to allow calculations with multiple eta tables.
+.: Names for flow files involving eta integrals have changed.
+.: Folders do not have spec_211.dat will be skipped by flowFromResonance.sh script.
+
+----------------------
+Ver 1.0.2, 06-17-2012
+----------------------
+.: pT cut 500 MeV added. Also defaults to use -2.5<eta<2.5 table.
+
+----------------------
+Ver 1.0.1, 05-30-2012
+----------------------
+.: Bug fix: when performaing interpolation using log(dN), a negativity check is now embedded. (Search for "if(normalization[i] < 0) normalization[i] = 1e-100;")
+
+------------
+Ver 1.00
+------------
+.: The very first tested version

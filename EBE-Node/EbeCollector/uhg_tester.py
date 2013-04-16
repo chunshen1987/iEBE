@@ -1,6 +1,6 @@
 
-import uhg
+from uhg import *
 
-uhg.use("testDB/collected.db")
+use("testDB/collected.db")
 
-print(uhg.eval("ecc_3(ed)"))
+print(e("ecc_3(ed)"))

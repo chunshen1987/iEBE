@@ -1,0 +1,6 @@
+#! /usr/bin/env bash
+for i in `ls *.bat`
+do
+	echo 'File: ' $i
+	grace -nosafe -batch $i
+done

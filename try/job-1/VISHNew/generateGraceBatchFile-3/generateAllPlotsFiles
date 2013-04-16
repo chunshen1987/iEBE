@@ -1,0 +1,37 @@
+#! /usr/bin/env bash
+
+if [ $# -eq 0 ]
+then
+  #./plotFrz
+  ./plotFrzSepXY
+  ./plotVPerp
+  ./plotSpaceAnisotropy
+  ./plotMomentumAnisotropy
+fi
+
+if [ $# -eq 1 ]
+then
+  #./plotFrz "$1"
+  ./plotFrzSepXY "$1"
+  ./plotVPerp "$1"
+  ./plotSpaceAnisotropy "$1"
+  ./plotMomentumAnisotropy "$1"
+fi
+
+if [ $# -eq 2 ]
+then
+  #./plotFrz "$1" "$2"
+  ./plotFrzSepXY "$1" "$2"
+  ./plotVPerp "$1" "$2"
+  ./plotSpaceAnisotropy "$1" "$2"
+  ./plotMomentumAnisotropy "$1" "$2"
+fi
+
+if [ $# -eq 3 ]
+then
+  #./plotFrz "$1" "$2" "$3"
+  ./plotFrzSepXY "$1" "$2" "$3"
+  ./plotVPerp "$1" "$2" "$3"
+  ./plotSpaceAnisotropy "$1" "$2" "$3"
+  ./plotMomentumAnisotropy "$1" "$2" "$3"
+fi

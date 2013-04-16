@@ -1,0 +1,70 @@
+
+real	0m0.723s
+user	0m0.653s
+sys	0m0.063s
+Traceback (most recent call last):
+  File "./urqmdBinShell.py", line 33, in <module>
+    binISS.binISSDataFileSimple(tmpFile, "./formats/binUrqmd_default_format.dat", useBinProcesses) # note that the format needs to agree with those dumped by UrqmdOutputFormatter.formatUrqmdOutputFile
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binISS.py", line 167, in binISSDataFileSimple
+    binUtilities.binDataStream(open(data_filename), raw_format, useBinProcesses)
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binUtilities.py", line 355, in binDataStream
+    for aProcess in BinProcesses: aProcess.saveAvgAndCount()
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binUtilities.py", line 295, in saveAvgAndCount
+    avgs, stds, count = self.binner.getAvgAndCount()
+ValueError: too many values to unpack
+
+real	0m0.519s
+user	0m0.397s
+sys	0m0.103s
+Traceback (most recent call last):
+  File "./urqmdBinShell.py", line 33, in <module>
+    binISS.binISSDataFileSimple(tmpFile, "./formats/binUrqmd_default_format.dat", useBinProcesses) # note that the format needs to agree with those dumped by UrqmdOutputFormatter.formatUrqmdOutputFile
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binISS.py", line 167, in binISSDataFileSimple
+    binUtilities.binDataStream(open(data_filename), raw_format, useBinProcesses)
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binUtilities.py", line 355, in binDataStream
+    for aProcess in BinProcesses: aProcess.saveAvgAndCount()
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binUtilities.py", line 295, in saveAvgAndCount
+    avgs, stds, count = self.binner.getAvgAndCount()
+ValueError: too many values to unpack
+
+real	0m0.491s
+user	0m0.430s
+sys	0m0.057s
+Traceback (most recent call last):
+  File "./urqmdBinShell.py", line 33, in <module>
+    binISS.binISSDataFileSimple(tmpFile, "./formats/binUrqmd_default_format.dat", useBinProcesses) # note that the format needs to agree with those dumped by UrqmdOutputFormatter.formatUrqmdOutputFile
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binISS.py", line 167, in binISSDataFileSimple
+    binUtilities.binDataStream(open(data_filename), raw_format, useBinProcesses)
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binUtilities.py", line 355, in binDataStream
+    for aProcess in BinProcesses: aProcess.saveAvgAndCount()
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binUtilities.py", line 295, in saveAvgAndCount
+    avgs, stds, count = self.binner.getAvgAndCount()
+ValueError: too many values to unpack
+
+real	0m0.423s
+user	0m0.390s
+sys	0m0.030s
+Traceback (most recent call last):
+  File "./urqmdBinShell.py", line 33, in <module>
+    binISS.binISSDataFileSimple(tmpFile, "./formats/binUrqmd_default_format.dat", useBinProcesses) # note that the format needs to agree with those dumped by UrqmdOutputFormatter.formatUrqmdOutputFile
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binISS.py", line 167, in binISSDataFileSimple
+    binUtilities.binDataStream(open(data_filename), raw_format, useBinProcesses)
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binUtilities.py", line 355, in binDataStream
+    for aProcess in BinProcesses: aProcess.saveAvgAndCount()
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binUtilities.py", line 295, in saveAvgAndCount
+    avgs, stds, count = self.binner.getAvgAndCount()
+ValueError: too many values to unpack
+
+real	0m0.472s
+user	0m0.407s
+sys	0m0.043s
+Traceback (most recent call last):
+  File "./urqmdBinShell.py", line 33, in <module>
+    binISS.binISSDataFileSimple(tmpFile, "./formats/binUrqmd_default_format.dat", useBinProcesses) # note that the format needs to agree with those dumped by UrqmdOutputFormatter.formatUrqmdOutputFile
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binISS.py", line 167, in binISSDataFileSimple
+    binUtilities.binDataStream(open(data_filename), raw_format, useBinProcesses)
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binUtilities.py", line 355, in binDataStream
+    for aProcess in BinProcesses: aProcess.saveAvgAndCount()
+  File "/home/qiu/LocalWorkspace/iebe/try/job-1/binUtilities/binUtilities.py", line 295, in saveAvgAndCount
+    avgs, stds, count = self.binner.getAvgAndCount()
+ValueError: too many values to unpack

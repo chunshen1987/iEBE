@@ -1,0 +1,86 @@
+Pb+Pb@2760: Aproj=208 Atarg=208 ecm=2760
++ 0-5%:    Npmin=357  Npmax=417   bmin=0.0   bmax=4.4
++ 0-10%:   Npmin=305  Npmax=417   bmin=0.0   bmax=5.7
++ 10-20%:  Npmin=223  Npmax=305   bmin=3.8   bmax=7.7
++ 20-30%:  Npmin=159  Npmax=223   bmin=5.6   bmax=9.4
++ 30-40%:  Npmin=110  Npmax=159   bmin=7.2   bmax=10.7
++ 40-50%:  Npmin=73   Npmax=110   bmin=8.3   bmax=12.1
++ 50-60%:  Npmin=45   Npmax=73    bmin=9.3   bmax=13.4
++ 60-70%:  Npmin=25   Npmax=45    bmin=10.1  bmax=14.7
++ 70-80%:  Npmin=12   Npmax=25    bmin=10.4  bmax=16.1
++ 80-90%:  Npmin=5    Npmax=12    bmin=11.3  bmax=17.2
++ 90-95%:  Npmin=2    Npmax=5     bmin=11.8  bmax=18.5
++ 90-100%: Npmin=0    Npmax=5     bmin=11.8  bmax=24.0
+
+
+
+Pb+Pb@5500: Aproj=208 Atarg=208 ecm=5500
++  0-5%:   Npmin=360   Npmax=416  bmin=0.0   bmax=4.3
++  0-10%:   Npmin=309   Npmax=416  bmin=0.0   bmax=6.1
++ 10-20%:   Npmin=226   Npmax=309  bmin=3.9   bmax=7.9
++ 20-30%:   Npmin=162   Npmax=226  bmin=5.9   bmax=9.3
++ 30-40%:   Npmin=112   Npmax=162  bmin=7.2   bmax=10.8
++ 40-45%:   Npmin=74    Npmax=112  bmin=8.3   bmax=11.9
++ 50-60%:   Npmin=45    Npmax=74   bmin=9.4   bmax=13.1
++ 60-70%:   Npmin=25    Npmax=45   bmin=10.2  bmax=14.2
++ 70-80%:   Npmin=12    Npmax=25   bmin=10.8  bmax=15.4
++ 80-90%:   Npmin=5     Npmax=12   bmin=11.7  bmax=17.5
++ 90-95%:   Npmin=2     Npmax=5    bmin=12.2  bmax=18.1
+
+
+Au+Au@63: Aproj=197 Atarg=197 ecm=63
++ 0-5%:		Npmin=322 	Npmax=391	bmin=0	   bmax=4
++ 5-10%:	Npmin=273 	Npmax=322	bmin=2.2   bmax=5.3
++ 10-20%:	Npmin=197 	Npmax=273	bmin=3.6   bmax=7.1
++ 20-30%:	Npmin=140 	Npmax=197	bmin=5.5   bmax=8.6
++ 30-40%:	Npmin=96 	Npmax=140	bmin=6.7   bmax=10
++ 40-50%:	Npmin=63 	Npmax=96	bmin=8	   bmax=11.3
++ 50-60%:	Npmin=39 	Npmax=50	bmin=8.7   bmax=12.4
++ 60-70%:	Npmin=21 	Npmax=39	bmin=9.6   bmax=13.5
++ 70-80%:	Npmin=10 	Npmax=21	bmin=10.3   bmax=14.7
++ 80-90%:	Npmin=4 	Npmax=10	bmin=10.8   bmax=16.2
++ 90-95%:	Npmin=2 	Npmax=4  	bmin=11	   bmax=17.5   
+
+
+Au+Au@200: Aproj=197 Atarg=197 ecm=200
++ 0-5%:		Npmin=327.0	Npmax=393.0	bmin=0		bmax=4.1
++ 0-10%:	Npmin=278.0	Npmax=393.0	bmin=0		bmax=5.3
++ 10-20%:	Npmin=202.0	Npmax=278.0	bmin=3.8	bmax=7.2
++ 20-30%:	Npmin=144.0	Npmax=202.0	bmin=5.5	bmax=8.7
++ 30-40%:	Npmin=99.0	Npmax=144.0	bmin=6.8	bmax=10.3
++ 40-50%:	Npmin=65.0	Npmax=99.0	bmin=7.9	bmax=11.2
++ 50-60%:	Npmin=40.0	Npmax=65.0	bmin=8.9	bmax=12.4
++ 60-70%:	Npmin=22.0	Npmax=40.0	bmin=9.4	bmax=14.2
++ 70-80%:	Npmin=11.0	Npmax=22.0	bmin=10.1	bmax=14.8
++ 80-90%:	Npmin=4.0	Npmax=11.0	bmin=10.5	bmax=16.2
++ 90-95%:	Npmin=2.0	Npmax=4.0	bmin=11		bmax=17.8
+
+
+Cu+Cu@63: Aproj=64 Atarg=64 ecm=63
++ 0-5%:		Npmin=100	Npmax=125	bmin=0		bmax=3.2
++ 0-10%:	Npmin=86	Npmax=125	bmin=0		bmax=4.2
++ 10-20%:	Npmin=63	Npmax=86	bmin=1.7	bmax=5.6
++ 20-30%:	Npmin=46	Npmax=63	bmin=3.4	bmax=6.8
++ 30-40%:	Npmin=32	Npmax=46	bmin=4.1	bmax=7.9
++ 40-50%:	Npmin=22	Npmax=32	bmin=5		bmax=8.8
++ 50-60%:	Npmin=14	Npmax=22	bmin=5.3	bmax=9.8
++ 60-70%:	Npmin=9		Npmax=14	bmin=5.8	bmax=10.2
++ 70-80%:	Npmin=5		Npmax=9		bmin=6.3	bmax=11.9
++ 80-90%:	Npmin=3		Npmax=5		bmin=6.1	bmax=13.1
++ 90-95%:	Npmin=2	 	Npmax=3		bmin=6.8	bmax=14
+
+Cu+Cu@200: Aproj=64 Atarg=64 ecm=200
++ 0-5%:		Npmin=102	Npmax=125	bmin=0		bmax=3.4
++ 0-10%:	Npmin=88	Npmax=125	bmin=0		bmax=4.2
++ 10-20%:	Npmin=65	Npmax=88	bmin=2.1	bmax=5.5
++ 20-30%:	Npmin=47	Npmax=65	bmin=3.5	bmax=6.9
++ 30-40%:	Npmin=33	Npmax=47	bmin=4.3	bmax=7.8
++ 40-50%:	Npmin=23	Npmax=33	bmin=4.9	bmax=9								
++ 50-60%:	Npmin=15	Npmax=23	bmin=5.3	bmax=10								
++ 60-70%:	Npmin=9		Npmax=15	bmin=5.7	bmax=10.8								
++ 70-80%:	Npmin=5		Npmax=9		bmin=6.3	bmax=11.6								
++ 80-90%:	Npmin=3		Npmax=5		bmin=6.6	bmax=13								
++ 90-95%:	Npmin=2		Npmax=3		bmin=6.8	bmax=14
+
+
+

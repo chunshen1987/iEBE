@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+./generateGraceBatchFile.py generatePlotFile '[["anisotropy.dat",1,2,"v\\sperp\\N"]]' '"v-perp.bat"' '"v\\sperp\\N"' '"\\x t \\f{}-\\x t\\s\\f{}0\\N (fm/c)"' '"v\\sperp\\N"' '[]' '[]' "$2"
+
+if [ $# -gt 0 ] # generate scaled .bat only knowing what scaling parameters are
+then
+  ./generateGraceBatchFile.py generatePlotFile '[["anisotropy.dat","($1/ttau0%d+1):($2)","v\\sperp\\N"]]' '"v-perp-scaled.bat"' '"v\\sperp\\N"' '"\\x t \\f{}/\\x t\\s0\\N \\f{}"' '"v\\sperp\\N"' "$1" '[]' "$2"
+fi

@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+echo "You sure? Press Return to continue..."
+read INPUT
+
+./generateAllPlotsFiles
+
+./refreshPltFiles

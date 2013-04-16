@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+./generateGraceBatchFile.py generatePlotFile '[["anisotropy.dat",1,3,"\\x e\\s\\f{}x\\N \\f{}"]]' '"epsilonX.bat"' '"Space anisotropy"' '"\\x t \\f{}-\\x t_0 \\f{} (fm/c)"' '"\\x e\\s\\f{}x\\N \\f{}"' '[]' '["world 0,0,1,0.25","autoscale xaxes"]' "$2"
+
+if [ $# -gt 0 ] # generate scaled .bat only knowing what scaling parameters are
+then
+  ./generateGraceBatchFile.py generatePlotFile '[["anisotropy.dat","($1/ttau0%d+1):($3)","\\x e\\s\\f{}x\\N \\f{}"]]' '"epsilonX-scaled.bat"' '"Scaled space anisotropy"' '"\\x t \\f{}/\\x t_0 \\f{}"' '"\\x e\\s\\f{}x\\N \\f{}"' "$1" '["world 0,0,1,0.25","autoscale xaxes"]' "$2"
+fi

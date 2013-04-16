@@ -1,0 +1,37 @@
+          CHANGELOG FOR PhyBdary
+        ==========================
+
+
+Ver 1.10 (working)
+-----------------------
+- Oct, 16. 2010       -
+-----------------------
+.: The interpolation function P3 is replaced by P4, which supports symmetric interpolation (no bias on the vertices of the cubic). Note that the argument format of P4 is different from P3.
+
+Ver 1.03 (working)
+-----------------------
+- Oct, 15. 2010       -
+-----------------------
+.: Unknown changes. The current working version.
+
+Ver 1.02
+-----------------------
+- May, 6. 2010        -
+-----------------------
+.: R0 used for boundary regulation, R0Bdry, is now a parameter read from common block.
+
+
+Ver 1.01
+-----------------------
+- Apr, 1. 2010        -
+-----------------------
+.: "R0" and "Aeps" which are used in boundary smoothing process in CoefASM2d are fixed at NXPhy/10 − 0.5 (lattice side in x direction − 0.5, in fm) and 0.5 respectively.
+
+
+Ver 1.0
+-----------------------
+- Jan, 11. 2010       -
+-----------------------
+.: "R0" and "Aeps" which are used in boundary smoothing process in CoefASM2d are fixed at 12.5 and 0.5 respectively.
+
+

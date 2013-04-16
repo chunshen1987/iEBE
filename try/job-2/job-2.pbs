@@ -1,0 +1,16 @@
+
+#!/usr/bin/env bash
+#PBS -N iEBE-2
+#PBS -l walltime=15:00:00
+#PBS -j oe
+#PBS -S /bin/bash
+(cd crank
+    ulimit -n 1000
+    python ./SequentialEventDriver_shell.py 5 1> RunRecord.txt 2> ErrorRecord.txt
+    cp RunRecord.txt ErrorRecord.txt ../finalResults/
+)
+mv ./finalResults /home/qiu/LocalWorkspace/iebe/get/job-2
+
+(cd /home/qiu/LocalWorkspace/iebe/get
+    zip -r -m -q job-2.zip job-2
+)

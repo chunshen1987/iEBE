@@ -1,0 +1,115 @@
+*-------------*
+*  iSpectra   *
+*-------------*
+Zhi Qiu & Chun Shen  --- 04/2013
+
+-- Use spectraFromHydroResults.sh for default (|eta|<0.5) thermal+resonance calculations.
+-- Use flowFromResonance.sh in iInteSp to calculate flows with different eta ranges. Files that do not specify eta range use |eta|<0.5.
+-- Use extractThermal/extractThermal3.sh to extract thermal results from v2data.dat and v2data-inte.dat (historical format).
+
+------------------------------
+10-01-2012, Ver 1.2.1.11
+------------------------------
+.: The readindata.cpp and readindata.h files are updated (Chun).
+
+------------------------------
+09-11-2012, Ver 1.2.1.10
+------------------------------
+.: The resonance8 code is changed again to incorporate a more robust regulation algorithm: the code searches backwards from large pT to the last point where the emission function is negative then regular from it on using points with even smaller pT's.
+
+------------------------------
+08-29-2012, Ver 1.2.1.9
+------------------------------
+.: extractThermal3 script modified so that the generated file names are thermal_211_integrated_vndata.dat.
+
+------------------------------
+08-06-2012, Ver 1.2.1.8
+------------------------------
+.: iInteSp updated to 1.1.2 (see its changelog).
+
+------------------------------
+06-28-2012, Ver 1.2.1.7
+------------------------------
+.: The script regulateVnData.py in extractThermal folder changed to output thermal data file using the same format as the resonance ones.
+
+------------------------------
+06-27-2012, Ver 1.2.1.6
+------------------------------
+.: iInteSp updated to 1.1.1 (see its changelog).
+
+------------------------------
+06-27-2012, Ver 1.2.1.5
+------------------------------
+.: iInteSp updated to 1.1.0 (see its changelog).
+.: Scripts for extracting thermal flow results from "historical format" v2data.dat and v2data-inte.dat files added (extractThermal folder).
+
+------------------------------
+06-17-2012, Ver 1.2.1.4
+------------------------------
+.: iInteSp updated to 1.0.2 (see its changelog).
+.: copy-data-spectra.sh now copies spec* files from "results" folder to target "spectra" folder.
+
+------------------------------
+06-17-2012, Ver 1.2.1.3
+------------------------------
+.: Chun updated the resonance8 code (see its changelog).
+
+------------------------------
+05-30-2012, Ver 1.2.1.2
+------------------------------
+.: Code iFlow added.
+
+------------------------------
+05-30-2012, Ver 1.2.1.1
+------------------------------
+.: Code iInteSp updated to 1.0.1.
+.: Bug fix: The particle name output changed from flow_differential_filename to flow_differential_filename_old in EmissionFunctionArray::calculate_dN_ptdptdphidy_and_flows_4all when USE_HISTORIC_FORMAT is used.
+.: The file copy-data-spectra.sh is modified so that files with names "v2*" in the "results" folder will be copied after calculations too.
+
+------------------------------
+05-12-2012, Ver 1.2.1.0
+------------------------------
+.: In spectraFromHydroResults.sh, the variable already_exist changed to "spectra/pion_p_vndata.dat".
+
+------------------------------
+05-07-2012, Ver 1.2.0.0
+------------------------------
+.: Macro AMOUNT_OF_OUTPUT added to emissionfunction.cpp to control the amount of output.
+
+
+------------------------------
+04-23-2012, Ver 1.1.1.3
+------------------------------
+.: Resonance8/tool.c updated to address negative dN problem.
+
+
+------------------------------
+04-12-2012, Ver 1.1.1.2
+------------------------------
+.: File readindata.cpp updated to Ver 1.1.
+(Code checked: phi_gauss_table_48 and phi_gauss_table_80 give 0.5% difference for integrated v2 for 1 bumpy initial condition.)
+
+
+------------------------------
+04-11-2012, Ver 1.1.1.1
+------------------------------
+.: File readindata.cpp updated to Ver 1.0.
+
+
+------------------------------
+04-09-2012, Ver 1.1.1 
+------------------------------
+.: Bug fixes: Two particles are not the same even if they have the same mass and chemical potential: they have to be both baryon or mesons. Such checks are added to function particles_have_same_mass_and_chemical_potentials and it is renamed to particles_are_the_same.
+.: Unused variables are cleaned.
+
+
+--------------------------
+03-30-2012: Ver 1.1.0
+--------------------------
+.: This version supports particle grouping (ref. macro PARTICLE_GROUPING).
+
+
+--------------------------
+03-26-2012: Ver 1.0.0
+--------------------------
+.: The very first tested version

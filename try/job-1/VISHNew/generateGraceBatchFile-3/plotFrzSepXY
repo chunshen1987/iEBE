@@ -1,0 +1,19 @@
+#! /usr/bin/env bash
+
+# First those without PiTrace curves:
+./generateGraceBatchFile.py generatePlotFile '[["SurfaceX.dat",4,1,"freezeout surface X"],["SurfaceY.dat",6,1,"freezeout surface Y"]]' '"fzXY.bat"' '"Freezeout surface"' '"r (fm)"' '"\\x t \\f{} (fm/c)"' '[]' '[]' "$2"
+# Then those with PiTrace curves:
+./generateGraceBatchFile.py generatePlotFile '[["SurfaceX.dat",4,1,"freezeout surface X"],["SurfaceY.dat",6,1,"freezeout surface Y"],["PiTrace.dat",2,1,"PiTrace"],["PiTrace.dat",3,1,"PiTrace"],["PiTrace.dat",4,1,"PiTrace"]]' '"fzXY-withPi.bat"' '"Freezeout surface and PiTrace"' '"r (fm)"' '"\\x t \\f{} (fm/c)"' '[]' '[]' "$2"
+
+
+if [ $# -gt 0 ] # generate scaled .bat only knowing what scaling parameters are
+then
+  # First those without PiTrace curves:
+  ./generateGraceBatchFile.py generatePlotFile '[["SurfaceX.dat","($4/rrad%d):($1/ttau0%d)","freezeout surface X"],["SurfaceY.dat","($6/rrad%d):($1/ttau0%d)","freezeout surface Y"]]' '"fzXY-scaled.bat"' '"Scaled freezeout surface"' '"r/R"' '"\\x t \\f{}/\\x t\\s0\\N \\f{}"' "$1" '[]' "$2"
+  # Then those with PiTrace curves:
+  ./generateGraceBatchFile.py generatePlotFile '[["SurfaceX.dat","($4/rrad%d):($1/ttau0%d)","freezeout surface X"],["SurfaceY.dat","($6/rrad%d):($1/ttau0%d)","freezeout surface Y"],["PiTrace.dat","($2/rrad%d):($1/ttau0%d)","PiTrace"],["PiTrace.dat","($3/rrad%d):($1/ttau0%d)","PiTrace"],["PiTrace.dat","($4/rrad%d):($1/ttau0%d)","PiTrace"]]' '"fzXY-withPi-scaled.bat"' '"Scaled freezeout surface and PiTrace"' '"r/R"' '"\\x t \\f{}/\\x t\\s0\\N \\f{}"' "$1" '[]' "$2"
+fi
+
+
+
+
