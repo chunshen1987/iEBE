@@ -71,13 +71,13 @@ The rest of the tables store information regarding the final states of the event
 7) Table "multiplicities".
 -- event_id (integer)
 -- pid (integer)
--- N (real)
+-- N (real): dN/dy
 
 8) Table "spectra".
 -- event_id (integer)
 -- pid (integer). This is the particle index value.
 -- pT (real)
--- N (real)
+-- N (real): dN/(dy dpT)
 
 
 -------------------------------
@@ -149,7 +149,7 @@ Get (pT, real(vn)) table for differential v_2:
 
 
 >>> db.selectFromTable("spectra", ("pT", "N"))
-[(0.09254586959349598, 12.3), (0.2230454975609756, 20.5), (0.3697138657718121, 14.9), (0.5221993366336635, 10.100000000000001), (0.670072, 4.5), (0.8232357499999998, 2.4000000000000004), (0.9717935714285714, 1.4000000000000001), (1.081035, 0.2), (1.26097, 0.6000000000000001), (1.4127966666666665, 0.30000000000000004), (1.5787820000000001, 0.5)]
+[(0.09254586959349598, 82.00000000000001), (0.2230454975609756, 136.66666666666669), (0.3697138657718121, 99.33333333333334), (0.5221993366336635, 67.33333333333334), (0.670072, 30.0), (0.8232357499999998, 16.000000000000004), (0.9717935714285714, 9.333333333333334), (1.081035, 1.3333333333333335), (1.26097, 4.000000000000001), (1.4127966666666665, 2.0000000000000004), (1.5787820000000001, 3.3333333333333335)]
 
 
 3) collectFLowsAndMultiplicities_iSFormat(folder, event_id, db, useSubfolder="spectra")
@@ -322,6 +322,121 @@ array([[  3.37855688,   0.1       ],
        [  3.81290396,   0.24769716]])
 
 
+7) Ultimate evaluation function.
+
+The evaluateExpression(expression, verbose=False) function evaluates an expression, and it prints out the expression that it evaluates before evaluation if "verbose" is set to True. The expressions that it can recognize is listed in the following. Note that all spaces will be elliminated first so any spaces in the original expression will not influence the matching process.
+
+<1> Eccentricity.
+
+The standard form of the complex eccentricity vector is of the form: "ecc_{m,n}(ed)", which is defined to be { r^m e^{i n phi} }_e (e is the weight function), and the one using entropy density has the form "ecc_{m,n}(sd)".
+
+For loose match the following are some rules:
+eccentricity_, e_ -> ecc_
+(e) -> (ed)
+(s) -> (sd)
+ecc_n, ecc_{n} -> ecc_{n,n}
+
+A few examples:
+>>> reader.evaluateExpression("ecc_3(ed)", verbose=True)
+get_ecc_n(eccType="ed", r_power=3, order=3)
+array([ 0.00074407-0.00626542j, -0.01404082-0.04322501j,
+       -0.18399698+0.12994067j,  0.00040966+0.00153535j])
+
+>>> reader.evaluateExpression("e_2 (s)", verbose=True)
+get_ecc_n(eccType="sd", r_power=2, order=2)
+array([ 0.00034019-0.00471038j, -0.01500890-0.0461648j ,
+       -0.11382886+0.07742261j,  0.00026303+0.00115929j])
+
+>>> reader.evaluateExpression("e_{3, 1} (e)", verbose=True)
+get_ecc_n(eccType="ed", r_power=3, order=1)
+array([ 0.00074407-0.00626542j, -0.01404082-0.04322501j,
+       -0.18399698+0.12994067j,  0.00040966+0.00153535j])
+
+<2> R-averages.
+
+The standard form of the r-integral is of the form: "{r^m}(ed)", which is defined as int(r^m*ed)/int(ed) (e is the weight function), and the one using entropy density as weight function is "{r^m}(sd)".
+
+For loose match the following are some rules:
+{R^ -> {r^
+
+A few examples:
+>>> reader.evaluateExpression("{ R^2 }(e)", verbose=True)
+getRIntegrals(eccType="ed", r_power=2) / getRIntegrals(eccType="ed", r_power=0)
+array([[ 1.12722936],
+       [ 2.5233512 ],
+       [ 4.60676773],
+       [ 0.98940458]])
+
+Replacing "{}" by "[]" will give the r-integrals instead of r-averages:
+>>> reader.evaluateExpression("[r^2](e)", verbose=True)
+getRIntegrals(eccType="ed", r_power=2)
+array([[   51.429047],
+       [ 1628.8231  ],
+       [  675.07625 ],
+       [   45.966488]])
+
+<3> Integrated flows.
+
+The standard form of the complex integrated flow vector is of the form "V_n(pion)", which is the n-th order integrated complex flow vector for "pion".
+
+A few examples:
+>>> reader.evaluateExpression("V_2(pion)", verbose=True)
+get_V_n(particleName="pion", order=2)
+array([ 0.01927809+0.05239437j, -0.00390843+0.05045172j,
+        0.07518625+0.02788557j, -0.03141065-0.01320664j])
+
+The particle with name "pion_p" is not in the test database, so the following example gives an empty result:
+>>> reader.evaluateExpression("V_2(pion_p)", verbose=True)
+get_V_n(particleName="pion_p", order=2)
+array([], dtype=float64)
+
+<4> Multiplicities.
+
+The standard form of the multiplicity is of the form "dN/dy(pion)", which is the multiplcity of pion.
+
+For loose match the following are some rules:
+N( -> dN/dy(
+dN( -> dN/dy(
+
+A few examples:
+>>> reader.evaluateExpression("dN/dy(pion)", verbose=True)
+get_dNdy(particleName="pion")
+array([[  22.8],
+       [ 290.4],
+       [  84. ],
+       [  26.6]])
+
+>>> reader.evaluateExpression("dN(total)", verbose=True)
+get_dNdy(particleName="total")
+array([[  31.7],
+       [ 395. ],
+       [ 116.6],
+       [  37.7]])
+
+<5> Differential flows.
+
+The standard form of the complex differential flow vector is of the form "V_n(pTs)(pion)", which is the differential flow of pion at given pT value(s).
+
+A few examples.
+Differential flow of pion at pT=0.5 GeV:
+>>> reader.evaluateExpression("V_2(0.5)(pion)", verbose=True)
+get_diff_V_n(particleName="pion", order=2, pTs=0.5)
+array([[ 0.11968908-0.06324814j],
+       [-0.04217610+0.07601679j],
+       [ 0.23127808+0.05106764j],
+       [-0.21871027-0.25311593j]])
+
+Differential flow of total particles at pT=0 and pT=1 GeV:
+>>> reader.evaluateExpression("V_2(linspace(0,1,2))(total)", verbose=True)
+get_diff_V_n(particleName="total", order=2, pTs=linspace(0,1,2))
+array([[-0.08786127+0.04011986j,  0.02558784-0.02479659j],
+       [ 0.01758154+0.01620859j, -0.14460473+0.17226352j],
+       [ 0.05387421-0.04663111j,  0.19836007+0.31369321j],
+       [ 0.05789534+0.191375j  , -0.09130198+0.03386241j]])
+
+<6> Spectra.
+
+The standard form of the spectra is of the form "dN/(dy pT dpT)
 
 
 
@@ -360,6 +475,54 @@ array([[  3.37855688,   0.1       ],
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===========
+The END
+===========
 
 
 
@@ -378,5 +541,3 @@ True
 True
 >>> DBR.SqliteDB("testData_PureHydroNewStyle/CollectedResults.db").deleteDatabase(confirmation=True)
 True
-
-The End.

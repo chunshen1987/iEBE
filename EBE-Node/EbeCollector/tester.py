@@ -1,13 +1,8 @@
-#!/usr/bin/env python
 
 import EbeCollector
-import DBR
-collector = EbeCollector.EbeCollector()
-#collector.createDatabaseFromEventFolders("testData_newStyle", collectMode="fromUrQMD")
-
-db = DBR.SqliteDB("tmp.db")
-collector.collectFLowsAndMultiplicities_urqmdBinUtilityFormat("testData", 1, db, multiplicityFactor=0.1)
-db.selectFromTable("inte_vn", ("vn_real", "vn_imag"), whereClause="n=3")
 
 reader = EbeCollector.EbeDBReader("testDB/collected.db")
-reader.getInterpretedComplexDifferentialFlowsForAllEvents(pTs=[0.5, 1.5])
+
+print(reader.evaluateExpression("ecc_3(e)", verbose=True))
+
+print(reader.evaluateExpression("ecc_3(s)", verbose=True))

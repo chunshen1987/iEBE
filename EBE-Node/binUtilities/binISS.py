@@ -5,6 +5,8 @@
 """
 
 import numpy
+from os import makedirs, path
+from shutil import copy
 from fileRVer2 import readNumericalData
 from listR import FLL
 from dataStreamTransformer import strStream2BlockStream
@@ -32,6 +34,9 @@ integrated_flow_format_saveTo = "results/integrated_flow_format.dat"
 
 count_particle_number_in_pT_range = "results/event_number_of_particles_in_pT_range.dat"
 
+if not path.exists("results"): makedirs("results")
+copy(pTBin_table_filename, "results")
+copy(pTAll_table_filename, "results")
 
 #-----------------------------------------------------------------------------------
 # define reusable bins

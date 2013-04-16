@@ -182,6 +182,9 @@ True
 >>> db.deleteDatabase(confirmation=True)
 True
 
+===========
+The END
+===========
 
 -------------
 Clean ups
@@ -190,4 +193,3 @@ Clean ups
 >>> unlink("employee.dat")
 >>> unlink("integer.dat")
 
-The END

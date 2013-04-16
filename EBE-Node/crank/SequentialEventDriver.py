@@ -136,7 +136,7 @@ urqmdParameters = {}
 binUtilitiesControl = {
     'mainDir'               :   'binUtilities',
     'operationDir'          :   'results',
-    'saveResultGlobs'       :   ['*flow*.dat'], # files in the operation directory matching these globs will be saved
+    'saveResultGlobs'       :   ['*flow*.dat', 'pT_*.dat'], # files in the operation directory matching these globs will be saved
     'executable'            :   'urqmdBinShell.py',
 }
 binUtilitiesParameters = {}
@@ -541,7 +541,6 @@ def sequentialEventDriverShell():
     
                 # bin the combined result file to get flows
                 binUrqmdResultFiles(urqmdOutputFilePath)
-                #!!!!!!!!!!!!!
                 
             elif simulationType == 'hydro':
                 # perform iS calculation and resonance decays
