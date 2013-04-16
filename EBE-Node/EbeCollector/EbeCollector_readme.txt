@@ -314,8 +314,8 @@ array([[ 1.07688333,  0.3       ],
        [ 1.22453   ,  0.1       ],
        [ 1.83739   ,  0.1       ]])
 
-Similarly to differential flow there is a getInterpretedSpectraForOneEvent(event_id=1, particleName="pion", pTs=np.linspace(0,2.5,10)) function that perform interpolation and another getInterpretedSpectraForAllEvents(particleName="pion", pTs=np.linspace(0,2.5,10), where="", orderBy="event_id") that does so for all events. The later is aliased as get_dNdypTdpT function, which is recommended way for accessing spectra. For example:
->>> reader.get_dNdypTdpT(pTs=[0.5, 1.5])
+Similarly to differential flow there is a getInterpretedSpectraForOneEvent(event_id=1, particleName="pion", pTs=np.linspace(0,2.5,10)) function that perform interpolation and another getInterpretedSpectraForAllEvents(particleName="pion", pTs=np.linspace(0,2.5,10), where="", orderBy="event_id") that does so for all events. The later is aliased as get_dNdydpT function, which is recommended way for accessing spectra. For example:
+>>> reader.get_dNdydpT(pTs=[0.5, 1.5])
 array([[  3.37855688,   0.1       ],
        [ 48.18746303,   1.91488976],
        [ 11.62703839,   0.31319786],
@@ -436,7 +436,26 @@ array([[-0.08786127+0.04011986j,  0.02558784-0.02479659j],
 
 <6> Spectra.
 
-The standard form of the spectra is of the form "dN/(dy pT dpT)
+The standard form of the spectra is of the form "dN/(dydpT)(pTs)(pion)".
+
+For loose match the following are some rules:
+dN/dpT, dN/dydpT, dN/(dy dpT) -> dN/(dydpT)
+
+A few examples.
+Pion spectra at pT=0.5 GeV:
+>>> reader.evaluateExpression("dN/dydpT(0.5)(pion)", verbose=True)
+get_dNdydpT(particleName="pion", pTs=0.5)
+array([[  3.37855688],
+       [ 48.18746303],
+       [ 11.62703839],
+       [  3.81290396]])
+
+Total spectra at pT=0 and 1 GeV:
+>>> reader.evaluateExpression("dN/dydpT([0,1])(total)", verbose=True)
+array([[  4.7       ,   1.44748483],
+       [ 49.6       ,  18.99128464],
+       [ 17.1       ,   2.82785324],
+       [  5.8       ,   1.30400747]])
 
 
 

@@ -657,7 +657,7 @@ class EbeDBReader(object):
             collectedResults.append(self.getInterpretedSpectraForOneEvent(event_id=event_id_tuple[0], particleName=particleName, pTs=pTs))
         return np.asarray(collectedResults)
 
-    get_dNdypTdpT = getInterpretedSpectraForAllEvents
+    get_dNdydpT = getInterpretedSpectraForAllEvents
 
     def evaluateExpression(self, expression, verbose=False):
         """
@@ -705,7 +705,13 @@ class EbeDBReader(object):
 
                 # differential flows
                 # V_n(pTs)(pion) := complex differential flow vector of order n for pion at pTs values
-                ("V_(\d+)\((.*?)\)\(([\w_]+)\)", 'self.get_diff_V_n(particleName="{0[2]}", order={0[0]}, pTs={0[1]})')
+                ("V_(\d+)\((.*?)\)\(([\w_]+)\)", 'self.get_diff_V_n(particleName="{0[2]}", order={0[0]}, pTs={0[1]})'),
+
+                # spectra:
+                # dN/(dydpT)(pTs)(pion) := pion spectra at pTs values
+                ("dN/dpT", "dN/(dydpT)"),
+                ("dN/dydpT", "dN/(dydpT)"),
+                ("dN/\(dydpT\)\((.*?)\)\(([\w_]+)\)", 'self.get_dNdydpT(particleName="{0[1]}", pTs={0[0]})'),
 
             ))
 
