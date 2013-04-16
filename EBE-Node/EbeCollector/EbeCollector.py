@@ -474,8 +474,8 @@ class EbeDBReader(object):
         # setup lookup tables
         self.ecc_lookup = dict((item[1], item[0]) for item in self.db.selectFromTable("ecc_id_lookup"))
         self.pid_lookup = dict(self.db.selectFromTable("pid_lookup"))
-        # set self.useStringSubstitution to none for lazy initialization in evaluateExpression function
-        self.useStringSubstitution = None
+        # set self.hasInitializedStringSubstitution to none for lazy initialization in evaluateExpression function
+        self.hasInitializedStringSubstitution = False
 
     def _ecc_id(self, ecc_type_name):
         """
@@ -508,7 +508,7 @@ class EbeDBReader(object):
             whereClause += " and " + where
         return np.asarray(self.db.selectFromTable("eccentricities", ("ecc_real, ecc_imag"), whereClause=whereClause, orderByClause=orderBy))
 
-    def get_ecc_n(self, eccType="ed", r_power=2, order=2, where="", orderBy="event_id"):
+    def get_Ecc_n(self, eccType="ed", r_power=2, order=2, where="", orderBy="event_id"):
         """
             Return the complex eccentricity vector from the getEccentricities
             function.
@@ -659,66 +659,113 @@ class EbeDBReader(object):
 
     get_dNdydpT = getInterpretedSpectraForAllEvents
 
-    def evaluateExpression(self, expression, verbose=False):
+    def evaluateExpression(self, expression):
         """
             Evaluate an expression by first applying substitution rules using
-            the StringSubstitution. When verbose is set to True, the expression
-            being evaluated will be printed.
+            the StringSubstitution.
+
+            The passed expression will first be converted in to a normalized
+            form, then the normalized expression will be replaced by
+            corresponding function calls, after this the functionized expression
+            will be evaluated.
+
+            It returns the typle
+            (value of the expression, string after normalization, string after functionization)
+
         """
         # remove spaces
         expression = expression.replace(" ", "")
         # perform lazy initialization
-        if not self.useStringSubstitution:
-            self.useStringSubstitution = StringSubstitution((
+        if not self.hasInitializedStringSubstitution:
+            self.useStringSubstitution_normalization = StringSubstitution((
 
                 # common
                 ("\(e\)", "(ed)"), # ed -> e
                 ("\(s\)", "(sd)"), # sd -> s
 
+                # for || = abs
+                ("\|([\w_]+)\|(.*?)\(([\w_]+)\)", "|{0[0]}{0[1]}({0[2]})|"), # |ooo|xxx(oxox) -> |oooxxx(oxox)|
+
                 # eccentricity:
-                # ecc_{m,n}(ed) := {r^m e^{i n phi}}_e
+                # Ecc_{m,n}(ed) := {r^m e^{i n phi}}_e
+                ("Eccentricity_", "Ecc_"), # Eccentricity_ -> Ecc_
+                ("E_", "Ecc_"), # E_ -> Ecc_
+                ("Ecc_([\d\w_]+)", "Ecc_{{{0[0]}}}"), # add { } to subscripts
+                ("Ecc_{([\d\w_]+)}", "Ecc_{{{0[0]},{0[0]}}}"), # Ecc_{n} -> Ecc_{n,n}
+                # ecc = |Ecc|
                 ("eccentricity_", "ecc_"), # eccentricity_ -> ecc_
                 ("e_", "ecc_"), # e_ -> ecc_
-                ("ecc_(\d+)", "ecc_{{{0[0]}}}"), # add { } to subscripts
-                ("ecc_{(\d+)}", "ecc_{{{0[0]},{0[0]}}}"), # ecc_{n} -> ecc_{n,n}
-                ("ecc_{(\d+),(\d+)}\((\w\w)\)", 'self.get_ecc_n(eccType="{0[2]}", r_power={0[0]}, order={0[1]})'), # to functions
+                ("ecc_", "|Ecc|_"),
 
                 # r-averages
                 # {r^m}(ed) := int(r^m*ed)/int(ed)
                 ("{R\^", "{{r^"),
-                ("{r\^(\d+)}\((\w\w)\)", 'self.getRIntegrals(eccType="{0[1]}", r_power={0[0]}) / self.getRIntegrals(eccType="{0[1]}", r_power=0)'),
 
                 # r-integrals
                 # [r^m](ed) := int(r^m*ed)
                 ("\[R\^", "[r^"),
-                ("\[r\^(\d+)\]\((\w\w)\)", 'self.getRIntegrals(eccType="{0[1]}", r_power={0[0]})'),
 
                 # integrated flow:
                 # V_n(pion) := pion complex flow vector of order n
-                ("V_(\d+)\(([\w_]+)\)", 'self.get_V_n(particleName="{0[1]}", order={0[0]})'),
 
                 # multiplicity:
                 # dN/dy(pion) := pion multiplicity
                 ("[^d]N\(", "dN/dy("),
                 ("dN\(", "dN/dy("),
-                ("dN/dy\(([\w_]+)\)", 'self.get_dNdy(particleName="{0[0]}")'),
 
                 # differential flows
                 # V_n(pTs)(pion) := complex differential flow vector of order n for pion at pTs values
-                ("V_(\d+)\((.*?)\)\(([\w_]+)\)", 'self.get_diff_V_n(particleName="{0[2]}", order={0[0]}, pTs={0[1]})'),
 
                 # spectra:
                 # dN/(dydpT)(pTs)(pion) := pion spectra at pTs values
                 ("dN/dpT", "dN/(dydpT)"),
                 ("dN/dydpT", "dN/(dydpT)"),
+
+            ))
+
+            self.useStringSubstitution_functionization = StringSubstitution((
+
+                # absolute value
+                ("\|(.*?)\|", 'abs({0[0]})'),
+
+                # mean value
+                ("<(.*?)>", 'mean({0[0]})'),
+
+                # eccentricity:
+                # ecc_{m,n}(ed) := {r^m e^{i n phi}}_e
+                ("Ecc_{([\d\w_]+),([\d\w_]+)}\((\w\w)\)", 'self.get_Ecc_n(eccType="{0[2]}", r_power={0[0]}, order={0[1]})'), # to functions
+
+                # r-averages
+                # {r^m}(ed) := int(r^m*ed)/int(ed)
+                ("{r\^([\d\w_]+)}\((\w\w)\)", 'self.getRIntegrals(eccType="{0[1]}", r_power={0[0]}) / self.getRIntegrals(eccType="{0[1]}", r_power=0)'),
+
+                # r-integrals
+                # [r^m](ed) := int(r^m*ed)
+                ("\[r\^([\d\w_]+)\]\((\w\w)\)", 'self.getRIntegrals(eccType="{0[1]}", r_power={0[0]})'),
+
+                # integrated flow:
+                # V_n(pion) := pion complex flow vector of order n
+                ("V_([\d\w_]+)\(([\w_]+)\)", 'self.get_V_n(particleName="{0[1]}", order={0[0]})'),
+
+                # multiplicity:
+                # dN/dy(pion) := pion multiplicity
+                ("dN/dy\(([\w_]+)\)", 'self.get_dNdy(particleName="{0[0]}")'),
+
+                # differential flows
+                # V_n(pTs)(pion) := complex differential flow vector of order n for pion at pTs values
+                ("V_([\d\w_]+)\((.*?)\)\(([\w_]+)\)", 'self.get_diff_V_n(particleName="{0[2]}", order={0[0]}, pTs={0[1]})'),
+
+                # spectra:
+                # dN/(dydpT)(pTs)(pion) := pion spectra at pTs values
                 ("dN/\(dydpT\)\((.*?)\)\(([\w_]+)\)", 'self.get_dNdydpT(particleName="{0[1]}", pTs={0[0]})'),
 
             ))
 
+
         # perform calculation
-        exprAfterSubstitution, numberOfScans = self.useStringSubstitution.applyAllRules(expression)
-        if verbose: print(exprAfterSubstitution.replace("self.",""))
-        return eval(exprAfterSubstitution)
+        exprAfterNormalization, numberOfScans = self.useStringSubstitution_normalization.applyAllRules(expression) # normalization
+        exprAfterFunctionization, numberOfScans = self.useStringSubstitution_functionization.applyAllRules(exprAfterNormalization) # functionization
+        return (eval(exprAfterFunctionization), exprAfterNormalization, exprAfterFunctionization)
 
 
 

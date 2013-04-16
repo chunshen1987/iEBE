@@ -240,7 +240,7 @@ array([[-0.00016182, -0.00449052],
        [ 0.00110106,  0.00146287]])
 
 This function has a getEccn variant that returns the complex eccentricity factor instead of the the (real, imag) matrix. For example:
->>> reader.get_ecc_n()
+>>> reader.get_Ecc_n()
 array([-0.00016182-0.00449052j, -0.01112089-0.03613683j,
        -0.13409214+0.09590283j,  0.00110106+0.00146287j])
 
@@ -324,52 +324,85 @@ array([[  3.37855688,   0.1       ],
 
 7) Ultimate evaluation function.
 
-The evaluateExpression(expression, verbose=False) function evaluates an expression, and it prints out the expression that it evaluates before evaluation if "verbose" is set to True. The expressions that it can recognize is listed in the following. Note that all spaces will be elliminated first so any spaces in the original expression will not influence the matching process.
+The evaluateExpression(expression) function evaluates an expression. The expression will first be converted into a normalized form, then the stardard expression will be converted into function calls, after this the expression will be evaluated. It returns a tuple:
+(value, expression after normalization, expression after functionization)
+
+The expressions that it can recognize is listed in the following. Note that all spaces will be elliminated first so any spaces in the original expression will not influence the matching process.
 
 <1> Eccentricity.
 
-The standard form of the complex eccentricity vector is of the form: "ecc_{m,n}(ed)", which is defined to be { r^m e^{i n phi} }_e (e is the weight function), and the one using entropy density has the form "ecc_{m,n}(sd)".
+The standard form of the complex eccentricity vector is of the form: "Ecc_{m,n}(ed)", which is defined to be { r^m e^{i n phi} }_e (e is the weight function), and the one using entropy density has the form "Ecc_{m,n}(sd)".
 
-For loose match the following are some rules:
-eccentricity_, e_ -> ecc_
+For loose matching the following are some rules:
+Eccentricity_, E_ -> Ecc_
 (e) -> (ed)
 (s) -> (sd)
-ecc_n, ecc_{n} -> ecc_{n,n}
+Ecc_n, Ecc_{n} -> Ecc_{n,n}
 
-A few examples:
->>> reader.evaluateExpression("ecc_3(ed)", verbose=True)
-get_ecc_n(eccType="ed", r_power=3, order=3)
+A few examples.
+For 3rd order complex eccentricity vector using energy density as the weight function:
+>>> res = reader.evaluateExpression("Ecc_3(ed)")
+>>> "{} -> {}".format(res[1], res[2])
+'Ecc_{3,3}(ed) -> self.get_Ecc_n(eccType="ed", r_power=3, order=3)'
+>>> res[0]
 array([ 0.00074407-0.00626542j, -0.01404082-0.04322501j,
        -0.18399698+0.12994067j,  0.00040966+0.00153535j])
 
->>> reader.evaluateExpression("e_2 (s)", verbose=True)
-get_ecc_n(eccType="sd", r_power=2, order=2)
+Conventional complex eccentricity vector using entropy density as the weight function:
+>>> res = reader.evaluateExpression("E_2 (s)")
+>>> "{} -> {}".format(res[1], res[2])
+'Ecc_{2,2}(sd) -> self.get_Ecc_n(eccType="sd", r_power=2, order=2)'
+>>> res[0]
 array([ 0.00034019-0.00471038j, -0.01500890-0.0461648j ,
        -0.11382886+0.07742261j,  0.00026303+0.00115929j])
 
->>> reader.evaluateExpression("e_{3, 1} (e)", verbose=True)
-get_ecc_n(eccType="ed", r_power=3, order=1)
+The r^3 weighted 1st order eccentricity vector:
+>>> res = reader.evaluateExpression("E_{3, 1} (e)")
+>>> "{} -> {}".format(res[1], res[2])
+'Ecc_{3,1}(ed) -> self.get_Ecc_n(eccType="ed", r_power=3, order=1)'
+>>> res[0]
 array([ 0.00074407-0.00626542j, -0.01404082-0.04322501j,
        -0.18399698+0.12994067j,  0.00040966+0.00153535j])
+
+The "ecc" symbol stands for the magnitude of the "Ecc" vector, and it has the same loose matching rules as stated above. In addition, "|Ecc|" is also recoginzable.
+
+A few examples:
+Same as the first example above, but for magnitudes:
+>>> res = reader.evaluateExpression("ecc_3(ed)")
+>>> "{} -> {}".format(res[1], res[2])
+'|Ecc_{3,3}(ed)| -> abs(self.get_Ecc_n(eccType="ed", r_power=3, order=3))'
+>>> res[0]
+array([ 0.00630945,  0.04544828,  0.22525423,  0.00158906])
+
+Showing the "|Ecc|" syntax:
+>>> res = reader.evaluateExpression("|E|_{7, 5} (e)")
+>>> "{} -> {}".format(res[1], res[2])
+'|Ecc_{7,5}(ed)| -> abs(self.get_Ecc_n(eccType="ed", r_power=7, order=5))'
+>>> res[0]
+array([ 0.01486751,  0.06266969,  0.42026266,  0.00499007])
 
 <2> R-averages.
 
 The standard form of the r-integral is of the form: "{r^m}(ed)", which is defined as int(r^m*ed)/int(ed) (e is the weight function), and the one using entropy density as weight function is "{r^m}(sd)".
 
-For loose match the following are some rules:
+For loose matching the following are some rules:
 {R^ -> {r^
 
 A few examples:
->>> reader.evaluateExpression("{ R^2 }(e)", verbose=True)
-getRIntegrals(eccType="ed", r_power=2) / getRIntegrals(eccType="ed", r_power=0)
+>>> res = reader.evaluateExpression("{ R^2 }(e)")
+>>> "{} -> {}".format(res[1], res[2])
+'{r^2}(ed) -> self.getRIntegrals(eccType="ed", r_power=2) / self.getRIntegrals(eccType="ed", r_power=0)'
+>>> res[0]
 array([[ 1.12722936],
        [ 2.5233512 ],
        [ 4.60676773],
        [ 0.98940458]])
 
 Replacing "{}" by "[]" will give the r-integrals instead of r-averages:
->>> reader.evaluateExpression("[r^2](e)", verbose=True)
-getRIntegrals(eccType="ed", r_power=2)
+>>> res = reader.evaluateExpression("[r^2](e)")
+>>> "{} -> {}".format(res[1], res[2])
+'[r^2](ed) -> self.getRIntegrals(eccType="ed", r_power=2)'
+>>> res[0]
 array([[   51.429047],
        [ 1628.8231  ],
        [  675.07625 ],
@@ -380,34 +413,42 @@ array([[   51.429047],
 The standard form of the complex integrated flow vector is of the form "V_n(pion)", which is the n-th order integrated complex flow vector for "pion".
 
 A few examples:
->>> reader.evaluateExpression("V_2(pion)", verbose=True)
-get_V_n(particleName="pion", order=2)
+>>> res = reader.evaluateExpression("V_2(pion)")
+>>> "{} -> {}".format(res[1], res[2])
+'V_2(pion) -> self.get_V_n(particleName="pion", order=2)'
+>>> res[0]
 array([ 0.01927809+0.05239437j, -0.00390843+0.05045172j,
         0.07518625+0.02788557j, -0.03141065-0.01320664j])
 
 The particle with name "pion_p" is not in the test database, so the following example gives an empty result:
->>> reader.evaluateExpression("V_2(pion_p)", verbose=True)
-get_V_n(particleName="pion_p", order=2)
+>>> res = reader.evaluateExpression("V_2(pion_p)")
+>>> "{} -> {}".format(res[1], res[2])
+'V_2(pion_p) -> self.get_V_n(particleName="pion_p", order=2)'
+>>> res[0]
 array([], dtype=float64)
 
 <4> Multiplicities.
 
 The standard form of the multiplicity is of the form "dN/dy(pion)", which is the multiplcity of pion.
 
-For loose match the following are some rules:
+For loose matching the following are some rules:
 N( -> dN/dy(
 dN( -> dN/dy(
 
 A few examples:
->>> reader.evaluateExpression("dN/dy(pion)", verbose=True)
-get_dNdy(particleName="pion")
+>>> res = reader.evaluateExpression("dN/dy(pion)")
+>>> "{} -> {}".format(res[1], res[2])
+'dN/dy(pion) -> self.get_dNdy(particleName="pion")'
+>>> res[0]
 array([[  22.8],
        [ 290.4],
        [  84. ],
        [  26.6]])
 
->>> reader.evaluateExpression("dN(total)", verbose=True)
-get_dNdy(particleName="total")
+>>> res = reader.evaluateExpression("dN(total)")
+>>> "{} -> {}".format(res[1], res[2])
+'dN/dy(total) -> self.get_dNdy(particleName="total")'
+>>> res[0]
 array([[  31.7],
        [ 395. ],
        [ 116.6],
@@ -419,16 +460,20 @@ The standard form of the complex differential flow vector is of the form "V_n(pT
 
 A few examples.
 Differential flow of pion at pT=0.5 GeV:
->>> reader.evaluateExpression("V_2(0.5)(pion)", verbose=True)
-get_diff_V_n(particleName="pion", order=2, pTs=0.5)
+>>> res = reader.evaluateExpression("V_2(0.5)(pion)")
+>>> "{} -> {}".format(res[1], res[2])
+'V_2(0.5)(pion) -> self.get_diff_V_n(particleName="pion", order=2, pTs=0.5)'
+>>> res[0]
 array([[ 0.11968908-0.06324814j],
        [-0.04217610+0.07601679j],
        [ 0.23127808+0.05106764j],
        [-0.21871027-0.25311593j]])
 
 Differential flow of total particles at pT=0 and pT=1 GeV:
->>> reader.evaluateExpression("V_2(linspace(0,1,2))(total)", verbose=True)
-get_diff_V_n(particleName="total", order=2, pTs=linspace(0,1,2))
+>>> res = reader.evaluateExpression("V_2(linspace(0,1,2))(total)")
+>>> "{} -> {}".format(res[1], res[2])
+'V_2(linspace(0,1,2))(total) -> self.get_diff_V_n(particleName="total", order=2, pTs=linspace(0,1,2))'
+>>> res[0]
 array([[-0.08786127+0.04011986j,  0.02558784-0.02479659j],
        [ 0.01758154+0.01620859j, -0.14460473+0.17226352j],
        [ 0.05387421-0.04663111j,  0.19836007+0.31369321j],
@@ -438,24 +483,65 @@ array([[-0.08786127+0.04011986j,  0.02558784-0.02479659j],
 
 The standard form of the spectra is of the form "dN/(dydpT)(pTs)(pion)".
 
-For loose match the following are some rules:
+For loose matching the following are some rules:
 dN/dpT, dN/dydpT, dN/(dy dpT) -> dN/(dydpT)
 
 A few examples.
 Pion spectra at pT=0.5 GeV:
->>> reader.evaluateExpression("dN/dydpT(0.5)(pion)", verbose=True)
-get_dNdydpT(particleName="pion", pTs=0.5)
+>>> res = reader.evaluateExpression("dN/dydpT(0.5)(pion)")
+>>> "{} -> {}".format(res[1], res[2])
+'dN/(dydpT)(0.5)(pion) -> self.get_dNdydpT(particleName="pion", pTs=0.5)'
+>>> res[0]
 array([[  3.37855688],
        [ 48.18746303],
        [ 11.62703839],
        [  3.81290396]])
 
 Total spectra at pT=0 and 1 GeV:
->>> reader.evaluateExpression("dN/dydpT([0,1])(total)", verbose=True)
+>>> res = reader.evaluateExpression("dN/dydpT([0,1])(total)")
+>>> "{} -> {}".format(res[1], res[2])
+'dN/(dydpT)([0,1])(total) -> self.get_dNdydpT(particleName="total", pTs=[0,1])'
+>>> res[0]
 array([[  4.7       ,   1.44748483],
        [ 49.6       ,  18.99128464],
        [ 17.1       ,   2.82785324],
        [  5.8       ,   1.30400747]])
+
+<7> Combined evaluation.
+
+All the expression above can be mixed algebraically. Any math function supported by numpy package is supported. In addition, the "|Q|" is the same as "abs(Q)", and "<Q>" is the same as "mean(Q)".
+
+Variables are also supported in places of explicit numerical values during evaluation, though variable names are restricted to contain only alphanumeric character and "_".
+
+A few examples.
+>>> n = 3
+>>> res = reader.evaluateExpression("<e_{3,1}(e)>")
+>>> "{} -> {}".format(res[1], res[2])
+'<|Ecc_{3,1}(ed)|> -> mean(abs(self.get_Ecc_n(eccType="ed", r_power=3, order=1)))'
+>>> res[0]
+0.069650253795251305
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
