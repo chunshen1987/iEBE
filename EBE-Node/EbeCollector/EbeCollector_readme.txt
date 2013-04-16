@@ -223,10 +223,8 @@ True
 4. Structure of the EbeDBReader class
 ------------------------------------------
 
-
 The constructor takes either a SqliteDB database or a string for a SQLite database filename, and store it internally. All other queries are with repect to this database. Assuming that the "collected.db" file exists under "testDB", the following example establishes such a link:
 >>> reader = EbeCollector.EbeDBReader("testDB/collected.db")
-
 
 1) Eccentricities.
 
@@ -374,12 +372,26 @@ Same as the first example above, but for magnitudes:
 >>> res[0]
 array([ 0.00630945,  0.04544828,  0.22525423,  0.00158906])
 
-Showing the "|Ecc|" syntax:
+Showing the "|Ecc_n|=|E_n|=|E|_n" syntax:
 >>> res = reader.evaluateExpression("|E|_{7, 5} (e)")
 >>> "{} -> {}".format(res[1], res[2])
 '|Ecc_{7,5}(ed)| -> abs(self.get_Ecc_n(eccType="ed", r_power=7, order=5))'
 >>> res[0]
 array([ 0.01486751,  0.06266969,  0.42026266,  0.00499007])
+
+You can also use "Epsilon" and "epsilon":
+>>> res = reader.evaluateExpression("epsilon_{2} (e)")
+>>> "{} -> {}".format(res[1], res[2])
+'|Ecc_{2,2}(ed)| -> abs(self.get_Ecc_n(eccType="ed", r_power=2, order=2))'
+>>> res[0]
+array([ 0.00449343,  0.03780932,  0.16485768,  0.00183093])
+
+Replacing "Ecc_{m,n}" by "Phi_{m,n}" gives the corresponding event plane angle lies between +-pi/n (using short axis of the deformation as + direction):
+>>> res = reader.evaluateExpression("Phi_2 (e)")
+>>> "{} -> {}".format(res[1], res[2])
+'$Ecc_{2,2}(ed)$ -> angle(-self.get_Ecc_n(eccType="ed", r_power=2, order=2))/2'
+>>> res[0]
+array([ 0.76738765,  0.63612512, -0.31042764, -1.10800162])
 
 <2> R-averages.
 
@@ -426,6 +438,20 @@ The particle with name "pion_p" is not in the test database, so the following ex
 'V_2(pion_p) -> self.get_V_n(particleName="pion_p", order=2)'
 >>> res[0]
 array([], dtype=float64)
+
+For magnitudes of the flow use "v_n=|V|_n=|V_n|", for example:
+>>> res = reader.evaluateExpression("v_2(pion)")
+>>> "{} -> {}".format(res[1], res[2])
+'|V_2(pion)| -> abs(self.get_V_n(particleName="pion", order=2))'
+>>> res[0]
+array([ 0.05582844,  0.05060289,  0.08019088,  0.0340741 ])
+
+Replacing "V_n" by "Psi_n" gives the n-th order event plane angle between +- pi/n:
+>>> res = reader.evaluateExpression("Psi_2(pion)")
+>>> "{} -> {}".format(res[1], res[2])
+'$V_2(pion)$ -> angle(self.get_V_n(particleName="pion", order=2))/2'
+>>> res[0]
+array([ 0.6091139 ,  0.82405529,  0.17757978, -1.37179069])
 
 <4> Multiplicities.
 
@@ -479,6 +505,26 @@ array([[-0.08786127+0.04011986j,  0.02558784-0.02479659j],
        [ 0.05387421-0.04663111j,  0.19836007+0.31369321j],
        [ 0.05789534+0.191375j  , -0.09130198+0.03386241j]])
 
+For magnitudes of the flow use "v_n=|V|_n=|V_n|", for example:
+>>> res = reader.evaluateExpression("v_7(0.15)(kaon)")
+>>> "{} -> {}".format(res[1], res[2])
+'|V_7(0.15)(kaon)| -> abs(self.get_diff_V_n(particleName="kaon", order=7, pTs=0.15))'
+>>> res[0]
+array([[ 0.63721643],
+       [ 0.13419388],
+       [ 0.07407628],
+       [ 0.0893462 ]])
+
+Replacing "V_n" by "Psi_n" gives the n-th order event plane angle between +- pi/n:
+>>> res = reader.evaluateExpression("Psi_3(0.15)(pion)")
+>>> "{} -> {}".format(res[1], res[2])
+'$V_3(0.15)(pion)$ -> angle(self.get_diff_V_n(particleName="pion", order=3, pTs=0.15))/3'
+>>> res[0]
+array([[-0.34120512],
+       [ 0.63215072],
+       [ 0.44368578],
+       [-0.32626036]])
+
 <6> Spectra.
 
 The standard form of the spectra is of the form "dN/(dydpT)(pTs)(pion)".
@@ -507,30 +553,59 @@ array([[  4.7       ,   1.44748483],
        [ 17.1       ,   2.82785324],
        [  5.8       ,   1.30400747]])
 
-<7> Combined evaluation.
+<7> Advanced evaluation features.
 
 All the expression above can be mixed algebraically. Any math function supported by numpy package is supported. In addition, the "|Q|" is the same as "abs(Q)", and "<Q>" is the same as "mean(Q)".
 
-Variables are also supported in places of explicit numerical values during evaluation, though variable names are restricted to contain only alphanumeric character and "_".
-
 A few examples.
->>> n = 3
->>> res = reader.evaluateExpression("<e_{3,1}(e)>")
+
+Calculate v_2[2](pion):
+>>> res = reader.evaluateExpression("sqrt(< v_2(pion)**2 >)")
 >>> "{} -> {}".format(res[1], res[2])
-'<|Ecc_{3,1}(ed)|> -> mean(abs(self.get_Ecc_n(eccType="ed", r_power=3, order=1)))'
+'sqrt(<|V_2(pion)|**2>) -> sqrt(mean(abs(self.get_V_n(particleName="pion", order=2))**2))'
 >>> res[0]
-0.069650253795251305
+0.05759576300663468
 
+And v_2[4](pion):
+>>> res = reader.evaluateExpression(" ( 2*<v_2(pion)**2>**2 - <v_2(pion)**4> )**(1.0/4) ")
+>>> "{} -> {}".format(res[1], res[2])
+'(2*<|V_2(pion)|**2>**2-<|V_2(pion)|**4>)**(1.0/4) -> (2*mean(abs(self.get_V_n(particleName="pion", order=2))**2)**2-mean(abs(self.get_V_n(particleName="pion", order=2))**4))**(1.0/4)'
+>>> res[0]
+0.051918047896339255
 
+Note how they are compared to <v_2(pion)>:
+>>> res = reader.evaluateExpression(" <v_2(pion)> ")
+>>> "{} -> {}".format(res[1], res[2])
+'<|V_2(pion)|> -> mean(abs(self.get_V_n(particleName="pion", order=2)))'
+>>> res[0]
+0.055174074938951469
 
+Difference between the event plane and participant plane angles:
+>>> res = reader.evaluateExpression(" < | Phi_2(ed) - Psi_2(total) | > ")
+>>> "{} -> {}".format(res[1], res[2])
+'<|$Ecc_{2,2}(ed)$-$V_2(total)$|> -> mean(abs(angle(-self.get_Ecc_n(eccType="ed", r_power=2, order=2))/2-angle(self.get_V_n(particleName="total", order=2))/2))'
+>>> res[0]
+0.88738658702337658
 
+>>> res = reader.evaluateExpression(" < | Phi_3(ed) - Psi_3(total) | > ")
+>>> "{} -> {}".format(res[1], res[2])
+'<|$Ecc_{3,3}(ed)$-$V_3(total)$|> -> mean(abs(angle(-self.get_Ecc_n(eccType="ed", r_power=3, order=3))/3-angle(self.get_V_n(particleName="total", order=3))/3))'
+>>> res[0]
+0.43496909527607353
 
+<8> A few convenience functions.
 
+The evaluateExpressionOnly function wraps the evaluateExpression function and returns only its o-th component, that is, the result:
+>>> reader.evaluateExpressionOnly("dN/dydpT(0.5)(pion)")
+array([[  3.37855688],
+       [ 48.18746303],
+       [ 11.62703839],
+       [  3.81290396]])
 
-
-
-
-
+The getFactoryFunctions function returns a tuple of two factory functions: (evaluateExpression, evaluateExpressionOnly), which can then be used without referring to the objects. For example:
+>>> (uhg_check, uhg) = reader.getFactoryFunctions()
+>>> uhg("<e_2(e)>")
+0.052247841125730748
 
 
 

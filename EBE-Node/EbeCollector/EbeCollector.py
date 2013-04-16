@@ -463,10 +463,14 @@ class EbeDBReader(object):
     """
     def __init__(self, database):
         """
-            Register a SqliteDB database.
+            Register a SqliteDB database; set first-use flags.
         """
         # setup database
-        if isinstance(database, str): database = SqliteDB(database)
+        if isinstance(database, str):
+            if path.exists(database):
+                database = SqliteDB(database)
+            else:
+                raise ValueError("EbeDBReader.__init__: the input argument must be an existing database file.")
         if isinstance(database, SqliteDB):
             self.db = database
         else:
@@ -474,6 +478,7 @@ class EbeDBReader(object):
         # setup lookup tables
         self.ecc_lookup = dict((item[1], item[0]) for item in self.db.selectFromTable("ecc_id_lookup"))
         self.pid_lookup = dict(self.db.selectFromTable("pid_lookup"))
+
         # set self.hasInitializedStringSubstitution to none for lazy initialization in evaluateExpression function
         self.hasInitializedStringSubstitution = False
 
@@ -677,14 +682,21 @@ class EbeDBReader(object):
         expression = expression.replace(" ", "")
         # perform lazy initialization
         if not self.hasInitializedStringSubstitution:
+            # note that all the substitution strings contain no spaces
             self.useStringSubstitution_normalization = StringSubstitution((
 
                 # common
                 ("\(e\)", "(ed)"), # ed -> e
                 ("\(s\)", "(sd)"), # sd -> s
 
-                # for || = abs
-                ("\|([\w_]+)\|(.*?)\(([\w_]+)\)", "|{0[0]}{0[1]}({0[2]})|"), # |ooo|xxx(oxox) -> |oooxxx(oxox)|
+                # || = abs
+                ("\|([\w_]+)\|(.*?)\(([\w_]+)\)", "|{0[0]}{0[1]}({0[2]})|"), # |ooo|xxx(oxox) -> |oooxxx(oxox)|; oxox is a word
+
+                # <> = mean
+                ("<([\w_]+)>(.*?)\(([\w_]+)\)", "<{0[0]}{0[1]}({0[2]})>"), # <ooo>xxx(oxox) -> <oooxxx(oxox)>; oxox is a word
+
+                # $$ = get plane angles; only applies to Ecc and V
+                ("\$([\w_]+)\$(.*?)\(([\w_]+)\)", "${0[0]}{0[1]}({0[2]})$"), # <ooo>xxx(oxox) -> <oooxxx(oxox)>; oxox is a word
 
                 # eccentricity:
                 # Ecc_{m,n}(ed) := {r^m e^{i n phi}}_e
@@ -696,6 +708,11 @@ class EbeDBReader(object):
                 ("eccentricity_", "ecc_"), # eccentricity_ -> ecc_
                 ("e_", "ecc_"), # e_ -> ecc_
                 ("ecc_", "|Ecc|_"),
+                # Phi = $Ecc$
+                ("Phi_", "$Ecc$_"),
+                # latex style support
+                ("Epsilon_", "Ecc_"),
+                ("epsilon_", "ecc_"),
 
                 # r-averages
                 # {r^m}(ed) := int(r^m*ed)/int(ed)
@@ -705,31 +722,35 @@ class EbeDBReader(object):
                 # [r^m](ed) := int(r^m*ed)
                 ("\[R\^", "[r^"),
 
-                # integrated flow:
-                # V_n(pion) := pion complex flow vector of order n
+                # flow:
+                # v = |V|
+                ("v_", "|V|_"),
+                # Psi = $V$
+                ("Psi_", '$V$_'),
 
                 # multiplicity:
                 # dN/dy(pion) := pion multiplicity
                 ("[^d]N\(", "dN/dy("),
                 ("dN\(", "dN/dy("),
 
-                # differential flows
-                # V_n(pTs)(pion) := complex differential flow vector of order n for pion at pTs values
-
                 # spectra:
                 # dN/(dydpT)(pTs)(pion) := pion spectra at pTs values
                 ("dN/dpT", "dN/(dydpT)"),
                 ("dN/dydpT", "dN/(dydpT)"),
-
+                
             ))
 
             self.useStringSubstitution_functionization = StringSubstitution((
 
-                # absolute value
+                # ||: absolute value
                 ("\|(.*?)\|", 'abs({0[0]})'),
 
-                # mean value
+                # <>: mean value
                 ("<(.*?)>", 'mean({0[0]})'),
+
+                # $$: get plane angles; only applies to Ecc (angle(-Ecc_n)/n) and V (angle(V_n)/n)
+                ("\$Ecc_{([\d\w+]),([\d\w+])}(.*?)\$", 'angle(-Ecc_{{{0[0]},{0[1]}}}{0[2]})/{0[1]}'),
+                ("\$V_([\d\w+])(.*?)\$", 'angle(V_{0[0]}{0[1]})/{0[0]}'),
 
                 # eccentricity:
                 # ecc_{m,n}(ed) := {r^m e^{i n phi}}_e
@@ -765,51 +786,40 @@ class EbeDBReader(object):
         # perform calculation
         exprAfterNormalization, numberOfScans = self.useStringSubstitution_normalization.applyAllRules(expression) # normalization
         exprAfterFunctionization, numberOfScans = self.useStringSubstitution_functionization.applyAllRules(exprAfterNormalization) # functionization
-        return (eval(exprAfterFunctionization), exprAfterNormalization, exprAfterFunctionization)
+        try:
+            value = eval(exprAfterFunctionization,globals(),locals())
+            return (value, exprAfterNormalization, exprAfterFunctionization)
+        except (SyntaxError, NameError):
+            print("Error encounterred evaluating {}:".format(expression))
+            print("-> {}\n-> {}".format(exprAfterNormalization, exprAfterFunctionization))
+            raise
+
+    def evaluateExpressionOnly(self, expression):
+        """
+            Wraps evaluateExpression function; returns only the result, not
+            expressions for checking.
+        """
+        try:
+            value, expr1, expr2 = self.evaluateExpression(expression)
+            return value
+        except (SyntaxError, NameError):
+            pass # ignore
 
 
 
+    def getFactoryFunctions(self):
+        """
+            Return factory functions for evaluateExpression and
+            evaluateExpressionOnly.
+        """
+        # factory function for evaluateExpression
+        def evaluateExpression_factory(expression):
+            return self.evaluateExpression(expression)
+        # factory function for evaluateExpressionOnly
+        def evaluateExpressionOnly_factory(expression):
+            return self.evaluateExpressionOnly(expression)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return (evaluateExpression_factory, evaluateExpressionOnly_factory)
 
 
 
