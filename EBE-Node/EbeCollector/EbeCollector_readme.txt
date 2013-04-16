@@ -427,7 +427,7 @@ The standard form of the complex integrated flow vector is of the form "V_n(pion
 A few examples:
 >>> res = reader.evaluateExpression("V_2(pion)")
 >>> "{} -> {}".format(res[1], res[2])
-'V_2(pion) -> self.get_V_n(particleName="pion", order=2)'
+'V_{2}(pion) -> self.get_V_n(particleName="pion", order=2)'
 >>> res[0]
 array([ 0.01927809+0.05239437j, -0.00390843+0.05045172j,
         0.07518625+0.02788557j, -0.03141065-0.01320664j])
@@ -435,21 +435,21 @@ array([ 0.01927809+0.05239437j, -0.00390843+0.05045172j,
 The particle with name "pion_p" is not in the test database, so the following example gives an empty result:
 >>> res = reader.evaluateExpression("V_2(pion_p)")
 >>> "{} -> {}".format(res[1], res[2])
-'V_2(pion_p) -> self.get_V_n(particleName="pion_p", order=2)'
+'V_{2}(pion_p) -> self.get_V_n(particleName="pion_p", order=2)'
 >>> res[0]
 array([], dtype=float64)
 
 For magnitudes of the flow use "v_n=|V|_n=|V_n|", for example:
 >>> res = reader.evaluateExpression("v_2(pion)")
 >>> "{} -> {}".format(res[1], res[2])
-'|V_2(pion)| -> abs(self.get_V_n(particleName="pion", order=2))'
+'|V_{2}(pion)| -> abs(self.get_V_n(particleName="pion", order=2))'
 >>> res[0]
 array([ 0.05582844,  0.05060289,  0.08019088,  0.0340741 ])
 
 Replacing "V_n" by "Psi_n" gives the n-th order event plane angle between +- pi/n:
 >>> res = reader.evaluateExpression("Psi_2(pion)")
 >>> "{} -> {}".format(res[1], res[2])
-'$V_2(pion)$ -> angle(self.get_V_n(particleName="pion", order=2))/2'
+'$V_{2}(pion)$ -> angle(self.get_V_n(particleName="pion", order=2))/2'
 >>> res[0]
 array([ 0.6091139 ,  0.82405529,  0.17757978, -1.37179069])
 
@@ -488,7 +488,7 @@ A few examples.
 Differential flow of pion at pT=0.5 GeV:
 >>> res = reader.evaluateExpression("V_2(0.5)(pion)")
 >>> "{} -> {}".format(res[1], res[2])
-'V_2(0.5)(pion) -> self.get_diff_V_n(particleName="pion", order=2, pTs=0.5)'
+'V_{2}(0.5)(pion) -> self.get_diff_V_n(particleName="pion", order=2, pTs=0.5)'
 >>> res[0]
 array([[ 0.11968908-0.06324814j],
        [-0.04217610+0.07601679j],
@@ -498,7 +498,7 @@ array([[ 0.11968908-0.06324814j],
 Differential flow of total particles at pT=0 and pT=1 GeV:
 >>> res = reader.evaluateExpression("V_2(linspace(0,1,2))(total)")
 >>> "{} -> {}".format(res[1], res[2])
-'V_2(linspace(0,1,2))(total) -> self.get_diff_V_n(particleName="total", order=2, pTs=linspace(0,1,2))'
+'V_{2}(linspace(0,1,2))(total) -> self.get_diff_V_n(particleName="total", order=2, pTs=linspace(0,1,2))'
 >>> res[0]
 array([[-0.08786127+0.04011986j,  0.02558784-0.02479659j],
        [ 0.01758154+0.01620859j, -0.14460473+0.17226352j],
@@ -508,7 +508,7 @@ array([[-0.08786127+0.04011986j,  0.02558784-0.02479659j],
 For magnitudes of the flow use "v_n=|V|_n=|V_n|", for example:
 >>> res = reader.evaluateExpression("v_7(0.15)(kaon)")
 >>> "{} -> {}".format(res[1], res[2])
-'|V_7(0.15)(kaon)| -> abs(self.get_diff_V_n(particleName="kaon", order=7, pTs=0.15))'
+'|V_{7}(0.15)(kaon)| -> abs(self.get_diff_V_n(particleName="kaon", order=7, pTs=0.15))'
 >>> res[0]
 array([[ 0.63721643],
        [ 0.13419388],
@@ -518,7 +518,7 @@ array([[ 0.63721643],
 Replacing "V_n" by "Psi_n" gives the n-th order event plane angle between +- pi/n:
 >>> res = reader.evaluateExpression("Psi_3(0.15)(pion)")
 >>> "{} -> {}".format(res[1], res[2])
-'$V_3(0.15)(pion)$ -> angle(self.get_diff_V_n(particleName="pion", order=3, pTs=0.15))/3'
+'$V_{3}(0.15)(pion)$ -> angle(self.get_diff_V_n(particleName="pion", order=3, pTs=0.15))/3'
 >>> res[0]
 array([[-0.34120512],
        [ 0.63215072],
@@ -562,34 +562,55 @@ A few examples.
 Calculate v_2[2](pion):
 >>> res = reader.evaluateExpression("sqrt(< v_2(pion)**2 >)")
 >>> "{} -> {}".format(res[1], res[2])
-'sqrt(<|V_2(pion)|**2>) -> sqrt(mean(abs(self.get_V_n(particleName="pion", order=2))**2))'
+'sqrt(<|V_{2}(pion)|**2>) -> sqrt(mean(abs(self.get_V_n(particleName="pion", order=2))**2))'
 >>> res[0]
 0.05759576300663468
 
-And v_2[4](pion):
+In fact the "[2]" syntex is supported:
+>>> res = reader.evaluateExpression("v_2[2](pion)")
+>>> "{} -> {}".format(res[1], res[2])
+'sqrt(<|V_{2}(pion)|**2>) -> sqrt(mean(abs(self.get_V_n(particleName="pion", order=2))**2))'
+>>> res[0]
+0.05759576300663468
+
+It works for differential flow too:
+>>> res = reader.evaluateExpression("v_2[2](0.5)(pion)")
+>>> "{} -> {}".format(res[1], res[2])
+'sqrt(<|V_{2}(0.5)(pion)|**2>) -> sqrt(mean(abs(self.get_diff_V_n(particleName="pion", order=2, pTs=0.5))**2))'
+>>> res[0]
+0.22016044857620587
+
+And also for eccentricity:
+>>> res = reader.evaluateExpression("e_2[2](ed)")
+>>> "{} -> {}".format(res[1], res[2])
+'sqrt(<|Ecc_{2,2}(ed)|**2>) -> sqrt(mean(abs(self.get_Ecc_n(eccType="ed", r_power=2, order=2))**2))'
+>>> res[0]
+0.08460369752054607
+
+Calculate v_2[4](pion):
 >>> res = reader.evaluateExpression(" ( 2*<v_2(pion)**2>**2 - <v_2(pion)**4> )**(1.0/4) ")
 >>> "{} -> {}".format(res[1], res[2])
-'(2*<|V_2(pion)|**2>**2-<|V_2(pion)|**4>)**(1.0/4) -> (2*mean(abs(self.get_V_n(particleName="pion", order=2))**2)**2-mean(abs(self.get_V_n(particleName="pion", order=2))**4))**(1.0/4)'
+'(2*<|V_{2}(pion)|**2>**2-<|V_{2}(pion)|**4>)**(1.0/4) -> (2*mean(abs(self.get_V_n(particleName="pion", order=2))**2)**2-mean(abs(self.get_V_n(particleName="pion", order=2))**4))**(1.0/4)'
 >>> res[0]
 0.051918047896339255
 
 Note how they are compared to <v_2(pion)>:
 >>> res = reader.evaluateExpression(" <v_2(pion)> ")
 >>> "{} -> {}".format(res[1], res[2])
-'<|V_2(pion)|> -> mean(abs(self.get_V_n(particleName="pion", order=2)))'
+'<|V_{2}(pion)|> -> mean(abs(self.get_V_n(particleName="pion", order=2)))'
 >>> res[0]
 0.055174074938951469
 
 Difference between the event plane and participant plane angles:
 >>> res = reader.evaluateExpression(" < | Phi_2(ed) - Psi_2(total) | > ")
 >>> "{} -> {}".format(res[1], res[2])
-'<|$Ecc_{2,2}(ed)$-$V_2(total)$|> -> mean(abs(angle(-self.get_Ecc_n(eccType="ed", r_power=2, order=2))/2-angle(self.get_V_n(particleName="total", order=2))/2))'
+'<|$Ecc_{2,2}(ed)$-$V_{2}(total)$|> -> mean(abs(angle(-self.get_Ecc_n(eccType="ed", r_power=2, order=2))/2-angle(self.get_V_n(particleName="total", order=2))/2))'
 >>> res[0]
 0.88738658702337658
 
 >>> res = reader.evaluateExpression(" < | Phi_3(ed) - Psi_3(total) | > ")
 >>> "{} -> {}".format(res[1], res[2])
-'<|$Ecc_{3,3}(ed)$-$V_3(total)$|> -> mean(abs(angle(-self.get_Ecc_n(eccType="ed", r_power=3, order=3))/3-angle(self.get_V_n(particleName="total", order=3))/3))'
+'<|$Ecc_{3,3}(ed)$-$V_{3}(total)$|> -> mean(abs(angle(-self.get_Ecc_n(eccType="ed", r_power=3, order=3))/3-angle(self.get_V_n(particleName="total", order=3))/3))'
 >>> res[0]
 0.43496909527607353
 

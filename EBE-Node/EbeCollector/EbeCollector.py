@@ -682,64 +682,94 @@ class EbeDBReader(object):
         expression = expression.replace(" ", "")
         # perform lazy initialization
         if not self.hasInitializedStringSubstitution:
-            # note that all the substitution strings contain no spaces
-            self.useStringSubstitution_normalization = StringSubstitution((
-
+            
+            # The groups of substitution rules it contains will loop until there
+            # is no more changes, thus only the relative order between the
+            # groups matter: make sure groups appear earlier contain expansions
+            # that should be done before groups appear later.
+            # Note that all the substitution strings contain no spaces
+            self.useStringSubstitution_normalization = (
+                
+            # 0th priorities: standardize notations
+            StringSubstitution((
+                
                 # common
                 ("\(e\)", "(ed)"), # ed -> e
                 ("\(s\)", "(sd)"), # sd -> s
-
-                # || = abs
-                ("\|([\w_]+)\|(.*?)\(([\w_]+)\)", "|{0[0]}{0[1]}({0[2]})|"), # |ooo|xxx(oxox) -> |oooxxx(oxox)|; oxox is a word
-
-                # <> = mean
-                ("<([\w_]+)>(.*?)\(([\w_]+)\)", "<{0[0]}{0[1]}({0[2]})>"), # <ooo>xxx(oxox) -> <oooxxx(oxox)>; oxox is a word
-
-                # $$ = get plane angles; only applies to Ecc and V
-                ("\$([\w_]+)\$(.*?)\(([\w_]+)\)", "${0[0]}{0[1]}({0[2]})$"), # <ooo>xxx(oxox) -> <oooxxx(oxox)>; oxox is a word
-
-                # eccentricity:
-                # Ecc_{m,n}(ed) := {r^m e^{i n phi}}_e
+                
+                # add {} to subscript to enable expansion of [2] and [4]
+                ("_([\d]+)", "_{{{0[0]}}}"), # add { } to subscripts
+                
+                # eccentricities
                 ("Eccentricity_", "Ecc_"), # Eccentricity_ -> Ecc_
                 ("E_", "Ecc_"), # E_ -> Ecc_
-                ("Ecc_([\d\w_]+)", "Ecc_{{{0[0]}}}"), # add { } to subscripts
-                ("Ecc_{([\d\w_]+)}", "Ecc_{{{0[0]},{0[0]}}}"), # Ecc_{n} -> Ecc_{n,n}
-                # ecc = |Ecc|
                 ("eccentricity_", "ecc_"), # eccentricity_ -> ecc_
                 ("e_", "ecc_"), # e_ -> ecc_
-                ("ecc_", "|Ecc|_"),
-                # Phi = $Ecc$
-                ("Phi_", "$Ecc$_"),
                 # latex style support
                 ("Epsilon_", "Ecc_"),
                 ("epsilon_", "ecc_"),
-
+                
+                # eccentricity:
+                # Ecc_{m,n}(ed) := {r^m e^{i n phi}}_e
+                ("Ecc_{([\d]+)}", "Ecc_{{{0[0]},{0[0]}}}"), # Ecc_{n} -> Ecc_{n,n}
+                
                 # r-averages
                 # {r^m}(ed) := int(r^m*ed)/int(ed)
                 ("{R\^", "{{r^"),
-
+            
                 # r-integrals
                 # [r^m](ed) := int(r^m*ed)
                 ("\[R\^", "[r^"),
-
-                # flow:
-                # v = |V|
-                ("v_", "|V|_"),
-                # Psi = $V$
-                ("Psi_", '$V$_'),
-
+                
                 # multiplicity:
                 # dN/dy(pion) := pion multiplicity
                 ("[^d]N\(", "dN/dy("),
                 ("dN\(", "dN/dy("),
-
+            
                 # spectra:
                 # dN/(dydpT)(pTs)(pion) := pion spectra at pTs values
                 ("dN/dpT", "dN/(dydpT)"),
-                ("dN/dydpT", "dN/(dydpT)"),
+                ("dN/dydpT", "dN/(dydpT)"),                
+            )),    
                 
-            ))
+            # 1st priorities: expanding [2] [4]
+            StringSubstitution((
 
+                # support for xxx_{ooo}[2](oxox)
+                ("([\w_]+)_{([\d,]+)}\[2\]\(([\w_]+)\)", 'sqrt(<{0[0]}_{{{0[1]}}}({0[2]})**2>)'), # without (pTs)
+                ("([\w_]+)_{([\d,]+)}\[2\](\(.*?\))\(([\w_]+)\)", 'sqrt(<{0[0]}_{{{0[1]}}}{0[2]}({0[3]})**2>)'), # with (pTs)
+                
+                # support for xxx_{ooo}[4](oxox)
+                ("([\w_]+)_{([\d,]+)}\[4\]\(([\w_]+)\)", '(2*<{0[0]}_{{{0[1]}}}({0[2]})**2>**2-<{0[0]}_{{{0[1]}}}({0[2]})**4>)**0.25'), # without (pTs)
+                ("([\w_]+)_{([\d,]+)}\[4\](\(.*?\))\(([\w_]+)\)", '(2*<{0[0]}_{{{0[1]}}}{0[2]}({0[3]})**2>**2-<{0[0]}_{{{0[1]}}}{0[2]}({0[3]})**4>)**0.25'), # with (pTs)
+            )),
+            
+            # 2nd priorities: expand special functions || <> $$ (related: ecc, v, Phi, Psi)
+            StringSubstitution((
+
+                # ecc = |Ecc|
+                ("ecc_", "|Ecc|_"),
+                # v = |V|
+                ("v_", "|V|_"),
+
+                # || = abs
+                ("\|([\w_]+)\|(.*?)\(([\w_]+)\)", "|{0[0]}{0[1]}({0[2]})|"), # |ooo|xxx(oxox) -> |oooxxx(oxox)|; oxox is a word
+                
+                # <> = mean
+                ("<([\w_]+)>(.*?)\(([\w_]+)\)", "<{0[0]}{0[1]}({0[2]})>"), # <ooo>xxx(oxox) -> <oooxxx(oxox)>; oxox is a word
+
+                # Phi = $Ecc$
+                ("Phi_", "$Ecc$_"),
+                # Psi = $V$
+                ("Psi_", '$V$_'),
+
+                # $$ = get plane angles; only applies to Ecc and V
+                ("\$([\w_]+)\$(.*?)\(([\w_]+)\)", "${0[0]}{0[1]}({0[2]})$"), # <ooo>xxx(oxox) -> <oooxxx(oxox)>; oxox is a word
+            )),
+            
+            )
+
+            # convert standardized notations to functions
             self.useStringSubstitution_functionization = StringSubstitution((
 
                 # ||: absolute value
@@ -750,31 +780,31 @@ class EbeDBReader(object):
 
                 # $$: get plane angles; only applies to Ecc (angle(-Ecc_n)/n) and V (angle(V_n)/n)
                 ("\$Ecc_{([\d\w+]),([\d\w+])}(.*?)\$", 'angle(-Ecc_{{{0[0]},{0[1]}}}{0[2]})/{0[1]}'),
-                ("\$V_([\d\w+])(.*?)\$", 'angle(V_{0[0]}{0[1]})/{0[0]}'),
-
+                ("\$V_{([\d\w+])}(.*?)\$", 'angle(V_{{{0[0]}}}{0[1]})/{0[0]}'),
+                
                 # eccentricity:
                 # ecc_{m,n}(ed) := {r^m e^{i n phi}}_e
-                ("Ecc_{([\d\w_]+),([\d\w_]+)}\((\w\w)\)", 'self.get_Ecc_n(eccType="{0[2]}", r_power={0[0]}, order={0[1]})'), # to functions
+                ("Ecc_{([\d]+),([\d]+)}\((\w\w)\)", 'self.get_Ecc_n(eccType="{0[2]}", r_power={0[0]}, order={0[1]})'), # to functions
 
                 # r-averages
                 # {r^m}(ed) := int(r^m*ed)/int(ed)
-                ("{r\^([\d\w_]+)}\((\w\w)\)", 'self.getRIntegrals(eccType="{0[1]}", r_power={0[0]}) / self.getRIntegrals(eccType="{0[1]}", r_power=0)'),
+                ("{r\^([\d]+)}\((\w\w)\)", 'self.getRIntegrals(eccType="{0[1]}", r_power={0[0]}) / self.getRIntegrals(eccType="{0[1]}", r_power=0)'),
 
                 # r-integrals
                 # [r^m](ed) := int(r^m*ed)
-                ("\[r\^([\d\w_]+)\]\((\w\w)\)", 'self.getRIntegrals(eccType="{0[1]}", r_power={0[0]})'),
+                ("\[r\^([\d]+)\]\((\w\w)\)", 'self.getRIntegrals(eccType="{0[1]}", r_power={0[0]})'),
 
                 # integrated flow:
-                # V_n(pion) := pion complex flow vector of order n
-                ("V_([\d\w_]+)\(([\w_]+)\)", 'self.get_V_n(particleName="{0[1]}", order={0[0]})'),
+                # V_{n}(pion) := pion complex flow vector of order n
+                ("V_{([\d]+)}\(([\w_]+)\)", 'self.get_V_n(particleName="{0[1]}", order={0[0]})'),
 
                 # multiplicity:
                 # dN/dy(pion) := pion multiplicity
                 ("dN/dy\(([\w_]+)\)", 'self.get_dNdy(particleName="{0[0]}")'),
 
                 # differential flows
-                # V_n(pTs)(pion) := complex differential flow vector of order n for pion at pTs values
-                ("V_([\d\w_]+)\((.*?)\)\(([\w_]+)\)", 'self.get_diff_V_n(particleName="{0[2]}", order={0[0]}, pTs={0[1]})'),
+                # V_{n}(pTs)(pion) := complex differential flow vector of order n for pion at pTs values
+                ("V_{([\d]+)}\((.*?)\)\(([\w_]+)\)", 'self.get_diff_V_n(particleName="{0[2]}", order={0[0]}, pTs={0[1]})'),
 
                 # spectra:
                 # dN/(dydpT)(pTs)(pion) := pion spectra at pTs values
@@ -783,13 +813,21 @@ class EbeDBReader(object):
             ))
 
 
-        # perform calculation
-        exprAfterNormalization, numberOfScans = self.useStringSubstitution_normalization.applyAllRules(expression) # normalization
-        exprAfterFunctionization, numberOfScans = self.useStringSubstitution_functionization.applyAllRules(exprAfterNormalization) # functionization
+        # perform normalization, should repeat until there is no more changes
+        exprAfterNormalization = expression
+        needMoreChanges = True
+        while needMoreChanges:
+            needMoreChanges = False
+            for stringSubstitution in self.useStringSubstitution_normalization:
+                exprAfterNormalization, numberOfScans = stringSubstitution.applyAllRules(exprAfterNormalization)
+                if numberOfScans>0: needMoreChanges = True
+        # perform functionization, should do only once
+        exprAfterFunctionization, numberOfScans = self.useStringSubstitution_functionization.applyAllRules(exprAfterNormalization)
+        # try to evaluate it
         try:
-            value = eval(exprAfterFunctionization,globals(),locals())
+            value = eval(exprAfterFunctionization)
             return (value, exprAfterNormalization, exprAfterFunctionization)
-        except (SyntaxError, NameError):
+        except (SyntaxError, NameError, KeyError):
             print("Error encounterred evaluating {}:".format(expression))
             print("-> {}\n-> {}".format(exprAfterNormalization, exprAfterFunctionization))
             raise
@@ -802,7 +840,7 @@ class EbeDBReader(object):
         try:
             value, expr1, expr2 = self.evaluateExpression(expression)
             return value
-        except (SyntaxError, NameError):
+        except (SyntaxError, NameError, KeyError):
             pass # ignore
 
 

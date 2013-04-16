@@ -4,11 +4,10 @@
     EbeDBReader class.
 """
 
-from numpy import *
 from EbeCollector import EbeDBReader
 
-eval = None
-check = None
+e = None
+c = None
 
 def use(database):
     """
@@ -17,5 +16,16 @@ def use(database):
     """
     global eval
     global check
-    print(globals()['n'])
-    check, eval = EbeDBReader(database).getFactoryFunctions()
+    c, e = EbeDBReader(database).getFactoryFunctions()
+
+def help():
+    """
+        Display a short help message.
+    """
+    pass
+
+
+help()
+
+if __name__ == '__main__':
+    pass

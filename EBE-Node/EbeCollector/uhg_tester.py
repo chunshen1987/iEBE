@@ -1,9 +1,6 @@
 
 import uhg
 
-n = 2
-
 uhg.use("testDB/collected.db")
 
-
-print(uhg.eval("e_2(ed)"))
+print(uhg.eval("ecc_3(ed)"))

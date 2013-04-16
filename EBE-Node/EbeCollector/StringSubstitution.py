@@ -101,7 +101,8 @@ class StringSubstitution(object):
             occur or until restrictNumberOfScans number of repeatness reached.
 
             Return the expression after substitution and the number of scans
-            performed.
+            performed. Changes are made if the returned number of scans is
+            non-zero.
 
             If trackExpression is set to True, the function prints out all the
             expression after each substitution.
