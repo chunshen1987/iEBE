@@ -519,7 +519,7 @@ class EbeDBReader(object):
             Return the complex eccentricity vector from the getEccentricities
             function.
         """
-        eccArray = self.getEccentricities(eccType=eccType, r_power=r_power, orderBy=orderBy)
+        eccArray = self.getEccentricities(eccType=eccType, r_power=r_power, order=order, orderBy=orderBy)
         return eccArray[:,0] + 1j*eccArray[:,1]
 
     def getRIntegrals(self, eccType="ed", r_power=2, where="", orderBy="event_id"):
