@@ -562,55 +562,55 @@ A few examples.
 Calculate v_2[2](pion):
 >>> res = reader.evaluateExpression("sqrt(< v_2(pion)**2 >)")
 >>> "{} -> {}".format(res[1], res[2])
-'sqrt(<|V_{2}(pion)|**2>) -> sqrt(mean(abs(self.get_V_n(particleName="pion", order=2))**2))'
+'sqrt(<|V_{2}(pion)|**2>) -> sqrt(mean(abs(self.get_V_n(particleName="pion", order=2))**2,0))'
 >>> res[0]
 0.05759576300663468
 
 In fact the "[2]" syntex is supported:
 >>> res = reader.evaluateExpression("v_2[2](pion)")
 >>> "{} -> {}".format(res[1], res[2])
-'sqrt(<|V_{2}(pion)|**2>) -> sqrt(mean(abs(self.get_V_n(particleName="pion", order=2))**2))'
+'sqrt(<|V_{2}(pion)|**2>) -> sqrt(mean(abs(self.get_V_n(particleName="pion", order=2))**2,0))'
 >>> res[0]
 0.05759576300663468
 
 It works for differential flow too:
 >>> res = reader.evaluateExpression("v_2[2](0.5)(pion)")
 >>> "{} -> {}".format(res[1], res[2])
-'sqrt(<|V_{2}(0.5)(pion)|**2>) -> sqrt(mean(abs(self.get_diff_V_n(particleName="pion", order=2, pTs=0.5))**2))'
+'sqrt(<|V_{2}(0.5)(pion)|**2>) -> sqrt(mean(abs(self.get_diff_V_n(particleName="pion", order=2, pTs=0.5))**2,0))'
 >>> res[0]
-0.22016044857620587
+array([ 0.22016045])
 
 And also for eccentricity:
 >>> res = reader.evaluateExpression("e_2[2](ed)")
 >>> "{} -> {}".format(res[1], res[2])
-'sqrt(<|Ecc_{2,2}(ed)|**2>) -> sqrt(mean(abs(self.get_Ecc_n(eccType="ed", r_power=2, order=2))**2))'
+'sqrt(<|Ecc_{2,2}(ed)|**2>) -> sqrt(mean(abs(self.get_Ecc_n(eccType="ed", r_power=2, order=2))**2,0))'
 >>> res[0]
 0.08460369752054607
 
 Calculate v_2[4](pion):
 >>> res = reader.evaluateExpression(" ( 2*<v_2(pion)**2>**2 - <v_2(pion)**4> )**(1.0/4) ")
 >>> "{} -> {}".format(res[1], res[2])
-'(2*<|V_{2}(pion)|**2>**2-<|V_{2}(pion)|**4>)**(1.0/4) -> (2*mean(abs(self.get_V_n(particleName="pion", order=2))**2)**2-mean(abs(self.get_V_n(particleName="pion", order=2))**4))**(1.0/4)'
+'(2*<|V_{2}(pion)|**2>**2-<|V_{2}(pion)|**4>)**(1.0/4) -> (2*mean(abs(self.get_V_n(particleName="pion", order=2))**2,0)**2-mean(abs(self.get_V_n(particleName="pion", order=2))**4,0))**(1.0/4)'
 >>> res[0]
 0.051918047896339255
 
 Note how they are compared to <v_2(pion)>:
 >>> res = reader.evaluateExpression(" <v_2(pion)> ")
 >>> "{} -> {}".format(res[1], res[2])
-'<|V_{2}(pion)|> -> mean(abs(self.get_V_n(particleName="pion", order=2)))'
+'<|V_{2}(pion)|> -> mean(abs(self.get_V_n(particleName="pion", order=2)),0)'
 >>> res[0]
 0.055174074938951469
 
 Difference between the event plane and participant plane angles:
 >>> res = reader.evaluateExpression(" < | Phi_2(ed) - Psi_2(total) | > ")
 >>> "{} -> {}".format(res[1], res[2])
-'<|$Ecc_{2,2}(ed)$-$V_{2}(total)$|> -> mean(abs(angle(-self.get_Ecc_n(eccType="ed", r_power=2, order=2))/2-angle(self.get_V_n(particleName="total", order=2))/2))'
+'<|$Ecc_{2,2}(ed)$-$V_{2}(total)$|> -> mean(abs(angle(-self.get_Ecc_n(eccType="ed", r_power=2, order=2))/2-angle(self.get_V_n(particleName="total", order=2))/2),0)'
 >>> res[0]
 0.88738658702337658
 
 >>> res = reader.evaluateExpression(" < | Phi_3(ed) - Psi_3(total) | > ")
 >>> "{} -> {}".format(res[1], res[2])
-'<|$Ecc_{3,3}(ed)$-$V_{3}(total)$|> -> mean(abs(angle(-self.get_Ecc_n(eccType="ed", r_power=3, order=3))/3-angle(self.get_V_n(particleName="total", order=3))/3))'
+'<|$Ecc_{3,3}(ed)$-$V_{3}(total)$|> -> mean(abs(angle(-self.get_Ecc_n(eccType="ed", r_power=3, order=3))/3-angle(self.get_V_n(particleName="total", order=3))/3),0)'
 >>> res[0]
 0.43496909527607353
 

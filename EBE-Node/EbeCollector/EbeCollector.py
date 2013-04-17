@@ -604,7 +604,7 @@ class EbeDBReader(object):
         diffVnData = self.getDifferentialFlowDataForOneEvent(event_id=event_id, particleName=particleName, order=order)
         return np.interp(pTs, diffVnData[:,0], diffVnData[:,1]) + 1j*np.interp(pTs, diffVnData[:,0], diffVnData[:,2])
 
-    def getInterpretedComplexDifferentialFlowsForAllEvents(self, particleName="pion", order=2, pTs=np.linspace(0,2.5,10), where="", orderBy="event_id"):
+    def getInterpretedComplexDifferentialFlowsForAllEvents(self, particleName="pion", order=2, pTs=np.linspace(0,2.5,10), where="", orderBy="event_id", verbose=True):
         """
             Return the interpreted values of complex differential flow for all
             events on pT points pTs, for order="order" and event id="event_id",
@@ -613,11 +613,39 @@ class EbeDBReader(object):
             with "where" and "orderBy" arguments. Returned value will be a numpy
             matrix so that each row is a differential flow vector for an event.
         """
+        # create a buffer in memory
+        whereClause = "pid=%d and n=%d" % (self._pid(particleName), order)
+        if verbose: print("""
+Calculating differential flow involves interpolation.
+Evaluating it at multiple pT values at the same time if possible.
+
+For better effeciency part of the database is being copied to memory...""")
+        databaseBuffer = SqliteDB(":memory:")
+        databaseBuffer.createTableIfNotExists("diff_vn", self.db.getTableInfo("diff_vn"))
+        databaseBuffer.insertIntoTable("diff_vn", self.db.selectFromTable("diff_vn", "*", whereClause=whereClause))
+        if verbose: print("Copy completed.\n")
+        # swap memory and the actual database
+        self.oldDb = self.db
+        self.db = databaseBuffer
+
+        # perform actions
         if not isIterable(pTs): pTs = [pTs]
         event_ids = self.db.selectFromTable("diff_vn", "event_id", whereClause=where, groupByClause="event_id", orderByClause=orderBy)
         collectedResults = []
+        if verbose: print("Looping over {} events... (please be patient)".format(len(event_ids)))
+        count = 0
         for event_id_tuple in event_ids:
+
+            if verbose and count % 100 == 0: print("Events processed: {}".format(count))
+            count += 1
+
             collectedResults.append(self.getInterpretedComplexDifferentialFlowForOneEvent(event_id=event_id_tuple[0], particleName=particleName, order=order, pTs=pTs))
+        if verbose: print("Done. Thanks for waiting.")
+
+        # swap back the actual database
+        self.db = self.oldDb
+
+        # return results
         return np.asarray(collectedResults)
 
     get_diff_V_n = getInterpretedComplexDifferentialFlowsForAllEvents
@@ -646,7 +674,7 @@ class EbeDBReader(object):
         diffVnData = self.getSpectraDataForOneEvent(event_id=event_id, particleName=particleName)
         return np.interp(pTs, diffVnData[:,0], diffVnData[:,1])
 
-    def getInterpretedSpectraForAllEvents(self, particleName="pion", pTs=np.linspace(0,2.5,10), where="", orderBy="event_id"):
+    def getInterpretedSpectraForAllEvents(self, particleName="pion", pTs=np.linspace(0,2.5,10), where="", orderBy="event_id", verbose=True):
         """
             Return the interpreted spectra for all events on pT points pTs, for
             event id="event_id", and for particle name="particleName". The
@@ -655,12 +683,42 @@ class EbeDBReader(object):
             value will be a numpy matrix so that each row is a spectra vector
             for an event.
         """
+        # create a buffer in memory
+        whereClause = "pid=%d" % self._pid(particleName)
+        if verbose: print("""
+Calculating spectra involves interpolation.
+Evaluating it at multiple pT values at the same time if possible.
+
+For better effeciency part of the database is being copied to memory...""")
+        databaseBuffer = SqliteDB(":memory:")
+        databaseBuffer.createTableIfNotExists("spectra", self.db.getTableInfo("spectra"))
+        databaseBuffer.insertIntoTable("spectra", self.db.selectFromTable("spectra", "*", whereClause=whereClause))
+        if verbose: print("Copy completed.\n")
+        # swap memory and the actual database
+        self.oldDb = self.db
+        self.db = databaseBuffer
+
+        # processing
         if not isIterable(pTs): pTs = [pTs]
-        event_ids = self.db.selectFromTable("diff_vn", "event_id", whereClause=where, groupByClause="event_id", orderByClause=orderBy)
+        event_ids = self.db.selectFromTable("spectra", "event_id", whereClause=where, groupByClause="event_id", orderByClause=orderBy)
         collectedResults = []
+        if verbose: print("Looping over {} events... (please be patient)".format(len(event_ids)))
+        count = 0
         for event_id_tuple in event_ids:
+
+            if verbose and count % 100 == 0: print("Events processed: {}".format(count))
+            count += 1
+
             collectedResults.append(self.getInterpretedSpectraForOneEvent(event_id=event_id_tuple[0], particleName=particleName, pTs=pTs))
+
+        if verbose: print("Done. Thanks for waiting.")
+
+        # swap back the actual database
+        self.db = self.oldDb
+
+        # return results
         return np.asarray(collectedResults)
+
 
     get_dNdydpT = getInterpretedSpectraForAllEvents
 
@@ -799,7 +857,7 @@ class EbeDBReader(object):
                 ("\|(.*?)\|", 'abs({0[0]})'),
 
                 # <>: mean value
-                ("<(.*?)>", 'mean({0[0]})'),
+                ("<(.*?)>", 'mean({0[0]},0)'),
 
                 # $$: get plane angles; only applies to Ecc (angle(-Ecc_n)/n) and V (angle(V_n)/n)
                 ("\$Ecc_{([\d\w+]),([\d\w+])}(.*?)\$", 'angle(-Ecc_{{{0[0]},{0[1]}}}{0[2]})/{0[1]}'),
@@ -850,7 +908,7 @@ class EbeDBReader(object):
         try:
             value = eval(exprAfterFunctionization)
             return (value, exprAfterNormalization, exprAfterFunctionization)
-        except (SyntaxError, NameError, KeyError):
+        except:
             print("Error encounterred evaluating {}:".format(expression))
             print("-> {}\n-> {}".format(exprAfterNormalization, exprAfterFunctionization))
             raise
@@ -863,7 +921,7 @@ class EbeDBReader(object):
         try:
             value, expr1, expr2 = self.evaluateExpression(expression)
             return value
-        except (SyntaxError, NameError, KeyError):
+        except:
             pass # ignore
 
     def getFactoryEvaluateExpressionOnly(self):

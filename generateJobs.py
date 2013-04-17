@@ -149,7 +149,7 @@ if compressResultsFolderAnswer == "yes":
 #PBS -j oe
 #PBS -S /bin/bash
 (cd %s
-    python autoZippedResultsCombiner.py %s %d "job-(\d*).zip" 10 1> WatcherReport.txt
+    python autoZippedResultsCombiner.py %s %d "job-(\d*).zip" 60 1> WatcherReport.txt
     mv WatcherReport.txt %s
 )
 """ % (walltime, utilitiesFolder, resultsFolder, numberOfJobs, resultsFolder)
