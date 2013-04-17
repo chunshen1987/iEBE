@@ -343,8 +343,8 @@ For 3rd order complex eccentricity vector using energy density as the weight fun
 >>> "{} -> {}".format(res[1], res[2])
 'Ecc_{3,3}(ed) -> self.get_Ecc_n(eccType="ed", r_power=3, order=3)'
 >>> res[0]
-array([ 0.00074407-0.00626542j, -0.01404082-0.04322501j,
-       -0.18399698+0.12994067j,  0.00040966+0.00153535j])
+array([-0.01453327 +5.60409700e-03j,  0.03313195 -5.51618030e-02j,
+       -0.15194745 -3.41929410e-01j,  0.00647459 +9.97194020e-05j])
 
 Conventional complex eccentricity vector using entropy density as the weight function:
 >>> res = reader.evaluateExpression("E_2 (s)")
@@ -359,8 +359,8 @@ The r^3 weighted 1st order eccentricity vector:
 >>> "{} -> {}".format(res[1], res[2])
 'Ecc_{3,1}(ed) -> self.get_Ecc_n(eccType="ed", r_power=3, order=1)'
 >>> res[0]
-array([ 0.00074407-0.00626542j, -0.01404082-0.04322501j,
-       -0.18399698+0.12994067j,  0.00040966+0.00153535j])
+array([-0.20594250+0.03413583j, -0.17964724+0.30506617j,
+        0.64069616+0.43195141j, -0.02206065-0.0115441j ])
 
 The "ecc" symbol stands for the magnitude of the "Ecc" vector, and it has the same loose matching rules as stated above. In addition, "|Ecc|" is also recoginzable.
 
@@ -370,14 +370,14 @@ Same as the first example above, but for magnitudes:
 >>> "{} -> {}".format(res[1], res[2])
 '|Ecc_{3,3}(ed)| -> abs(self.get_Ecc_n(eccType="ed", r_power=3, order=3))'
 >>> res[0]
-array([ 0.00630945,  0.04544828,  0.22525423,  0.00158906])
+array([ 0.01557632,  0.06434711,  0.37417075,  0.00647536])
 
 Showing the "|Ecc_n|=|E_n|=|E|_n" syntax:
 >>> res = reader.evaluateExpression("|E|_{7, 5} (e)")
 >>> "{} -> {}".format(res[1], res[2])
 '|Ecc_{7,5}(ed)| -> abs(self.get_Ecc_n(eccType="ed", r_power=7, order=5))'
 >>> res[0]
-array([ 0.01486751,  0.06266969,  0.42026266,  0.00499007])
+array([ 0.02074981,  0.08562445,  0.17040317,  0.03101743])
 
 You can also use "Epsilon" and "epsilon":
 >>> res = reader.evaluateExpression("epsilon_{2} (e)")
@@ -682,7 +682,7 @@ Difference between the event plane and participant plane angles:
 >>> "{} -> {}".format(res[1], res[2])
 '<|$Ecc_{3,3}(ed)$-$V_{3}(total)$|> -> mean(abs(angle(self.get_Ecc_n(eccType="ed", r_power=3, order=3))/3-angle(self.get_V_n(particleName="total", order=3))/3),0)'
 >>> res[0]
-0.66243719548703017
+0.74089569544563649
 
 <8> A few convenience functions.
 
