@@ -3,5 +3,5 @@ import EbeCollector
 
 reader = EbeCollector.EbeDBReader("testDB/collected.db")
 
-res = reader.evaluateExpression("Psi_2(pion)")
+res = reader.getAttendance()
 print(res)

@@ -19,18 +19,28 @@
 from numpy import *
 from EbeCollector import EbeDBReader
 
-functionList = []
+_storedEbeDBReader = None
 
-e = lambda s: functionList[1](s)
-c = lambda s: functionList[0](s)
+e = lambda s: _storedEbeDBReader.evaluateExpressionOnly(s)
 
 def use(database):
     """
         Create a EbeDBReader object and link the factory functions for
         evaluateExpression and evaluateExpressionOnly as uhg_check and uhg.
     """
-    global functionList
-    functionList = EbeDBReader(database).getFactoryFunctions()
+    global _storedEbeDBReader
+    _storedEbeDBReader = EbeDBReader(database)
+
+def info():
+    """
+        Print out number of events information for all particles.
+    """
+    global _storedEbeDBReader
+    print("Total number of events: {}".format(_storedEbeDBReader.getNumberOfEvents()))
+    print("-"*60)
+    print("\tParticle\t\tNumber Of Events")
+    for aParticle, numberOfEvents in _storedEbeDBReader.getAttendance():
+        if numberOfEvents>0: print("\t{}\t\t\t\t{}".format(aParticle, numberOfEvents))
 
 def h():
     """

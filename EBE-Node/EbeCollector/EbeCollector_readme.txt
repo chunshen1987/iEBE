@@ -623,15 +623,18 @@ array([[  3.37855688],
        [ 11.62703839],
        [  3.81290396]])
 
-The getFactoryFunctions function returns a tuple of two factory functions: (evaluateExpression, evaluateExpressionOnly), which can then be used without referring to the objects. For example:
->>> (uhg_check, uhg) = reader.getFactoryFunctions()
->>> uhg("<e_2(e)>")
+The getFactoryEvaluateExpressionOnly function return the factory function for evaluateExpressionOnly, which can then be used without referring to the objects. For example:
+>>> e = reader.getFactoryEvaluateExpressionOnly()
+>>> e("<e_2(e)>")
 0.052247841125730748
 
+The getAttendance function returns a list of tuple (name of particle, number of events) for all particles given in the pid table:
+>>> reader.getAttendance() # doctest: +ELLIPSIS
+[(u'total', 4), (u'charged', 0), (u'pion', 4),...]
 
-
-
-
+The getNumberOfEvents function returns the number of events:
+>>> reader.getNumberOfEvents()
+4
 
 
 

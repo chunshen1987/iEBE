@@ -664,6 +664,29 @@ class EbeDBReader(object):
 
     get_dNdydpT = getInterpretedSpectraForAllEvents
 
+    def getAttendance(self):
+        """
+            Return a list of tuple (name for particle, number of events) for all
+            particles in the pid table in the order of increase |pid|. Harmonic
+            order 2 will be used to probe all particles.
+        """
+        probes = []
+        allParticles = self.pid_lookup.items()
+        allParticles.sort(key=lambda x: abs(x[1]))
+        for aParticle, pid in allParticles:
+            numberOfEvents = len(self.get_V_n(particleName=aParticle))
+            probes.append((aParticle, numberOfEvents))
+        return probes
+
+    def getNumberOfEvents(self):
+        """
+            Return total number of events by finding the difference between max
+            and min of event_id.
+        """
+        maxEventId = self.db.selectFromTable("eccentricities", "max(event_id)")[0][0]
+        minEventId = self.db.selectFromTable("eccentricities", "min(event_id)")[0][0]
+        return maxEventId - minEventId + 1
+
     def evaluateExpression(self, expression):
         """
             Evaluate an expression by first applying substitution rules using
@@ -843,24 +866,15 @@ class EbeDBReader(object):
         except (SyntaxError, NameError, KeyError):
             pass # ignore
 
-
-
-    def getFactoryFunctions(self):
+    def getFactoryEvaluateExpressionOnly(self):
         """
-            Return factory functions for evaluateExpression and
-            evaluateExpressionOnly.
+            Return factory functions for evaluateExpressionOnly.
         """
-        # factory function for evaluateExpression
-        def evaluateExpression_factory(expression):
-            return self.evaluateExpression(expression)
         # factory function for evaluateExpressionOnly
         def evaluateExpressionOnly_factory(expression):
             return self.evaluateExpressionOnly(expression)
 
-        return (evaluateExpression_factory, evaluateExpressionOnly_factory)
-
-
-
+        return evaluateExpressionOnly_factory
 
 if __name__ == '__main__':
     import doctest
