@@ -129,7 +129,8 @@ class EbeCollector(object):
                 filename = matchResult.group()
                 r_power = matchResult.groups()[0] # indicated by the file name
                 # read the eccentricity file and write database
-                for n, aLine in enumerate(open(path.join(folder, filename))): # row index is "n"
+                for idx, aLine in enumerate(open(path.join(folder, filename))): # row index is "n"
+                    n = idx+1
                     data = aLine.split()
                     # insert into eccentricity table
                     db.insertIntoTable("eccentricities",
