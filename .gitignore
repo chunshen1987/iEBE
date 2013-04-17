@@ -5,5 +5,4 @@
 .DS_Store
 results/
 obj/
-*.pyc
 tests/
