@@ -604,7 +604,7 @@ class EbeDBReader(object):
         diffVnData = self.getDifferentialFlowDataForOneEvent(event_id=event_id, particleName=particleName, order=order)
         return np.interp(pTs, diffVnData[:,0], diffVnData[:,1]) + 1j*np.interp(pTs, diffVnData[:,0], diffVnData[:,2])
 
-    def getInterpretedComplexDifferentialFlowsForAllEvents(self, particleName="pion", order=2, pTs=np.linspace(0,2.5,10), where="", orderBy="event_id", verbose=True):
+    def getInterpretedComplexDifferentialFlowsForAllEvents(self, particleName="pion", order=2, pTs=np.linspace(0,2.5,10), where="", orderBy="event_id", verbose=False):
         """
             Return the interpreted values of complex differential flow for all
             events on pT points pTs, for order="order" and event id="event_id",
@@ -674,7 +674,7 @@ For better effeciency part of the database is being copied to memory...""")
         diffVnData = self.getSpectraDataForOneEvent(event_id=event_id, particleName=particleName)
         return np.interp(pTs, diffVnData[:,0], diffVnData[:,1])
 
-    def getInterpretedSpectraForAllEvents(self, particleName="pion", pTs=np.linspace(0,2.5,10), where="", orderBy="event_id", verbose=True):
+    def getInterpretedSpectraForAllEvents(self, particleName="pion", pTs=np.linspace(0,2.5,10), where="", orderBy="event_id", verbose=False):
         """
             Return the interpreted spectra for all events on pT points pTs, for
             event id="event_id", and for particle name="particleName". The
@@ -860,11 +860,11 @@ For better effeciency part of the database is being copied to memory...""")
                 ("<(.*?)>", 'mean({0[0]},0)'),
 
                 # $$: get plane angles; only applies to Ecc (angle(-Ecc_n)/n) and V (angle(V_n)/n)
-                ("\$Ecc_{([\d\w+]),([\d\w+])}(.*?)\$", 'angle(-Ecc_{{{0[0]},{0[1]}}}{0[2]})/{0[1]}'),
+                ("\$Ecc_{([\d\w+]),([\d\w+])}(.*?)\$", 'angle(Ecc_{{{0[0]},{0[1]}}}{0[2]})/{0[1]}'),
                 ("\$V_{([\d\w+])}(.*?)\$", 'angle(V_{{{0[0]}}}{0[1]})/{0[0]}'),
                 
                 # eccentricity:
-                # ecc_{m,n}(ed) := {r^m e^{i n phi}}_e
+                # ecc_{m,n}(ed) := {-r^m e^{i n phi}}_e
                 ("Ecc_{([\d]+),([\d]+)}\((\w\w)\)", 'self.get_Ecc_n(eccType="{0[2]}", r_power={0[0]}, order={0[1]})'), # to functions
 
                 # r-averages
@@ -885,11 +885,11 @@ For better effeciency part of the database is being copied to memory...""")
 
                 # differential flows
                 # V_{n}(pTs)(pion) := complex differential flow vector of order n for pion at pTs values
-                ("V_{([\d]+)}\((.*?)\)\(([\w_]+)\)", 'self.get_diff_V_n(particleName="{0[2]}", order={0[0]}, pTs={0[1]})'),
+                ("V_{([\d]+)}\((.*?)\)\(([\w_]+)\)", 'self.get_diff_V_n(particleName="{0[2]}", order={0[0]}, pTs={0[1]}, verbose=True)'),
 
                 # spectra:
                 # dN/(dydpT)(pTs)(pion) := pion spectra at pTs values
-                ("dN/\(dydpT\)\((.*?)\)\(([\w_]+)\)", 'self.get_dNdydpT(particleName="{0[1]}", pTs={0[0]})'),
+                ("dN/\(dydpT\)\((.*?)\)\(([\w_]+)\)", 'self.get_dNdydpT(particleName="{0[1]}", pTs={0[0]}, verbose=True)'),
 
             ))
 

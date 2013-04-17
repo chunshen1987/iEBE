@@ -329,7 +329,7 @@ The expressions that it can recognize is listed in the following. Note that all 
 
 <1> Eccentricity.
 
-The standard form of the complex eccentricity vector is of the form: "Ecc_{m,n}(ed)", which is defined to be { r^m e^{i n phi} }_e (e is the weight function), and the one using entropy density has the form "Ecc_{m,n}(sd)".
+The standard form of the complex eccentricity vector is of the form: "Ecc_{m,n}(ed)", which is defined to be { (-1) r^m e^{i n phi} }_e (e is the weight function), and the one using entropy density has the form "Ecc_{m,n}(sd)".
 
 For loose matching the following are some rules:
 Eccentricity_, E_ -> Ecc_
@@ -389,9 +389,9 @@ array([ 0.00449343,  0.03780932,  0.16485768,  0.00183093])
 Replacing "Ecc_{m,n}" by "Phi_{m,n}" gives the corresponding event plane angle lies between +-pi/n (using short axis of the deformation as + direction):
 >>> res = reader.evaluateExpression("Phi_2 (e)")
 >>> "{} -> {}".format(res[1], res[2])
-'$Ecc_{2,2}(ed)$ -> angle(-self.get_Ecc_n(eccType="ed", r_power=2, order=2))/2'
+'$Ecc_{2,2}(ed)$ -> angle(self.get_Ecc_n(eccType="ed", r_power=2, order=2))/2'
 >>> res[0]
-array([ 0.76738765,  0.63612512, -0.31042764, -1.10800162])
+array([-0.80340868, -0.93467121,  1.26036869,  0.4627947 ])
 
 <2> R-averages.
 
@@ -487,8 +487,18 @@ The standard form of the complex differential flow vector is of the form "V_n(pT
 A few examples.
 Differential flow of pion at pT=0.5 GeV:
 >>> res = reader.evaluateExpression("V_2(0.5)(pion)")
+<BLANKLINE>
+Calculating differential flow involves interpolation.
+Evaluating it at multiple pT values at the same time if possible.
+<BLANKLINE>
+For better effeciency part of the database is being copied to memory...
+Copy completed.
+<BLANKLINE>
+Looping over 4 events... (please be patient)
+Events processed: 0
+Done. Thanks for waiting.
 >>> "{} -> {}".format(res[1], res[2])
-'V_{2}(0.5)(pion) -> self.get_diff_V_n(particleName="pion", order=2, pTs=0.5)'
+'V_{2}(0.5)(pion) -> self.get_diff_V_n(particleName="pion", order=2, pTs=0.5, verbose=True)'
 >>> res[0]
 array([[ 0.11968908-0.06324814j],
        [-0.04217610+0.07601679j],
@@ -497,8 +507,18 @@ array([[ 0.11968908-0.06324814j],
 
 Differential flow of total particles at pT=0 and pT=1 GeV:
 >>> res = reader.evaluateExpression("V_2(linspace(0,1,2))(total)")
+<BLANKLINE>
+Calculating differential flow involves interpolation.
+Evaluating it at multiple pT values at the same time if possible.
+<BLANKLINE>
+For better effeciency part of the database is being copied to memory...
+Copy completed.
+<BLANKLINE>
+Looping over 4 events... (please be patient)
+Events processed: 0
+Done. Thanks for waiting.
 >>> "{} -> {}".format(res[1], res[2])
-'V_{2}(linspace(0,1,2))(total) -> self.get_diff_V_n(particleName="total", order=2, pTs=linspace(0,1,2))'
+'V_{2}(linspace(0,1,2))(total) -> self.get_diff_V_n(particleName="total", order=2, pTs=linspace(0,1,2), verbose=True)'
 >>> res[0]
 array([[-0.08786127+0.04011986j,  0.02558784-0.02479659j],
        [ 0.01758154+0.01620859j, -0.14460473+0.17226352j],
@@ -507,8 +527,18 @@ array([[-0.08786127+0.04011986j,  0.02558784-0.02479659j],
 
 For magnitudes of the flow use "v_n=|V|_n=|V_n|", for example:
 >>> res = reader.evaluateExpression("v_7(0.15)(kaon)")
+<BLANKLINE>
+Calculating differential flow involves interpolation.
+Evaluating it at multiple pT values at the same time if possible.
+<BLANKLINE>
+For better effeciency part of the database is being copied to memory...
+Copy completed.
+<BLANKLINE>
+Looping over 4 events... (please be patient)
+Events processed: 0
+Done. Thanks for waiting.
 >>> "{} -> {}".format(res[1], res[2])
-'|V_{7}(0.15)(kaon)| -> abs(self.get_diff_V_n(particleName="kaon", order=7, pTs=0.15))'
+'|V_{7}(0.15)(kaon)| -> abs(self.get_diff_V_n(particleName="kaon", order=7, pTs=0.15, verbose=True))'
 >>> res[0]
 array([[ 0.63721643],
        [ 0.13419388],
@@ -517,8 +547,18 @@ array([[ 0.63721643],
 
 Replacing "V_n" by "Psi_n" gives the n-th order event plane angle between +- pi/n:
 >>> res = reader.evaluateExpression("Psi_3(0.15)(pion)")
+<BLANKLINE>
+Calculating differential flow involves interpolation.
+Evaluating it at multiple pT values at the same time if possible.
+<BLANKLINE>
+For better effeciency part of the database is being copied to memory...
+Copy completed.
+<BLANKLINE>
+Looping over 4 events... (please be patient)
+Events processed: 0
+Done. Thanks for waiting.
 >>> "{} -> {}".format(res[1], res[2])
-'$V_{3}(0.15)(pion)$ -> angle(self.get_diff_V_n(particleName="pion", order=3, pTs=0.15))/3'
+'$V_{3}(0.15)(pion)$ -> angle(self.get_diff_V_n(particleName="pion", order=3, pTs=0.15, verbose=True))/3'
 >>> res[0]
 array([[-0.34120512],
        [ 0.63215072],
@@ -535,8 +575,18 @@ dN/dpT, dN/dydpT, dN/(dy dpT) -> dN/(dydpT)
 A few examples.
 Pion spectra at pT=0.5 GeV:
 >>> res = reader.evaluateExpression("dN/dydpT(0.5)(pion)")
+<BLANKLINE>
+Calculating spectra involves interpolation.
+Evaluating it at multiple pT values at the same time if possible.
+<BLANKLINE>
+For better effeciency part of the database is being copied to memory...
+Copy completed.
+<BLANKLINE>
+Looping over 4 events... (please be patient)
+Events processed: 0
+Done. Thanks for waiting.
 >>> "{} -> {}".format(res[1], res[2])
-'dN/(dydpT)(0.5)(pion) -> self.get_dNdydpT(particleName="pion", pTs=0.5)'
+'dN/(dydpT)(0.5)(pion) -> self.get_dNdydpT(particleName="pion", pTs=0.5, verbose=True)'
 >>> res[0]
 array([[  3.37855688],
        [ 48.18746303],
@@ -545,8 +595,18 @@ array([[  3.37855688],
 
 Total spectra at pT=0 and 1 GeV:
 >>> res = reader.evaluateExpression("dN/dydpT([0,1])(total)")
+<BLANKLINE>
+Calculating spectra involves interpolation.
+Evaluating it at multiple pT values at the same time if possible.
+<BLANKLINE>
+For better effeciency part of the database is being copied to memory...
+Copy completed.
+<BLANKLINE>
+Looping over 4 events... (please be patient)
+Events processed: 0
+Done. Thanks for waiting.
 >>> "{} -> {}".format(res[1], res[2])
-'dN/(dydpT)([0,1])(total) -> self.get_dNdydpT(particleName="total", pTs=[0,1])'
+'dN/(dydpT)([0,1])(total) -> self.get_dNdydpT(particleName="total", pTs=[0,1], verbose=True)'
 >>> res[0]
 array([[  4.7       ,   1.44748483],
        [ 49.6       ,  18.99128464],
@@ -575,8 +635,18 @@ In fact the "[2]" syntex is supported:
 
 It works for differential flow too:
 >>> res = reader.evaluateExpression("v_2[2](0.5)(pion)")
+<BLANKLINE>
+Calculating differential flow involves interpolation.
+Evaluating it at multiple pT values at the same time if possible.
+<BLANKLINE>
+For better effeciency part of the database is being copied to memory...
+Copy completed.
+<BLANKLINE>
+Looping over 4 events... (please be patient)
+Events processed: 0
+Done. Thanks for waiting.
 >>> "{} -> {}".format(res[1], res[2])
-'sqrt(<|V_{2}(0.5)(pion)|**2>) -> sqrt(mean(abs(self.get_diff_V_n(particleName="pion", order=2, pTs=0.5))**2,0))'
+'sqrt(<|V_{2}(0.5)(pion)|**2>) -> sqrt(mean(abs(self.get_diff_V_n(particleName="pion", order=2, pTs=0.5, verbose=True))**2,0))'
 >>> res[0]
 array([ 0.22016045])
 
@@ -604,20 +674,30 @@ Note how they are compared to <v_2(pion)>:
 Difference between the event plane and participant plane angles:
 >>> res = reader.evaluateExpression(" < | Phi_2(ed) - Psi_2(total) | > ")
 >>> "{} -> {}".format(res[1], res[2])
-'<|$Ecc_{2,2}(ed)$-$V_{2}(total)$|> -> mean(abs(angle(-self.get_Ecc_n(eccType="ed", r_power=2, order=2))/2-angle(self.get_V_n(particleName="total", order=2))/2),0)'
+'<|$Ecc_{2,2}(ed)$-$V_{2}(total)$|> -> mean(abs(angle(self.get_Ecc_n(eccType="ed", r_power=2, order=2))/2-angle(self.get_V_n(particleName="total", order=2))/2),0)'
 >>> res[0]
-0.88738658702337658
+1.3872205573450411
 
 >>> res = reader.evaluateExpression(" < | Phi_3(ed) - Psi_3(total) | > ")
 >>> "{} -> {}".format(res[1], res[2])
-'<|$Ecc_{3,3}(ed)$-$V_{3}(total)$|> -> mean(abs(angle(-self.get_Ecc_n(eccType="ed", r_power=3, order=3))/3-angle(self.get_V_n(particleName="total", order=3))/3),0)'
+'<|$Ecc_{3,3}(ed)$-$V_{3}(total)$|> -> mean(abs(angle(self.get_Ecc_n(eccType="ed", r_power=3, order=3))/3-angle(self.get_V_n(particleName="total", order=3))/3),0)'
 >>> res[0]
-0.43496909527607353
+0.66243719548703017
 
 <8> A few convenience functions.
 
 The evaluateExpressionOnly function wraps the evaluateExpression function and returns only its o-th component, that is, the result:
 >>> reader.evaluateExpressionOnly("dN/dydpT(0.5)(pion)")
+<BLANKLINE>
+Calculating spectra involves interpolation.
+Evaluating it at multiple pT values at the same time if possible.
+<BLANKLINE>
+For better effeciency part of the database is being copied to memory...
+Copy completed.
+<BLANKLINE>
+Looping over 4 events... (please be patient)
+Events processed: 0
+Done. Thanks for waiting.
 array([[  3.37855688],
        [ 48.18746303],
        [ 11.62703839],
