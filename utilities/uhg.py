@@ -38,9 +38,9 @@ def info():
     global _storedEbeDBReader
     print("Total number of events: {}".format(_storedEbeDBReader.getNumberOfEvents()))
     print("-"*60)
-    print("\tParticle\t\tNumber Of Events")
+    print("\t{:<30}{:^20}".format("Particle","Number of events"))
     for aParticle, numberOfEvents in _storedEbeDBReader.getAttendance():
-        if numberOfEvents>0: print("\t{}\t\t\t\t{}".format(aParticle, numberOfEvents))
+        if numberOfEvents>0: print("\t{:<30}{:^20}".format(aParticle, numberOfEvents))
 
 def h():
     """
@@ -51,17 +51,16 @@ def h():
     Welcome to the UHG Module!
 ----------------------------------
 1) Connect to a SQLite database using "use(database)" function.
-
 2) Use "h()" function to print this message.
-
-3) Evaluate expressions using "e(expression)" function. The following are examples of some supported symbols, for a complete list see EbeCollector_readme.txt.
+3) Use "info()" function to list particle storage info in the database.
+4) Evaluate expressions using "e(expression)" function. The following are examples of some supported symbols, for a complete list see EbeCollector_readme.txt.
 
     Ecc_{m,n}(ed), E_n(sd), ecc_{m,n}(e), Phi_{m,n}(s), {r^m}(ed),
     V_{n}(pion), v_n(kaon), Psi_n(nucleon), dN/dy(pion)
     V_{n}(pT)(pion), v_n([pT1, pT2, ...])(kaon), Psi_n(pT)(pion), dN/(dydpT)(total),
     v_n[2](pion), e_n[4](ed), <symbol>, |symbol|
     
-4) Some concrete examples:
+5) Some concrete examples:
     
     E_2(s), e_{3,1}(e), ecc_3(ed), Phi_2(e),
     V_2(pion), v_3(kaon), Psi_4(total), N(total),
