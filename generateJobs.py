@@ -6,7 +6,7 @@
 """
 
 from sys import argv, exit
-from os import makedirs, path
+from os import makedirs, path, unlink
 from shutil import copytree, copy, rmtree
 
 from check_prerequisites import checkEnvironment, checkExecutables, greetings
@@ -84,6 +84,9 @@ print(green + "\n>>>>> Checking for existence of executables <<<<<\n" + normal)
 if not checkExecutables():
     print("Not all executables can be generated. Aborting.")
     exit()
+
+# clean up check_prerequisites.pyc
+unlink("check_prerequisites.pyc")
 
 # generate events
 print(green + "\n>>>>> Generating events <<<<<\n" + normal)
