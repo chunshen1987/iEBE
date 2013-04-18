@@ -630,7 +630,7 @@ For better effeciency part of the database is being copied to memory...""")
         self.db = databaseBuffer
 
         # perform actions
-        if not isIterable(pTs): pTs = [pTs]
+        #if not isIterable(pTs): pTs = [pTs]
         event_ids = self.db.selectFromTable("diff_vn", "event_id", whereClause=where, groupByClause="event_id", orderByClause=orderBy)
         collectedResults = []
         if verbose: print("Looping over {} events... (please be patient)".format(len(event_ids)))
@@ -700,7 +700,7 @@ For better effeciency part of the database is being copied to memory...""")
         self.db = databaseBuffer
 
         # processing
-        if not isIterable(pTs): pTs = [pTs]
+        #if not isIterable(pTs): pTs = [pTs]
         event_ids = self.db.selectFromTable("spectra", "event_id", whereClause=where, groupByClause="event_id", orderByClause=orderBy)
         collectedResults = []
         if verbose: print("Looping over {} events... (please be patient)".format(len(event_ids)))

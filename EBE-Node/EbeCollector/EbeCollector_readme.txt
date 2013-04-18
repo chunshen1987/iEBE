@@ -500,10 +500,8 @@ Done. Thanks for waiting.
 >>> "{} -> {}".format(res[1], res[2])
 'V_{2}(0.5)(pion) -> self.get_diff_V_n(particleName="pion", order=2, pTs=0.5, verbose=True)'
 >>> res[0]
-array([[ 0.11968908-0.06324814j],
-       [-0.04217610+0.07601679j],
-       [ 0.23127808+0.05106764j],
-       [-0.21871027-0.25311593j]])
+array([ 0.11968908-0.06324814j, -0.04217610+0.07601679j,
+        0.23127808+0.05106764j, -0.21871027-0.25311593j])
 
 Differential flow of total particles at pT=0 and pT=1 GeV:
 >>> res = reader.evaluateExpression("V_2(linspace(0,1,2))(total)")
@@ -540,10 +538,7 @@ Done. Thanks for waiting.
 >>> "{} -> {}".format(res[1], res[2])
 '|V_{7}(0.15)(kaon)| -> abs(self.get_diff_V_n(particleName="kaon", order=7, pTs=0.15, verbose=True))'
 >>> res[0]
-array([[ 0.63721643],
-       [ 0.13419388],
-       [ 0.07407628],
-       [ 0.0893462 ]])
+array([ 0.63721643,  0.13419388,  0.07407628,  0.0893462 ])
 
 Replacing "V_n" by "Psi_n" gives the n-th order event plane angle between +- pi/n:
 >>> res = reader.evaluateExpression("Psi_3(0.15)(pion)")
@@ -560,10 +555,7 @@ Done. Thanks for waiting.
 >>> "{} -> {}".format(res[1], res[2])
 '$V_{3}(0.15)(pion)$ -> angle(self.get_diff_V_n(particleName="pion", order=3, pTs=0.15, verbose=True))/3'
 >>> res[0]
-array([[-0.34120512],
-       [ 0.63215072],
-       [ 0.44368578],
-       [-0.32626036]])
+array([-0.34120512,  0.63215072,  0.44368578, -0.32626036])
 
 <6> Spectra.
 
@@ -588,10 +580,7 @@ Done. Thanks for waiting.
 >>> "{} -> {}".format(res[1], res[2])
 'dN/(dydpT)(0.5)(pion) -> self.get_dNdydpT(particleName="pion", pTs=0.5, verbose=True)'
 >>> res[0]
-array([[  3.37855688],
-       [ 48.18746303],
-       [ 11.62703839],
-       [  3.81290396]])
+array([  3.37855688,  48.18746303,  11.62703839,   3.81290396])
 
 Total spectra at pT=0 and 1 GeV:
 >>> res = reader.evaluateExpression("dN/dydpT([0,1])(total)")
@@ -648,7 +637,7 @@ Done. Thanks for waiting.
 >>> "{} -> {}".format(res[1], res[2])
 'sqrt(<|V_{2}(0.5)(pion)|**2>) -> sqrt(mean(abs(self.get_diff_V_n(particleName="pion", order=2, pTs=0.5, verbose=True))**2,0))'
 >>> res[0]
-array([ 0.22016045])
+0.22016044857620587
 
 And also for eccentricity:
 >>> res = reader.evaluateExpression("e_2[2](ed)")
@@ -698,10 +687,7 @@ Copy completed.
 Looping over 4 events... (please be patient)
 Events processed: 0
 Done. Thanks for waiting.
-array([[  3.37855688],
-       [ 48.18746303],
-       [ 11.62703839],
-       [  3.81290396]])
+array([  3.37855688,  48.18746303,  11.62703839,   3.81290396])
 
 The getFactoryEvaluateExpressionOnly function return the factory function for evaluateExpressionOnly, which can then be used without referring to the objects. For example:
 >>> e = reader.getFactoryEvaluateExpressionOnly()
