@@ -274,10 +274,7 @@ array([ 0.01927809+0.05239437j, -0.00390843+0.05045172j,
 
 The getMultiplicities(particleName="pion", where="", orderBy="event_id") function returns a list of multiplicities from the "multiplicities" table for all events, and by default order by "event_id". Additional requirements can be added by modifying the "where" and "orderBy" arguments. For example:
 >>> reader.getMultiplicities()
-array([[  22.8],
-       [ 290.4],
-       [  84. ],
-       [  26.6]])
+array([  22.8,  290.4,   84. ,   26.6])
 
 This function is also aliased as the get_dNdy function.
 
@@ -466,19 +463,13 @@ A few examples:
 >>> "{} -> {}".format(res[1], res[2])
 'dN/dy(pion) -> self.get_dNdy(particleName="pion")'
 >>> res[0]
-array([[  22.8],
-       [ 290.4],
-       [  84. ],
-       [  26.6]])
+array([  22.8,  290.4,   84. ,   26.6])
 
 >>> res = reader.evaluateExpression("dN(total)")
 >>> "{} -> {}".format(res[1], res[2])
 'dN/dy(total) -> self.get_dNdy(particleName="total")'
 >>> res[0]
-array([[  31.7],
-       [ 395. ],
-       [ 116.6],
-       [  37.7]])
+array([  31.7,  395. ,  116.6,   37.7])
 
 <5> Differential flows.
 

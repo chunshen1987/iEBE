@@ -576,7 +576,8 @@ class EbeDBReader(object):
         whereClause = "pid=%d" % self._pid(particleName)
         if where:
             whereClause += " and " + where
-        return np.asarray(self.db.selectFromTable("multiplicities", "N", whereClause=whereClause, orderByClause=orderBy))
+        tmp = np.asarray(self.db.selectFromTable("multiplicities", "N", whereClause=whereClause, orderByClause=orderBy))
+        return tmp.reshape(tmp.size)
 
     get_dNdy = getMultiplicities
 
