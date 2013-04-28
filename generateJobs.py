@@ -86,7 +86,7 @@ if not checkExecutables():
     exit()
 
 # clean up check_prerequisites.pyc
-unlink("check_prerequisites.pyc")
+if path.exists("check_prerequisites.pyc"): unlink("check_prerequisites.pyc")
 
 # generate events
 print(green + "\n>>>>> Generating events <<<<<\n" + normal)
