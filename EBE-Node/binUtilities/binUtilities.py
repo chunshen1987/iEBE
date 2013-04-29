@@ -68,11 +68,12 @@ class DataBinner():
         for ii in range(self.numberOfBins): # look for empty entries
             if self.countBuffer[ii] != 0: break # found one
         else:
-            return [ [0], 0 ]*self.numberOfBins # all are empty
+            return [ [0]*self.numberOfBins ]*3 # all are empty
         blank = self.binAvgBuffer[ii]*0 # empty entries will be replaced by this entry
         for ii in range(self.numberOfBins): # replace empty entries by blank
             if self.countBuffer[ii] == 0:
                 self.binAvgBuffer[ii] = numpy.copy(blank)
+                self.binStdBuffer[ii] = numpy.copy(blank)
             else:
                 self.binAvgBuffer[ii] /= float(self.countBuffer[ii])
                 self.binStdBuffer[ii] /= float(self.countBuffer[ii])
@@ -293,6 +294,7 @@ class BinProcess():
         """
         # deal with numerics first
         avgs, stds, count = self.binner.getAvgAndCount()
+        #print(count)
         avgs1d = []
         stds1d = []
         nonzero_count = []
@@ -302,6 +304,7 @@ class BinProcess():
                 avgs1d.append(avgs[idx].reshape([1,avgs[idx].size]).tolist()[0]) # make avgs 1d lists
                 stds1d.append(stds[idx].reshape([1,stds[idx].size]).tolist()[0]) # make stds 1d lists
                 nonzero_count.append(count[idx])
+        if not nonzero_count: return
         to_write = [[] for var in range(len(nonzero_count))]
         for idx in range(len(nonzero_count)):
             to_write[idx].append(nonzero_count[idx])
@@ -375,8 +378,15 @@ def splitDataStream(dataStream, dataFormat, binObject, tmpDirectory="split"):
             already_opened[bin_idx].write(aLine)
 
 ####################################################################################
+#
 # 03-28-2013:
 # Bug fix: In BinProcesses.saveAvgAndCount, when using complex file format, a
 # column corresponding to the imaginary part of "count " (=0) should also have a
 # corresponding format label in the corresponding format file; previous this was
 # overlooked.
+#
+# 04-29-2013:
+# Bug fix: In DataBinner.getAvgAndCount, when the total number of samples were
+# empty, the previous return statement gave only avg and count, now with std.
+# Also BinProcess.saveAvgAndCount now skips saving action if the passed in count
+# array contains only zero elements.

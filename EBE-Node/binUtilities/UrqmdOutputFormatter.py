@@ -68,6 +68,9 @@ def formatUrqmdOutputFile(urqmdOutputFilePath, formattedFilePath):
                 header_count = 0 # not pointing at the header line yet
                 read_mode = "header_first_part"
 
+    # return
+    return True
+
 
 
 if __name__ == '__main__':
