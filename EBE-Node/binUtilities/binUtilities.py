@@ -117,7 +117,7 @@ class SingleVarBin(BinObject):
             self.binStep = (self.binMax-self.binMin) / float(self.numberOfBins)
             def wrap_decideBin(self,sample,sampleFormat):
                 elem = sample[sampleFormat[variableName]]
-                if elem < self.binMin or elem > self.binMax:
+                if elem < self.binMin or elem >= self.binMax:
                     return -1 # skip such samples
                 else:
                     return int((elem-self.binMin)/self.binStep)
@@ -390,3 +390,7 @@ def splitDataStream(dataStream, dataFormat, binObject, tmpDirectory="split"):
 # empty, the previous return statement gave only avg and count, now with std.
 # Also BinProcess.saveAvgAndCount now skips saving action if the passed in count
 # array contains only zero elements.
+#
+# 05-03-2013:
+# Bug fix: In SingleVarBin.__init__: in wrap_decideBin, the condition elem >
+# self.binMax is changed to elem >= self.binMax.
