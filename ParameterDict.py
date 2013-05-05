@@ -26,3 +26,10 @@ iSSParameters = {
     'y_LB'                          :   -2.5,
     'y_RB'                          :   2.5,
 }
+
+photonEmissionParameters = {
+    'dx'          :   0.5,
+    'dy'          :   0.5,
+    'dTau'        :   0.02,
+    'calHGIdFlag' :   0,
+}

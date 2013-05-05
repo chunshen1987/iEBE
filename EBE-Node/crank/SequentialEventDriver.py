@@ -27,6 +27,8 @@ allParameterLists = [
     'iSSParameters',
     'iSControl',
     'iSParameters',
+    'photonEmissionControl',
+    'photonEmissionParameters',
     'osc2uControl',
     'osc2uParameters',
     'urqmdControl',
@@ -114,6 +116,21 @@ iSControl = {
     'entryShell'        :   'iS_withResonance.sh',
 }
 iSParameters = {}
+
+photonEmissionControl = {
+    'mainDir'           :   'photonEmission',
+    'operationDir'      :   'results',
+    'saveResultGlobs'   :   ['*Sp*.dat'], # files in the operation directory matching these globs will be saved
+    'executable'       :   'hydro_photonEmission.e',
+}
+photonEmissionParameters = {
+    'dx'       :   0.5,
+    'dy'       :   0.5,
+    'dTau'     :   0.02,
+    'T_dec'    :   0.120,
+    'tau_start'   : 0.6,
+    'calHGIdFlag' : 0,
+}
 
 osc2uControl = {
     'mainDir'           :   'osc2u',
@@ -317,6 +334,43 @@ def iSWithResonancesWithHydroResultFiles(fileList):
     for aGlob in iSControl['saveResultGlobs']:
         worthStoring.extend(glob(path.join(iSOperationDirectory, aGlob)))
     for aFile in glob(path.join(iSOperationDirectory, "*")):
+        if aFile in worthStoring:
+            move(aFile, controlParameterList['eventResultDir'])
+
+def photonEmissionWithHydroResultFiles(fileList):
+    """
+        Perform thermal photon calculation using the given list of hydro result files.
+    """
+    # set directory strings
+    photonEmDirectory = path.join(controlParameterList['rootDir'], photonEmissionControl['mainDir'])
+    photonEmOperationDirectory = path.join(photonEmDirectory, photonEmissionControl['operationDir']) # for both input and output
+    photonEmExecutable = photonEmissionControl['executable']
+
+    # check executable
+    checkExistenceOfExecutable(path.join(photonEmDirectory, photonEmExecutable))
+
+    # clean up results folder
+    cleanUpFolder(photonEmOperationDirectory)
+
+    # check existence of hydro result files and move them to operation folder
+    for aFile in fileList:
+        if not path.exists(aFile):
+            raise ExecutionError("Hydro result file %s not found!" % aFile)
+        else:
+            move(aFile, photonEmOperationDirectory)
+
+    # form assignment string
+    assignments = formAssignmentStringFromDict(photonEmissionParameters)
+    # form executable string
+    executableString = "./" + photonEmExecutable + assignments
+    # execute!
+    run(executableString, cwd=photonEmDirectory)
+
+    # save some of the important result files
+    worthStoring = []
+    for aGlob in photonEmissionControl['saveResultGlobs']:
+        worthStoring.extend(glob(path.join(photonEmOperationDirectory, aGlob)))
+    for aFile in glob(path.join(photonEmOperationDirectory, "*")):
         if aFile in worthStoring:
             move(aFile, controlParameterList['eventResultDir'])
 
@@ -549,7 +603,7 @@ def sequentialEventDriverShell():
             
             elif simulationType == 'hydroEM':
                 # perform EM radiation calculation
-                print("Chun Shen: Haha")
+                photonEmissionWithHydroResultFiles(hydroResultFiles)
 
             # print current progress to terminal
             stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
