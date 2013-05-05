@@ -87,7 +87,8 @@ hydroParameters = {
     'iLS'       :   130,
     'T0'        :   0.6, # tau_0
     'Edec'      :   0.3, # 0.3->160 MeV, 0.18->120 MeV
-    'factor'    :   1.0
+    'factor'    :   1.0,
+    'IhydroJetoutput'   :   1,   #switch for output hydro evolution history into hdf5 file
 }
 
 iSSControl = {

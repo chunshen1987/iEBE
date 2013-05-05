@@ -72,6 +72,9 @@ CSHEN===========================================================================
        Integer :: IOSCARWrite       ! output OCCAR file path number
 CSHEN===========================================================================
 
+       Integer :: IhydroJetoutput   ! Output control for hydro evolution history
+       Common /hydroJetoutput/ IhydroJetoutput
+
 CSHEN===EOS from tables========================================================
       Integer, Parameter :: RegEOSdatasize = EOSDATALENGTH !converted EOS table size
       double precision :: PEOSdata(RegEOSdatasize),
@@ -214,6 +217,9 @@ C------ Lattice size and boundary R0 ----------------------------
       Read(1,*) Ifreez
       Read(1,*) Edec0   
 
+      Read(1,*) Cha
+      Read(1,*) IhydroJetoutput
+
       CLOSE(1)
 C===========================================================================
 
@@ -233,7 +239,8 @@ C===========================================================================
      &    "EK=", EK, "tau0=", T0, "EDec=", EDec, ! energy unit: GeV/fm^3
      &    "LS=", LS, "R0Bdry", R0Bdry, "VisBeta=", VisBeta,
      &    "DX=", DX, "DY=", DY, "DT_1=", DT_1,
-     &    "NDX=", NDX, "NDY=", NDY, "NDT=", NDT
+     &    "NDX=", NDX, "NDY=", NDY, "NDT=", NDT,
+     &    "IhydroJetoutput=", IhydroJetoutput
 
 
       ddx=dx
@@ -321,6 +328,11 @@ CSHEN======output OSCAR file Header=========================================
      &                             NYPhy0, NYPhy, T0, DX, DY)
       endif
 CSHEN======output OSCAR file Header end=====================================
+
+CSHEN======set up output file for hydro evolution history===================
+      if(IhydroJetoutput .eq. 1) then
+         Call setHydroFiles(NX0, NX, DX, 5, NY0, NY, DY, 5, T0, DT, 5)
+      endif
 
       CALL CPU_TIME(cpu_start) !Tic
       Call Mainpro(NX0,NY0,NZ0,NX,NY,NZ,NXPhy0,NYPhy0,
@@ -528,7 +540,12 @@ C==========OSCAR2008H related parameters===================================
       Integer :: IOSCARWrite
       Logical :: IOSCAR            ! trigger for output OSCAR format hydro results, False: not output, True: output
       Common/OSCAR/ IOSCAR,IOSCARWrite
+
+      Integer :: Tau_idx
 CSHEN=========end==========================================================
+
+      Integer :: IhydroJetoutput
+      Common/hydroJetoutput/ IhydroJetoutput
 
 CSHEN===EOS from tables========================================================
       Integer, Parameter :: RegEOSdatasize = EOSDATALENGTH  !converted EOS table size
@@ -977,6 +994,17 @@ C======Using a smaller time step for short initialization time \tau_0
                   DT = DT_1
             endif
 CSHEN====END====================================================================
+
+      if(IhydroJetoutput .eq. 1) then
+!        output hydro infos
+!        Units: [ed]=GeV/fm^3, [sd]=fm^-3, [p]=GeV/fm^3, [T]=GeV, [Vx]=[Vy]=1
+!        Units: [Pi]=GeV/fm^3, [PPi]=GeV/fm^3
+         Call writeHydroBlock(ITime-1, Ed*HbarC, Sd, PL*HbarC,
+     &      Temp*HbarC,Vx, Vy, Pi00*HbarC, Pi01*HbarC, Pi02*HbarC, 
+     &      Pi02*HbarC*0.0d0, Pi11*HbarC, Pi12*HbarC, Pi12*HbarC*0.0d0,
+     &      Pi22*HbarC, Pi22*HbarC*0.0d0, Pi33*HbarC, PPI*HbarC)
+!        output hydro infos, end
+      endif
 
 !   ---Zhi-Changes---
         Call determineR0(NX0,NY0,NZ0,NX,NY,NZ,Ed,PL,Sd,
