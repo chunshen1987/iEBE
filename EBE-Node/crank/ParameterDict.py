@@ -1,5 +1,5 @@
 controlParameterList = {
-    'simulation_type'       :   'hybrid', # 'hybrid' or 'hydro'
+    'simulation_type'       :   'hydroEM', # 'hybrid' or 'hydro'
 }
 
 superMCParameters = {
@@ -18,6 +18,7 @@ superMCParameters = {
 hydroParameters = {
     'vis'       :   0.08,
     'T0'        :   0.6, # tau_0
+    'IhydroJetoutput' :   1,  # switch for output hydro evolution history into hdf5 file
 }
 
 iSSParameters = {

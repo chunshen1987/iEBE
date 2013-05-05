@@ -74,9 +74,9 @@ hydroControl = {
     'initialConditionDir'   :   'Initial', # hydro initial condition folder, relative
     'initialConditionFile'  :   'InitialSd.dat', # IC filename
     'resultDir'             :   'results', # hydro results folder, relative
-    'resultFiles'           :   '*.dat', # results files
+    'resultFiles'           :   '*', # results files
     'saveICFile'            :   True, # whether to save initial condition file
-    'saveResultGlobs'       :   ['surface.dat', 'dec*.dat', 'ecc*.dat'], # files match these globs will be saved
+    'saveResultGlobs'       :   ['surface.dat', 'dec*.dat', 'ecc*.dat', '*.h5'], # files match these globs will be saved
     'executable'            :   'VISHNew.e',
 }
 hydroParameters = {
@@ -546,6 +546,10 @@ def sequentialEventDriverShell():
             elif simulationType == 'hydro':
                 # perform iS calculation and resonance decays
                 iSWithResonancesWithHydroResultFiles(hydroResultFiles)
+            
+            elif simulationType == 'hydroEM':
+                # perform EM radiation calculation
+                print("Chun Shen: Haha")
 
             # print current progress to terminal
             stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
