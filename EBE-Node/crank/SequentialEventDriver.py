@@ -163,6 +163,7 @@ EbeCollectorControl = {
     'mainDir'               :   'EbeCollector',
     'executable_hybrid'     :   'EbeCollectorShell_hydroWithUrQMD.py',
     'executable_hydro'      :   'EbeCollectorShell_pureHydro.py',
+    'executable_hydroEM'    :   'EbeCollectorShell_HydroEM.py',
 }
 EbeCollectorParameters = {
     'subfolderPattern'      :   '"event-(\d*)"',
@@ -484,6 +485,9 @@ def collectEbeResultsToDatabaseFrom(folder):
         executableString = "python ./" + collectorExecutable + " %s %g %s %s" % (folder, 1.0/(iSSParameters['number_of_repeated_sampling']*(iSSParameters["y_RB"]-iSSParameters["y_LB"])), EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     elif simulationType == 'hydro':
         collectorExecutable = EbeCollectorControl['executable_hydro']
+        executableString = "python ./" + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+    elif simulationType == 'hydroEM':
+        collectorExecutable = EbeCollectorControl['executable_hydroEM']
         executableString = "python ./" + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     
     # execute
