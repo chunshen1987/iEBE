@@ -76,6 +76,10 @@ def checkEnvironment():
     if not checkModule("numpy"):
         finalMsgs.append("You need to install python numpy package.")
 
+    # check hdf5
+    if not checkCommand("h5fc") or not checkCommand("h5c++"):
+        finalMsgs.append("You need to install hdf5 library.")
+
     # print final messages
     print("-"*80)
     if not finalMsgs:
@@ -99,6 +103,7 @@ def checkExecutables():
         path.join("iS", "iS.e"),
         path.join("iS", "resonance.e"),
         path.join("iS", "iInteSp.e"),
+        path.join("photonEmission", "hydro_photonEmission.e"),
         path.join("osc2u", "osc2u.e"),
         path.join("urqmd", "urqmd.e"),
     )

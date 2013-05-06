@@ -287,6 +287,9 @@ void HydroinfoH5::readHydroinfoH5(string filename_in, int bufferSize_in, int Vis
       cout << "Buffersize is too small, increase it to at lease to " << grid_Framenum << endl;
       exit(1);
    }
+   else
+      Buffersize = grid_Framenum;
+      
    //initialize all matrices
    ed = new double** [Buffersize];
    sd = new double** [Buffersize];

@@ -48,6 +48,11 @@ class ThermalPhoton
       double *dNd2pT_vis, **vnpT_cos_vis, **vnpT_sin_vis;
       double *dNd2pT_tot, **vnpT_cos_tot, **vnpT_sin_tot;
 
+      double dNdy_eq, dNdy_vis, dNdy_tot;
+      double *vn_cos_eq, *vn_sin_eq;
+      double *vn_cos_vis, *vn_sin_vis;
+      double *vn_cos_tot, *vn_sin_tot;
+
    public:
       ThermalPhoton(ParameterReader* paraRdr_in);
       ~ThermalPhoton();
@@ -58,6 +63,7 @@ class ThermalPhoton
       Table2D* get_eqRatetableptr() {return(Photonemission_eqrateTable_ptr);};
       Table2D* get_visRatetableptr() {return(Photonemission_viscous_rateTable_ptr);};
       double getPhotonp(int i) {return(p[i]);};
+      double getPhoton_pweight(int i) {return(p_weight[i]);};
       double getPhotonphi(int i) {return(phi[i]);};
       double getPhoton_phiweight(int i) {return(phi_weight[i]);};
       double getPhotontheta(int i) {return(theta[i]);};

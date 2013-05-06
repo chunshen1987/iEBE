@@ -105,6 +105,25 @@ ThermalPhoton::ThermalPhoton(ParameterReader* paraRdr_in)
          vnpT_sin_tot[order][i] = 0.0;
       }
     }
+
+    dNdy_eq = 0.0;
+    dNdy_vis = 0.0;
+    dNdy_tot = 0.0;
+    vn_cos_eq = new double [norder];
+    vn_sin_eq = new double [norder];
+    vn_cos_vis = new double [norder];
+    vn_sin_vis = new double [norder];
+    vn_cos_tot = new double [norder];
+    vn_sin_tot = new double [norder];
+    for(int i = 0; i < norder; i++)
+    {
+       vn_cos_eq[i] = 0.0;
+       vn_sin_eq[i] = 0.0;
+       vn_cos_vis[i] = 0.0;
+       vn_sin_vis[i] = 0.0;
+       vn_cos_tot[i] = 0.0;
+       vn_sin_tot[i] = 0.0;
+    }
     return;
 }
 
@@ -164,6 +183,13 @@ ThermalPhoton::~ThermalPhoton()
     delete [] vnpT_sin_vis;
     delete [] vnpT_cos_tot;
     delete [] vnpT_sin_tot;
+
+    delete [] vn_cos_eq;
+    delete [] vn_sin_eq;
+    delete [] vn_cos_vis;
+    delete [] vn_sin_vis;
+    delete [] vn_cos_tot;
+    delete [] vn_sin_tot;
 }
 
 void ThermalPhoton::setupEmissionrate(string emissionProcess, double Xmin, double dX,  double Ymin, double dY)
@@ -278,10 +304,10 @@ void ThermalPhoton::calPhoton_SpvnpT()
    {
        for(int j=0;j<nphi;j++)
        {
-         dNd2pT_eq[i] += dNd2pTdphidy_eq[i][j][k]*phi_weight[j];
+         dNd2pT_eq[i] += dNd2pTdphidy_eq[i][j][k]*phi_weight[j];  //dN/(dy pT dpT)
          dNd2pT_vis[i] += dNd2pTdphidy_vis[i][j][k]*phi_weight[j];
          dNd2pT_tot[i] += dNd2pTdphidy_tot[i][j][k]*phi_weight[j];
-         for(int order=1; order<norder; order++)
+         for(int order=0; order<norder; order++)
          {
             vnpT_cos_eq[order][i] += dNd2pTdphidy_eq[i][j][k]*cos(order*phi[j])*phi_weight[j];
             vnpT_cos_vis[order][i] += dNd2pTdphidy_vis[i][j][k]*cos(order*phi[j])*phi_weight[j];
@@ -291,8 +317,19 @@ void ThermalPhoton::calPhoton_SpvnpT()
             vnpT_sin_tot[order][i] += dNd2pTdphidy_tot[i][j][k]*sin(order*phi[j])*phi_weight[j];
          }
        }
-       for(int order=1; order<norder; order++)
+       dNdy_eq += dNd2pT_eq[i]*p[i]*p_weight[i];   //dN/dy
+       dNdy_vis += dNd2pT_vis[i]*p[i]*p_weight[i];
+       dNdy_tot += dNd2pT_tot[i]*p[i]*p_weight[i];
+       for(int order = 0; order < norder ; order++)
        {
+          vn_cos_eq[order] += vnpT_cos_eq[order][i]*p[i]*p_weight[i];
+          vn_sin_eq[order] += vnpT_sin_eq[order][i]*p[i]*p_weight[i];
+          vn_cos_vis[order] += vnpT_cos_vis[order][i]*p[i]*p_weight[i];
+          vn_sin_vis[order] += vnpT_sin_vis[order][i]*p[i]*p_weight[i];
+          vn_cos_tot[order] += vnpT_cos_tot[order][i]*p[i]*p_weight[i];
+          vn_sin_tot[order] += vnpT_sin_tot[order][i]*p[i]*p_weight[i];
+          
+          //vn(pT)
           vnpT_cos_eq[order][i] = vnpT_cos_eq[order][i]/dNd2pT_eq[i];
           vnpT_cos_vis[order][i] = vnpT_cos_vis[order][i]/dNd2pT_vis[i];
           vnpT_cos_tot[order][i] = vnpT_cos_tot[order][i]/dNd2pT_tot[i];
@@ -300,9 +337,19 @@ void ThermalPhoton::calPhoton_SpvnpT()
           vnpT_sin_vis[order][i] = vnpT_sin_vis[order][i]/dNd2pT_vis[i];
           vnpT_sin_tot[order][i] = vnpT_sin_tot[order][i]/dNd2pT_tot[i];
        }
-       dNd2pT_eq[i] = dNd2pT_eq[i]/(2*M_PI);
+       dNd2pT_eq[i] = dNd2pT_eq[i]/(2*M_PI);  //dN/(2pi dy pT dpT)
        dNd2pT_vis[i] = dNd2pT_vis[i]/(2*M_PI);
        dNd2pT_tot[i] = dNd2pT_tot[i]/(2*M_PI);
+   }
+   for(int order = 1; order < norder ; order++)
+   {
+       //vn
+       vn_cos_eq[order] = vn_cos_eq[order]/dNdy_eq;
+       vn_sin_eq[order] = vn_sin_eq[order]/dNdy_eq;
+       vn_cos_vis[order] = vn_cos_vis[order]/dNdy_vis;
+       vn_sin_vis[order] = vn_sin_vis[order]/dNdy_vis;
+       vn_cos_tot[order] = vn_cos_tot[order]/dNdy_tot;
+       vn_sin_tot[order] = vn_sin_tot[order]/dNdy_tot;
    }
    return;
 }
@@ -315,6 +362,9 @@ void ThermalPhoton::outputPhoton_SpvnpT(string path)
     ostringstream filename_stream_Spvn_eq;
     ostringstream filename_stream_Spvn_vis;
     ostringstream filename_stream_Spvn_tot;
+    ostringstream filename_stream_inte_Spvn_eq;
+    ostringstream filename_stream_inte_Spvn_vis;
+    ostringstream filename_stream_inte_Spvn_tot;
 
     filename_stream_SpMatrix_eq << path << emissionProcess_name << "_SpMatrix_eq.dat";
     filename_stream_SpMatrix_vis << path << emissionProcess_name << "_SpMatrix_vis.dat";
@@ -322,6 +372,9 @@ void ThermalPhoton::outputPhoton_SpvnpT(string path)
     filename_stream_Spvn_eq << path << emissionProcess_name << "_Spvn_eq.dat";
     filename_stream_Spvn_vis << path << emissionProcess_name << "_Spvn_vis.dat";
     filename_stream_Spvn_tot << path << emissionProcess_name << "_Spvn_tot.dat";
+    filename_stream_inte_Spvn_eq << path << emissionProcess_name << "_Spvn_eq_inte.dat";
+    filename_stream_inte_Spvn_vis << path << emissionProcess_name << "_Spvn_vis_inte.dat";
+    filename_stream_inte_Spvn_tot << path << emissionProcess_name << "_Spvn_tot_inte.dat";
 
     ofstream fphotonSpMatrix_eq(filename_stream_SpMatrix_eq.str().c_str());
     ofstream fphotonSpMatrix_vis(filename_stream_SpMatrix_vis.str().c_str());
@@ -329,6 +382,9 @@ void ThermalPhoton::outputPhoton_SpvnpT(string path)
     ofstream fphotonSpvn_eq(filename_stream_Spvn_eq.str().c_str());
     ofstream fphotonSpvn_vis(filename_stream_Spvn_vis.str().c_str());
     ofstream fphotonSpvn_tot(filename_stream_Spvn_tot.str().c_str());
+    ofstream fphotoninteSpvn_eq(filename_stream_inte_Spvn_eq.str().c_str());
+    ofstream fphotoninteSpvn_vis(filename_stream_inte_Spvn_vis.str().c_str());
+    ofstream fphotoninteSpvn_tot(filename_stream_inte_Spvn_tot.str().c_str());
 
     for(int i=0;i<nphi;i++)
     {
@@ -376,12 +432,35 @@ void ThermalPhoton::outputPhoton_SpvnpT(string path)
       fphotonSpvn_vis << endl;
       fphotonSpvn_tot << endl;
     }
+
+    for(int order = 0; order < norder; order++)
+    {
+        fphotoninteSpvn_eq << scientific << setprecision(6) << setw(16) 
+                           << order << "   " << vn_cos_eq[order] << "   " 
+                           << vn_sin_eq[order] << "   " 
+                           << sqrt(pow(vn_cos_eq[order], 2) + pow(vn_sin_eq[order], 2)) 
+                           << endl;
+        fphotoninteSpvn_vis << scientific << setprecision(6) << setw(16) 
+                            << order << "   " << vn_cos_vis[order] << "   " 
+                            << vn_sin_vis[order] << "   " 
+                            << sqrt(pow(vn_cos_vis[order], 2) + pow(vn_sin_vis[order], 2)) 
+                            << endl;
+        fphotoninteSpvn_tot << scientific << setprecision(6) << setw(16) 
+                            << order << "   " << vn_cos_tot[order] << "   " 
+                            << vn_sin_tot[order] << "   " 
+                            << sqrt(pow(vn_cos_tot[order], 2) + pow(vn_sin_tot[order], 2)) 
+                            << endl;
+    }
+
     fphotonSpMatrix_eq.close();
     fphotonSpMatrix_vis.close();
     fphotonSpMatrix_tot.close();
     fphotonSpvn_eq.close();
     fphotonSpvn_vis.close();
     fphotonSpvn_tot.close();
+    fphotoninteSpvn_eq.close();
+    fphotoninteSpvn_vis.close();
+    fphotoninteSpvn_tot.close();
 
     return;
 }

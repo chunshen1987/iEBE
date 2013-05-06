@@ -365,7 +365,7 @@ class EbeCollector(object):
             "photon_total_eq_Spvn"    :   "photon_total_eq",
             "photon_total_Spvn"       :   "photon_total",
         }
-        #filename_inte = "%s_integrated_vndata.dat" # filename for integrated flow files, %s is the "string in filename" defined in toCollect
+        filename_inte = "%s_inte.dat" # filename for integrated flow files, %s is the "string in filename" defined in toCollect
         filename_diff = "%s.dat" # filename for differential flow files
 
         # first write the pid_lookup table, makes sure there is only one such table
@@ -400,20 +400,20 @@ class EbeCollector(object):
                     )
 
             # next, integrated flow
-#            particle_filename = path.join(folder, filename_inte % particle_string_infile)
-#            if path.exists(particle_filename):
-#                # extract integrated flow and multiplicity information
-#                inte_flow_block = np.loadtxt(particle_filename)
-#                largest_n = inte_flow_block.shape[0]
-#                # write flow table
-#                for n in range(1, largest_n):
-#                    db.insertIntoTable("inte_vn",
-#                        (event_id, pid, n, inte_flow_block[n,3], inte_flow_block[n,4])
-#                    )
-#                # write multiplicity table
-#                db.insertIntoTable("multiplicities",
-#                    (event_id, pid, inte_flow_block[0,1])
-#                )
+            particle_filename = path.join(folder, filename_inte % particle_string_infile)
+            if path.exists(particle_filename):
+                # extract integrated flow and multiplicity information
+                inte_flow_block = np.loadtxt(particle_filename)
+                largest_n = inte_flow_block.shape[0]
+                # write flow table
+                for n in range(1, largest_n):
+                    db.insertIntoTable("inte_vn",
+                        (event_id, pid, n, inte_flow_block[n,1], inte_flow_block[n,2])
+                    )
+                # write multiplicity table
+                db.insertIntoTable("multiplicities",
+                    (event_id, pid, inte_flow_block[0,1])
+                )
 
         # close connection to commit changes
         db.closeConnection()
