@@ -10,15 +10,11 @@
 ##			distclean	remove all objectsfiles and binaries
 ##  
 
-#CC := $(shell ../crank/configure_compiler_C++.sh)
-#CFLAGS= $(shell ../crank/configure_compiler_C++_Flags.sh)
-CC := g++
-CFLAGS = -g
+CC := h5c++
+CFLAGS = -O3
 
 RM		=	rm -f
 O               =       .o
-HDF5LD          = -I/usr/local/hdf5/include
-HDF5FLAGS       = -L/usr/local/hdf5/lib /usr/local/hdf5/lib/libhdf5_hl_cpp.a /usr/local/hdf5/lib/libhdf5_cpp.a /usr/local/hdf5/lib/libhdf5_hl.a /usr/local/hdf5/lib/libhdf5.a -lz -lm
 LDFLAGS         =       $(CFLAGS)
 SYSTEMFILES     =       $(SRCGNU)
 
@@ -48,7 +44,7 @@ INSTPATH	=	$(HOME)/local/bin
 # --------------- Pattern rules -------------------
 
 $(OBJDIR)/%.o: %.cpp
-	$(CC) $(CFLAGS) $(HDF5LD) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 %.cpp:
 	if [ -f $@ ] ; then touch $@ ; else false ; fi
@@ -66,7 +62,7 @@ mkobjdir:
 		-@mkdir -p $(OBJDIR)
 
 $(TARGET):	$(OBJECTS)	
-		$(CC) $(LDFLAGS) $(HDF5FLAGS) $(OBJECTS) -o $(TARGET)
+		$(CC) $(LDFLAGS) $(OBJECTS) -o $(TARGET)
 #		strip $(TARGET)
 
 clean:		

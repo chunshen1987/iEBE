@@ -9,6 +9,7 @@
 #include "GlueDensity.h"
 #include "CollisionPair.h"
 #include "Largex.h"
+#include "Spectator.h"
 
 #include "GaussianNucleonsCal.h"
 #include "ParameterReader.h"
@@ -21,6 +22,8 @@ protected:
     std::vector<Particle*> nucl1,nucl2;
     std::vector<Participant*> participant;
     std::vector<CollisionPair*> binaryCollision;
+    std::vector<Spectator*> spectators;
+
     KLNModel* kln;
     GaussianNucleonsCal *gaussCal; // for Gaussian shaped nucleons calculations
     Large_x* val;
@@ -64,6 +67,7 @@ public:
     MCnucl(ParameterReader*);
     ~MCnucl();
 
+    double lastCx1, lastPh1, lastCx2, lastPh2; // store the nuclei rotation angles from the last call
     void setKLN(KLNModel* k) {kln=k;}  // pointer to small-x gluon class
     void setLgX(Large_x* k) {val=k;}   // pointer to large-x partons
 
@@ -96,6 +100,9 @@ public:
     int hit(double r);
     static double Angle(const double x,const double y);
 
-    void dumpBinaryTable();
+    void dumpBinaryTable(char filename[]);
+
+    int getSpectators();
+    void dumpSpectatorsTable(int event);
 };
 #endif

@@ -261,11 +261,11 @@ void PhotonEmission::calPhotonemission(HydroinfoH5* hydroinfo_ptr, double* eta_p
   double p_lab_local[4], p_lab_lowmu[4];
   double flow_u_mu_low[4];
   for(int k=0;k<nrapidity;k++)
-     y_q[k] = photon_pirho->getPhotonrapidity(k);
-  for(int l=0;l<np;l++) p_q[l] = photon_pirho->getPhotonp(l);
+     y_q[k] = photon_QGP->getPhotonrapidity(k);
+  for(int l=0;l<np;l++) p_q[l] = photon_QGP->getPhotonp(l);
   for(int m=0;m<nphi;m++)
   {
-     phi_q[m] = photon_pirho->getPhotonphi(m);
+     phi_q[m] = photon_QGP->getPhotonphi(m);
      sin_phiq[m] = sin(phi_q[m]);
      cos_phiq[m] = cos(phi_q[m]);
   }
@@ -470,11 +470,11 @@ void PhotonEmission::calPhoton_total_Spvn()
        double pweight = photon_QGP->getPhoton_pweight(i);
        for(int j=0;j<nphi;j++)
        {
-         double phi = photon_pirho->getPhotonphi(j);
-         double phiweight = photon_pirho->getPhoton_phiweight(j);
+         double phi = photon_QGP->getPhotonphi(j);
+         double phiweight = photon_QGP->getPhoton_phiweight(j);
          dNd2pT_eq[i] += dNd2pTdphidy_eq[i][j][k]*phiweight;
          dNd2pT[i] += dNd2pTdphidy[i][j][k]*phiweight;
-         for(int order=0; order<norder; order++)
+         for(int order = 0; order < norder; order++)
          {
             vnpT_cos_eq[order][i] += dNd2pTdphidy_eq[i][j][k]*cos(order*phi)*phiweight;
             vnpT_cos[order][i] += dNd2pTdphidy[i][j][k]*cos(order*phi)*phiweight;
@@ -487,10 +487,10 @@ void PhotonEmission::calPhoton_total_Spvn()
 
        for(int order=0; order<norder; order++)
        {
-          vn_cos_eq[order] = vnpT_cos_eq[order][i]*p*pweight;
-          vn_sin_eq[order] = vnpT_sin_eq[order][i]*p*pweight;
-          vn_cos_tot[order] = vnpT_cos[order][i]*p*pweight;
-          vn_sin_tot[order] = vnpT_sin[order][i]*p*pweight;
+          vn_cos_eq[order] += vnpT_cos_eq[order][i]*p*pweight;
+          vn_sin_eq[order] += vnpT_sin_eq[order][i]*p*pweight;
+          vn_cos_tot[order] += vnpT_cos[order][i]*p*pweight;
+          vn_sin_tot[order] += vnpT_sin[order][i]*p*pweight;
 
           vnpT_cos_eq[order][i] = vnpT_cos_eq[order][i]/dNd2pT_eq[i];
           vnpT_cos[order][i] = vnpT_cos[order][i]/dNd2pT[i];
@@ -535,7 +535,7 @@ void PhotonEmission::outputPhoton_total_SpvnpT(string filename)
 
     for(int i=0;i<nphi;i++)
     {
-      double phi = photon_pirho->getPhotonphi(i);
+      double phi = photon_QGP->getPhotonphi(i);
       fphoton_eq_SpMatrix << phi << "  ";
       fphotonSpMatrix << phi << "  ";
       for(int j=0;j<np;j++)
@@ -551,7 +551,7 @@ void PhotonEmission::outputPhoton_total_SpvnpT(string filename)
     }
     for(int i=0;i<np;i++)
     {
-      double pT = photon_pirho->getPhotonp(i);
+      double pT = photon_QGP->getPhotonp(i);
       fphoton_eq_Spvn << scientific << setprecision(6) << setw(16) 
                   << pT << "  " << dNd2pT_eq[i] << "  " ;
       fphotonSpvn << scientific << setprecision(6) << setw(16) 

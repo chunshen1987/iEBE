@@ -1,5 +1,21 @@
 ***** Note: If the compiler complains that "lgsl not found", try to disable the "-fast" option in the Zmake.sh script. *****
 
+
+============================
+Ver1.6.0 (01-30-2013)
+============================
+.: The support of outputting TA*TB when generating averaged initial conditions is added.
+
+============================
+Ver1.5.0 (10-14-2012)
+============================
+.: The overlap area calculated using two methods (see MakeDensity) are also outputted when calculating the eccentricities.
+
+============================
+Ver1.4.1 (10-04-2012)
+============================
+.: (Andy) The angle used to rotate the nuclei are now also outputted in the eccentricity files.
+
 ============================
 Ver1.4.0 (08-20-2012)
 ============================

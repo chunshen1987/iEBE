@@ -35,7 +35,7 @@ INC		= 	ArraySaver.h Bases.h CollisionPair.h EOS.h GaussianNucleonsCal.h \
 			MCnucl.h MakeDenstiy.h MathBasics.h NBD.h OverLap.h \
 			ParamDefs.h ParameterReader.h Participant.h Particle.h \
                   RandomVariable.h Regge96.h Stopwatch.h Table.h TableFunction.h \
-                  UnintegPartonDist.h arsenal.h rcBKfunc.h \
+                  UnintegPartonDist.h arsenal.h rcBKfunc.h Spectator.h \
 
 
 # -------------------------------------------------

@@ -10,13 +10,14 @@
 ##			distclean	remove all objectsfiles and binaries
 ##  
 
-FC := gfortran
-FFLAGS= -O3 -cpp -lm -lz -fno-align-commons -I/usr/local/hdf5/include 
+FC := h5fc
+FFLAGS= -O3 -cpp -lm -lz -fno-align-commons
 
 RM		=	rm -f
 O               =       .o
 LDFLAGS         =       $(FFLAGS) 
 LIBSHDF         =       -L/usr/local/hdf5/lib /usr/local/hdf5/lib/libhdf5hl_fortran.a /usr/local/hdf5/lib/libhdf5_hl.a /usr/local/hdf5/lib/libhdf5_fortran.a /usr/local/hdf5/lib/libhdf5.a 
+LIBSHDF         =  
 SYSTEMFILES     =       $(SRCGNU)
 
 # --------------- Files involved ------------------

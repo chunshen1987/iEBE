@@ -146,6 +146,8 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
 
     cx = 1.0-2.0*drand48();
     phi = 2*M_PI*drand48();
+    lastCx1=cx;
+    lastPh1=phi;
     proj ->setRotation(cx, phi);
 
     for(int ia=0;ia<nn;ia++) {
@@ -189,7 +191,8 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
     cx = 1.0-2.0*drand48();
     phi = 2*M_PI*drand48();
     targ->setRotation(cx, phi);
-
+    lastCx2=cx;
+    lastPh2=phi;
     for(int ia=0;ia<nn;ia++) {
       double x,y,z;
       int icon=0;
@@ -754,12 +757,16 @@ void MCnucl::deleteNucleus()
   for(int i=0;i<(int)participant.size();i++) {
     delete participant[i];
   }
+  for(int i=0;i<(int)spectators.size();i++) {
+    delete spectators[i];
+  }
   for(int i=0;i<(int)binaryCollision.size();i++) {
     delete binaryCollision[i];
   }
   nucl1.clear();
   nucl2.clear();
   participant.clear();
+  spectators.clear();
   binaryCollision.clear();
 }
 
@@ -793,12 +800,12 @@ void MCnucl::rotateGrid(int iy, int n)
 }
 
 
-void MCnucl::dumpBinaryTable()
+void MCnucl::dumpBinaryTable(char filename[])
 {
   double x,y;
   ofstream of;
-  
-  of.open("data/binary.data");
+
+  of.open(filename, std::ios_base::app);
   for (int idx=0; idx<binaryCollision.size(); idx++)
   {
     x = binaryCollision[idx]->getX();
@@ -809,6 +816,7 @@ void MCnucl::dumpBinaryTable()
   }
   of.close();
   
+  /* for debug
   of.open("data/wounded.data");
   for (int idx=0; idx<participant.size(); idx++)
   {
@@ -819,7 +827,7 @@ void MCnucl::dumpBinaryTable()
         << endl;
   }
   of.close();
-  
+
   of.open("data/nucl1.data");
   for (int idx=0; idx<nucl1.size(); idx++)
   {
@@ -830,7 +838,7 @@ void MCnucl::dumpBinaryTable()
         << endl;
   }
   of.close();
-  
+
   of.open("data/nucl2.data");
   for (int idx=0; idx<nucl2.size(); idx++)
   {
@@ -841,4 +849,52 @@ void MCnucl::dumpBinaryTable()
         << endl;
   }
   of.close();
+  */
 }
+
+int MCnucl::getSpectators()
+{
+  int count = 0;
+  double ecm = paraRdr->getVal("ecm");
+  //calculate the rapidity_Y for spectators at a given collision energy
+  double v_z = sqrt(1. - 1./((ecm/2.)*(ecm/2.)));
+  double rapidity_Y = 0.5*log((1. + v_z)/(1. - v_z + 1e-100));
+  for(int i=0;i<(int)nucl1.size();i++) { // loop over proj. nucleons
+    if(nucl1[i]->getNumberOfCollision()==0) {
+      double x1 = nucl1[i]->getX();
+      double y1 = nucl1[i]->getY();
+      spectators.push_back(new Spectator(x1, y1, rapidity_Y));
+      count++;
+    }
+  }
+  for(int i=0;i<(int)nucl2.size();i++) { // loop over targ. nucleons
+    if(nucl2[i]->getNumberOfCollision()==0) {
+      double x2 = nucl2[i]->getX();
+      double y2 = nucl2[i]->getY();
+      spectators.push_back(new Spectator(x2, y2, -rapidity_Y));
+      count++;
+    }
+  }
+  return(count);
+}
+
+void MCnucl::dumpSpectatorsTable(int event)
+{
+  double x, y, rap;
+  ostringstream of_stream; 
+  ofstream of;
+  of_stream << "data/Spectators_event_" << event << ".dat";
+  
+  of.open(of_stream.str().c_str());
+  for (int idx=0; idx<spectators.size(); idx++)
+  {
+    x = spectators[idx]->getX();
+    y = spectators[idx]->getY();
+    rap = spectators[idx]->getRapidity_Y();
+    of  << scientific << setprecision(4) << setw(10) 
+        << x << "  " << y << "  " << rap
+        << endl;
+  }
+  of.close();
+}
+

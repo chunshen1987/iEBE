@@ -46,6 +46,10 @@ int main(int argc, char *argv[]) {
       // generate a set of profiles, used for e-by-e calculations
       dens->generate_profile_ebe(nevent);
       break;
+    case 2:
+      // generate a set of profiles, used for e-by-e calculations with Jet quenching
+      dens->generate_profile_ebe_Jet(nevent);
+      break;
     case 3:
       // generate a set of averaged profiles, for entropy and/or energy densities (controallable using parameters.dat)
       dens->generate_profile_average(nevent);
