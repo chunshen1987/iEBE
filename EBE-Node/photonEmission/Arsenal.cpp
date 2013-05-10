@@ -3,6 +3,7 @@
 #include<fstream>
 #include<cmath>
 #include<iomanip>
+#include<stdlib.h>
 #include "Arsenal.h"
 
 double Simpson_sum(double* array, int num, double h_step)

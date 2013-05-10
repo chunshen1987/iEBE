@@ -4,6 +4,7 @@
 #include<cmath>
 #include<iomanip>
 #include<string>
+#include<stdlib.h>
 
 #include "hdf5.h"
 #include "Hydroinfo_h5.h"
