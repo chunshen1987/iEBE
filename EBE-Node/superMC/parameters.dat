@@ -54,7 +54,7 @@ Npmax = 1000              # Maximum participant nucleon cut
 
 
 # Monte Carlo Optns
-nev = 5                  # Number of collision events simulated
+nev = 1                  # Number of collision events simulated
 randomSeed = -1           # If randomSeed < 0 then CPU time is used to seed
 backup_number = 10000     # Backs up the averaged profile every "n" events. 0 means 
                           # every step. Use a neg number to turn it off

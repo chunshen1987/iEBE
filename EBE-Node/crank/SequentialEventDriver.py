@@ -78,7 +78,7 @@ hydroControl = {
     'resultDir'             :   'results', # hydro results folder, relative
     'resultFiles'           :   '*', # results files
     'saveICFile'            :   True, # whether to save initial condition file
-    'saveResultGlobs'       :   ['surface.dat', 'dec*.dat', 'ecc*.dat', '*.h5'], # files match these globs will be saved
+    'saveResultGlobs'       :   ['surface.dat', 'dec*.dat', 'ecc*.dat'], # files match these globs will be saved
     'executable'            :   'VISHNew.e',
 }
 hydroParameters = {
@@ -329,6 +329,40 @@ def iSWithResonancesWithHydroResultFiles(fileList):
 
     # execute!
     run("bash ./"+iSExecutionEntry, cwd=iSDirectory)
+
+    # save some of the important result files
+    worthStoring = []
+    for aGlob in iSControl['saveResultGlobs']:
+        worthStoring.extend(glob(path.join(iSOperationDirectory, aGlob)))
+    for aFile in glob(path.join(iSOperationDirectory, "*")):
+        if aFile in worthStoring:
+            move(aFile, controlParameterList['eventResultDir'])
+
+def iSeventplaneAngleWithHydroResultFiles(fileList):
+    """
+        Perform iS calculation using the given list of hydro result files,
+        only calculate thermal pion+ to determine event plane angle
+    """
+    # set directory strings
+    iSDirectory = path.join(controlParameterList['rootDir'], iSControl['mainDir'])
+    iSOperationDirectory = path.join(iSDirectory, iSControl['operationDir']) # for both input & output
+    iSExecutable = iSControl['executables'][0]
+
+    # check executable
+    checkExistenceOfExecutable(path.join(iSDirectory, iSExecutable))
+
+    # clean up operation folder
+    cleanUpFolder(iSOperationDirectory)
+
+    # check existence of hydro result files and move them to operation folder
+    for aFile in fileList:
+        if not path.exists(aFile):
+            raise ExecutionError("Hydro result file %s not found!" % aFile)
+        else:
+            move(aFile, iSOperationDirectory)
+
+    # execute!
+    run("bash ./"+iSExecutable, cwd=iSDirectory)
 
     # save some of the important result files
     worthStoring = []

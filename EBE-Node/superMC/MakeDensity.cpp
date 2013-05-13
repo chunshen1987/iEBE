@@ -197,7 +197,7 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
       {
         setSd(dens1, iy); // includes factor multiplication
         sprintf(buffer, file1_ecc, event);
-        dumpEccentricities(buffer, dens1, iy, from_order, to_order, Npart, Nbin, b);
+        dumpEccentricities(buffer, dens1, iy, from_order, to_order, Npart, binary, b);
         if (use_4col)
           {
             sprintf(buffer,file1_4col,event);
@@ -214,7 +214,7 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
       {
         setEd(dens2, iy); // includes factor multiplication
         sprintf(buffer,file2_ecc,event);
-        dumpEccentricities(buffer, dens2, iy, from_order, to_order, Npart, Nbin, b);
+        dumpEccentricities(buffer, dens2, iy, from_order, to_order, Npart, binary, b);
         if (use_4col)
           {
             sprintf(buffer,file2_4col,event);
