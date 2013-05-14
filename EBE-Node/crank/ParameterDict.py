@@ -23,6 +23,8 @@ hydroParameters = {
 }
 
 iSSParameters = {
+    'calculate_vn'                  :   1,
+    'MC_sampling'                   :   0,
     'number_of_repeated_sampling'   :   10,
     'y_LB'                          :   -2.5,
     'y_RB'                          :   2.5,

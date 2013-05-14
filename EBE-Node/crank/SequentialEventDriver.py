@@ -326,6 +326,7 @@ def iSWithResonancesWithHydroResultFiles(fileList):
             raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
             move(aFile, iSOperationDirectory)
+    move(path.join(iSDirectory, 'EOS', 'chosen_particle_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particle.dat'))
 
     # execute!
     run("bash ./"+iSExecutionEntry, cwd=iSDirectory)
@@ -338,39 +339,48 @@ def iSWithResonancesWithHydroResultFiles(fileList):
         if aFile in worthStoring:
             move(aFile, controlParameterList['eventResultDir'])
 
-def iSeventplaneAngleWithHydroResultFiles(fileList):
+def iSSeventplaneAngleWithHydroResultFiles(fileList):
     """
-        Perform iS calculation using the given list of hydro result files,
-        only calculate thermal pion+ to determine event plane angle
+        Perform iSS calculation using the given list of hydro result files.
+        Return the path to the OSCAR file.
     """
     # set directory strings
-    iSDirectory = path.join(controlParameterList['rootDir'], iSControl['mainDir'])
-    iSOperationDirectory = path.join(iSDirectory, iSControl['operationDir']) # for both input & output
-    iSExecutable = iSControl['executables'][0]
+    iSSDirectory = path.join(controlParameterList['rootDir'], iSSControl['mainDir'])
+    iSSOperationDirectory = path.join(iSSDirectory, iSSControl['operationDir']) # for both input & output
+    hydroH5Filepath = path.join(iSSOperationDirectory, 'JetData.h5')
+    iSSExecutable = iSSControl['executable']
 
     # check executable
-    checkExistenceOfExecutable(path.join(iSDirectory, iSExecutable))
+    checkExistenceOfExecutable(path.join(iSSDirectory, iSSExecutable))
 
     # clean up operation folder
-    cleanUpFolder(iSOperationDirectory)
+    cleanUpFolder(iSSOperationDirectory)
 
     # check existence of hydro result files and move them to operation folder
     for aFile in fileList:
         if not path.exists(aFile):
             raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
-            move(aFile, iSOperationDirectory)
+            move(aFile, iSSOperationDirectory)
+    copy(path.join(iSSDirectory, 'EOS', 'chosen_particles_pion.dat'), path.join(iSSDirectory, 'EOS', 'chosen_particles.dat'))
 
+    # form assignment string
+    assignments = formAssignmentStringFromDict(iSSParameters)
+    # form executable string
+    executableString = "./" + iSSExecutable + assignments
     # execute!
-    run("bash ./"+iSExecutable, cwd=iSDirectory)
+    run(executableString, cwd=iSSDirectory)
 
     # save some of the important result files
     worthStoring = []
-    for aGlob in iSControl['saveResultGlobs']:
-        worthStoring.extend(glob(path.join(iSOperationDirectory, aGlob)))
-    for aFile in glob(path.join(iSOperationDirectory, "*")):
+    for aGlob in iSSControl['saveResultGlobs']:
+        worthStoring.extend(glob(path.join(iSSOperationDirectory, aGlob)))
+    for aFile in glob(path.join(iSSOperationDirectory, "*")):
         if aFile in worthStoring:
             move(aFile, controlParameterList['eventResultDir'])
+
+    # return hydro h5 file path
+    return (hydroH5Filepath,)
 
 def photonEmissionWithHydroResultFiles(fileList):
     """
@@ -640,8 +650,9 @@ def sequentialEventDriverShell():
                 iSWithResonancesWithHydroResultFiles(hydroResultFiles)
             
             elif simulationType == 'hydroEM':
+                h5file = iSSeventplaneAngleWithHydroResultFiles(hydroResultFiles)
                 # perform EM radiation calculation
-                photonEmissionWithHydroResultFiles(hydroResultFiles)
+                photonEmissionWithHydroResultFiles(h5file)
 
             # print current progress to terminal
             stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))

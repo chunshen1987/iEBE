@@ -510,7 +510,8 @@ class EbeCollector(object):
             for aSubfolder, event_id in matchedSubfolders:
                 print("Collecting %s as with event-id: %s" % (aSubfolder, event_id))
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
-                self.collectFLowsAndMultiplicities_photon(aSubfolder, event_id, db, useSubfolder="") # collect flow
+                self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db, useSubfolder="") # collect hadron flow
+                self.collectFLowsAndMultiplicities_photon(aSubfolder, event_id, db, useSubfolder="") # collect photon flow
         else:
             print("!"*60)
             print("Mode string not found")
