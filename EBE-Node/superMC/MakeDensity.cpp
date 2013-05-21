@@ -876,7 +876,9 @@ void MakeDensity::dumpEccentricities(char* base_filename, double*** density, con
             << setprecision(8) << setw(16) <<  mc->lastCx1
             << setprecision(8) << setw(16) <<  mc->lastPh1
             << setprecision(8) << setw(16) <<  mc->lastCx2
-	    << setprecision(8) << setw(16) <<  mc->lastPh2
+	      << setprecision(8) << setw(16) <<  mc->lastPh2
+            << setprecision(8) << setw(16) <<  xc
+            << setprecision(8) << setw(16) <<  yc
 	    //<< setprecision(3) << setw(12) <<  rapMin+(rapMax-rapMin)/binRapidity*iy
             << endl;
         of.close();
