@@ -8,6 +8,11 @@ Zhi Qiu & Chun Shen  --- 04/2013
 -- Use extractThermal/extractThermal3.sh to extract thermal results from v2data.dat and v2data-inte.dat (historical format).
 
 ------------------------------
+05-21-2013, Ver 1.2.1.12
+------------------------------
+.: In emissionfunction.cpp, the output for non-historical formats are changed from "results/thermal_%d_vn.dat" to "results/thermal_%d_vndata.dat".
+
+------------------------------
 10-01-2012, Ver 1.2.1.11
 ------------------------------
 .: The readindata.cpp and readindata.h files are updated (Chun).

@@ -88,8 +88,8 @@ EmissionFunctionArray::EmissionFunctionArray(double particle_y_in, Table* chosen
 
   flow_differential_filename_old =  "results/v2data.dat";
   flow_integrated_filename_old = "results/v2data-inte.dat";
-  flow_differential_filename = "results/thermal_%d_vn.dat";
-  flow_integrated_filename = "results/thermal_%d_integrated_vn.dat";
+  flow_differential_filename = "results/thermal_%d_vndata.dat";
+  flow_integrated_filename = "results/thermal_%d_integrated_vndata.dat";
   last_particle_idx = -1;
 
 }
