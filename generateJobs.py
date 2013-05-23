@@ -119,13 +119,14 @@ for i in range(1, numberOfJobs+1):
 #PBS -l walltime=%s
 #PBS -j oe
 #PBS -S /bin/bash
+cd %s
 (cd %s
     ulimit -n 1000
     python ./SequentialEventDriver_shell.py %d 1> RunRecord.txt 2> ErrorRecord.txt
     cp RunRecord.txt ErrorRecord.txt ../finalResults/
 )
 mv ./finalResults %s/job-%d
-""" % (i, walltime, crankFolderName, numberOfEventsPerJob, resultsFolder, i)
+""" % (i, walltime, targetWorkingFolder, crankFolderName, numberOfEventsPerJob, resultsFolder, i)
     )
     if compressResultsFolderAnswer == "yes":
         open(path.join(targetWorkingFolder, "job-%d.pbs" % i), "a").write(
@@ -151,11 +152,18 @@ if compressResultsFolderAnswer == "yes":
 #PBS -l walltime=%s
 #PBS -j oe
 #PBS -S /bin/bash
+cd %s
 (cd %s
     python autoZippedResultsCombiner.py %s %d "job-(\d*).zip" 60 1> WatcherReport.txt
     mv WatcherReport.txt %s
 )
-""" % (walltime, utilitiesFolder, resultsFolder, numberOfJobs, resultsFolder)
+""" % (walltime, watcherDirectory, utilitiesFolder, resultsFolder, numberOfJobs, resultsFolder)
     )
 
 print("Jobs generated. Submit them using submitJobs scripts.")
+
+
+
+###########################################################################
+# 05-23-2013:
+#   Bugfix: "cd %s" added to the pbs files.
