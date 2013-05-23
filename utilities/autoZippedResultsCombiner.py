@@ -37,12 +37,13 @@ except:
 matchFilename = re.compile(subfolderPattern)
 keepWatching = True
 while keepWatching:
-    fileList = listdir(parentFolder)
     count = 0
-    for aFile in fileList:
-        if matchFilename.match(aFile): count += 1
-    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    print("Number of zipped job files found: %d" % count)
+    if path.exists(parentFolder):
+        fileList = listdir(parentFolder)
+        for aFile in fileList:
+            if matchFilename.match(aFile): count += 1
+        print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        print("Number of zipped job files found: %d" % count)
     # keep watching?...
     if count < numberOfZipFiles:
         print("Keep watching...")
