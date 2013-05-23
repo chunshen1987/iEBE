@@ -52,7 +52,7 @@ controlParameterList = {
 superMCControl = {
     'mainDir'                       :   'superMC',
     'dataDir'                       :   'data', # where initial conditions are stored, relative
-    'dataFiles'                     :   '*.dat', # data filenames
+    'dataFiles'                     :   '*event*.dat', # data filenames
     'numberOfEventsParameterName'   :   'nev',
     'executable'                    :   'superMC.e',
 }
