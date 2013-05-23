@@ -18,6 +18,7 @@ superMCParameters = {
 hydroParameters = {
     'vis'       :   0.08,
     'T0'        :   0.6, # tau_0
+    'Edec'      :   0.18,
 }
 
 iSSParameters = {
