@@ -52,11 +52,12 @@ def formatUrqmdOutputFile(urqmdOutputFilePath, formattedFilePath):
                 # still have data to read
                 try:
                     p0, px, py, pz = map(lambda x: float(x.replace("D","E")), aLine[98:193].split())
+                    isospin2 = int(aLine[222:224])
                     pid = int(aLine[216:222])
                     pT = sqrt(px*px + py*py)
                     phi = atan2(py, px)
                     E = p0
-                    formattedFileHandler.write("%d  %g  %g  %g\n" % (pid, E, pT, phi))
+                    formattedFileHandler.write("%d  %g  %g  %g\n" % (pid+isospin2*1000, E, pT, phi))
                 except ValueError as e:
                     print("The file "+urqmdOutputFilePath+" does not have valid urqmd data!")
                     print(e)
