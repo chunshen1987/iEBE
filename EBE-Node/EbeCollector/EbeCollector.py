@@ -159,6 +159,19 @@ class EbeCollector(object):
         db.closeConnection()
 
 
+    def collectScalars(self, folder, event_id, db):
+        """
+            This function collects scalar info and into the "scalars" table.
+            The supported scalars include: lifetime of the fireball.
+        """
+        # first write the scalar, makes sure there is only one such table
+        db.createTableIfNotExists("scalars", (("event_id","integer"), ("lifetime","real")))
+        # for lifetime
+        maxLifetime = np.max(np.loadtxt(path.join(folder, "surface.dat"))[:,1])
+        db.insertIntoTable("scalars", (event_id, maxLifetime))
+        # for others (future)
+
+
     def collectFLowsAndMultiplicities_urqmdBinUtilityFormat(self, folder, event_id, db, multiplicityFactor=1.0):
         """
             This function collects integrated and differential flows data
@@ -597,6 +610,7 @@ class EbeCollector(object):
             for aSubfolder, event_id in matchedSubfolders:
                 print("Collecting %s as with event-id: %s" % (aSubfolder, event_id))
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db) # collect ecc
+                self.collectScalars(aSubfolder, event_id, db)  # collect scalars
                 self.collectFLowsAndMultiplicities_urqmdBinUtilityFormat(aSubfolder, event_id, db, multiplicityFactor) # collect flow
         elif collectMode == "fromPureHydro":
             print("-"*60)
@@ -605,6 +619,7 @@ class EbeCollector(object):
             for aSubfolder, event_id in matchedSubfolders:
                 print("Collecting %s as with event-id: %s" % (aSubfolder, str(event_id)))
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=True) # collect ecc
+                self.collectScalars(path.join(aSubfolder,"results"), event_id, db)  # collect scalars
                 self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db) # collect flow
         elif collectMode == "fromPureHydroNewStoring":
             print("-"*60)
@@ -613,6 +628,7 @@ class EbeCollector(object):
             for aSubfolder, event_id in matchedSubfolders:
                 print("Collecting %s as with event-id: %s" % (aSubfolder, event_id))
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
+                self.collectScalars(aSubfolder, event_id, db)  # collect scalars
                 self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db, useSubfolder="") # collect flow
         elif collectMode == "fromHydroEM":
             print("-"*60)

@@ -79,6 +79,11 @@ The rest of the tables store information regarding the final states of the event
 -- pT (real)
 -- N (real): dN/(dy dpT)
 
+There is an additional table storing scalar quantity for each event.
+
+9) Table "scalars"
+-- event_id (integer)
+-- lifetime (real)
 
 -------------------------------
 2. Structure of the package
@@ -116,6 +121,13 @@ Check the lookup table:
 >>> db.selectFromTable("ecc_id_lookup") == [(1, u'sd'), (2, u'ed')]
 True
 
+1*) collectScalars(folder, event_id, db)
+
+This function collect scalar info from the folder "folder", then write it into the "scalars" table. So far the lifetime is included.
+
+>>> collector.collectScalars("testData", 1, db)
+>>> set(db.selectFromTable("scalars", "lifetime")) == set([(3.34351882,)])
+True
 
 2) collectFLowsAndMultiplicities_urqmdBinUtilityFormat(folder, event_id, db, multiplicityFactor)
 
@@ -126,7 +138,7 @@ For example, assuming that the "testData" folder exists (should be included in t
 >>> collector.collectFLowsAndMultiplicities_urqmdBinUtilityFormat("testData", 1, db, multiplicityFactor=0.1)
 
 We can check the tables it contains by do the following:
->>> set(db.getAllTableNames()) == set([u'ecc_id_lookup', u'eccentricities', u'r_integrals', u'pid_lookup', u'inte_vn', u'diff_vn', u'multiplicities', u'spectra'])
+>>> set(db.getAllTableNames()) == set([u'ecc_id_lookup', u'eccentricities', u'r_integrals', u'pid_lookup', u'inte_vn', u'diff_vn', u'multiplicities', u'spectra', u'scalars'])
 True
 
 >>> ('pion_p_hydro', 1007) in db.selectFromTable("pid_lookup")
