@@ -37,4 +37,4 @@ for aFolder in listdir(targetWorkingDirectory):
             print("Running %s in %s..." % (commandString, subFolder))
             Popen(commandString, shell=True, cwd=subFolder)
 
-print("Job submittion done. See RunRecord.txt file in each job folder for progress.")
+print("Job submission done. See RunRecord.txt file in each job folder for progress.")
