@@ -555,6 +555,14 @@ class EbeDBReader(object):
             whereClause += " and " + where
         return np.asarray(self.db.selectFromTable("r_integrals", "r_inte", whereClause=whereClause, orderByClause=orderBy))
 
+    def getLifetimes(self, orderBy="event_id"):
+        """
+            Return a list of lifetimes.
+
+            -- orderBy: the "order by" clause.
+        """
+        return np.asarray(self.db.selectFromTable("scalars", "lifetime", orderByClause=orderBy))
+
     def getIntegratedFlows(self, particleName="pion", order=2, where="", orderBy="event_id"):
         """
             Return (real, imag) list for integrated flows for the species of
@@ -892,6 +900,9 @@ For better effeciency part of the database is being copied to memory...""")
                 # r-integrals
                 # [r^m](ed) := int(r^m*ed)
                 ("\[r\^([\d]+)\]\((\w\w)\)", 'self.getRIntegrals(eccType="{0[1]}", r_power={0[0]})'),
+
+                # lifetimes
+                ("lifetime", 'self.getLifetimes()'),
 
                 # integrated flow:
                 # V_{n}(pion) := pion complex flow vector of order n
