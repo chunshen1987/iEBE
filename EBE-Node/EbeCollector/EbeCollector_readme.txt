@@ -264,6 +264,11 @@ array([[   51.429047],
        [  675.07625 ],
        [   45.966488]])
 
+2*) Lifetimes.
+
+The getLifetime(orderBy="event_id") function returns a list of lifetimes for all events, ordered by their "event_id".
+>>> reader.getLifetimes()
+
 
 3) Integrated flows.
 
@@ -428,6 +433,12 @@ array([[   51.429047],
        [ 1628.8231  ],
        [  675.07625 ],
        [   45.966488]])
+
+<2*> Lifetimes.
+
+The lifetimes of all the fireballs can be returned simply by using the keyword "lifetime":
+>>> reader.evaluateExpression("lifetime")[0]
+
 
 <3> Integrated flows.
 
