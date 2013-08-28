@@ -86,8 +86,9 @@ void GlueDensity::getCMAngle(const int iy, int n)
         y = Ymin + j*dy - Ycm[iy];
         th = atan2(y,x);
         wei = density[iy][i][j];
-        Num_real += (x*x+y*y)*cos(n*th)*wei;
-        Num_imag += (x*x+y*y)*sin(n*th)*wei;
+        double rwei = pow(sqrt(x*x+y*y), n);
+        Num_real += rwei*cos(n*th)*wei; //r^n weighted eccentricity
+        Num_imag += rwei*sin(n*th)*wei;
     }
     if(weight <1e-15) {
         cout << "GlueDensity::getCMAngle weight =0 ? " << iy
@@ -95,8 +96,8 @@ void GlueDensity::getCMAngle(const int iy, int n)
             << endl;
             exit(0);
     }
-
-    AngleG[iy] = -atan2(-Num_imag, -Num_real)/n;
+    int rand_orientation = rand() % n; //random integer from 0 to n-1
+    AngleG[iy] = -atan2(-Num_imag, -Num_real)/n + 2*M_PI*rand_orientation/n; //AngleG takes the range from -pi to pi
     // cout << "imag=" << Num_imag << "," << "real=" << Num_real << endl;
     // cout << "new: " << AngleG[iy] << "," << "order=" << n << endl;
 }

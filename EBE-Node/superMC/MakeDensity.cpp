@@ -367,7 +367,7 @@ void MakeDensity::generate_profile_average(int nevent)
       } // <-> for(int iy=0;iy<binRapidity;iy++)
     } // <-> for(int iorder=0; iorder<number_of_orders; iorder++)
     mc->deleteNucleus();
-    cout << "processing event: " << event << endl;
+    //cout << "processing event: " << event << endl;
 
     // auto-backup
     if (backup_counter>0) backup_counter--; // autobackup turned on; keep track of counter
