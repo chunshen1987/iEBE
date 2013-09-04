@@ -236,8 +236,11 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
                   //viscous corrections
                   double Wfactor = pt*pt*pi00 - 2.0*pt*px*pi01 - 2.0*pt*py*pi02 + px*px*pi11 + 2.0*px*py*pi12 + py*py*pi22 + pz*pz*pi33;
                   double deltaf = (1 - F0_IS_NOT_SMALL*sign*f0)*Wfactor*deltaf_prefactor;
-
-                  double result = prefactor*degen*f0*(1+deltaf)*pdsigma*tau;
+                  double result;
+                  if(1+deltaf < 0.0) //set results to zero when delta f turns whole expression to negative
+                     result = 0.0;
+                  else
+                     result = prefactor*degen*f0*(1+deltaf)*pdsigma*tau;
 
                   dN_ptdptdphidy_tmp += result*delta_eta;
               } // k
