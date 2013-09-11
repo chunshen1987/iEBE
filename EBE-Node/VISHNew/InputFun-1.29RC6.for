@@ -970,10 +970,9 @@
       Integer regMethod
       Common /regMethod/ regMethod
 
-      Double Precision :: ms = 1D0 ! "ms"=much smaller
+      Double Precision :: Xsi0 = 1D0  !adaptive zero
+      Double Precision :: Tideal_scale, pi_scale
       Double Precision regStrength
-      Double Precision traceAnormaly
-      Double Precision zero, ezero
 
       Double Precision maxPiRatio
       Common /maxPiRatio/ maxPiRatio
@@ -989,7 +988,7 @@
 
       Double Precision PiTr, PiTrSum, trans
 
-      zero = 1D-2/(regStr+1D0) ! VER-1.29RC: adaptive zero chooser VER-1.29RC4: bug fix: regStr -> regStr+1D0
+      Xsi0 = 1D-2/(regStr+1D0) ! VER-1.29RC: adaptive zero chooser VER-1.29RC4: bug fix: regStr -> regStr+1D0
 
       If (debug >= 3) Print *, "* Start RegulatePi"
 
@@ -1004,14 +1003,9 @@
 
         regStrength = 1D-30
 
-!        traceAnormaly = max(MaxPiRatio*abs(Ed(I,J,K)-3D0*PL(I,J,K)),
-!     &      1D-8)*zero
-        traceAnormaly = MaxPiRatio*
-     &  min( max( abs(Ed(I,J,K)-3D0*PL(I,J,K)), Ed(I,J,K)*1D-3 ),
-     &     PL(I,J,K))*zero + 1D-30
-        ezero = MaxPiRatio*abs(Ed(I,J,K))*zero + 1D-30
-        maxPi = MaxPiRatio*(Ed(I,J,K)+PL(I,J,K)) + 1D-30
-
+        vvx = Vx(I,J,K)
+        vvy = Vy(I,J,K)
+        Tideal_scale = Ed(I,J,K)**2 + 3*PL(I,J,K)**2
 
         p00 = Pi00(I,J,K)
         p01 = Pi01(I,J,K)
@@ -1019,17 +1013,19 @@
         p11 = Pi11(I,J,K)
         p12 = Pi12(I,J,K)
         p22 = Pi22(I,J,K)
-        p33 = Pi33(I,J,K)/(Time*Time) ! Pi33=pi^(3,3)*tau*tau
+        p33 = Pi33(I,J,K)   ! pi are in t-xyz coordinate
 
-        vvx = Vx(I,J,K)
-        vvy = Vy(I,J,K)
-
+        ! calculate Tr(pi^2)
+        TrPi2 = p00*p00+p11*p11+p22*p22+p33*p33
+     &    -2*p01*p01-2*p02*p02+2*p12*p12
+        pi_scale = sqrt(abs(TrPi2)) + 1D-30
 
         ! find regulation strength
 
         ! first, tracelessness
-        PiTr = p00-p11-p22-p33*Time*Time
-        regStrength = max(abs(PiTr)/maxPi/ms, regStrength)
+        PiTr = p00-p11-p22-p33
+        regStrength = max(abs(PiTr)/(Xsi0*MaxPiRatio*pi_scale), 
+     &                    regStrength)
 
         !If (I==0.AND.J==0) Then
         !  Print*, "I,J=",I,J
@@ -1038,11 +1034,14 @@
 
         ! next transversality
         trans = p01-vvx*p11-vvy*p12
-        regStrength = max(abs(trans)/ezero/ms, regStrength) ! VER-1.29RC2: compared with ezero
+        regStrength = max(abs(trans)/(Xsi0*MaxPiRatio*pi_scale), 
+     &                    regStrength)
         trans = p02-vvx*p12-vvy*p22
-        regStrength = max(abs(trans)/ezero/ms, regStrength) ! VER-1.29RC2: compared with ezero
+        regStrength = max(abs(trans)/(Xsi0*MaxPiRatio*pi_scale),
+     &                    regStrength)
         trans = p00-vvx*p01-vvy*p02
-        regStrength = max(abs(trans)/ezero/ms, regStrength) ! VER-1.29RC2: compared with ezero
+        regStrength = max(abs(trans)/(Xsi0*MaxPiRatio*pi_scale), 
+     &                    regStrength)
 
         !If (I==0.AND.J==0) Then
         !  Print*, "I,J=",I,J
@@ -1051,11 +1050,7 @@
 
 
         ! largeness comparision
-        ! calculate Tr(pi^2)
-        TrPi2 = p00*p00+p11*p11+p22*p22+p33*Time*Time*p33*Time*Time
-     &    -2*p01*p01-2*p02*p02+2*p12*p12
-
-        rTrPi2EAndP = sqrt(abs(TrPi2)) / maxPi + 1e-30
+        rTrPi2EAndP = pi_scale/(MaxPiRatio*Tideal_scale) + 1e-30
 
         regStrength = max(rTrPi2EAndP, regStrength)
 
@@ -1078,21 +1073,24 @@
           Print*, "I,J=",I,J
           Print*, "regStrength=", regStrength
           Print*, "PiTr=", PiTr
-          Print*, "traceAnormaly=", traceAnormaly
+          Print*, "numerical zero for pi=", Xsi0*MaxPiRatio*pi_scale
           Print*, "p01-vvx*p11-vvy*p12=", p01-vvx*p11-vvy*p12
-          Print*, "regStrength1=",abs(p01-vvx*p11-vvy*p12)/traceAnormaly
+          Print*, "regStrength1=",abs(p01-vvx*p11-vvy*p12)
+     &                            /(Xsi0*MaxPiRatio*pi_scale)
           Print*, "p02-vvx*p12-vvy*p22=", p02-vvx*p12-vvy*p22
-          Print*, "regStrength2=",abs(p02-vvx*p12-vvy*p22)/traceAnormaly
+          Print*, "regStrength2=",abs(p02-vvx*p12-vvy*p22)
+     &                            /(Xsi0*MaxPiRatio*pi_scale)
           Print*, "p00-vvx*p01-vvy*p02=", p00-vvx*p01-vvy*p02
-          Print*, "regStrength3=",abs(p00-vvx*p01-vvy*p02)/traceAnormaly
-          Print*, "sqrt(TrPi2)=", sqrt(TrPi2)
-          Print*, "maxPi=", maxPi
+          Print*, "regStrength3=",abs(p00-vvx*p01-vvy*p02)
+     &                            /(Xsi0*MaxPiRatio*pi_scale)
+          Print*, "sqrt(TrPi2)=", pi_scale
+          Print*, "maxPi=", MaxPiRatio*Tideal_scale
           Print*, "Ed,PL=", Ed(I,J,K), PL(I,J,K)
-          Print*, "Ed(I,J,K)+PL(I,J,K)=", Ed(I,J,K)+PL(I,J,K)
-          Print*, "Ed(I,J,K)-3*PL(I,J,K)=", Ed(I,J,K)-3D0*PL(I,J,K)
-          Print*, "PiTr/maxPi/ms=", PiTr/maxPi/ms
-          Print*, "sqrt(abs(TrPi2)) / maxPi=", sqrt(abs(TrPi2)) / maxPi
-          Print*, "ms=",ms
+          Print*, "Tideal_scale=", Tideal_scale
+          Print*, "PiTr=", PiTr
+          Print*, "regStrength0=", PiTr/(Xsi0*MaxPiRatio*pi_scale)
+          Print*, "sqrt(abs(TrPi2)) / maxPi=", rTrPi2EAndP
+          Print*, "Xsi0=", Xsi0
 !
           call printMore(1, I, J, Time,
      &  NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
@@ -1104,21 +1102,24 @@
           Print*, "I,J=",I,J
           Print*, "regStrength=", regStrength
           Print*, "PiTr=", PiTr
-          Print*, "traceAnormaly=", traceAnormaly
+          Print*, "numerical zero for pi=", Xsi0*MaxPiRatio*pi_scale
           Print*, "p01-vvx*p11-vvy*p12=", p01-vvx*p11-vvy*p12
-          Print*, "regStrength1=",abs(p01-vvx*p11-vvy*p12)/traceAnormaly
+          Print*, "regStrength1=",abs(p01-vvx*p11-vvy*p12)
+     &                            /(Xsi0*MaxPiRatio*pi_scale)
           Print*, "p02-vvx*p12-vvy*p22=", p02-vvx*p12-vvy*p22
-          Print*, "regStrength2=",abs(p02-vvx*p12-vvy*p22)/traceAnormaly
+          Print*, "regStrength2=",abs(p02-vvx*p12-vvy*p22)
+     &                            /(Xsi0*MaxPiRatio*pi_scale)
           Print*, "p00-vvx*p01-vvy*p02=", p00-vvx*p01-vvy*p02
-          Print*, "regStrength3=",abs(p00-vvx*p01-vvy*p02)/traceAnormaly
-          Print*, "sqrt(TrPi2)=", sqrt(TrPi2)
-          Print*, "maxPi=", maxPi
+          Print*, "regStrength3=",abs(p00-vvx*p01-vvy*p02)
+     &                            /(Xsi0*MaxPiRatio*pi_scale)
+          Print*, "sqrt(TrPi2)=", pi_scale
+          Print*, "maxPi=", MaxPiRatio*Tideal_scale
           Print*, "Ed,PL=", Ed(I,J,K), PL(I,J,K)
-          Print*, "Ed(I,J,K)+PL(I,J,K)=", Ed(I,J,K)+PL(I,J,K)
-          Print*, "Ed(I,J,K)-3*PL(I,J,K)=", Ed(I,J,K)-3D0*PL(I,J,K)
-          Print*, "PiTr/maxPi/ms=", PiTr/maxPi/ms
-          Print*, "sqrt(abs(TrPi2)) / maxPi=", sqrt(abs(TrPi2)) / maxPi
-          Print*, "ms=",ms
+          Print*, "Tideal_scale=", Tideal_scale
+          Print*, "PiTr=", PiTr
+          Print*, "regStrength0=", PiTr/(Xsi0*MaxPiRatio*pi_scale)
+          Print*, "sqrt(abs(TrPi2)) / maxPi=", rTrPi2EAndP
+          Print*, "Xsi0=", Xsi0
 
         End If
         End If !If (debug>=9)
@@ -1137,7 +1138,7 @@
      &      +abs(Pi02(I,J,K))
      &      +abs(Pi11(I,J,K))+abs(Pi12(I,J,K))
      &      +abs(Pi22(I,J,K))
-     &      +abs(Pi33(I,J,K)/(Time*Time)))
+     &      +abs(Pi33(I,J,K)))
 
         PiCheckFlag = 1
         If (PiAvg .ne. PiAvg) PiCheckFlag = 0

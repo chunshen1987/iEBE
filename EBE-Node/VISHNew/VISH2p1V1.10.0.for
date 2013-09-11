@@ -4514,11 +4514,11 @@ C----------------------------------------------------------------
       Integer say_level
 
       Integer I,J,K
-      Double Precision trace_pi, trans, TrPi2, ee
+      Double Precision trace_pi, trans, TrPi2
 
-      Double Precision traceAnormaly, eStr, vxS, vyS
-      Double Precision :: smallness = 1D-2
-      Double Precision :: accuracy = 1D-2
+      Double Precision :: Tideal_scale, pi_scale
+      Double Precision :: absNumericalzero = 1D-2
+      Double Precision :: relNumericalzero = 1D-2  !Xsi_0 in Zhi's thesis
 
       Double Precision maxPiRatio
       Common /maxPiRatio/ maxPiRatio
@@ -4529,12 +4529,43 @@ C----------------------------------------------------------------
       Do J=NYPhy0-3,NYPhy+3
       Do I=NXPhy0-3,NXPhy+3
 
-        eStr = (Ed(I,J,K)+PL(I,J,K))*maxPiRatio
-        ee = Ed(I,J,K)*maxPiRatio
-        traceAnormaly = abs(Ed(I,J,K)-3D0*PL(I,J,K))*maxPiRatio
+        
+        !Largeness of pi tensor Tr(pi^2)
+        TrPi2 = Pi00(I,J,K)**2+Pi11(I,J,K)**2+Pi22(I,J,K)**2
+     &          +Pi33(I,J,K)**2
+     &          -2*Pi01(I,J,K)**2-2*Pi02(I,J,K)**2+2*Pi12(I,J,K)**2
 
+        Tideal_scale = sqrt(Ed(I,J,K)**2 + 3*PL(I,J,K)**2)
+        pi_scale = sqrt(TrPi2)
+        If (pi_scale > max(maxPiRatio*Tideal_scale,
+     &      absNumericalzero)) Then
+          If (say_level>=9) Then
+          Print*, "Time=", Time
+          Print*, "Positivity of TrPi^2 violated!"
+          Print*, "I,J=", I,J
+          Print*, "Trace pi^2=", TrPi2
+          Print*, "Ed,PL=", Ed(I,J,K),PL(I,J,K)
+          Print*, "Before: Pi00,Pi11,Pi22,Pi33*T^2,Pi01,Pi02,Pi12=",
+     &      Pi00Regulated(I,J,K),Pi11Regulated(I,J,K),
+     &      Pi22Regulated(I,J,K),Pi33Regulated(I,J,K),
+     &      Pi01Regulated(I,J,K),Pi02Regulated(I,J,K),
+     &      Pi12Regulated(I,J,K)
+          Print*, "Before: Trace pi^2=",
+     &      Pi00Regulated(I,J,K)**2+Pi11Regulated(I,J,K)**2
+     &      +Pi22Regulated(I,J,K)**2+Pi33Regulated(I,J,K)**2
+     &      -2*Pi01Regulated(I,J,K)**2-2*Pi02Regulated(I,J,K)**2
+     &      +2*Pi12Regulated(I,J,K)**2
+          End If
+          II = I
+          JJ = J
+          failed = 1
+          return
+        End If
+
+        !trace of pi tensor
         trace_pi = Pi00(I,J,K)-Pi11(I,J,K)-Pi22(I,J,K)-Pi33(I,J,K)
-        If (abs(trace_pi)>max(traceAnormaly*accuracy,smallness)) Then
+        If(abs(trace_pi) > max(relNumericalzero*pi_scale,
+     &     absNumericalzero) ) Then
           If (say_level>=9) Then
           Print*, "Time=", Time
           Print*, "Pi should be traceless!"
@@ -4558,8 +4589,10 @@ C----------------------------------------------------------------
           return
         End If
 
+        !transversality of pi tensor  u_mu pi^{mu,x} = 0
         trans = Pi01(I,J,K)-Vx(I,J,K)*Pi11(I,J,K)-Vy(I,J,K)*Pi12(I,J,K)
-        If (abs(trans)>max(ee*accuracy,smallness)) Then ! VER-1.6.29RC3: compared with ed
+        If (abs(trans) > max(relNumericalzero*pi_scale, 
+     &      absNumericalzero)) Then
           If (say_level>=9) Then
           Print*, "Time=", Time
           Print*, "Tranversality violated!"
@@ -4584,8 +4617,10 @@ C----------------------------------------------------------------
           return
         End If
 
+        !transversality of pi tensor  u_mu pi^{mu,y} = 0
         trans = Pi02(I,J,K)-Vx(I,J,K)*Pi12(I,J,K)-Vy(I,J,K)*Pi22(I,J,K)
-        If (abs(trans)>max(ee*accuracy,smallness)) Then ! VER-1.6.29RC3: compared with ed
+        If (abs(trans) > max(relNumericalzero*pi_scale,
+     &      absNumericalzero)) Then
           If (say_level>=9) Then
           Print*, "Time=", Time
           Print*, "Tranversality violated!"
@@ -4610,8 +4645,10 @@ C----------------------------------------------------------------
           return
         End If
 
+        !transversality of pi tensor  u_mu pi^{mu,tau} = 0
         trans = Pi00(I,J,K)-Vx(I,J,K)*Pi01(I,J,K)-Vy(I,J,K)*Pi02(I,J,K)
-        If (abs(trans)>max(ee*accuracy,smallness)) Then ! VER-1.6.29RC3: compared with ed
+        If (abs(trans) > max(relNumericalzero*pi_scale,
+     &      absNumericalzero)) Then
           If (say_level>=9) Then
           Print*, "Time=", Time
           Print*, "Tranversality violated!"
@@ -4636,32 +4673,6 @@ C----------------------------------------------------------------
           return
         End If
 
-        TrPi2 = Pi00(I,J,K)**2+Pi11(I,J,K)**2+Pi22(I,J,K)**2
-     &          +Pi33(I,J,K)**2*Time**4
-     &          -2*Pi01(I,J,K)**2-2*Pi02(I,J,K)**2+2*Pi12(I,J,K)**2
-        If (TrPi2<-max(eStr*accuracy,smallness)) Then
-          If (say_level>=9) Then
-          Print*, "Time=", Time
-          Print*, "Positivity of TrPi^2 violated!"
-          Print*, "I,J=", I,J
-          Print*, "Trace pi^2=", TrPi2
-          Print*, "Ed,PL=", Ed(I,J,K),PL(I,J,K)
-          Print*, "Before: Pi00,Pi11,Pi22,Pi33*T^2,Pi01,Pi02,Pi12=",
-     &      Pi00Regulated(I,J,K),Pi11Regulated(I,J,K),
-     &      Pi22Regulated(I,J,K),Pi33Regulated(I,J,K),
-     &      Pi01Regulated(I,J,K),Pi02Regulated(I,J,K),
-     &      Pi12Regulated(I,J,K)
-          Print*, "Before: Trace pi^2=",
-     &      Pi00Regulated(I,J,K)**2+Pi11Regulated(I,J,K)**2
-     &      +Pi22Regulated(I,J,K)**2+Pi33Regulated(I,J,K)**2*Time**4
-     &      -2*Pi01Regulated(I,J,K)**2-2*Pi02Regulated(I,J,K)**2
-     &      +2*Pi12Regulated(I,J,K)**2
-          End If
-          II = I
-          JJ = J
-          failed = 1
-          return
-        End If
 
       End Do
       End Do
