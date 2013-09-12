@@ -1,4 +1,0 @@
-#! /usr/bin/env bash
-
-./generateGraceBatchFile.py generatePlotFile '[["v2data.dat",1,12,""]]' '"v3.bat"' '"\\xp\\f{}\\S+\\N differential v\\s3\\N"' '"p\\sT\\N (GeV)"' '"v\\s3"'
-
