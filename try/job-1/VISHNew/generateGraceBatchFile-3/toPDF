@@ -1,6 +1,0 @@
-#! /usr/bin/env bash
-
-for i in `ls *.ps *.eps`
-do 
-	ps2pdf $i
-done
