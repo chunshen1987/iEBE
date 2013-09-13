@@ -62,6 +62,9 @@
 
       Double Precision maxPiRatio ! used in tanh regulation method: Pi=Pi_max*tanh(Pi/Pi_max), Pi_max=maxPiRatio*(e+p)
       Common /maxPiRatio/ maxPiRatio
+      
+      Double Precision maxBulkPiRatio ! used in tanh regulation method: Pi=Pi_max*tanh(Pi/Pi_max), Pi_max=maxPiRatio*(e+p)
+      Common /maxBulkPiRatio/ maxBulkPiRatio
 
       Integer checkE
       Common /checkE/ checkE
@@ -89,6 +92,8 @@
       Print *, "PiRatio=", PiRatio
       READ(391,*) maxPiRatio
       Print *, "maxPiRatio=", maxPiRatio
+      READ(391,*) maxBulkPiRatio
+      Print *, "maxPiRatio=", maxBulkPiRatio
 
       Close(391)
 
