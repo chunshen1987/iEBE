@@ -957,7 +957,7 @@
       Common /regMethod/ regMethod
 
       Double Precision :: Xsi0 = 1D0  !adaptive zero
-      Double Precision :: Tideal_scale, bulkPi_scale
+      Double Precision :: pressure_scale, bulkPi_scale
       Double Precision regStrength
 
       Double Precision maxBulkPiRatio
@@ -978,7 +978,7 @@
 
         regStrength = 1D-30
         
-        Tideal_scale = Ed(I,J,K)**2 + 3*PL(I,J,K)**2
+        pressure_scale = abs(PL(I,J,K))
 
         BulkPi = PPI(I,J,K)
 
@@ -990,7 +990,7 @@
         endif
 
         ! find regulation strength using largeness comparison
-        regStrength = max(bulkPi_scale/(maxBulkPiRatio*Tideal_scale), 
+        regStrength = max(bulkPi_scale/(maxBulkPiRatio*pressure_scale), 
      &                    regStrength)
 
         If ( say_level >=9 ) Then
@@ -998,18 +998,16 @@
             Print*, "I,J=",I,J
             Print*, "regStrength=", regStrength
             Print*, "BulkPi = ", bulkPi_scale
-            Print*, "maxPi=", maxBulkPiRatio*Tideal_scale
-            Print*, "Ed,PL=", Ed(I,J,K), PL(I,J,K)
-            Print*, "Tideal_scale=", Tideal_scale
+            Print*, "maxPi=", maxBulkPiRatio*pressure_scale
+            Print*, "PL=", PL(I,J,K)
             Print*, "Xsi0=", Xsi0
           endif
           If (I==0.AND.J==0) Then
             Print*, "I,J=",I,J
             Print*, "regStrength=", regStrength
             Print*, "BulkPi = ", bulkPi_scale
-            Print*, "maxPi=", maxBulkPiRatio*Tideal_scale
-            Print*, "Ed,PL=", Ed(I,J,K), PL(I,J,K)
-            Print*, "Tideal_scale=", Tideal_scale
+            Print*, "maxPi=", maxBulkPiRatio*pressure_scale
+            Print*, "PL=", PL(I,J,K)
             Print*, "Xsi0=", Xsi0
           
           End If

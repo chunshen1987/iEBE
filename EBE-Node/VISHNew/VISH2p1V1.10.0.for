@@ -4731,7 +4731,7 @@ C----------------------------------------------------------------
       Integer say_level  !Warning level
 
       Integer I,J,K
-      Double Precision :: Tideal_scale, bulkPi_scale
+      Double Precision :: pressure_scale, bulkPi_scale
       Double Precision :: absNumericalzero = 1D-2
       Double Precision :: relNumericalzero = 1D-2  !Xsi_0 in Zhi's thesis
 
@@ -4745,17 +4745,17 @@ C----------------------------------------------------------------
       Do I=NXPhy0-3,NXPhy+3
 
         !Largeness of bulk pressure
-        Tideal_scale = sqrt(Ed(I,J,K)**2 + 3*PL(I,J,K)**2)
+        pressure_scale = abs(PL(I,J,K))
         bulkPi_scale = abs(PPI(I,J,K))
 
-        If (bulkPi_scale > max(maxBulkPiRatio*Tideal_scale,
+        If (bulkPi_scale > max(maxBulkPiRatio*pressure_scale,
      &      absNumericalzero)) Then
           If (say_level>=9) Then
             Print*, "Time=", Time
-            Print*, "Bulk Pi is larger than Tideal!"
+            Print*, "Bulk Pi is larger than pressure!"
             Print*, "I,J=", I,J
             Print*, "Bulk Pi=", PPI(I,J,K)
-            Print*, "Ed,PL=", Ed(I,J,K),PL(I,J,K)
+            Print*, "Pressure=", PL(I,J,K)
           End If
           II = I
           JJ = J
