@@ -93,7 +93,7 @@
       READ(391,*) maxPiRatio
       Print *, "maxPiRatio=", maxPiRatio
       READ(391,*) maxBulkPiRatio
-      Print *, "maxPiRatio=", maxBulkPiRatio
+      Print *, "maxBulkPiRatio=", maxBulkPiRatio
 
       Close(391)
 

@@ -439,10 +439,6 @@ C###############################################################################
       Double Precision Pi33Regulated(NX0:NX,NY0:NY,NZ0:NZ)
       Double Precision PPIRegulated(NX0:NX,NY0:NY,NZ0:NZ)
 
-      Double Precision oldTT00(NX0:NX,NY0:NY,NZ0:NZ)
-      Double Precision oldTT01(NX0:NX,NY0:NY,NZ0:NZ)
-      Double Precision oldTT02(NX0:NX,NY0:NY,NZ0:NZ)
-
 CSHEN==========================================================================
 C======output relaxation time for both shear and bulk viscosity================
       Dimension VRelaxT(NX0:NX, NY0:NY, NZ0:NZ) !viscous coeficient relaxation time
@@ -994,12 +990,11 @@ CSHEN====END====================================================================
             XiTtP0(I,J,K)  = XiTtP(I,J,K)
 3006    Continue
 
-
       ! Initialize PiXXRegulated and backup oldTTXX
-      If (ViscousC>1D-6 .or. VisBulk>1D-6) Then
-
+      if (ViscousC>1D-6 .or. VisBulk > 1D-6) then
+        
         !shear
-        if(ViscousC>1D-6)then
+        If (ViscousC>1D-6) Then
           Pi00Regulated = Pi00
           Pi01Regulated = Pi01
           Pi02Regulated = Pi02
@@ -1011,18 +1006,14 @@ CSHEN====END====================================================================
           If (echo_level>=3) Print*, "Regulation counts:", 
      &                               iRegulateCounter
         endif
-
+        
         !bulk
         if(VisBulk > 1D-6) then
           PPIRegulated = PPI
           iRegulateCounterBulkPi = 0D0
-          If (echo_level>=3) Print*, "Regulation counts:", 
+          If (echo_level>=3) Print*, "Regulation Bulk Pi counts:", 
      &                               iRegulateCounterBulkPi
         endif
-
-        oldTT00 = TT00
-        oldTT01 = TT01
-        oldTT02 = TT02
 
       call dpSc8(TT00,TT01,TT02,ScT00,ScT01,ScT02,Vx,Vy,
      &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22, PScT00,PScT01,PScT02,PScT33,
@@ -1031,99 +1022,95 @@ CSHEN====END====================================================================
      &  Ed,PL,Bd,Sd,Temp0,Temp,CMu, T00,T01,T02, IAA,CofAA,Time,DX,DY,
      &  DZ,DT,NXPhy0,NYPhy0,NXPhy,NYPhy,NX0,NX,NY0,NY,NZ0,NZ,PNEW,NNEW)  !PNEW NNEW  related to root finding
 
-      DIFFC = 0.125D0
-      !DIFFC = 0D0
-      if(ViscousC > 1D-6) then
-        call UPShasta2 (Pi01,Vx,Vy,PScT01, NX0,NX,NY0,NY,NZ0,NZ, 0,0,  !Pi01
-     &           DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,-1,1, DIFFC)
-        call UPShasta2 (Pi02,Vx,Vy,PScT02, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &           DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,-1, DIFFC)
-        call UPShasta2 (Pi00,Vx,Vy,PScT00, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
-        call UPShasta2 (Pi33,Vx,Vy,PScT33, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
-        call UPShasta2 (Pi11,Vx,Vy,PScT11, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
-        call UPShasta2 (Pi12,Vx,Vy,PScT12, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
-        call UPShasta2 (Pi22,Vx,Vy,PScT22, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &              DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
-      endif
-
-      if(VisBulk > 1D-6) then
-        call UPShasta2 (PPI,Vx,Vy,PISc, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &          DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
-      endif
+        DIFFC = 0.125D0
+        !DIFFC = 0D0
+        if(ViscousC > 1D-6) then 
+         call UPShasta2 (Pi01,Vx,Vy,PScT01, NX0,NX,NY0,NY,NZ0,NZ, 0,0,  !Pi01
+     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,-1,1, DIFFC)
+         call UPShasta2 (Pi02,Vx,Vy,PScT02, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,-1, DIFFC)
+         call UPShasta2 (Pi00,Vx,Vy,PScT00, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &             DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+         call UPShasta2 (Pi33,Vx,Vy,PScT33, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &             DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+         call UPShasta2 (Pi11,Vx,Vy,PScT11, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &             DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+         call UPShasta2 (Pi12,Vx,Vy,PScT12, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &             DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+         call UPShasta2 (Pi22,Vx,Vy,PScT22, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &             DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+        endif
+        
+        if(VisBulk > 1D-6) then
+          call UPShasta2 (PPI,Vx,Vy,PISc, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &             DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+        endif
 
 !CHANGES
 ! Boundary regulation immediately
-      DO K=NZ0,NZ
-      DO J=NYPhy0,NYPhy
-      DO I=NXPhy0,NXPhy
-        xx=DX*I
-        yy=DY*J
-        rr=sqrt(xx**2+yy**2)
-        ff=1.0/(Dexp((rr-R0Bdry)/Aeps)+1.0)
-        Pi00(I,J,K) = Pi00(I,J,K)*ff
-        Pi01(I,J,K) = Pi01(I,J,K)*ff
-        Pi02(I,J,K) = Pi02(I,J,K)*ff
-        Pi33(I,J,K) = Pi33(I,J,K)*ff
-        Pi11(I,J,K) = Pi11(I,J,K)*ff
-        Pi12(I,J,K) = Pi12(I,J,K)*ff
-        Pi22(I,J,K) = Pi22(I,J,K)*ff
-        PPI(I,J,K) = PPI(I,J,K)*ff
-      End Do
-      End Do
-      End Do
+        DO K=NZ0,NZ
+        DO J=NYPhy0,NYPhy
+        DO I=NXPhy0,NXPhy
+          xx=DX*I
+          yy=DY*J
+          rr=sqrt(xx**2+yy**2)
+          ff=1.0/(Dexp((rr-R0Bdry)/Aeps)+1.0)
+          Pi00(I,J,K) = Pi00(I,J,K)*ff
+          Pi01(I,J,K) = Pi01(I,J,K)*ff
+          Pi02(I,J,K) = Pi02(I,J,K)*ff
+          Pi33(I,J,K) = Pi33(I,J,K)*ff
+          Pi11(I,J,K) = Pi11(I,J,K)*ff
+          Pi12(I,J,K) = Pi12(I,J,K)*ff
+          Pi22(I,J,K) = Pi22(I,J,K)*ff
+          PPI(I,J,K) = PPI(I,J,K)*ff
+        End Do
+        End Do
+        End Do
+        
+        if(ViscousC > 1D-6) then
+         Do ! pi evolution
+           call checkPiAll(iFailed, II, JJ, Time, Vx, Vy, Ed, PL,
+     &     NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &     Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22,
+     &     Pi00Regulated,Pi01Regulated,Pi02Regulated,Pi33Regulated,
+     &     Pi11Regulated,Pi12Regulated,Pi22Regulated,echo_level)
+         If (iFailed==0) Exit
+         call regulatePi(iRegulateCounter,Time,NX0,NY0,NZ0,NX,NY,NZ,
+     &       NXPhy0,NXPhy,NYPhy0,NYPhy,
+     &       Ed,PL,PPI,
+     &       Pi00,Pi01,Pi02,Pi11,
+     &       Pi12,Pi22,Pi33,Vx,Vy,II,JJ)
+         If (echo_level>=7) Then
+           Print*, "After: Pi00,Pi11,Pi22,Pi33*T^2,Pi01,Pi02,Pi12=",
+     &         Pi00(II,JJ,1),Pi11(II,JJ,1),
+     &         Pi22(II,JJ,1),Pi33(II,JJ,1),
+     &         Pi01(II,JJ,1),Pi02(II,JJ,1),
+     &         Pi12(II,JJ,1)
+         End If
+         iRegulateCounter = iRegulateCounter + 1D0
+         If (echo_level>=3) Then
+           Print*, "Regulation counts:", iRegulateCounter
+         EndIf
+         End Do ! pi evolution
+        endif
       
-      if (ViscousC > 1D-6) then
-        Do ! pi evolution
-
-          call checkPiAll(iFailed, II, JJ, Time, Vx, Vy, Ed, PL,
-     &    NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
-     &    Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22,
-     &    Pi00Regulated,Pi01Regulated,Pi02Regulated,Pi33Regulated,
-     &    Pi11Regulated,Pi12Regulated,Pi22Regulated,echo_level)
-
-        If (iFailed==0) Exit
-        call regulatePi(iRegulateCounter,Time,NX0,NY0,NZ0,NX,NY,NZ,
-     &      NXPhy0,NXPhy,NYPhy0,NYPhy,
-     &      Ed,PL,PPI,
-     &      Pi00,Pi01,Pi02,Pi11,
-     &      Pi12,Pi22,Pi33,Vx,Vy,II,JJ)
-        If (echo_level>=7) Then
-          Print*, "After: Pi00,Pi11,Pi22,Pi33*T^2,Pi01,Pi02,Pi12=",
-     &        Pi00(II,JJ,1),Pi11(II,JJ,1),
-     &        Pi22(II,JJ,1),Pi33(II,JJ,1),
-     &        Pi01(II,JJ,1),Pi02(II,JJ,1),
-     &        Pi12(II,JJ,1)
-        End If
-        iRegulateCounter = iRegulateCounter + 1D0
-        If (echo_level>=3) Then
-          Print*, "Regulation counts:", iRegulateCounter
-        EndIf
-        enddo !pi evolution
-      endif
-
-      if(VisBulk > 1D-6) then 
-        Do ! BulkPi evolution
-
-          call checkBulkPi(iFailed, II, JJ, Time, Ed, PL,
-     &    NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
-     &    PPI, echo_level)
-
-        If (iFailed==0) Exit
-        call regulateBulkPi(iRegulateCounterBulkPi,Time,NX0,NY0,NZ0,
-     &      NX,NY,NZ,NXPhy0,NXPhy,NYPhy0,NYPhy,Ed,PL,PPI,II,JJ)
-        If (echo_level>=7) Then
-          Print*, "After: PPI=", PPI(II,JJ,1)
-        End If
-        iRegulateCounterBulkPi = iRegulateCounterBulkPi + 1D0
-        If (echo_level>=3) Then
-          Print*, "Regulation counts:", iRegulateCounterBulkPi
-        EndIf
-        End Do ! BulkPi evolution
-      endif
+        if(VisBulk > 1D-6) then 
+          Do ! BulkPi evolution
+            call checkBulkPi(iFailed, II, JJ, Time, Ed, PL,
+     &      NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &      PPI, echo_level)
+          If (iFailed==0) Exit
+          call regulateBulkPi(iRegulateCounterBulkPi,Time,NX0,NY0,NZ0,
+     &        NX,NY,NZ,NXPhy0,NXPhy,NYPhy0,NYPhy,Ed,PL,PPI,II,JJ)
+          If (echo_level>=7) Then
+            Print*, "After: PPI=", PPI(II,JJ,1)
+          End If
+          iRegulateCounterBulkPi = iRegulateCounterBulkPi + 1D0
+          If (echo_level>=3) Then
+            Print*, "Regulation BulkPi counts:", iRegulateCounterBulkPi
+          EndIf
+          End Do ! BulkPi evolution
+        endif
 
       else ! ideal hydro
 
@@ -1143,7 +1130,7 @@ CSHEN====END====================================================================
      &  Ed,PL,Bd,Sd,Temp0,Temp,CMu, T00,T01,T02, IAA,CofAA,Time,DX,DY,
      &  DZ,DT,NXPhy0,NYPhy0,NXPhy,NYPhy,NX0,NX,NY0,NY,NZ0,NZ,PNEW,NNEW)  !PNEW NNEW  related to root finding
 
-      End If ! If (ViscousC>1D-6) Then
+      End If ! If (ViscousC>1D-6 .or. VisBulk > 1D-6) Then
 
 
       ! T(mu,nu) evolution
@@ -4494,7 +4481,6 @@ C----------------------------------------------------------------
 !-----------------------------------------------------------------------
 
 
-
       Subroutine checkPiAll(failed, II, JJ, Time, Vx, Vy, Ed, PL,
      &  NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
      &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22,
@@ -4547,15 +4533,16 @@ C----------------------------------------------------------------
       Do K=NZ0,NZ
       Do J=NYPhy0-3,NYPhy+3
       Do I=NXPhy0-3,NXPhy+3
-        
-        Tideal_scale = sqrt(Ed(I,J,K)**2 + 3*PL(I,J,K)**2)
 
-        !Positivity of Tr(pi^2)
+        Tideal_scale = sqrt(Ed(I,J,K)**2 + 3*PL(I,J,K)**2)
+        
         TrPi2 = Pi00(I,J,K)**2+Pi11(I,J,K)**2+Pi22(I,J,K)**2
      &          +Pi33(I,J,K)**2
      &          -2*Pi01(I,J,K)**2-2*Pi02(I,J,K)**2+2*Pi12(I,J,K)**2
 
-        if(TrPi2 < 0) then
+        pi_scale = sqrt(abs(TrPi2))
+        !Positivity of Tr(pi^2)
+        if(TrPi2 < -relNumericalzero*pi_scale) then
           If (say_level>=9) Then
             Print*, "Time=", Time
             Print*, "Trace Pi^2 is negative!"
@@ -4580,12 +4567,11 @@ C----------------------------------------------------------------
         endif
 
         !Largeness of pi tensor Tr(pi^2)
-        pi_scale = sqrt(abs(TrPi2))
         If (pi_scale > max(maxPiRatio*Tideal_scale,
      &      absNumericalzero)) Then
           If (say_level>=9) Then
           Print*, "Time=", Time
-          Print*, "pi^(mu nu) is too large!"
+          Print*, "Positivity of TrPi^2 violated!"
           Print*, "I,J=", I,J
           Print*, "Trace pi^2=", TrPi2
           Print*, "Ed,PL=", Ed(I,J,K),PL(I,J,K)
