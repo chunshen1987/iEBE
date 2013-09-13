@@ -920,6 +920,107 @@
 !-----------------------------------------------------------------------
 
 
+************************************************************************
+      Subroutine regulateBulkPi(regStr,Time,NX0,NY0,NZ0,NX,NY,NZ,
+     &  NXPhy0,NXPhy,NYPhy0,NYPhy,
+     &  Ed,PL,PPI,II,JJ)
+!     Purpose:
+!       Regulate Bulk pressure tensor by restrain it under a maximum
+!       value using tanh function
+
+      Implicit None
+
+      Integer debug
+      Common /debug/ debug
+
+      Integer NX0,NY0,NZ0,NX,NY,NZ,NXPhy0,NXPhy,NYPhy0,NYPhy
+      Integer I,J,K,II,JJ,regStr
+
+      Common/dxdy/ ddx, ddy ! lattice spacing
+      Double Precision ddx, ddy
+
+      Double Precision Time
+
+      Double Precision Ed(NX0:NX, NY0:NY, NZ0:NZ) !energy density
+      Double Precision PL(NX0:NX, NY0:NY, NZ0:NZ) !local pressure
+
+      Double Precision PPI(NX0:NX, NY0:NY, NZ0:NZ) ! Bulk Pressure Tensor
+
+      Double Precision BulkPi   
+
+      Integer regMethod
+      Common /regMethod/ regMethod
+
+      Double Precision :: Xsi0 = 1D0  !adaptive zero
+      Double Precision :: Tideal_scale, bulkPi_scale
+      Double Precision regStrength
+
+      Double Precision maxBulkPiRatio
+      Common /maxBulkPiRatio/ maxBulkPiRatio
+
+      Xsi0 = 1D-2/(regStr+1D0) ! VER-1.29RC: adaptive zero chooser VER-1.29RC4: bug fix: regStr -> regStr+1D0
+
+      If (debug >= 3) Print *, "* Start RegulateBulkPi"
+
+      If (regMethod == 2) Then ! do tanh regulation
+
+        If (debug>=5) Print *, "-- To branch regMethod=2"
+        If (debug>=5) Print *, "-- Pi regulation at time",Time
+
+        DO 3019 K=NZ0,NZ
+        DO 3019 J=NY0,NY
+        DO 3018 I=NX0,NX
+
+        regStrength = 1D-30
+        
+        Tideal_scale = Ed(I,J,K)**2 + 3*PL(I,J,K)**2
+
+        BulkPi = PPI(I,J,K)
+
+        ! get Bulk pi scale
+        bulkPi_scale = abs(BulkPi) + 1d-30
+        if(bulkPi_scale .ne. bulkPi_scale) then
+           print*, "Bulk Pi is NaN, I,J =", I, J
+           stop
+        endif
+
+        ! find regulation strength using largeness comparison
+        regStrength = max(bulkPi_scale/(maxBulkPiRatio*Tideal_scale), 
+     &                    regStrength)
+
+        If ( say_level >=9 ) Then
+          If (I==II.AND.J==JJ) Then
+            Print*, "I,J=",I,J
+            Print*, "regStrength=", regStrength
+            Print*, "BulkPi = ", bulkPi_scale
+            Print*, "maxPi=", maxBulkPiRatio*Tideal_scale
+            Print*, "Ed,PL=", Ed(I,J,K), PL(I,J,K)
+            Print*, "Tideal_scale=", Tideal_scale
+            Print*, "Xsi0=", Xsi0
+          endif
+          If (I==0.AND.J==0) Then
+            Print*, "I,J=",I,J
+            Print*, "regStrength=", regStrength
+            Print*, "BulkPi = ", bulkPi_scale
+            Print*, "maxPi=", maxBulkPiRatio*Tideal_scale
+            Print*, "Ed,PL=", Ed(I,J,K), PL(I,J,K)
+            Print*, "Tideal_scale=", Tideal_scale
+            Print*, "Xsi0=", Xsi0
+          
+          End If
+        End If !If (debug>=9)
+
+        PPI(I,J,K)=PPI(I,J,K)*(tanh(regStrength)/regStrength) ! Bulk pressure PPI is regulated here
+
+3018    Continue
+3019    Continue
+
+      EndIf ! on regMethod
+
+      If (debug>=3) Print *, "* RegulateBulkPi finished"
+
+      End Subroutine
+!-----------------------------------------------------------------------------
 
 ************************************************************************
       Subroutine regulatePi(regStr,Time,NX0,NY0,NZ0,NX,NY,NZ,

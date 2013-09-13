@@ -437,6 +437,7 @@ C###############################################################################
       Double Precision Pi12Regulated(NX0:NX,NY0:NY,NZ0:NZ)
       Double Precision Pi22Regulated(NX0:NX,NY0:NY,NZ0:NZ)
       Double Precision Pi33Regulated(NX0:NX,NY0:NY,NZ0:NZ)
+      Double Precision PPIRegulated(NX0:NX,NY0:NY,NZ0:NZ)
 
       Double Precision oldTT00(NX0:NX,NY0:NY,NZ0:NZ)
       Double Precision oldTT01(NX0:NX,NY0:NY,NZ0:NZ)
@@ -517,7 +518,7 @@ C-------------------------------------------------------------------------------
       Double Precision SEOSL7, PEOSL7, TEOSL7, SEOSL6
       Double Precision ss, ddt1, ddt2, ee1, ee2
       External SEOSL7
-      Integer iRegulateCounter
+      Integer iRegulateCounter, iRegulateCounterBulkPi
 
 !   ---Zhi-End---
 
@@ -995,38 +996,33 @@ CSHEN====END====================================================================
 
 
       ! Initialize PiXXRegulated and backup oldTTXX
-      If (ViscousC>1D-6) Then
+      If (ViscousC>1D-6 .or. VisBulk>1D-6) Then
 
-      Pi00Regulated = Pi00
-      Pi01Regulated = Pi01
-      Pi02Regulated = Pi02
-      Pi11Regulated = Pi11
-      Pi22Regulated = Pi22
-      Pi12Regulated = Pi12
-      Pi33Regulated = Pi33
+        !shear
+        if(ViscousC>1D-6)then
+          Pi00Regulated = Pi00
+          Pi01Regulated = Pi01
+          Pi02Regulated = Pi02
+          Pi11Regulated = Pi11
+          Pi22Regulated = Pi22
+          Pi12Regulated = Pi12
+          Pi33Regulated = Pi33
+          iRegulateCounter = 0D0
+          If (echo_level>=3) Print*, "Regulation counts:", 
+     &                               iRegulateCounter
+        endif
 
-      iRegulateCounter = 0D0
+        !bulk
+        if(VisBulk > 1D-6) then
+          PPIRegulated = PPI
+          iRegulateCounterBulkPi = 0D0
+          If (echo_level>=3) Print*, "Regulation counts:", 
+     &                               iRegulateCounterBulkPi
+        endif
 
-      oldTT00 = TT00
-      oldTT01 = TT01
-      oldTT02 = TT02
-
-
-
-      If (ViscousC>1D-6) Then
-      If (echo_level>=3) Print*, "Regulation counts:", iRegulateCounter
-      Pi00 = Pi00Regulated
-      Pi01 = Pi01Regulated
-      Pi02 = Pi02Regulated
-      Pi11 = Pi11Regulated
-      Pi22 = Pi22Regulated
-      Pi12 = Pi12Regulated
-      Pi33 = Pi33Regulated
-      End If
-
-      TT00 = oldTT00 ! use the original TTXX's
-      TT01 = oldTT01
-      TT02 = oldTT02
+        oldTT00 = TT00
+        oldTT01 = TT01
+        oldTT02 = TT02
 
       call dpSc8(TT00,TT01,TT02,ScT00,ScT01,ScT02,Vx,Vy,
      &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22, PScT00,PScT01,PScT02,PScT33,
@@ -1035,8 +1031,9 @@ CSHEN====END====================================================================
      &  Ed,PL,Bd,Sd,Temp0,Temp,CMu, T00,T01,T02, IAA,CofAA,Time,DX,DY,
      &  DZ,DT,NXPhy0,NYPhy0,NXPhy,NYPhy,NX0,NX,NY0,NY,NZ0,NZ,PNEW,NNEW)  !PNEW NNEW  related to root finding
 
-        DIFFC = 0.125D0
-        !DIFFC = 0D0
+      DIFFC = 0.125D0
+      !DIFFC = 0D0
+      if(ViscousC > 1D-6) then
         call UPShasta2 (Pi01,Vx,Vy,PScT01, NX0,NX,NY0,NY,NZ0,NZ, 0,0,  !Pi01
      &           DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,-1,1, DIFFC)
         call UPShasta2 (Pi02,Vx,Vy,PScT02, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
@@ -1050,10 +1047,13 @@ CSHEN====END====================================================================
         call UPShasta2 (Pi12,Vx,Vy,PScT12, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
      &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
         call UPShasta2 (Pi22,Vx,Vy,PScT22, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+     &              DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+      endif
 
+      if(VisBulk > 1D-6) then
         call UPShasta2 (PPI,Vx,Vy,PISc, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+     &          DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+      endif
 
 !CHANGES
 ! Boundary regulation immediately
@@ -1071,49 +1071,70 @@ CSHEN====END====================================================================
         Pi11(I,J,K) = Pi11(I,J,K)*ff
         Pi12(I,J,K) = Pi12(I,J,K)*ff
         Pi22(I,J,K) = Pi22(I,J,K)*ff
+        PPI(I,J,K) = PPI(I,J,K)*ff
       End Do
       End Do
       End Do
+      
+      if (ViscousC > 1D-6) then
+        Do ! pi evolution
 
-      Do ! pi evolution
+          call checkPiAll(iFailed, II, JJ, Time, Vx, Vy, Ed, PL,
+     &    NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &    Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22,
+     &    Pi00Regulated,Pi01Regulated,Pi02Regulated,Pi33Regulated,
+     &    Pi11Regulated,Pi12Regulated,Pi22Regulated,echo_level)
 
-        call checkPiAll(iFailed, II, JJ, Time, Vx, Vy, Ed, PL,
-     &  NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
-     &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22,
-     &  Pi00Regulated,Pi01Regulated,Pi02Regulated,Pi33Regulated,
-     &  Pi11Regulated,Pi12Regulated,Pi22Regulated,echo_level)
+        If (iFailed==0) Exit
+        call regulatePi(iRegulateCounter,Time,NX0,NY0,NZ0,NX,NY,NZ,
+     &      NXPhy0,NXPhy,NYPhy0,NYPhy,
+     &      Ed,PL,PPI,
+     &      Pi00,Pi01,Pi02,Pi11,
+     &      Pi12,Pi22,Pi33,Vx,Vy,II,JJ)
+        If (echo_level>=7) Then
+          Print*, "After: Pi00,Pi11,Pi22,Pi33*T^2,Pi01,Pi02,Pi12=",
+     &        Pi00(II,JJ,1),Pi11(II,JJ,1),
+     &        Pi22(II,JJ,1),Pi33(II,JJ,1),
+     &        Pi01(II,JJ,1),Pi02(II,JJ,1),
+     &        Pi12(II,JJ,1)
+        End If
+        iRegulateCounter = iRegulateCounter + 1D0
+        If (echo_level>=3) Then
+          Print*, "Regulation counts:", iRegulateCounter
+        EndIf
+        enddo !pi evolution
+      endif
 
-      If (iFailed==0) Exit
-      call regulatePi(iRegulateCounter,Time,NX0,NY0,NZ0,NX,NY,NZ,
-     &    NXPhy0,NXPhy,NYPhy0,NYPhy,
-     &    Ed,PL,PPI,
-     &    Pi00,Pi01,Pi02,Pi11,
-     &    Pi12,Pi22,Pi33,Vx,Vy,II,JJ)
-      If (echo_level>=7) Then
-        Print*, "After: Pi00,Pi11,Pi22,Pi33*T^2,Pi01,Pi02,Pi12=",
-     &      Pi00(II,JJ,1),Pi11(II,JJ,1),
-     &      Pi22(II,JJ,1),Pi33(II,JJ,1),
-     &      Pi01(II,JJ,1),Pi02(II,JJ,1),
-     &      Pi12(II,JJ,1)
-      End If
-      iRegulateCounter = iRegulateCounter + 1D0
-      If (echo_level>=3) Then
-        Print*, "Regulation counts:", iRegulateCounter
-      EndIf
-        !If (iRegulateCounter>=20) Exit
+      if(VisBulk > 1D-6) then 
+        Do ! BulkPi evolution
 
-      End Do ! pi evolution
+          call checkBulkPi(iFailed, II, JJ, Time, Ed, PL,
+     &    NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &    PPI, echo_level)
 
+        If (iFailed==0) Exit
+        call regulateBulkPi(iRegulateCounterBulkPi,Time,NX0,NY0,NZ0,
+     &      NX,NY,NZ,NXPhy0,NXPhy,NYPhy0,NYPhy,Ed,PL,PPI,II,JJ)
+        If (echo_level>=7) Then
+          Print*, "After: PPI=", PPI(II,JJ,1)
+        End If
+        iRegulateCounterBulkPi = iRegulateCounterBulkPi + 1D0
+        If (echo_level>=3) Then
+          Print*, "Regulation counts:", iRegulateCounterBulkPi
+        EndIf
+        End Do ! BulkPi evolution
+      endif
 
       else ! ideal hydro
 
-      Pi00 = 0D0
-      Pi01 = 0D0
-      Pi02 = 0D0
-      Pi11 = 0D0
-      Pi22 = 0D0
-      Pi12 = 0D0
-      Pi33 = 0D0
+        Pi00 = 0D0
+        Pi01 = 0D0
+        Pi02 = 0D0
+        Pi11 = 0D0
+        Pi22 = 0D0
+        Pi12 = 0D0
+        Pi33 = 0D0
+        PPI = 0D0
 
       call dpSc8(TT00,TT01,TT02,ScT00,ScT01,ScT02,Vx,Vy,
      &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22, PScT00,PScT01,PScT02,PScT33,
@@ -4474,8 +4495,6 @@ C----------------------------------------------------------------
 
 
 
-
-
       Subroutine checkPiAll(failed, II, JJ, Time, Vx, Vy, Ed, PL,
      &  NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
      &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22,
@@ -4528,7 +4547,6 @@ C----------------------------------------------------------------
       Do K=NZ0,NZ
       Do J=NYPhy0-3,NYPhy+3
       Do I=NXPhy0-3,NXPhy+3
-
         
         !Largeness of pi tensor Tr(pi^2)
         TrPi2 = Pi00(I,J,K)**2+Pi11(I,J,K)**2+Pi22(I,J,K)**2
@@ -4541,7 +4559,7 @@ C----------------------------------------------------------------
      &      absNumericalzero)) Then
           If (say_level>=9) Then
           Print*, "Time=", Time
-          Print*, "Positivity of TrPi^2 violated!"
+          Print*, "pi^(mu nu) is too large!"
           Print*, "I,J=", I,J
           Print*, "Trace pi^2=", TrPi2
           Print*, "Ed,PL=", Ed(I,J,K),PL(I,J,K)
@@ -4682,6 +4700,63 @@ C----------------------------------------------------------------
 !-----------------------------------------------------------------------
 
 
+      Subroutine checkBulkPi(failed, II, JJ, Time, Ed, PL,
+     &  NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &  PPI, say_level)
+      ! Check the size of Bulk pressure
+
+      Implicit None
+
+      Integer NXPhy0,NXPhy,NYPhy0,NYPhy,NX0,NX,NY0,NY,NZ0,NZ
+      Integer failed, II, JJ ! (II,JJ): where it fails
+      Double Precision Time
+
+      Double Precision Ed(NX0:NX,NY0:NY,NZ0:NZ)
+      Double Precision PL(NX0:NX,NY0:NY,NZ0:NZ)
+
+      Double Precision PPI(NX0:NX, NY0:NY, NZ0:NZ)     !Bulk pressure
+
+      Integer say_level  !Warning level
+
+      Integer I,J,K
+      Double Precision :: Tideal_scale, bulkPi_scale
+      Double Precision :: absNumericalzero = 1D-2
+      Double Precision :: relNumericalzero = 1D-2  !Xsi_0 in Zhi's thesis
+
+      Double Precision maxBulkPiRatio
+      Common /maxBulkPiRatio/ maxBulkPiRatio
+
+      failed = 0
+
+      Do K=NZ0,NZ
+      Do J=NYPhy0-3,NYPhy+3
+      Do I=NXPhy0-3,NXPhy+3
+
+        !Largeness of bulk pressure
+        Tideal_scale = sqrt(Ed(I,J,K)**2 + 3*PL(I,J,K)**2)
+        bulkPi_scale = abs(PPI(I,J,K))
+
+        If (bulkPi_scale > max(maxBulkPiRatio*Tideal_scale,
+     &      absNumericalzero)) Then
+          If (say_level>=9) Then
+            Print*, "Time=", Time
+            Print*, "Bulk Pi is larger than Tideal!"
+            Print*, "I,J=", I,J
+            Print*, "Bulk Pi=", bulkPi_Scale
+            Print*, "Ed,PL=", Ed(I,J,K),PL(I,J,K)
+          End If
+          II = I
+          JJ = J
+          failed = 1
+          return
+        End If
+
+      End Do
+      End Do
+      End Do
+
+      End Subroutine
+!-----------------------------------------------------------------------
 
 
 
