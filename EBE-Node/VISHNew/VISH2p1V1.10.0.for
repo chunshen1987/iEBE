@@ -4548,13 +4548,39 @@ C----------------------------------------------------------------
       Do J=NYPhy0-3,NYPhy+3
       Do I=NXPhy0-3,NXPhy+3
         
-        !Largeness of pi tensor Tr(pi^2)
+        Tideal_scale = sqrt(Ed(I,J,K)**2 + 3*PL(I,J,K)**2)
+
+        !Positivity of Tr(pi^2)
         TrPi2 = Pi00(I,J,K)**2+Pi11(I,J,K)**2+Pi22(I,J,K)**2
      &          +Pi33(I,J,K)**2
      &          -2*Pi01(I,J,K)**2-2*Pi02(I,J,K)**2+2*Pi12(I,J,K)**2
 
-        Tideal_scale = sqrt(Ed(I,J,K)**2 + 3*PL(I,J,K)**2)
-        pi_scale = sqrt(TrPi2)
+        if(TrPi2 < 0) then
+          If (say_level>=9) Then
+            Print*, "Time=", Time
+            Print*, "Trace Pi^2 is negative!"
+            Print*, "I,J=", I,J
+            Print*, "Trace pi^2=", TrPi2
+            Print*, "Ed,PL=", Ed(I,J,K),PL(I,J,K)
+            Print*, "Before: Pi00,Pi11,Pi22,Pi33*T^2,Pi01,Pi02,Pi12=",
+     &        Pi00Regulated(I,J,K),Pi11Regulated(I,J,K),
+     &        Pi22Regulated(I,J,K),Pi33Regulated(I,J,K),
+     &        Pi01Regulated(I,J,K),Pi02Regulated(I,J,K),
+     &        Pi12Regulated(I,J,K)
+            Print*, "Before: Trace pi^2=",
+     &        Pi00Regulated(I,J,K)**2+Pi11Regulated(I,J,K)**2
+     &        +Pi22Regulated(I,J,K)**2+Pi33Regulated(I,J,K)**2
+     &        -2*Pi01Regulated(I,J,K)**2-2*Pi02Regulated(I,J,K)**2
+     &        +2*Pi12Regulated(I,J,K)**2
+          End If
+          II = I
+          JJ = J
+          failed = 1
+          return
+        endif
+
+        !Largeness of pi tensor Tr(pi^2)
+        pi_scale = sqrt(abs(TrPi2))
         If (pi_scale > max(maxPiRatio*Tideal_scale,
      &      absNumericalzero)) Then
           If (say_level>=9) Then
@@ -4742,7 +4768,7 @@ C----------------------------------------------------------------
             Print*, "Time=", Time
             Print*, "Bulk Pi is larger than Tideal!"
             Print*, "I,J=", I,J
-            Print*, "Bulk Pi=", bulkPi_Scale
+            Print*, "Bulk Pi=", PPI(I,J,K)
             Print*, "Ed,PL=", Ed(I,J,K),PL(I,J,K)
           End If
           II = I

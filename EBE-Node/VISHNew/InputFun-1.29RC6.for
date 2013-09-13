@@ -863,8 +863,8 @@
       Double Precision Pi01(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
       Double Precision Pi02(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
       Double Precision Pi33(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
-      Double Precision Pi11(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor NZ)
-      Double Precision Pi12(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor )
+      Double Precision Pi11(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+      Double Precision Pi12(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor 
       Double Precision Pi22(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
 
       Double Precision R0, Aeps
