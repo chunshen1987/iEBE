@@ -1005,6 +1005,14 @@ CSHEN====END====================================================================
           iRegulateCounter = 0D0
           If (echo_level>=3) Print*, "Regulation counts:", 
      &                               iRegulateCounter
+        else
+          Pi00 = 0D0 
+          Pi01 = 0D0 
+          Pi02 = 0D0 
+          Pi11 = 0D0 
+          Pi22 = 0D0 
+          Pi12 = 0D0 
+          Pi33 = 0D0 
         endif
         
         !bulk
@@ -1013,6 +1021,8 @@ CSHEN====END====================================================================
           iRegulateCounterBulkPi = 0D0
           If (echo_level>=3) Print*, "Regulation Bulk Pi counts:", 
      &                               iRegulateCounterBulkPi
+        else
+          PPI = 0D0
         endif
 
       call dpSc8(TT00,TT01,TT02,ScT00,ScT01,ScT02,Vx,Vy,
