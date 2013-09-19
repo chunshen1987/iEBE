@@ -52,6 +52,8 @@ C===============================================================================
 
 ! change to 1 to ignore checks
 #define silent_checkPi 0
+#define outputPiviolation .true.
+#define outputMovie .true.
 
 #define echo_level 5
 
@@ -279,7 +281,9 @@ C======output the chemical potential information at freeze out surface.====
 
       !Open(3771,FILE='movie/DPc.dat',STATUS='REPLACE')
       !Close(3771)
-      !Open(3773,FILE='movie/Vx.dat',STATUS='REPLACE')
+      if (outputMovie) then 
+         open(3773,FILE='movie/Evolution.dat',STATUS='REPLACE')
+      endif
       !Close(3773)
       !Open(3774,FILE='movie/U1.dat',STATUS='REPLACE')
       !Close(3774)
@@ -292,7 +296,13 @@ C======output the chemical potential information at freeze out surface.====
         IOSCARWrite = 43
         open(IOSCARWrite,File='results/OSCAR2008H.dat',Form='Formatted',
      &     status='REPLACE')   !output standard format VISH2+1 results for further hydro movie and jet quenching purpose
-      End If
+      EndIf
+      if (outputPiviolation) then
+         open(583, File='results/piViolation.dat',
+     &        Form='Formatted', status='REPLACE')
+         open(584, File='results/BulkpiViolation.dat',
+     &        Form='Formatted', status='REPLACE')
+      endif
 CSHEN======================================================================
 
       open(92,File='results/anisotropy.dat',status='REPLACE')
@@ -336,6 +346,9 @@ CSHEN======output OSCAR file Header end=====================================
       Close(83)
       close(IOSCARWrite)
       Close(377)
+      if(outputMovie) then 
+         close(3773)
+      endif
 
       End
 !-----------------------------------------------------------------------
@@ -1078,6 +1091,11 @@ CSHEN====END====================================================================
         End Do
         
         if(ViscousC > 1D-6) then
+         if (outputPiviolation) then
+            call checkPiandoutputViolation(Time, DX, DY, Vx, Vy, Ed, PL,
+     &     NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &     Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22)
+         endif
          Do ! pi evolution
            call checkPiAll(iFailed, II, JJ, Time, Vx, Vy, Ed, PL,
      &     NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
@@ -1105,6 +1123,11 @@ CSHEN====END====================================================================
         endif
       
         if(VisBulk > 1D-6) then 
+          if(outputPiviolation) then
+            call checkBulkPiandoutputViolation(Time, Dx, Dy, Ed, PL,
+     &        NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &        PPI)
+          endif
           Do ! BulkPi evolution
             call checkBulkPi(iFailed, II, JJ, Time, Ed, PL,
      &      NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
@@ -1167,7 +1190,18 @@ CSHEN====END====================================================================
       End Do
       End Do
 
-
+      if(outputMovie) then
+         DO K=NZ0,NZ
+         DO J=NYPhy0,NYPhy
+         DO I=NXPhy0,NXPhy
+           if(mod(I, 5) .eq. 0 .and. mod(J, 5) .eq. 0) then  
+             write(3773, '(4F18.8)')Time, I*Dx, J*Dy,
+     &             Temp(I, J, K)*0.19733D0
+           endif
+         enddo
+         enddo
+         enddo
+      endif
 CSHEN===========================================================================
 C====output the OSCAR body file from hydro evolution============ ===============
       if(IOSCAR) then
@@ -4722,6 +4756,111 @@ C----------------------------------------------------------------
 !-----------------------------------------------------------------------
 
 
+      Subroutine checkPiandoutputViolation(Time, Dx, Dy, Vx, Vy, Ed, PL,
+     &  NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22)
+      ! Check size + tracelessness + transversality + positiveness of Tr(pi^2)
+      ! and output all the violation points in the transverse plane
+
+      Implicit None
+
+      Integer NXPhy0,NXPhy,NYPhy0,NYPhy,NX0,NX,NY0,NY,NZ0,NZ
+      Double Precision Time, Dx, Dy
+
+      Double Precision Ed(NX0:NX,NY0:NY,NZ0:NZ)
+      Double Precision PL(NX0:NX,NY0:NY,NZ0:NZ)
+
+      Double Precision Vx(NX0:NX,NY0:NY,NZ0:NZ)
+      Double Precision Vy(NX0:NX,NY0:NY,NZ0:NZ)
+
+      Double Precision Pi00(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+      Double Precision Pi01(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+      Double Precision Pi02(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+      Double Precision Pi33(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+      Double Precision Pi11(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+      Double Precision Pi12(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+      Double Precision Pi22(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+
+      Integer I,J,K
+      integer iFlag
+      double precision violationType
+      Double Precision trace_pi, trans, TrPi2
+
+      Double Precision :: Tideal_scale, pi_scale
+      Double Precision :: absNumericalzero = 1D-2
+      Double Precision :: relNumericalzero = 1D-2  !Xsi_0 in Zhi's thesis
+
+      Double Precision maxPiRatio
+      Common /maxPiRatio/ maxPiRatio
+
+      iFlag = 0
+
+      Do K=NZ0,NZ
+      Do J=NYPhy0-3,NYPhy+3
+      Do I=NXPhy0-3,NXPhy+3
+
+        violationType = 0D0
+        Tideal_scale = sqrt(Ed(I,J,K)**2 + 3*PL(I,J,K)**2)
+        
+        TrPi2 = Pi00(I,J,K)**2+Pi11(I,J,K)**2+Pi22(I,J,K)**2
+     &          +Pi33(I,J,K)**2
+     &          -2*Pi01(I,J,K)**2-2*Pi02(I,J,K)**2+2*Pi12(I,J,K)**2
+
+        pi_scale = sqrt(abs(TrPi2))
+        !Positivity of Tr(pi^2)
+        if(TrPi2 < -relNumericalzero*pi_scale) then
+          violationType = violationType + 1.0D0
+        endif
+
+        !Largeness of pi tensor Tr(pi^2)
+        If (pi_scale > max(maxPiRatio*Tideal_scale,
+     &      absNumericalzero)) Then
+          violationType = violationType + 0.1D0
+        End If
+
+        !trace of pi tensor
+        trace_pi = Pi00(I,J,K)-Pi11(I,J,K)-Pi22(I,J,K)-Pi33(I,J,K)
+        If(abs(trace_pi) > max(relNumericalzero*pi_scale,
+     &     absNumericalzero) ) Then
+          violationType = violationType + 0.01D0
+        End If
+
+        !transversality of pi tensor  u_mu pi^{mu,x} = 0
+        trans = Pi01(I,J,K)-Vx(I,J,K)*Pi11(I,J,K)-Vy(I,J,K)*Pi12(I,J,K)
+        If (abs(trans) > max(relNumericalzero*pi_scale, 
+     &      absNumericalzero)) Then
+          violationType = violationType + 0.001D0
+        End If
+
+        !transversality of pi tensor  u_mu pi^{mu,y} = 0
+        trans = Pi02(I,J,K)-Vx(I,J,K)*Pi12(I,J,K)-Vy(I,J,K)*Pi22(I,J,K)
+        If (abs(trans) > max(relNumericalzero*pi_scale,
+     &      absNumericalzero)) Then
+          violationType = violationType + 0.001D0
+        End If
+
+        !transversality of pi tensor  u_mu pi^{mu,tau} = 0
+        trans = Pi00(I,J,K)-Vx(I,J,K)*Pi01(I,J,K)-Vy(I,J,K)*Pi02(I,J,K)
+        If (abs(trans) > max(relNumericalzero*pi_scale,
+     &      absNumericalzero)) Then
+          violationType = violationType + 0.001D0
+        End If
+        
+        if(violationType > 0D0) then 
+           iFlag = 1
+           write(583, '(4F18.8)')Time, violationType, I*DX, J*DY
+        endif
+
+      End Do
+      End Do
+      End Do
+
+      if(iFlag .eq. 0) then 
+         write(583, '(4F18.8)')Time, 0D0, 10D0, 10D0
+      endif
+      End Subroutine
+!-----------------------------------------------------------------------
+
       Subroutine checkBulkPi(failed, II, JJ, Time, Ed, PL,
      &  NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
      &  PPI, say_level)
@@ -4781,6 +4920,50 @@ C----------------------------------------------------------------
 !-----------------------------------------------------------------------
 
 
+      Subroutine checkBulkPiandoutputViolation(Time, Dx, Dy, Ed, PL,
+     &  NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &  PPI)
+      ! Check the size of Bulk pressure and output all violation 
+      ! points in the transverse plane
+
+      Implicit None
+
+      Integer NXPhy0,NXPhy,NYPhy0,NYPhy,NX0,NX,NY0,NY,NZ0,NZ
+      Double Precision Time, Dx, Dy
+
+      Double Precision Ed(NX0:NX,NY0:NY,NZ0:NZ)
+      Double Precision PL(NX0:NX,NY0:NY,NZ0:NZ)
+
+      Double Precision PPI(NX0:NX, NY0:NY, NZ0:NZ)     !Bulk pressure
+
+      Integer violationType
+      Integer I,J,K
+      Double Precision :: pressure_scale, bulkPi_scale
+      Double Precision :: absNumericalzero = 1D-2
+      Double Precision :: relNumericalzero = 1D-2  !Xsi_0 in Zhi's thesis
+
+      Double Precision maxBulkPiRatio
+      Common /maxBulkPiRatio/ maxBulkPiRatio
+
+      Do K=NZ0,NZ
+      Do J=NYPhy0-3,NYPhy+3
+      Do I=NXPhy0-3,NXPhy+3
+
+        !Largeness of bulk pressure
+        pressure_scale = abs(PL(I,J,K))
+        bulkPi_scale = abs(PPI(I,J,K))
+
+        If (bulkPi_scale > max(maxBulkPiRatio*pressure_scale,
+     &      absNumericalzero)) Then
+          write(584, '(3F18.8)')Time, I*DX, J*DY
+        End If
+
+      End Do
+      End Do
+      End Do
+
+      End Subroutine
+!-----------------------------------------------------------------------
 
 
       Subroutine printMore(id, I, J, Time,
