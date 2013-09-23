@@ -151,6 +151,7 @@ CSHEN===EOS from tables end====================================================
       call prepareInputFun() ! this is the initialization function in InputFun.for
 
       Print *, "Read parameters from Vishydro.inp file."
+
 !----------Start of reading parameters from file------------------------
 C========= Inputting Parameters ===========================================
       OPEN(1,FILE='Vishydro.inp',STATUS='OLD')
@@ -674,7 +675,7 @@ CSHEN===EOS from tables end====================================================
           CPi22 = Pi22(I,J,1)     
           CPi33 = Pi33(I,J,1)    
 
-          WRITE(99,'(99E20.8)') Time,DA0,DA1,DA2,VZCM,VRCM,
+          WRITE(99,'(99E20.8E3)') Time,DA0,DA1,DA2,VZCM,VRCM,
      &                  Ed(I,J,1)*HbarC,BN,
      &                  Temp(I,J,1)*HbarC,BAMU,SMU, PDec2, 
      &                  CPi33*HbarC,
@@ -1695,7 +1696,7 @@ C          EINS=EINS+1
 
 
 2553   FORMAT(8F20.8)
-2555   FORMAT(19E14.6)
+2555   FORMAT(19E14.6E3)
 2565   FORMAT(14E14.6)
 
 
