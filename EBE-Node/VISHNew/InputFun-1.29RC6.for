@@ -1244,10 +1244,7 @@
      &      +abs(Pi22(I,J,K))
      &      +abs(Pi33(I,J,K)))
 
-        PiCheckFlag = 1
-        If (PiAvg .ne. PiAvg) PiCheckFlag = 0
-
-        If (PiCheckFlag .eq. 0) Then
+        If (PiAvg .ne. PiAvg) Then
           Print *, "Invalid PiAvg"
           Print *, "(I,J,K)=",I,J,K
           Print *, "e=", Ed(I,J,K)
@@ -1265,8 +1262,8 @@
           Stop
         EndIf
 
- 3008   Continue
- 3009   Continue
+3008    Continue
+3009    Continue
 
       EndIf ! on regMethod
 
