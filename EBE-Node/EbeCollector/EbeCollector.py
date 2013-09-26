@@ -629,50 +629,41 @@ class EbeDBReader(object):
         """
         diffVnData = self.getDifferentialFlowDataForOneEvent(event_id=event_id, particleName=particleName, order=order)
         return np.interp(pTs, diffVnData[:,0], diffVnData[:,1]) + 1j*np.interp(pTs, diffVnData[:,0], diffVnData[:,2])
-
+    
+    def getDifferentialFlowDataForAllEvents(self, particleName="pion", order=2, pT_range=None, where="", orderBy="event_id"):
+        """
+            Return the (p_T, real(v_n), imag(v_n)) list for the differential
+            flow of order "order" for event with id "event_id", for particle
+            with name "particleName". Only those data inside the given
+            "pT_range" will be returned, otherwise only those satisfying
+            pT_range(0)<=pT<=pT_range(1) will be returned.
+        """
+        whereClause = "pid=%d and n=%d" % (self._pid(particleName), order)
+        if pT_range:
+            whereClause += " and %g<=pT and pT<=%g" % (pT_range[0], pT_range[1])
+        if where:
+            whereClause += " and " + where
+        RawdiffvnData = np.asarray(self.db.selectFromTable("diff_vn", ("pT", "vn_real", "vn_imag"), whereClause=whereClause, orderByClause=orderBy))
+        nevent = self.getNumberOfEvents()
+        npT = len(RawdiffvnData[:,0])/nevent
+        diffvnData = RawdiffvnData.reshape(nevent, npT, 3)
+        return diffvnData
+    
     def getInterpretedComplexDifferentialFlowsForAllEvents(self, particleName="pion", order=2, pTs=np.linspace(0,2.5,10), where="", orderBy="event_id", verbose=False):
         """
-            Return the interpreted values of complex differential flow for all
-            events on pT points pTs, for order="order" and event id="event_id",
-            and for particle name="particleName". The argument pTs must be
-            iterable and it will be checked. Additional criteria can be added
-            with "where" and "orderBy" arguments. Returned value will be a numpy
-            matrix so that each row is a differential flow vector for an event.
+            Return the interpreted complex differential flow on pT points pTs, 
+            for order="order" and event id="event_id", and for 
+            particle name="particleName". The argument
+            pTs must be iterable and it will not be checked.
         """
-        # create a buffer in memory
-        whereClause = "pid=%d and n=%d" % (self._pid(particleName), order)
-        if verbose: print("""
-Calculating differential flow involves interpolation.
-Evaluating it at multiple pT values at the same time if possible.
-
-For better effeciency part of the database is being copied to memory...""")
-        databaseBuffer = SqliteDB(":memory:")
-        databaseBuffer.createTableIfNotExists("diff_vn", self.db.getTableInfo("diff_vn"))
-        databaseBuffer.insertIntoTable("diff_vn", self.db.selectFromTable("diff_vn", "*", whereClause=whereClause))
-        if verbose: print("Copy completed.\n")
-        # swap memory and the actual database
-        self.oldDb = self.db
-        self.db = databaseBuffer
-
-        # perform actions
-        #if not isIterable(pTs): pTs = [pTs]
-        event_ids = self.db.selectFromTable("diff_vn", "event_id", whereClause=where, groupByClause="event_id", orderByClause=orderBy)
-        collectedResults = []
-        if verbose: print("Looping over {} events... (please be patient)".format(len(event_ids)))
-        count = 0
-        for event_id_tuple in event_ids:
-
-            if verbose and count % 100 == 0: print("Events processed: {}".format(count))
-            count += 1
-
-            collectedResults.append(self.getInterpretedComplexDifferentialFlowForOneEvent(event_id=event_id_tuple[0], particleName=particleName, order=order, pTs=pTs))
+        diffVnData = self.getDifferentialFlowDataForAllEvents(particleName=particleName, order=order, where=where, orderBy=orderBy)
+        diffVnintepBlock = []
+        if verbose: print("Looping over {} events... (please be patient)".format(diffVnData.shape[0]))
+        for iev in range(diffVnData.shape[0]):
+           diffVnintep = np.interp(pTs, diffVnData[iev,:,0], diffVnData[iev,:,1]) + 1j*np.interp(pTs, diffVnData[iev,:,0], diffVnData[iev,:,2])
+           diffVnintepBlock.append(diffVnintep)
         if verbose: print("Done. Thanks for waiting.")
-
-        # swap back the actual database
-        self.db = self.oldDb
-
-        # return results
-        return np.asarray(collectedResults)
+        return np.asarray(diffVnintepBlock)
 
     get_diff_V_n = getInterpretedComplexDifferentialFlowsForAllEvents
 
@@ -700,52 +691,43 @@ For better effeciency part of the database is being copied to memory...""")
         diffVnData = self.getSpectraDataForOneEvent(event_id=event_id, particleName=particleName)
         return np.interp(pTs, diffVnData[:,0], diffVnData[:,1])
 
+    def getSpectraDataForAllEvents(self, particleName="pion", pT_range=None, where="", orderBy="event_id"):
+        """
+            Return the (pT, dN/(dydpT)) spectra list for particle with name 
+            "particleName". Only those data inside the given "pT_range" 
+            will be returned, otherwise only those satisfying
+            pT_range(0)<=pT<=pT_range(1) will be returned.
+        """
+        whereClause = "pid=%d" % (self._pid(particleName))
+        if pT_range:
+            whereClause += " and %g<=pT and pT<=%g" % (pT_range[0], pT_range[1])
+        if where:
+            whereClause += " and " + where
+        RawdNdyData = np.asarray(self.db.selectFromTable("spectra", ("pT", "N"), whereClause=whereClause, orderByClause=orderBy))
+        nevent = self.getNumberOfEvents()
+        npT = len(RawdNdyData[:,0])/nevent
+        dNdyData = RawdNdyData.reshape(nevent, npT, 2)
+        return dNdyData
+
     def getInterpretedSpectraForAllEvents(self, particleName="pion", pTs=np.linspace(0,2.5,10), where="", orderBy="event_id", verbose=False):
         """
-            Return the interpreted spectra for all events on pT points pTs, for
-            event id="event_id", and for particle name="particleName". The
+            Return the interpreted spectra dN/(dydpT) for all events on pT 
+            points pTs, for particle name="particleName". The
             argument pTs must be iterable and it will be checked. Additional
             criteria can be added with "where" and "orderBy" arguments. Returned
             value will be a numpy matrix so that each row is a spectra vector
             for an event.
         """
-        # create a buffer in memory
-        whereClause = "pid=%d" % self._pid(particleName)
-        if verbose: print("""
-Calculating spectra involves interpolation.
-Evaluating it at multiple pT values at the same time if possible.
-
-For better effeciency part of the database is being copied to memory...""")
-        databaseBuffer = SqliteDB(":memory:")
-        databaseBuffer.createTableIfNotExists("spectra", self.db.getTableInfo("spectra"))
-        databaseBuffer.insertIntoTable("spectra", self.db.selectFromTable("spectra", "*", whereClause=whereClause))
-        if verbose: print("Copy completed.\n")
-        # swap memory and the actual database
-        self.oldDb = self.db
-        self.db = databaseBuffer
-
         # processing
-        #if not isIterable(pTs): pTs = [pTs]
-        event_ids = self.db.selectFromTable("spectra", "event_id", whereClause=where, groupByClause="event_id", orderByClause=orderBy)
-        collectedResults = []
-        if verbose: print("Looping over {} events... (please be patient)".format(len(event_ids)))
-        count = 0
-        for event_id_tuple in event_ids:
-
-            if verbose and count % 100 == 0: print("Events processed: {}".format(count))
-            count += 1
-
-            collectedResults.append(self.getInterpretedSpectraForOneEvent(event_id=event_id_tuple[0], particleName=particleName, pTs=pTs))
-
+        dNdyData = self.getSpectraDataForAllEvents(particleName=particleName, where=where, orderBy=orderBy)
+        dNdyintepBlock = []
+        if verbose: print("Looping over {} events... (please be patient)".format(dNdyData.shape[0]))
+        for iev in range(dNdyData.shape[0]):
+           dNdyintep = exp(np.interp(pTs, dNdyData[iev,:,0], log(dNdyData[iev,:,1])))
+           dNdyintepBlock.append(dNdyintep)
         if verbose: print("Done. Thanks for waiting.")
-
-        # swap back the actual database
-        self.db = self.oldDb
-
-        # return results
-        return np.asarray(collectedResults)
-
-
+        return np.asarray(dNdyintepBlock)
+    
     get_dNdydpT = getInterpretedSpectraForAllEvents
 
     def getAttendance(self):
@@ -767,9 +749,9 @@ For better effeciency part of the database is being copied to memory...""")
             Return total number of events by finding the difference between max
             and min of event_id.
         """
-        maxEventId = self.db.selectFromTable("eccentricities", "max(event_id)")[0][0]
-        minEventId = self.db.selectFromTable("eccentricities", "min(event_id)")[0][0]
-        return maxEventId - minEventId + 1
+        whereClause = "ecc_id = 1 and r_power = 0 and n = 2"
+        EventId = self.db.selectFromTable("eccentricities", "event_id", whereClause)
+        return len(EventId)
 
     def evaluateExpression(self, expression):
         """
