@@ -157,29 +157,16 @@ CSHEN===EOS from tables end====================================================
 C========= Inputting Parameters ===========================================
       OPEN(1,FILE='Vishydro.inp',STATUS='OLD')
 
-      READ(1,*) IEOS        !type of EOS  (EOSQ:0  EOSI: 2, SM-EOSQ: 5, EOSL: 4(Katz05 data) )
-      READ(1,*) b           !impact parameter (fm)
-
       READ(1,*) T0          !initial time (fm/c)
-      READ(1,*) EK          !initial energy density EK(b=0, r=0)  (GeV/fm^3)
       READ(1,*) Edec        !Decoupling energy density   (GeV/fm^3)
-
+      READ(1,*) IEOS        !type of EOS  (EOSQ:0  EOSI: 2, SM-EOSQ: 5, EOSL: 4(Katz05 data) )
       READ(1,*) IEOS2dec    !if IEOS=2 (EOSI),  0: decouple by gluon 1: decouple by pions
 C----------------------------------------------------------------------
       Read(1,*) Cha
       Read(1,*) Cha
 
-      READ(1,*) IInit !initializion by Glauber or CGC  (0:Gaussian, 1:Glauber, 2:CGC, )
-
-C---- Parameters for Optical Glauber Initialization --------------
-
+      READ(1,*) IInit       !initialization by Glauber or CGC  (0:Gaussian, 1:Glauber, 2:read from file )
       READ(1,*) IEin        !type of initialization  0:initialize by energy density 1: initialize by entropy density
-      READ(1,*) HWN         !HWN  % of WN   (1-HWN) % of BC
-      READ(1,*) A           !mass of atom
-      READ(1,*) Si0         !cross section for NN
-      READ(1,*) TRo0        !nuclear density  (unit: fm^-3)
-      READ(1,*) TEta        !diffussion parameter of nuclear radii  (unit: fm)
-      READ(1,*) TRA         !nuclear radii (unit: fm)
 
 C------- Parameter for viscous coeficients  ------------------------
       Read(1,*) Cha
@@ -200,24 +187,26 @@ C------- Parameter for freeze-out  ------------------------
       READ(1,*) NDT       ! freeze-out step in \tau dirction
 
 
-C------ Some uncommon parameters ----------------------------
-      Read(1,*) Cha
-      Read(1,*) Cha
-
-      READ(1,*) DT_1      ! time step
-      READ(1,*) Rx2,Ry2   ! <x^2> and <y^2> for Gaussian initial condition
-
 C------ Lattice size and boundary R0 ----------------------------
       Read(1,*) Cha
       Read(1,*) Cha
 
-      READ(1,*) LS      ! time step
-      READ(1,*) R0Bdry   ! <x^2> and <y^2> for Gaussian initial condition
+      READ(1,*) DT_1      ! time step
+      READ(1,*) LS        ! lattice size
+      READ(1,*) R0Bdry    ! <x^2> and <y^2> for Gaussian initial condition
 
+C------ Some uncommon parameters ----------------------------
+      Read(1,*) Cha
+      Read(1,*) Cha
+
+      READ(1,*) Rx2,Ry2   ! <x^2> and <y^2> for Gaussian initial condition
+
+C------ freeze out at first time below Edec  ----------------------------
       Read(1,*) Cha
       Read(1,*) Ifreez
       Read(1,*) Edec0   
 
+C------ output hydro evolution file  ----------------------------
       Read(1,*) Cha
       Read(1,*) IhydroJetoutput
 
