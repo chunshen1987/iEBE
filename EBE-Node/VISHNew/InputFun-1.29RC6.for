@@ -1089,6 +1089,7 @@
 
       Double Precision PiAvg, PiRegAvg
       Integer PiCheckFlag, PiRegCheckFlag
+      Double Precision gamma_perp
 
       Double Precision PiTr, PiTrSum, trans
 
@@ -1109,6 +1110,7 @@
 
         vvx = Vx(I,J,K)
         vvy = Vy(I,J,K)
+        gamma_perp = 1./sqrt(1. - vvx**2 - vvy**2 + 1D-30)
         Tideal_scale = sqrt(Ed(I,J,K)**2 + 3*PL(I,J,K)**2)
 
         p00 = Pi00(I,J,K)
@@ -1137,13 +1139,13 @@
         !End If
 
         ! next transversality
-        trans = p01-vvx*p11-vvy*p12
+        trans = gamma_perp*(p01-vvx*p11-vvy*p12)
         regStrength = max(abs(trans)/(Xsi0*MaxPiRatio*pi_scale), 
      &                    regStrength)
-        trans = p02-vvx*p12-vvy*p22
+        trans = gamma_perp*(p02-vvx*p12-vvy*p22)
         regStrength = max(abs(trans)/(Xsi0*MaxPiRatio*pi_scale),
      &                    regStrength)
-        trans = p00-vvx*p01-vvy*p02
+        trans = gamma_perp*(p00-vvx*p01-vvy*p02)
         regStrength = max(abs(trans)/(Xsi0*MaxPiRatio*pi_scale), 
      &                    regStrength)
 

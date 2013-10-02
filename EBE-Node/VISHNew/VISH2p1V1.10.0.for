@@ -4571,6 +4571,7 @@ C----------------------------------------------------------------
       Double Precision :: relNumericalzero = 1D-2  !Xsi_0 in Zhi's thesis
 
       Double Precision maxPiRatio
+      Double Precision gamma_perp
       Common /maxPiRatio/ maxPiRatio
 
       failed = 0
@@ -4665,7 +4666,9 @@ C----------------------------------------------------------------
         End If
 
         !transversality of pi tensor  u_mu pi^{mu,x} = 0
-        trans = Pi01(I,J,K)-Vx(I,J,K)*Pi11(I,J,K)-Vy(I,J,K)*Pi12(I,J,K)
+        gamma_perp = sqrt(1./(1. - Vx(I,J,K)**2 - Vy(I,J,K)**2 + 1D-30))
+        trans = gamma_perp*(Pi01(I,J,K) - Vx(I,J,K)*Pi11(I,J,K)
+     &                      - Vy(I,J,K)*Pi12(I,J,K))
         If (abs(trans) > max(relNumericalzero*pi_scale, 
      &      absNumericalzero)) Then
           If (say_level>=9) Then
@@ -4693,7 +4696,8 @@ C----------------------------------------------------------------
         End If
 
         !transversality of pi tensor  u_mu pi^{mu,y} = 0
-        trans = Pi02(I,J,K)-Vx(I,J,K)*Pi12(I,J,K)-Vy(I,J,K)*Pi22(I,J,K)
+        trans = gamma_perp*(Pi02(I,J,K) - Vx(I,J,K)*Pi12(I,J,K)
+     &                      - Vy(I,J,K)*Pi22(I,J,K))
         If (abs(trans) > max(relNumericalzero*pi_scale,
      &      absNumericalzero)) Then
           If (say_level>=9) Then
@@ -4721,7 +4725,8 @@ C----------------------------------------------------------------
         End If
 
         !transversality of pi tensor  u_mu pi^{mu,tau} = 0
-        trans = Pi00(I,J,K)-Vx(I,J,K)*Pi01(I,J,K)-Vy(I,J,K)*Pi02(I,J,K)
+        trans = gamma_perp*(Pi00(I,J,K) - Vx(I,J,K)*Pi01(I,J,K)
+     &                      - Vy(I,J,K)*Pi02(I,J,K))
         If (abs(trans) > max(relNumericalzero*pi_scale,
      &      absNumericalzero)) Then
           If (say_level>=9) Then
@@ -4792,6 +4797,7 @@ C----------------------------------------------------------------
       Double Precision :: relNumericalzero = 1D-2  !Xsi_0 in Zhi's thesis
 
       Double Precision maxPiRatio
+      Double Precision gamma_perp
       Common /maxPiRatio/ maxPiRatio
 
       iFlag = 0
@@ -4827,21 +4833,25 @@ C----------------------------------------------------------------
         End If
 
         !transversality of pi tensor  u_mu pi^{mu,x} = 0
-        trans = Pi01(I,J,K)-Vx(I,J,K)*Pi11(I,J,K)-Vy(I,J,K)*Pi12(I,J,K)
+        gamma_perp = sqrt(1./(1. - Vx(I,J,K)**2 - Vy(I,J,K)**2 + 1D-30))
+        trans = gamma_perp*(Pi01(I,J,K) - Vx(I,J,K)*Pi11(I,J,K) 
+     &                      - Vy(I,J,K)*Pi12(I,J,K))
         If (abs(trans) > max(relNumericalzero*pi_scale, 
      &      absNumericalzero)) Then
           violationType = violationType + 0.001D0
         End If
 
         !transversality of pi tensor  u_mu pi^{mu,y} = 0
-        trans = Pi02(I,J,K)-Vx(I,J,K)*Pi12(I,J,K)-Vy(I,J,K)*Pi22(I,J,K)
+        trans = gamma_perp*(Pi02(I,J,K) - Vx(I,J,K)*Pi12(I,J,K) 
+     &                      - Vy(I,J,K)*Pi22(I,J,K))
         If (abs(trans) > max(relNumericalzero*pi_scale,
      &      absNumericalzero)) Then
           violationType = violationType + 0.001D0
         End If
 
         !transversality of pi tensor  u_mu pi^{mu,tau} = 0
-        trans = Pi00(I,J,K)-Vx(I,J,K)*Pi01(I,J,K)-Vy(I,J,K)*Pi02(I,J,K)
+        trans = gamma_perp*(Pi00(I,J,K) - Vx(I,J,K)*Pi01(I,J,K) 
+     &                      - Vy(I,J,K)*Pi02(I,J,K))
         If (abs(trans) > max(relNumericalzero*pi_scale,
      &      absNumericalzero)) Then
           violationType = violationType + 0.001D0
