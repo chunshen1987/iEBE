@@ -4616,7 +4616,7 @@ C----------------------------------------------------------------
      &      absNumericalzero)) Then
           If (say_level>=9) Then
           Print*, "Time=", Time
-          Print*, "Positivity of TrPi^2 violated!"
+          Print*, "pi is too large!"
           Print*, "I,J=", I,J
           Print*, "Trace pi^2=", TrPi2
           Print*, "Ed,PL=", Ed(I,J,K),PL(I,J,K)

@@ -1109,7 +1109,7 @@
 
         vvx = Vx(I,J,K)
         vvy = Vy(I,J,K)
-        Tideal_scale = Ed(I,J,K)**2 + 3*PL(I,J,K)**2
+        Tideal_scale = sqrt(Ed(I,J,K)**2 + 3*PL(I,J,K)**2)
 
         p00 = Pi00(I,J,K)
         p01 = Pi01(I,J,K)
