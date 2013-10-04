@@ -339,6 +339,108 @@ class EbeCollector(object):
         # close connection to commit changes
         db.closeConnection()
     
+    def collectEccentricityfrom11P5N(self, folder, db):
+        """
+            This function collect eccentricity data
+        """
+        # collection of file name patterns, ecc_id, and ecc_type_name
+        typeCollections = (
+            (
+                1, # ecc_id
+                "sd", # ecc_type_name
+            ),
+            (
+                2,
+                "ed",
+            )
+        )
+        # first write the ecc_id_lookup table, makes sure there is only one such table
+        if db.createTableIfNotExists("ecc_id_lookup", (("ecc_id","integer"), ("ecc_type_name","text"))):
+            for ecc_id, ecc_type_name in typeCollections:
+                db.insertIntoTable("ecc_id_lookup", (ecc_id, ecc_type_name))
+        # next create the eccentricity and r_integrals table, if not existing
+        db.createTableIfNotExists("eccentricities", (("event_id","integer"), ("ecc_id", "integer"), ("r_power", "integer"), ("n","integer"), ("ecc_real","real"), ("ecc_imag","real")))
+        db.createTableIfNotExists("r_integrals", (("event_id","integer"), ("ecc_id","integer"), ("r_power","integer"), ("r_inte","real")))
+
+        # the big loop
+        for ecc_id, ecc_type_name in typeCollections: 
+           for Ir_power in range(10):
+              fileName = '%s_ecc_r_power_%d.dat' % (ecc_type_name, Ir_power)
+              print('processing %s' % fileName)
+              # read the eccentricity file and write database
+              for idx, aLine in enumerate(open(path.join(folder, fileName))):
+                    event_id = idx + 1
+                    data = aLine.split()
+                    # insert ecc_n (n = 1-9) into eccentricity table
+                    for Iorder in range(9):
+                       db.insertIntoTable("eccentricities",(event_id, ecc_id, Ir_power, Iorder+1, float(data[2*Iorder]), float(data[2*Iorder+1])))
+                    # insert into r-integrals table but only once
+                    db.insertIntoTable("r_integrals",(event_id, ecc_id, Ir_power, float(data[18])))
+        # close connection to commit changes
+        db.closeConnection()
+
+    def collectFLowsAndMultiplicities_11P5N(self, folder, db):
+        """
+            This function collects integrated and differential flows data
+            and multiplicity and spectra data from 11P5N and store into
+            database "db".
+        """
+        # collection of file name patterns, pid, and particle name. The file format is determined from the "filename_format.dat" file
+        toCollect = {
+            "Charged"       :   "charged_hydro", # string in filename, particle name
+            "pion_p"        :   "pion_p_hydro",
+            "Kaon_p"        :   "kaon_p_hydro",
+            "proton"        :   "proton_hydro",
+            "Sigma_p"       :   "sigma_p_hydro",
+            "Xi_m"          :   "xi_m_hydro",
+            "Omega"         :   "omega_hydro",
+            "Lambda"        :   "lambda_hydro",
+            "thermal_211"   :   "pion_p_thermal",
+            "thermal_321"   :   "kaon_p_thermal",
+            "thermal_2212"  :   "proton_thermal",
+        }
+        fileName = "11P5N_moments_order_%d_%s.dat" # filename for integrated differential nth flow files
+        
+        # first write the pid_lookup table, makes sure there is only one such table
+        if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
+            db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
+        # next create various tables
+        db.createTableIfNotExists("inte_vn", (("event_id","integer"), ("pid","integer"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("diff_vn", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("multiplicities", (("event_id","integer"), ("pid","integer"), ("N","real")))
+        db.createTableIfNotExists("spectra", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("N","real")))
+
+        # the big loop
+        for particle_string_infile in toCollect.keys():
+           pid = self.pidDict[toCollect[particle_string_infile]]
+           
+           for Iorder in range(1,10):
+              # first, differential flow
+              particle_filename = path.join(folder, fileName % (Iorder, particle_string_infile))
+              if path.exists(particle_filename):
+                 print("processing %s ..." % particle_filename)
+                 
+                 # write flow table
+                 for rowIdx, aLine in enumerate(open(particle_filename)):
+                    event_id = rowIdx+1
+                    data = aLine.split()
+                    data = [float(ii) for ii in data]
+                    #first, differential flow
+                    for ipT in range(15):
+                       db.insertIntoTable("diff_vn",(event_id, pid, data[5*ipT+11], Iorder, data[5*ipT+14], data[5*ipT+15]))
+                       # write spectra table
+                       if(Iorder == 2) :
+                          db.insertIntoTable("spectra",(event_id, pid, data[5*ipT+11], data[5*ipT+13]*2.*np.pi*data[5*ipT+11]))
+
+                    # next, integrated flow
+                    db.insertIntoTable("inte_vn",(event_id, pid, Iorder, data[8], data[9]))
+                    # write multiplicity table
+                    if(Iorder == 2) :
+                       db.insertIntoTable("multiplicities",(event_id, pid, data[10]))
+
+        # close connection to commit changes
+        db.closeConnection()
+    
     def collectFLowsAndMultiplicities_photon(self, folder, event_id, db, useSubfolder="spectra"):
         """
             This function collects integrated and differential flows data
@@ -457,6 +559,9 @@ class EbeCollector(object):
             -- "fromHydroEM": eccentricity follows the format of "fromPureHydroNewStoring"
             for spectra and flow collectFlowsAndMultiplicities_photon will be 
             called with "useSubfolder=''"
+            
+            -- "fromPureHydro11P5N":
+               collect data from old 11P5N format
         """
         # get list of (matched subfolders, event id)
         matchPattern = re.compile(subfolderPattern)
@@ -512,6 +617,12 @@ class EbeCollector(object):
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
                 self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db, useSubfolder="") # collect hadron flow
                 self.collectFLowsAndMultiplicities_photon(aSubfolder, event_id, db, useSubfolder="") # collect photon flow
+        elif collectMode == "fromPureHydro11P5N":
+            print("-"*60)
+            print("Using fromPureHydro11P5N mode")
+            print("-"*60)
+            self.collectEccentricityfrom11P5N(folder, db)
+            self.collectFLowsAndMultiplicities_11P5N(folder, db)
         else:
             print("!"*60)
             print("Mode string not found")
