@@ -342,7 +342,113 @@ class EbeCollector(object):
 
         # close connection to commit changes
         db.closeConnection()
+    
+    def collectEccentricityfrom11P5N(self, folder, db):
+        """
+            This function collect eccentricity data
+        """
+        # collection of file name patterns, ecc_id, and ecc_type_name
+        typeCollections = (
+            (
+                1, # ecc_id
+                "sd", # ecc_type_name
+            ),
+            (
+                2,
+                "ed",
+            )
+        )
+        # first write the ecc_id_lookup table, makes sure there is only one such table
+        if db.createTableIfNotExists("ecc_id_lookup", (("ecc_id","integer"), ("ecc_type_name","text"))):
+            for ecc_id, ecc_type_name in typeCollections:
+                db.insertIntoTable("ecc_id_lookup", (ecc_id, ecc_type_name))
+        # next create the eccentricity and r_integrals table, if not existing
+        db.createTableIfNotExists("eccentricities", (("event_id","integer"), ("ecc_id", "integer"), ("r_power", "integer"), ("n","integer"), ("ecc_real","real"), ("ecc_imag","real")))
+        db.createTableIfNotExists("r_integrals", (("event_id","integer"), ("ecc_id","integer"), ("r_power","integer"), ("r_inte","real")))
 
+        # the big loop
+        for ecc_id, ecc_type_name in typeCollections: 
+           for Ir_power in range(10):
+              fileName = '%s_ecc_r_power_%d.dat' % (ecc_type_name, Ir_power)
+              print('processing %s' % fileName)
+              # read the eccentricity file and write database
+              for idx, aLine in enumerate(open(path.join(folder, fileName))):
+                    event_id = idx + 1
+                    data = aLine.split()
+                    # insert ecc_n (n = 1-9) into eccentricity table
+                    for Iorder in range(9):
+                       db.insertIntoTable("eccentricities",(event_id, ecc_id, Ir_power, Iorder+1, float(data[2*Iorder]), float(data[2*Iorder+1])))
+                    # insert into r-integrals table but only once
+                    db.insertIntoTable("r_integrals",(event_id, ecc_id, Ir_power, float(data[18])))
+        # close connection to commit changes
+        db.closeConnection()
+
+    def collectFLowsAndMultiplicities_11P5N(self, folder, db):
+        """
+            This function collects integrated and differential flows data
+            and multiplicity and spectra data from 11P5N and store into
+            database "db".
+
+            This function fills the following table: "pid_lookup",
+            "inte_vn", "diff_vn", "multiplicities", "spectra".
+
+        """
+        # collection of file name patterns, pid, and particle name. The file format is determined from the "filename_format.dat" file
+        toCollect = {
+            "Charged"       :   "charged_hydro", # string in filename, particle name
+            "pion_p"        :   "pion_p_hydro",
+            "Kaon_p"        :   "kaon_p_hydro",
+            "proton"        :   "proton_hydro",
+            "Sigma_p"       :   "sigma_p_hydro",
+            "Xi_m"          :   "xi_m_hydro",
+            "Omega"         :   "omega_hydro",
+            "Lambda"        :   "lambda_hydro",
+            "thermal_211"   :   "pion_p_thermal",
+            "thermal_321"   :   "kaon_p_thermal",
+            "thermal_2212"  :   "proton_thermal",
+        }
+        fileName = "11P5N_moments_order_%d_%s.dat" # filename for integrated differential nth flow files
+
+        # first write the pid_lookup table, makes sure there is only one such table
+        if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
+            db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
+
+        # next create various tables
+        db.createTableIfNotExists("inte_vn", (("event_id","integer"), ("pid","integer"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("diff_vn", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("multiplicities", (("event_id","integer"), ("pid","integer"), ("N","real")))
+        db.createTableIfNotExists("spectra", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("N","real")))
+
+        # the big loop
+        for particle_string_infile in toCollect.keys():
+           pid = self.pidDict[toCollect[particle_string_infile]]
+           
+           for Iorder in range(1,10):
+              # first, differential flow
+              particle_filename = path.join(folder, fileName % (Iorder, particle_string_infile))
+              if path.exists(particle_filename):
+                 print("processing %s ..." % particle_filename)
+                 
+                 # write flow table
+                 for rowIdx, aLine in enumerate(open(particle_filename)):
+                    event_id = rowIdx+1
+                    data = aLine.split()
+                    data = [float(ii) for ii in data]
+                    #first, differential flow
+                    for ipT in range(15):
+                       db.insertIntoTable("diff_vn",(event_id, pid, data[5*ipT+11], Iorder, data[5*ipT+14], data[5*ipT+15]))
+                       # write spectra table
+                       if(Iorder == 2) :
+                          db.insertIntoTable("spectra",(event_id, pid, data[5*ipT+11], data[5*ipT+13]*2.*np.pi*data[5*ipT+11]))
+
+                    # next, integrated flow
+                    db.insertIntoTable("inte_vn",(event_id, pid, Iorder, data[8], data[9]))
+                    # write multiplicity table
+                    if(Iorder == 2) :
+                       db.insertIntoTable("multiplicities",(event_id, pid, data[10]))
+
+        # close connection to commit changes
+        db.closeConnection()
 
     def createDatabaseFromEventFolders(self, folder, subfolderPattern="event-(\d*)", databaseFilename="CollectedResults.db", collectMode="fromUrQMD", multiplicityFactor=1.0):
         """
@@ -378,6 +484,9 @@ class EbeCollector(object):
             "oldStyleStorage=False" in the collectEccentricitiesAndRIntegrals
             function; for flows collectFLowsAndMultiplicities_iSFormat will be
             called with "useSubfolder=''"
+            
+            -- "fromPureHydro11P5N":
+               collect data from old 11P5N format
         """
         # get list of (matched subfolders, event id)
         matchPattern = re.compile(subfolderPattern)
@@ -427,6 +536,12 @@ class EbeCollector(object):
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
                 self.collectScalars(aSubfolder, event_id, db)  # collect scalars
                 self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db, useSubfolder="") # collect flow
+        elif collectMode == "fromPureHydro11P5N":
+            print("-"*60)
+            print("Using fromPureHydro11P5N mode")
+            print("-"*60)
+            self.collectEccentricityfrom11P5N(folder, db)
+            self.collectFLowsAndMultiplicities_11P5N(folder, db)
         else:
             print("!"*60)
             print("Mode string not found")
@@ -629,50 +744,41 @@ class EbeDBReader(object):
         """
         diffVnData = self.getDifferentialFlowDataForOneEvent(event_id=event_id, particleName=particleName, order=order)
         return np.interp(pTs, diffVnData[:,0], diffVnData[:,1]) + 1j*np.interp(pTs, diffVnData[:,0], diffVnData[:,2])
-
+    
+    def getDifferentialFlowDataForAllEvents(self, particleName="pion", order=2, pT_range=None, where="", orderBy="event_id"):
+        """
+            Return the (p_T, real(v_n), imag(v_n)) list for the differential
+            flow of order "order" for event with id "event_id", for particle
+            with name "particleName". Only those data inside the given
+            "pT_range" will be returned, otherwise only those satisfying
+            pT_range(0)<=pT<=pT_range(1) will be returned.
+        """
+        whereClause = "pid=%d and n=%d" % (self._pid(particleName), order)
+        if pT_range:
+            whereClause += " and %g<=pT and pT<=%g" % (pT_range[0], pT_range[1])
+        if where:
+            whereClause += " and " + where
+        RawdiffvnData = np.asarray(self.db.selectFromTable("diff_vn", ("pT", "vn_real", "vn_imag"), whereClause=whereClause, orderByClause=orderBy))
+        nevent = self.getNumberOfEvents()
+        npT = len(RawdiffvnData[:,0])/nevent
+        diffvnData = RawdiffvnData.reshape(nevent, npT, 3)
+        return diffvnData
+    
     def getInterpretedComplexDifferentialFlowsForAllEvents(self, particleName="pion", order=2, pTs=np.linspace(0,2.5,10), where="", orderBy="event_id", verbose=False):
         """
-            Return the interpreted values of complex differential flow for all
-            events on pT points pTs, for order="order" and event id="event_id",
-            and for particle name="particleName". The argument pTs must be
-            iterable and it will be checked. Additional criteria can be added
-            with "where" and "orderBy" arguments. Returned value will be a numpy
-            matrix so that each row is a differential flow vector for an event.
+            Return the interpreted complex differential flow on pT points pTs, 
+            for order="order" and event id="event_id", and for 
+            particle name="particleName". The argument
+            pTs must be iterable and it will not be checked.
         """
-        # create a buffer in memory
-        whereClause = "pid=%d and n=%d" % (self._pid(particleName), order)
-        if verbose: print("""
-Calculating differential flow involves interpolation.
-Evaluating it at multiple pT values at the same time if possible.
-
-For better effeciency part of the database is being copied to memory...""")
-        databaseBuffer = SqliteDB(":memory:")
-        databaseBuffer.createTableIfNotExists("diff_vn", self.db.getTableInfo("diff_vn"))
-        databaseBuffer.insertIntoTable("diff_vn", self.db.selectFromTable("diff_vn", "*", whereClause=whereClause))
-        if verbose: print("Copy completed.\n")
-        # swap memory and the actual database
-        self.oldDb = self.db
-        self.db = databaseBuffer
-
-        # perform actions
-        #if not isIterable(pTs): pTs = [pTs]
-        event_ids = self.db.selectFromTable("diff_vn", "event_id", whereClause=where, groupByClause="event_id", orderByClause=orderBy)
-        collectedResults = []
-        if verbose: print("Looping over {} events... (please be patient)".format(len(event_ids)))
-        count = 0
-        for event_id_tuple in event_ids:
-
-            if verbose and count % 100 == 0: print("Events processed: {}".format(count))
-            count += 1
-
-            collectedResults.append(self.getInterpretedComplexDifferentialFlowForOneEvent(event_id=event_id_tuple[0], particleName=particleName, order=order, pTs=pTs))
+        diffVnData = self.getDifferentialFlowDataForAllEvents(particleName=particleName, order=order, where=where, orderBy=orderBy)
+        diffVnintepBlock = []
+        if verbose: print("Looping over {} events... (please be patient)".format(diffVnData.shape[0]))
+        for iev in range(diffVnData.shape[0]):
+           diffVnintep = np.interp(pTs, diffVnData[iev,:,0], diffVnData[iev,:,1]) + 1j*np.interp(pTs, diffVnData[iev,:,0], diffVnData[iev,:,2])
+           diffVnintepBlock.append(diffVnintep)
         if verbose: print("Done. Thanks for waiting.")
-
-        # swap back the actual database
-        self.db = self.oldDb
-
-        # return results
-        return np.asarray(collectedResults)
+        return np.asarray(diffVnintepBlock)
 
     get_diff_V_n = getInterpretedComplexDifferentialFlowsForAllEvents
 
@@ -700,52 +806,43 @@ For better effeciency part of the database is being copied to memory...""")
         diffVnData = self.getSpectraDataForOneEvent(event_id=event_id, particleName=particleName)
         return np.interp(pTs, diffVnData[:,0], diffVnData[:,1])
 
+    def getSpectraDataForAllEvents(self, particleName="pion", pT_range=None, where="", orderBy="event_id"):
+        """
+            Return the (pT, dN/(dydpT)) spectra list for particle with name 
+            "particleName". Only those data inside the given "pT_range" 
+            will be returned, otherwise only those satisfying
+            pT_range(0)<=pT<=pT_range(1) will be returned.
+        """
+        whereClause = "pid=%d" % (self._pid(particleName))
+        if pT_range:
+            whereClause += " and %g<=pT and pT<=%g" % (pT_range[0], pT_range[1])
+        if where:
+            whereClause += " and " + where
+        RawdNdyData = np.asarray(self.db.selectFromTable("spectra", ("pT", "N"), whereClause=whereClause, orderByClause=orderBy))
+        nevent = self.getNumberOfEvents()
+        npT = len(RawdNdyData[:,0])/nevent
+        dNdyData = RawdNdyData.reshape(nevent, npT, 2)
+        return dNdyData
+
     def getInterpretedSpectraForAllEvents(self, particleName="pion", pTs=np.linspace(0,2.5,10), where="", orderBy="event_id", verbose=False):
         """
-            Return the interpreted spectra for all events on pT points pTs, for
-            event id="event_id", and for particle name="particleName". The
+            Return the interpreted spectra dN/(dydpT) for all events on pT 
+            points pTs, for particle name="particleName". The
             argument pTs must be iterable and it will be checked. Additional
             criteria can be added with "where" and "orderBy" arguments. Returned
             value will be a numpy matrix so that each row is a spectra vector
             for an event.
         """
-        # create a buffer in memory
-        whereClause = "pid=%d" % self._pid(particleName)
-        if verbose: print("""
-Calculating spectra involves interpolation.
-Evaluating it at multiple pT values at the same time if possible.
-
-For better effeciency part of the database is being copied to memory...""")
-        databaseBuffer = SqliteDB(":memory:")
-        databaseBuffer.createTableIfNotExists("spectra", self.db.getTableInfo("spectra"))
-        databaseBuffer.insertIntoTable("spectra", self.db.selectFromTable("spectra", "*", whereClause=whereClause))
-        if verbose: print("Copy completed.\n")
-        # swap memory and the actual database
-        self.oldDb = self.db
-        self.db = databaseBuffer
-
         # processing
-        #if not isIterable(pTs): pTs = [pTs]
-        event_ids = self.db.selectFromTable("spectra", "event_id", whereClause=where, groupByClause="event_id", orderByClause=orderBy)
-        collectedResults = []
-        if verbose: print("Looping over {} events... (please be patient)".format(len(event_ids)))
-        count = 0
-        for event_id_tuple in event_ids:
-
-            if verbose and count % 100 == 0: print("Events processed: {}".format(count))
-            count += 1
-
-            collectedResults.append(self.getInterpretedSpectraForOneEvent(event_id=event_id_tuple[0], particleName=particleName, pTs=pTs))
-
+        dNdyData = self.getSpectraDataForAllEvents(particleName=particleName, where=where, orderBy=orderBy)
+        dNdyintepBlock = []
+        if verbose: print("Looping over {} events... (please be patient)".format(dNdyData.shape[0]))
+        for iev in range(dNdyData.shape[0]):
+           dNdyintep = exp(np.interp(pTs, dNdyData[iev,:,0], log(dNdyData[iev,:,1])))
+           dNdyintepBlock.append(dNdyintep)
         if verbose: print("Done. Thanks for waiting.")
-
-        # swap back the actual database
-        self.db = self.oldDb
-
-        # return results
-        return np.asarray(collectedResults)
-
-
+        return np.asarray(dNdyintepBlock)
+    
     get_dNdydpT = getInterpretedSpectraForAllEvents
 
     def getAttendance(self):
@@ -767,9 +864,9 @@ For better effeciency part of the database is being copied to memory...""")
             Return total number of events by finding the difference between max
             and min of event_id.
         """
-        maxEventId = self.db.selectFromTable("eccentricities", "max(event_id)")[0][0]
-        minEventId = self.db.selectFromTable("eccentricities", "min(event_id)")[0][0]
-        return maxEventId - minEventId + 1
+        whereClause = "ecc_id = 1 and r_power = 0 and n = 2"
+        EventId = self.db.selectFromTable("eccentricities", "event_id", whereClause)
+        return len(EventId)
 
     def evaluateExpression(self, expression):
         """
