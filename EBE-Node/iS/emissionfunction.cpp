@@ -18,6 +18,7 @@
 #define USE_HISTORIC_FORMAT 1 // 0: use new way of outputting
 #define GROUPING_PARTICLES 1 // set to 1 to perform calculations for similar particles together
 #define PARTICLE_DIFF_TOLERANCE 0.01 // particles with mass and chemical potential (for each FZ-cell) difference less than this value will be considered to be identical (b/c Cooper-Frye)
+#define INCLUDE_DELTAF 1 // include delta f correction to particle distribution function in Cooper-Frye Formula
 
 using namespace std;
 
@@ -182,7 +183,7 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
               double Tdec = surf->Tdec;
               double Pdec = surf->Pdec;
               double Edec = surf->Edec;
-              double deltaf_prefactor = 1.0/(2.0*Tdec*Tdec*(Edec+Pdec));
+              double deltaf_prefactor = 1.0/(2.0*Tdec*Tdec*(Edec+Pdec))*INCLUDE_DELTAF;
 
               double mu = surf->particle_mu[last_particle_idx];
 
