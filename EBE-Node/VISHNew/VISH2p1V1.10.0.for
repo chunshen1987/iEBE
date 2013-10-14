@@ -3178,8 +3178,8 @@ C--------------------------------------
         Call invertFunctionD(findEdHook,0D0,5D3,1D-3,ED(I,J,K),0D0,eeH)
 
         !eeH = quadESolver(ED(I,J,K),DM0,DM,PPI(I,J,K),IDebug,I,J) ! use Ed from last time step as a starting point
-        ED(I,J,K) = eeH
-        DM = dmax1(DM, 1e-10)
+        ED(I,J,K) = dmax1(eeH, 1D-10)
+        DM = dmax1(DM, 1D-10)
         VP = (DM0-eeH)/DM
 
         ee=Ed(I,J,NZ0)*HbarC        !fm-4 to GeV/fm3  peter unit
@@ -3189,7 +3189,7 @@ C--------------------------------------
 
         Vx(I,J,K) = VP*T01IJ/DM
         Vy(I,J,K) = VP*T02IJ/DM
- !----------------------------------------------------------------------
+!----------------------------------------------------------------------
  310   CONTINUE
  300   CONTINUE
 
@@ -3207,7 +3207,7 @@ C--------------------------------------
       DO K=NZ0,NZ
       DO J=NYPhy0,NYPhy
       DO I=NXPhy0,NXPhy
-        U0(I,J,K)=1D0/sqrt(1D0-Vx(I,J,K)**2-Vy(I,J,k)**2) ! also calculate U0 to save another separated loop
+        U0(I,J,K)=1D0/sqrt(1D0-Vx(I,J,K)**2-Vy(I,J,k)**2+1D-10) ! also calculate U0 to save another separated loop
         U1(I,J,K)=U0(I,J,K)*Vx(I,J,K)
         U2(I,J,K)=U0(I,J,K)*Vy(I,J,K)
       End Do
