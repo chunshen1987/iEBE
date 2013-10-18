@@ -1974,6 +1974,15 @@ c       goto 199
        DPc22(I,J,K)=(-1.0)*D2U2-U2(I,J,K)*DU2+CS*(U2(I,J,K)**2+1.0)
        DPc12(I,J,K)=(-0.5)*(D2U1+D1U2)-0.5*(U1(I,J,K)*DU2+U2(I,J,K)*DU1)
      &                      +CS*(U1(I,J,K)*U2(I,J,K))
+       call checkSigma(U0(I,J,K), U1(I,J,K), U2(I,J,K),
+     &    DPc00(I,J,K), DPc01(I,J,K), DPc02(I,J,K),
+     &    DPc11(I,J,K), DPc12(I,J,K), DPc22(I,J,K), DPc33(I,J,K),
+     &    Itrigger)
+       !if(Itrigger .eq. 1) then
+       !  print*, D0U2, D2U0
+       !  print*, U0(I,J+1,K), U0(I,J-1,K)
+       !  stop
+       !endif
 
          SiLoc(I,J,K)=CS*3.0  !   CS=(D0U0+D1U1+D2U2+U0(I,J,K)/Time)/3.0
 
@@ -3425,9 +3434,6 @@ C--------------------
      & DPc00,DPc01,DPc02,DPc33, DPc11,DPc22,DPc12, DDU0,DDU1,DDU2,
      & Temp,Temp0,  SiLoc,DLnT,  Time, NXPhy0,NYPhy0,NXPhy,NYPhy,
      & NX0,NX,NY0,NY,NZ0,NZ)
-        call checkSigma(U0, U1, U2, 
-     &           DPc00, DPc01, DPc02, DPc11, DPc12, DPc22, DPc33,
-     &   NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ)
       Else ! Ver 1.6.19RC5: set to 0
         DPc00=0D0
         DPc01=0D0
@@ -4764,29 +4770,16 @@ C----------------------------------------------------------------
       End Subroutine
 !-----------------------------------------------------------------------
 
-      Subroutine checkSigma(U0, U1, U2, 
-     &           DPc00, DPc01, DPc02, DPc11, DPc12, DPc22, DPc33,
-     &   NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ)
+      Subroutine checkSigma(u0, u1, u2, 
+     &           sigma00, sigma01, sigma02, sigma11, sigma12, sigma22,
+     &           sigma33, trigger)
       !check the traceless + transversality of the velocity shear tensor
       Implicit None
 
-      Integer NXPhy0,NXPhy,NYPhy0,NYPhy,NX0,NX,NY0,NY,NZ0,NZ
-
-      Double Precision U0(NX0:NX, NY0:NY, NZ0:NZ) !Four velocity
-      Double Precision U1(NX0:NX, NY0:NY, NZ0:NZ) !Four velocity
-      Double Precision U2(NX0:NX, NY0:NY, NZ0:NZ) !Four velocity
-
-      Double Precision DPc00(NX0:NX, NY0:NY, NZ0:NZ) !
-      Double Precision DPc01(NX0:NX, NY0:NY, NZ0:NZ) !
-      Double Precision DPc02(NX0:NX, NY0:NY, NZ0:NZ) !
-      Double Precision DPc11(NX0:NX, NY0:NY, NZ0:NZ) !
-      Double Precision DPc12(NX0:NX, NY0:NY, NZ0:NZ) !
-      Double Precision DPc22(NX0:NX, NY0:NY, NZ0:NZ) !
-      Double Precision DPc33(NX0:NX, NY0:NY, NZ0:NZ) !
+      Double Precision u0, u1, u2
 
       Integer I,J,K
       Integer trigger
-      Double Precision u0_local, u1_local, u2_local
       Double Precision sigma00, sigma01, sigma02, 
      &                 sigma11, sigma12, sigma22, sigma33
       Double Precision trace, trans0, trans1, trans2
@@ -4796,58 +4789,42 @@ C----------------------------------------------------------------
  
       trigger = 0
 
-      Do K=NZ0,NZ
-      Do J=NYPhy0-3,NYPhy+3
-      Do I=NXPhy0-3,NXPhy+3
-         u0_local = U0(I,J,K)
-         u1_local = U1(I,J,K)
-         u2_local = U2(I,J,K)
-         sigma00 = DPc00(I,J,K)
-         sigma01 = DPc01(I,J,K)
-         sigma02 = DPc02(I,J,K)
-         sigma11 = DPc11(I,J,K)
-         sigma12 = DPc12(I,J,K)
-         sigma22 = DPc22(I,J,K)
-         sigma33 = DPc33(I,J,K)
+      trace = sigma00 - sigma11 - sigma22 - sigma33
+      trans0 = u0*sigma00 - u1*sigma01 - u2*sigma02
+      trans1 = u0*sigma01 - u1*sigma11 - u2*sigma12
+      trans2 = u0*sigma02 - u1*sigma12 - u2*sigma22
 
-         trace = sigma00 - sigma11 - sigma22 - sigma33
-         trans0 = u0_local*sigma00 - u1_local*sigma01 - u2_local*sigma02
-         trans1 = u0_local*sigma01 - u1_local*sigma11 - u2_local*sigma12
-         trans2 = u0_local*sigma02 - u1_local*sigma12 - u2_local*sigma22
-         if(abs(trace) .gt. absNumericalzero) then
-            trigger = 1
-            print*, "velocity shear tensor: violate traceless"
-            print*, "trace = ", trace
-         endif
-         if(abs(trans0) .gt. absNumericalzero) then
-            trigger = 1
-            print*, "velocity shear tensor: violate transversality"
-            print*, "trans0 = ", trans0
-         endif
-         if(abs(trans1) .gt. absNumericalzero) then
-            trigger = 1
-            print*, "velocity shear tensor: violate transversality"
-            print*, "trans1 = ", trans1
-         endif
-         if(abs(trans2) .gt. absNumericalzero) then
-            trigger = 1
-            print*, "velocity shear tensor: violate transversality"
-            print*, "trans2 = ", trans2
-         endif
+      if(abs(trace) .gt. absNumericalzero) then
+         trigger = 1
+         print*, "velocity shear tensor: violate traceless"
+         print*, "trace = ", trace
+      endif
+      if(abs(trans0) .gt. absNumericalzero) then
+         trigger = 1
+         print*, "velocity shear tensor: violate transversality"
+         print*, "trans0 = ", trans0
+      endif
+      if(abs(trans1) .gt. absNumericalzero) then
+         trigger = 1
+         print*, "velocity shear tensor: violate transversality"
+         print*, "trans1 = ", trans1
+      endif
+      if(abs(trans2) .gt. absNumericalzero) then
+         trigger = 1
+         print*, "velocity shear tensor: violate transversality"
+         print*, "trans2 = ", trans2
+      endif
 
-         if(trigger .eq. 1) then
-            print*, "velocity shear tensor is not right!"
-            print*, u0_local, u1_local, u2_local
-            print*, sigma00, sigma01, sigma02
-            print*, sigma11, sigma12, sigma22, sigma33
-            stop
-         endif
+      if(trigger .eq. 1) then
+         print*, "velocity shear tensor is not right!"
+         print*, u0, u1, u2
+         print*, sigma00, sigma01, sigma02, 0.0d0
+         print*, sigma01, sigma11, sigma12, 0.0d0
+         print*, sigma02, sigma12, sigma22, 0.0d0
+         print*, 0.0d0, 0.0d0, 0.0d0, sigma33
+      endif
 
-      enddo
-      enddo
-      enddo
-
-      end
+      end Subroutine
 
 !-----------------------------------------------------------------------
       Subroutine checkPiandoutputViolation(Time, Dx, Dy, Vx, Vy, Ed, PL,
