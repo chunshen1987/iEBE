@@ -2,6 +2,7 @@
 #include "Regge96.h"
 #include <iomanip>
 #include <ctime>
+#include <sys/time.h>
 
 #include "arsenal.h"
 #include "GaussianNucleonsCal.h"
@@ -59,6 +60,10 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in)
      gsl_rng_env_setup();
      gslRngType = gsl_rng_default;
      gslRng = gsl_rng_alloc(gslRngType);
+     timeval a;
+     gettimeofday(&a, 0);
+     int randomSeed=a.tv_usec; // randomSeed use CPU clock
+     gsl_rng_set (gslRng, (unsigned long int) randomSeed); //initialize random generator
      ccFluctuationGammaTheta = paraRdr->getVal("cc_fluctuation_Gamma_theta");
   }
 
