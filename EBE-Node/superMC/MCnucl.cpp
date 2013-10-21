@@ -54,6 +54,14 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in)
   CCFluctuationModel = paraRdr->getVal("cc_fluctuation_model");
   CCFluctuationK = paraRdr->getVal("cc_fluctuation_k");
   if (CCFluctuationModel) nbd = new NBD;
+  if (CCFluctuationModel == 3)
+  {
+     gsl_rng_env_setup();
+     gslRngType = gsl_rng_default;
+     gslRng = gsl_rng_alloc(gslRngType);
+     ccFluctuationGammaTheta = paraRdr->getVal("cc_fluctuation_Gamma_theta");
+  }
+
 
   which_mc_model = paraRdr->getVal("which_mc_model");
   sub_model = paraRdr->getVal("sub_model");
@@ -125,6 +133,8 @@ MCnucl::~MCnucl()
     }
     delete [] dndydptTable;
   }
+
+  if(CCFluctuationModel == 3) gsl_rng_free(gslRng);
 
   if (gaussCal) delete gaussCal;
 }
@@ -529,6 +539,7 @@ void MCnucl::setDensity(int iy, int ipt)
           {
               int ncoll=binaryCollision.size();
               tab=0.0;
+              double fluctfactor = 1.0;
               if (shape_of_nucleons==1)
               {
                   for(int icoll=0;icoll<ncoll;icoll++)
@@ -536,7 +547,9 @@ void MCnucl::setDensity(int iy, int ipt)
                     double x = binaryCollision[icoll]->getX();
                     double y = binaryCollision[icoll]->getY();
                     double dc = (x-xg)*(x-xg) + (y-yg)*(y-yg);
-                    if(dc <= dsq) tab += (10.0/siginNN)*(Alpha + (1.-Alpha)*binaryCollision[icoll]->additional_weight); // second part in the paranthesis is for Uli-Glb model
+                    if(CCFluctuationModel == 3)
+                       fluctfactor = gsl_ran_gamma(gslRng, 1./ccFluctuationGammaTheta, ccFluctuationGammaTheta);
+                    if(dc <= dsq) tab += fluctfactor*(10.0/siginNN)*(Alpha + (1.-Alpha)*binaryCollision[icoll]->additional_weight); // second part in the paranthesis is for Uli-Glb model
                   }
               }
               else if (shape_of_nucleons>=2 && shape_of_nucleons<=9)
@@ -547,7 +560,9 @@ void MCnucl::setDensity(int iy, int ipt)
                     double y = binaryCollision[icoll]->getY();
                     double dc = (x-xg)*(x-xg) + (y-yg)*(y-yg);
                     if (dc > (5.*gaussCal->entropy_gaussian_width)*(5.*gaussCal->entropy_gaussian_width)) continue; // skip small numbers to speed up
-                    tab += GaussianNucleonsCal::get2DHeightFromWidth(gaussCal->entropy_gaussian_width)*exp(-dc/(2*gaussCal->entropy_gaussian_width*gaussCal->entropy_gaussian_width))*(Alpha + (1.-Alpha)*binaryCollision[icoll]->additional_weight); // this density is normalized to 1, to be consisitent with the disk-like treatment; second part in the last parathesis is for Uli-Glb model
+                    if(CCFluctuationModel == 3)
+                       fluctfactor = gsl_ran_gamma(gslRng, 1./ccFluctuationGammaTheta, ccFluctuationGammaTheta);
+                    tab += fluctfactor*GaussianNucleonsCal::get2DHeightFromWidth(gaussCal->entropy_gaussian_width)*exp(-dc/(2*gaussCal->entropy_gaussian_width*gaussCal->entropy_gaussian_width))*(Alpha + (1.-Alpha)*binaryCollision[icoll]->additional_weight); // this density is normalized to 1, to be consisitent with the disk-like treatment; second part in the last parathesis is for Uli-Glb model
                   }
               }
           } else {
@@ -604,9 +619,10 @@ void MCnucl::fluctuateCurrentDensity(int iy)
             rho -> setDensity(iy,ir,jr,n/(dx*dy));
         }
     }
-    else
+    else if (CCFluctuationModel > 3)
     {
         cout << "MCnucl::fluctuateCurrentDensity error: CCFluctuationModel not supported." << endl;
+        cout << "MCnucl:: CCFluctuationModel = " << CCFluctuationModel << endl;
         exit(-1);
     }
 }

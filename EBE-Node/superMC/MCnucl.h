@@ -14,6 +14,9 @@
 #include "ParameterReader.h"
 #include "NBD.h"
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
 // subroutines to generate and handle MC configurations of colliding nuclei
 class MCnucl
 {
@@ -49,11 +52,15 @@ protected:
     int NpartMax, NpartMin;  // accepted range of Npart (centrality cut)
     double BiLinear(int rapBin, double TA, double TB, int ipt);
     double Alpha;
+
     // For CC fluctuation
     void fluctuateCurrentDensity(int iy);
     int CCFluctuationModel;
     double CCFluctuationK;
     NBD *nbd;
+    const gsl_rng_type * gslRngType;
+    gsl_rng * gslRng;
+    double ccFluctuationGammaTheta;  // scale parameter for gamma distribution
 
     ParameterReader* paraRdr;
     int shape_of_nucleons;
