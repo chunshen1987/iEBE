@@ -35,7 +35,7 @@ targ_deformed = 0         # (0) Spherical nucleus; (1) Deformed nucleus (see Ove
 
 
 # Nucleon Optns
-shape_of_nucleons = 1     # (1) Disk-like nucleons with width given by sigmaNN 
+shape_of_nucleons = 2     # (1) Disk-like nucleons with width given by sigmaNN 
                           # (2) Gaussian nucleons with width given by sigmaNN
                           # (3) Gaussian nucleons with energy dependent width calc
                           # by Heinz and Moreland (http://arxiv.org/abs/1108.5379)
@@ -100,8 +100,10 @@ ny = 1                    # Number of rapidity bins (do not set to zero)
 ymax = 0                  # Maximum rapidity value (symmetric -ymax to ymax)
 
 # CC fluctions
-cc_fluctuation_model = 0  # 0: no fluctuations; 1: constant k; 2: use TA TB to determine n
+cc_fluctuation_model = 3  # 0: no fluctuations; 1: constant k; 2: use TA TB to determine n; 3: Gamma distribution for collision
 cc_fluctuation_k = 0.75   # constant k; used when cc_fluctuation_model is set to 1.
+cc_fluctuation_Gamma_theta = 1.0    # the scale parameter for Gamma distribution
 
 # For jet calculations
 output_TATB = 1           # 1: output; 0: no output; only effective when generating averaged profiles
+
