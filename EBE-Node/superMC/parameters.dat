@@ -100,9 +100,9 @@ ny = 1                    # Number of rapidity bins (do not set to zero)
 ymax = 0                  # Maximum rapidity value (symmetric -ymax to ymax)
 
 # CC fluctions
-cc_fluctuation_model = 3  # 0: no fluctuations; 1: constant k; 2: use TA TB to determine n; 3: Gamma distribution for collision
+cc_fluctuation_model = 6  # 0: no fluctuations; 1: NBD constant k; 2: NBD use TA TB to determine n; 6: MCGlb: Gamma distribution for each collision and wounded nucleon
 cc_fluctuation_k = 0.75   # constant k; used when cc_fluctuation_model is set to 1.
-cc_fluctuation_Gamma_theta = 1.0    # the scale parameter for Gamma distribution
+cc_fluctuation_Gamma_theta = 1.29    # the scale parameter for Gamma distribution theta = 1.29 at 2.76 TeV(interpolated results from the fit to pp multiplicity data at 2.36 and 7 TeV)
 
 # For jet calculations
 output_TATB = 1           # 1: output; 0: no output; only effective when generating averaged profiles

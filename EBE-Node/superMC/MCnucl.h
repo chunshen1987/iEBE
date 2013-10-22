@@ -111,5 +111,7 @@ public:
 
     int getSpectators();
     void dumpSpectatorsTable(int event);
+
+    double sampleFluctionFactor();
 };
 #endif
