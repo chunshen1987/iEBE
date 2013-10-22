@@ -10,6 +10,7 @@ protected:
     int nucl;
     Particle* part;
     double xsave,ysave;
+    double fluctfactor;
 public:
     std::vector<int> who_hit_me; // those nucleons collided with this nucleon, their indices in the binaryCollision array is stored here. This is not against the capsulate rule since the interpretation of these vector replied on external programs, and this vector is just a storage space for additional info.
     Participant(Particle* part0,int i) {
@@ -31,6 +32,9 @@ public:
     int    isNucl() {return nucl;}
     void   setNucl(int i) {nucl=i;}
     void resetCoordinate() {part->setX(xsave);part->setY(ysave);}
+
+    void setfluctfactor(double fluct) {fluctfactor = fluct;}
+    double getfluctfactor() {return fluctfactor;}
 };
 
 #endif

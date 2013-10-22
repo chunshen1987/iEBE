@@ -104,5 +104,7 @@ public:
     static double Angle(const double x,const double y);
 
     void dumpBinaryTable();
+
+    double sampleFluctionFactor();
 };
 #endif
