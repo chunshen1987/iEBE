@@ -465,12 +465,14 @@ void MCnucl::getTA2()
     imax = max(imax,j);
   }
 
-  if(imax>=tmax) {
-    cout  << "# WARNING: in MCnucl::getTA2() : imax=" << imax
-          << " should be less than tmax=" << tmax << endl;
-    exit(0);
+  if(which_mc_model == 1)
+  {
+     if(imax>=tmax) {
+       cout  << "# WARNING: in MCnucl::getTA2() : imax=" << imax
+             << " should be less than tmax=" << tmax << endl;
+       exit(0);
+     }
   }
-
 }
 
 

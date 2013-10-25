@@ -23,7 +23,7 @@ tmax_subdivision = 3      # Its reciprocal gives the step used to generate the T
 
 
 # Glauber Optns
-alpha = 0.14              # Alpha defining WN and BC mixture: (1-alpha)/2*WN + alpha*BC
+alpha = 0.118             # Alpha defining WN and BC mixture: (1-alpha)/2*WN + alpha*BC
 glb_entropy_width = 0.5   # User specified gaussian width for the deposition of entropy 
                           # in the Glauber model 
 
