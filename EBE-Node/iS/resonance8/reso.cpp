@@ -13,46 +13,47 @@ for a description of the formalism utilized in this program.
 */
 
 #include <iostream>
-#include	<string.h>
-#include	<stdio.h>
-#include	<math.h>
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
 
-#include	"reso.h"
-#include	"functions.h"
-#include	"decay.h"
+#include "reso.h"
+#include "functions.h"
+#include "decay.h"
 
 //*****************************************************
 //This is the main program that calls all the needed subroutines.
 
-main() {
+int main() 
+{
 
-	FILE	*datin;
-       
-	char	outdir[FILEDIM];
-    char	specfile[FILEDIM];
-	char	dummy[200];
-
-	int max, maxdecay, bound;
-
-	printf("START of reso decays !\n");
-	//Read in the data from "reso.inp, including the results folder and the spectra data      
-	datin = fopen("reso.inp","r");
-	fscanf(datin,"%s%s",specfile,dummy);
-	std::cout << specfile << std::endl;
-	fscanf(datin,"%s%s",outdir,dummy);
-	fscanf(datin,"%i%s",&bound,dummy);
-    fclose(datin);
-	//Read in the spectra and decays using "resoweak.dat" as a database of particles
-    readspec(specfile, &max, &maxdecay);
-	//The main module that calculates the resonance decay feeddown
-    cal_reso_decays(max, maxdecay, bound); 
-	//Writes the spectra to specified data files.
-    writespec(max,outdir);
-
-	printf("END of reso decays ! \n");
-
-	return 0;	/* ok */
-	}
+   FILE *datin;
+    
+   char outdir[FILEDIM];
+   char specfile[FILEDIM];
+   char dummy[200];
+   
+   int max, maxdecay, bound;
+   
+   printf("START of reso decays !\n");
+   //Read in the data from "reso.inp, including the results folder and the spectra data      
+   datin = fopen("reso.inp","r");
+   fscanf(datin,"%s%s",specfile,dummy);
+   std::cout << specfile << std::endl;
+   fscanf(datin,"%s%s",outdir,dummy);
+   fscanf(datin,"%i%s",&bound,dummy);
+   fclose(datin);
+   //Read in the spectra and decays using "resoweak.dat" as a database of particles
+   readspec(specfile, &max, &maxdecay);
+   //The main module that calculates the resonance decay feeddown
+   cal_reso_decays(max, maxdecay, bound); 
+   //Writes the spectra to specified data files.
+   writespec(max,outdir);
+   
+   printf("END of reso decays ! \n");
+   
+   return 0;	/* ok */
+}
 
 
 

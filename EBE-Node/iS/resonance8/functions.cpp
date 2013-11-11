@@ -60,7 +60,7 @@ extern struct de  {
     int numpart;    /* number of daughter particles after decay */
     double  branch;     /* branching ratio */
     int part[5];    /* array of daughter particels Montecarlo number */
-    }  decay[NUMDECAY];
+    } particleDecay[NUMDECAY];
 
 /* array for converting Montecarlo numbers in internal numbering of the
 resonances */
@@ -222,20 +222,20 @@ void   readin(char filename[FILEDIM], int* particlemax, int* decaymax)
        for(k=0;k<particle[i].decays;k++)
          {
            h=fscanf(dat,"%i%i%lf%i%i%i%i%i",
-            &decay[j].reso, &decay[j].numpart, &decay[j].branch,
-            &decay[j].part[0], &decay[j].part[1], &decay[j].part[2],
-            &decay[j].part[3], &decay[j].part[4]);
-           //  printf("      %i %i %lf %i %i %i %i %i\n", decay[j].reso,
-           //         decay[j].numpart, decay[j].branch, decay[j].part[0],
-           //         decay[j].part[1], decay[j].part[2],decay[j].part[3],
-           //      decay[j].part[4]);
+            &particleDecay[j].reso, &particleDecay[j].numpart, &particleDecay[j].branch,
+            &particleDecay[j].part[0], &particleDecay[j].part[1], &particleDecay[j].part[2],
+            &particleDecay[j].part[3], &particleDecay[j].part[4]);
+           //  printf("      %i %i %lf %i %i %i %i %i\n", particleDecay[j].reso,
+           //         particleDecay[j].numpart, particleDecay[j].branch, particleDecay[j].part[0],
+           //         particleDecay[j].part[1], particleDecay[j].part[2],particleDecay[j].part[3],
+           //      particleDecay[j].part[4]);
 
             if (h != 8) {
               printf("Error in scanf decay \n");
                   printf(" GOOD BYE AND HAVE A NICE DAY! \n");
               exit(0);
             }
-        if (decay[j].numpart == 1) particle[i].stable = 1;
+        if (particleDecay[j].numpart == 1) particle[i].stable = 1;
         j++; // Add one to the decay counting variable "j"
         }
        //printf("\n");
