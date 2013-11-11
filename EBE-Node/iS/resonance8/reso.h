@@ -49,7 +49,7 @@ struct de  {
 	int	numpart;    /* number of daughter particles after decay */
 	double	branch;     /* branching ratio */
 	int	part[5];    /* array of daughter particels Montecarlo number */
-	}  decay[NUMDECAY];
+	}  particleDecay[NUMDECAY];
 
 /* array for converting Montecarlo numbers in internal numbering of the
 resonances */

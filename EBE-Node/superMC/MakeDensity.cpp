@@ -236,7 +236,6 @@ void MakeDensity::generate_profile_ebe(int nevent)
 
 
 
-
 //**********************************************************************
 void MakeDensity::generate_profile_average(int nevent)
 {
@@ -587,9 +586,18 @@ void MakeDensity::dumpEccentricities(char* base_filename, double*** density, con
             mom_real[order] += r*r*cos(order*theta)*density[iy][i][j];
             mom_imag[order] += r*r*sin(order*theta)*density[iy][i][j];
             norm[order] += r*r*density[iy][i][j];
-            momp_real[order] += pow(r,order)*cos(order*theta)*density[iy][i][j];
-            momp_imag[order] += pow(r,order)*sin(order*theta)*density[iy][i][j];
-            normp[order] += pow(r,order)*density[iy][i][j];
+            if(order == 1)
+            {
+               momp_real[order] += pow(r,3)*cos(order*theta)*density[iy][i][j];
+               momp_imag[order] += pow(r,3)*sin(order*theta)*density[iy][i][j];
+               normp[order] += pow(r,3)*density[iy][i][j];
+            }
+            else
+            {
+               momp_real[order] += pow(r,order)*cos(order*theta)*density[iy][i][j];
+               momp_imag[order] += pow(r,order)*sin(order*theta)*density[iy][i][j];
+               normp[order] += pow(r,order)*density[iy][i][j];
+            }
         }
 
         // take ratio; note that the minus sign is just a convention
