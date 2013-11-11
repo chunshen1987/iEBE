@@ -66,7 +66,7 @@ extern struct de  {
 	int	numpart;    /* number of daughter particles after decay */
 	double	branch;     /* branching ratio */
 	int	part[5];    /* array of daughter particels Montecarlo number */
-	}  decay[NUMDECAY];
+	}  particleDecay[NUMDECAY];
 
 /* array for converting Montecarlo numbers in internal numbering of the
 resonances */
@@ -365,7 +365,7 @@ void add_reso (int pn, int pnR, int k, int j)
   nphi = particle[pn].nphi;
 
   // Determine the number of particles involved in the decay with the switch
-  switch (abs (decay[j].numpart))
+  switch (abs (particleDecay[j].numpart))
     {
     case 1: //Only 1 particle, if it gets here, by accident, this prevents any integration for 1 particle chains
       break;
@@ -373,10 +373,10 @@ void add_reso (int pn, int pnR, int k, int j)
     case 2: // 2-body decay
       {
 	if (k == 0)
-	  pn2 = partid[MHALF + decay[j].part[1]];
+	  pn2 = partid[MHALF + particleDecay[j].part[1]];
 
 	else
-	  pn2 = partid[MHALF + decay[j].part[0]];
+	  pn2 = partid[MHALF + particleDecay[j].part[0]];
 
 	//printf ("case 2:  i %3i j %3i k %3i \n", pn, j, k);
 	m1 = particle[pn].mass;
@@ -395,7 +395,7 @@ void add_reso (int pn, int pnR, int k, int j)
 	    for (i = 0; i < nphi; i++)
 	      {
 		// Call the 2-body decay integral and add its contribution to the daughter particle of interest
-		particle[pn].dNdptdphi[l][i] += decay[j].branch *
+		particle[pn].dNdptdphi[l][i] += particleDecay[j].branch *
 		  Edndp3_2bodyN (y, particle[pn].pt[l], PHI[i],
 				 m1, m2, mr, particle[pnR].monval);
 	      }
@@ -407,20 +407,20 @@ void add_reso (int pn, int pnR, int k, int j)
       {
 	if (k == 0)
 	  {
-	    pn2 = partid[MHALF + decay[j].part[1]];
-	    pn3 = partid[MHALF + decay[j].part[2]];
+	    pn2 = partid[MHALF + particleDecay[j].part[1]];
+	    pn3 = partid[MHALF + particleDecay[j].part[2]];
 	  }
 	else
 	  {
 	    if (k == 1)
 	      {
-		pn2 = partid[MHALF + decay[j].part[0]];
-		pn3 = partid[MHALF + decay[j].part[2]];
+		pn2 = partid[MHALF + particleDecay[j].part[0]];
+		pn3 = partid[MHALF + particleDecay[j].part[2]];
 	      }
 	    else
 	      {
-		pn2 = partid[MHALF + decay[j].part[0]];
-		pn3 = partid[MHALF + decay[j].part[1]];
+		pn2 = partid[MHALF + particleDecay[j].part[0]];
+		pn3 = partid[MHALF + particleDecay[j].part[1]];
 	      }
 	  }
 
@@ -442,7 +442,7 @@ void add_reso (int pn, int pnR, int k, int j)
 	    for (l = 0; l < npt; l++)
 	      {
 		// Call the 3-body decay integral and add its contribution to the daughter particle of interest
-		particle[pn].dNdptdphi[l][i] += decay[j].branch *
+		particle[pn].dNdptdphi[l][i] += particleDecay[j].branch *
 		  Edndp3_3bodyN (y, particle[pn].pt[l], PHI[i],
 				 m1, m2, m3, mr, norm3, particle[pnR].monval);
 	      }
@@ -454,31 +454,31 @@ void add_reso (int pn, int pnR, int k, int j)
       {
 	if (k == 0)
 	  {
-	    pn2 = partid[MHALF + decay[j].part[1]];
-	    pn3 = partid[MHALF + decay[j].part[2]];
-	    pn4 = partid[MHALF + decay[j].part[3]];
+	    pn2 = partid[MHALF + particleDecay[j].part[1]];
+	    pn3 = partid[MHALF + particleDecay[j].part[2]];
+	    pn4 = partid[MHALF + particleDecay[j].part[3]];
 	  }
 	else
 	  {
 	    if (k == 1)
 	      {
-		pn2 = partid[MHALF + decay[j].part[0]];
-		pn3 = partid[MHALF + decay[j].part[2]];
-		pn4 = partid[MHALF + decay[j].part[3]];
+		pn2 = partid[MHALF + particleDecay[j].part[0]];
+		pn3 = partid[MHALF + particleDecay[j].part[2]];
+		pn4 = partid[MHALF + particleDecay[j].part[3]];
 	      }
 	    else
 	      {
 		if (k == 2)
 		  {
-		    pn2 = partid[MHALF + decay[j].part[0]];
-		    pn3 = partid[MHALF + decay[j].part[1]];
-		    pn4 = partid[MHALF + decay[j].part[3]];
+		    pn2 = partid[MHALF + particleDecay[j].part[0]];
+		    pn3 = partid[MHALF + particleDecay[j].part[1]];
+		    pn4 = partid[MHALF + particleDecay[j].part[3]];
 		  }
 		else
 		  {
-		    pn2 = partid[MHALF + decay[j].part[0]];
-		    pn3 = partid[MHALF + decay[j].part[1]];
-		    pn4 = partid[MHALF + decay[j].part[2]];
+		    pn2 = partid[MHALF + particleDecay[j].part[0]];
+		    pn3 = partid[MHALF + particleDecay[j].part[1]];
+		    pn4 = partid[MHALF + particleDecay[j].part[2]];
 		  }
 	      }
 	  }
@@ -500,8 +500,8 @@ void add_reso (int pn, int pnR, int k, int j)
 	  {
 	    for (l = 0; l < npt; l++)
 	      {
-		// the 4-body decay approximated by the 3-body decay routine
-		particle[pn].dNdptdphi[l][i] += decay[j].branch *
+		// the 4-body particleDecay approximated by the 3-body decay routine
+		particle[pn].dNdptdphi[l][i] += particleDecay[j].branch *
 		  Edndp3_3bodyN (y, particle[pn].pt[l], PHI[i],
 				 m1, m2, m3, mr, norm3, particle[pnR].monval);
 	      }
@@ -511,7 +511,7 @@ void add_reso (int pn, int pnR, int k, int j)
 
     default:
       printf ("ERROR in add_reso! \n");
-      printf ("%i decay not implemented ! \n", abs (decay[j].numpart));
+      printf ("%i decay not implemented ! \n", abs (particleDecay[j].numpart));
       exit (0);
     }
 }
@@ -554,11 +554,11 @@ void cal_reso_decays (int maxpart, int maxdecay, int bound)
 
 	    for (j = 0; j < maxdecay; j++) // Cycle through every decay channel known (as given in resoweak.dat)
 	      {                            // to see if the particle was a daughter particle in a decay channel
-		pnR = partid[MHALF + decay[j].reso];
+		pnR = partid[MHALF + particleDecay[j].reso];
 		//printf("Partid is %i.\n",pnR);
-		for (k = 0; k < abs (decay[j].numpart); k++)
+		for (k = 0; k < abs (particleDecay[j].numpart); k++)
 		  {
-		    if ((part == decay[j].part[k]) && (decay[j].numpart != 1))// Make sure that the decay channel isn't trivial
+		    if ((part == particleDecay[j].part[k]) && (particleDecay[j].numpart != 1))// Make sure that the particleDecay channel isn't trivial
 		      {                                                       // and contains the daughter particle
 			//printf("Calculating a decay \n");
 			add_reso (i, pnR, k, j);
@@ -573,11 +573,11 @@ void cal_reso_decays (int maxpart, int maxdecay, int bound)
 	    printf("Is an anti-baryon.\n");
 	    for (j = 0; j < maxdecay; j++)// Cycle through every decay channel known (as given in resoweak.dat)
 	      {                            // to see if the particle was a daughter particle in a decay channel
-		pnaR = partid[MHALF - decay[j].reso];
+		pnaR = partid[MHALF - particleDecay[j].reso];
 		//printf("Partid is %i.\n",pnaR);
-		for (k = 0; k < abs (decay[j].numpart); k++)
+		for (k = 0; k < abs (particleDecay[j].numpart); k++)
 		  {
-		    if ((-part == decay[j].part[k]) && (decay[j].numpart != 1))// Make sure that the decay channel isn't trivial
+		    if ((-part == particleDecay[j].part[k]) && (particleDecay[j].numpart != 1))// Make sure that the decay channel isn't trivial
 		      {                                                        // and contains the daughter particle
 			//printf("Calculating a decay \n");
 			add_reso (i, pnaR, k, j);
@@ -593,18 +593,18 @@ void cal_reso_decays (int maxpart, int maxdecay, int bound)
 
 	    for (j = 0; j < maxdecay; j++)
 	      {
-		pnR = partid[MHALF + decay[j].reso];
+		pnR = partid[MHALF + particleDecay[j].reso];
 		//printf("Partid is %i.\n",pnR);
-		for (k = 0; k < abs (decay[j].numpart); k++)
+		for (k = 0; k < abs (particleDecay[j].numpart); k++)
 		  {
 		    if (particle[pnR].baryon == 1)
 		      {
-			pnaR = partid[MHALF - decay[j].reso];
+			pnaR = partid[MHALF - particleDecay[j].reso];
 			if ((particle[i].charge == 0)
 			    && (particle[i].strange == 0))
 			  {
-			    if ((part == decay[j].part[k])
-				&& (decay[j].numpart != 1))
+			    if ((part == particleDecay[j].part[k])
+				&& (particleDecay[j].numpart != 1))
 			      {
 				//printf("Calculating a decay \n");
 				add_reso (i, pnR, k, j);
@@ -613,14 +613,14 @@ void cal_reso_decays (int maxpart, int maxdecay, int bound)
 			  }
 			else
 			  {
-			    if ((part == decay[j].part[k])
-				&& (decay[j].numpart != 1))
+			    if ((part == particleDecay[j].part[k])
+				&& (particleDecay[j].numpart != 1))
 			      {
 				//printf("Calculating a decay \n");
 				add_reso (i, pnR, k, j);
 			      }
-			    if ((-part == decay[j].part[k])
-				&& (decay[j].numpart != 1))
+			    if ((-part == particleDecay[j].part[k])
+				&& (particleDecay[j].numpart != 1))
 			      {
 				//printf("Calculating a decay \n");
 				add_reso (i, pnaR, k, j);
@@ -629,8 +629,8 @@ void cal_reso_decays (int maxpart, int maxdecay, int bound)
 		      }
 		    else
 		      {
-			if ((part == decay[j].part[k])
-			    && (decay[j].numpart != 1))
+			if ((part == particleDecay[j].part[k])
+			    && (particleDecay[j].numpart != 1))
 			  {
 			    //printf("Calculating a decay \n");
 			    add_reso (i, pnR, k, j);

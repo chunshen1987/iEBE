@@ -4,6 +4,6 @@
 #ifndef decay_h
 #define decay_h
 
-void	cal_reso_decays(int maxpart, int maxdecay, int bound);
+void cal_reso_decays(int maxpart, int maxdecay, int bound);
 
 #endif

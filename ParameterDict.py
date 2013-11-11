@@ -1,5 +1,5 @@
 controlParameterList = {
-    'simulation_type'       :   'hybrid', # 'hybrid' or 'hydro'
+    'simulation_type'       :   'hydro', # 'hybrid' or 'hydro'
 }
 
 superMCParameters = {
