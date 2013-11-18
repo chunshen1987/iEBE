@@ -48,19 +48,23 @@ gauss_nucl_width = 0.5    # 4-> User specified width for Gaussian nucleons
 # Collision Optns
 ecm = 2760                # Beam Energy sqrt(s) in GeV
 bmin = 0                  # Minimum sampled impact parameter
-bmax = 20                 # Maximum sampled impact parameter
-Npmin = 0                 # Minimum participant nucleon cut
+bmax = 4.4                 # Maximum sampled impact parameter
+Npmin = 357                 # Minimum participant nucleon cut
 Npmax = 1000              # Maximum participant nucleon cut
+
+cutdSdy = 1               # cut centrality with additional requirements on total entropy density (without normalization factor)
+cutdSdy_lowerBound =  551.864          # lower bound of the allowed total entropy density
+cutdSdy_upperBound =  10000000.0       # upper bound of the allowed total entropy density
 
 
 # Monte Carlo Optns
-nev = 363109              # Number of collision events simulated
+nev = 10              # Number of collision events simulated
 randomSeed = -1           # If randomSeed < 0 then CPU time is used to seed
 backup_number = 10000     # Backs up the averaged profile every "n" events. 0 means 
                           # every step. Use a neg number to turn it off
 
 # Operation Mode Optns
-operation = 9             # (1) Generate n transverse density profiles for n events 
+operation = 1             # (1) Generate n transverse density profiles for n events 
                           # (input for event-by-event hydro)
                           # (3) Average n transverse density profiles to maximize 
                           # the specified eccentricity (input for single shot hydro) 
