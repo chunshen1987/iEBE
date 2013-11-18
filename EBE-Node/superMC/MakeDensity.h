@@ -23,6 +23,8 @@ protected:
 
   double ecm,Anucl1,Anucl2;
   double bmin, bmax, Npmin, Npmax;
+  int cutdSdy;
+  double cutdSdy_lowerBound, cutdSdy_upperBound;
   double siginNN;
   int Maxx, Maxy;
   double Xmin, Ymin, Xmax, Ymax;
@@ -54,6 +56,7 @@ protected:
   void dumpEccentricities(char* base_filename, double*** density, const int iy, int from_order, int to_order, double Npart_current, double Nbin_current, double b);
   void setSd(double*** data, int iy);
   void setEd(double*** data, int iy);
+  double gettotaldSdy(const int iy);
 };
 
 #endif

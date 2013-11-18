@@ -52,6 +52,10 @@ bmax = 2.0                  # Maximum sampled impact parameter
 Npmin = 350                 # Minimum participant nucleon cut
 Npmax = 1000              # Maximum participant nucleon cut
 
+cutdSdy = 1               # cut centrality with additional requirements on total entropy density (without normalization factor)
+cutdSdy_lowerBound =  551.864          # lower bound of the allowed total entropy density
+cutdSdy_upperBound =  10000000.0       # upper bound of the allowed total entropy density
+
 
 # Monte Carlo Optns
 nev = 1                  # Number of collision events simulated
@@ -102,7 +106,7 @@ ymax = 0                  # Maximum rapidity value (symmetric -ymax to ymax)
 # CC fluctions
 cc_fluctuation_model = 6  # 0: no fluctuations; 1: NBD constant k; 2: NBD use TA TB to determine n; 6: MCGlb: Gamma distribution for each collision and wounded nucleon
 cc_fluctuation_k = 0.75   # constant k; used when cc_fluctuation_model is set to 1.
-cc_fluctuation_Gamma_theta = 1.29    # the scale parameter for Gamma distribution theta = 1.29 at 2.76 TeV(interpolated results from the fit to pp multiplicity data at 2.36 and 7 TeV)
+cc_fluctuation_Gamma_theta = 0.9175    # the scale parameter for Gamma distribution theta = 0.9175 (from KNO scaling)
 
 # For jet calculations
 output_TATB = 1           # 1: output; 0: no output; only effective when generating averaged profiles

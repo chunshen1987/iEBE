@@ -34,6 +34,9 @@ MakeDensity::MakeDensity(ParameterReader *paraRdr_in)
   Npmin = paraRdr->getVal("Npmin");
   Npmax = paraRdr->getVal("Npmax");
 
+  cutdSdy = paraRdr->getVal("cutdSdy");
+  cutdSdy_lowerBound = paraRdr->getVal("cutdSdy_lowerBound");
+  cutdSdy_upperBound = paraRdr->getVal("cutdSdy_upperBound");
 
   // renaming of A for proj+targ
   Anucl1 = paraRdr->getVal("Aproj");
@@ -317,6 +320,16 @@ void MakeDensity::generate_profile_ebe(int nevent)
 
     for(int iy=0;iy<binRapidity;iy++) {
       mc->setDensity(iy);
+      if(iy == 0 && cutdSdy)
+      {
+         double totaldSdy = gettotaldSdy(iy);
+         if(totaldSdy < cutdSdy_lowerBound || totaldSdy > cutdSdy_upperBound)
+         {
+            event--;
+            break;
+         }
+         cout << totaldSdy*finalFactor << endl;
+      }
       // output entropy profile
       if (use_sd)
       {
@@ -914,6 +927,18 @@ void MakeDensity::setEd(double*** data, const int iy)
     {
         data[iy][i][j] = eos.edFromSd(mc->getRho(iy,i,j)*finalFactor);
     }
+}
+
+double MakeDensity::gettotaldSdy(const int iy)
+// calculate total entropy density at rapidity iy using mc->getRho function with multiplicity factor (gluon density to entropy)
+{
+    double sum = 0.0;
+    for(int i=0;i<Maxx;i++)
+    for(int j=0;j<Maxy;j++)
+    {
+        sum += mc->getRho(iy,i,j)*dx*dy;
+    }
+    return(sum);
 }
 
 //--------------------------------------------------------------------
