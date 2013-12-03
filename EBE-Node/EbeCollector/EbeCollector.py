@@ -65,6 +65,10 @@ class EbeCollector(object):
             "omega"             :   36,
             "anti_omega"        :   -36,
             "phi"               :   41,
+            "rho"               :   46, #sum(47, 48, -47)
+            "rho_p"             :   47,
+            "rho_0"             :   48,
+            "rho_m"             :   -47,
         }
 
         for aParticle in self.pidDict.keys():
@@ -284,6 +288,8 @@ class EbeCollector(object):
             "thermal_211"   :   "pion_p_thermal",
             "thermal_321"   :   "kaon_p_thermal",
             "thermal_2212"  :   "proton_thermal",
+            "thermal_213"   :   "rho_p_thermal",
+            "thermal_333"   :   "phi_thermal",
         }
         filename_inte = "%s_integrated_vndata.dat" # filename for integrated flow files, %s is the "string in filename" defined in toCollect
         filename_diff = "%s_vndata.dat" # filename for differential flow files
