@@ -28,6 +28,9 @@ workFolder=./workplace
           (cd ../iSS; ./iSS.e > /dev/null)
           mv ../iSS/results $iev
         done
+       if [ -f ./collected.db ]; then
+          rm -f ./collected.db
+       fi
       )
       (cd $workFolder/EbeCollector; echo collecting data into database ...; ./EbeCollectorShell_HydroEM.py ../$jobfolder)
       (cd $workFolder; echo compressing files ...; zip -r $ijob $jobfolder > /dev/null)
