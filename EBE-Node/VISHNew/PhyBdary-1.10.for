@@ -1426,6 +1426,47 @@ c      Print*,'section2'
       RETURN
       END
 
+*******************************************************************
+      SUBROUTINE SECTIONCornelius(E0,INTERSECT,ECUBE,EPS0,EPS1,
+     &                            I,J,NDX,NDY,NX0,NY0,NX,NY)
+
+*****************************************************************
+** THIS ROUTINE CHECKS WHETHER THE eps=E0 -SURFACE INTERSECTS   *
+** WITH A 'CUBE' (I,J). IF THAT IS THE CASE, THE LOGICAL        *
+** VARIABLE 'INTERSECT' IS RETURNED WITH A VALUE .TRUE. AND     *
+** THE MATRIX ECUBE(2,2,2) WITH THE eps VALUES OF THE CUBE      *
+** CORNERS for Cornelius routine.                               *
+*****************************************************************
+      Implicit Double Precision (A-H, O-Z)
+      DIMENSION EPS0(NX0:NX, NY0:NY),EPS1(NX0:NX, NY0:NY)
+      DIMENSION ECUBE(0:1,0:1,0:1)
+      LOGICAL INTERSECT
+
+      IF ((E0-EPS0(I,J))*(EPS1(I+NDX,J+NDY)-E0).LT.0.0) THEN
+        IF ((E0-EPS0(I+NDX,J))*(EPS1(I,J+NDY)-E0).LT.0.0) THEN
+          IF ((E0-EPS0(I+NDX,J+NDY))*(EPS1(I,J)-E0).LT.0.0) THEN
+            IF ((E0-EPS0(I,J+NDY))*(EPS1(I+NDX,J)-E0).LT.0.0) THEN
+              INTERSECT=.FALSE.
+              GO TO 200
+            END IF
+          END IF
+        END IF
+      END IF
+
+      INTERSECT=.TRUE.
+      ECUBE(0,0,0)=EPS0(I,J)
+      ECUBE(0,1,0)=EPS0(I+NDX,J)
+      ECUBE(0,1,1)=EPS0(I+NDX,J+NDY)
+      ECUBE(0,0,1)=EPS0(I,J+NDY)
+      ECUBE(1,0,0)=EPS1(I,J)
+      ECUBE(1,1,0)=EPS1(I+NDX,J)
+      ECUBE(1,1,1)=EPS1(I+NDX,J+NDY)
+      ECUBE(1,0,1)=EPS1(I,J+NDY)
+200   continue
+
+      RETURN
+      END
+
 C###########################################################################
       Subroutine AFreezeoutPro3 (EDEC,TFREEZ, TFLAG,  IEOS,
      &     EPS0,EPS1,TEM0,TEM1,  V10,V20,V11,V21,  EINS,NINT, IW,

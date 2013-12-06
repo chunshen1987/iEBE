@@ -26,7 +26,7 @@ endif
 
 SRC		=	VISH2p1V1.10.0.for PhyBdary-1.10.for InputEOS-1.3.for \
                   OSCARoutput.for Arsenal-0.8.for Initialization-1.03.for \
-                  InputFun-1.29RC6.for
+                  InputFun-1.29RC6.for cornelius2.f90
 
 INC		= 	
 
@@ -42,6 +42,9 @@ INSTPATH	=	$(HOME)/local/bin
 # --------------- Pattern rules -------------------
 
 $(OBJDIR)/%.o: %.for
+	$(FC) $(FFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: %.f90
 	$(FC) $(FFLAGS) -c $< -o $@
 
 %.cpp:
