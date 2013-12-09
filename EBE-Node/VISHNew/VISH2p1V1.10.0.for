@@ -1763,8 +1763,8 @@ CSHEN======================================================================
        Y = J*DY
        X = I*DX
 
-       CALL SECTIO2(Edec, Intersect, Cube, EPS0, EPS1,
-     &              I,J,NDX,NDY,NX0,NY0,NX,NY)
+       CALL SECTIONCornelius(Edec, Intersect, Cube, EPS0, EPS1,
+     &                       I,J,NDX,NDY,NX0,NY0,NX,NY)
 
        IF (INTERSECT) THEN   !***(INTERSECT)
          NINT = NINT+1
