@@ -609,6 +609,40 @@ class EbeCollector(object):
         # close connection to commit changes
         db.closeConnection()
 
+    def collectInitialeccnStatistics(self, folder, db):
+        """
+            This function collects eccn, Npart, Ncoll, dS/dy, impact parameter from
+            superMC output files into database.
+        """
+        typeCollections = ((1, 'sn'), (2,'en'))
+        # first write the ecc_id_lookup table, makes sure there is only one such table
+        if db.createTableIfNotExists("ecc_id_lookup", (("ecc_id","integer"), ("ecc_type_name","text"))):
+            for ecc_id, ecc_type_name in typeCollections:
+                db.insertIntoTable("ecc_id_lookup", (ecc_id, ecc_type_name))
+        
+        # next create the eccentricities and collisionParameters table
+        db.createTableIfNotExists("eccentricities", (("event_id","integer"), ("ecc_id", "integer"), ("n","integer"), ("ecc_real","real"), ("ecc_imag","real")))
+        db.createTableIfNotExists("collisionParameters", (("event_id","integer"), ("Npart", "integer"), ("Ncoll","integer"), ("b","real"), ("total_entropy","real")))
+
+        # the big loop
+        for ecc_id, ecc_type_name in typeCollections:
+            for iorder in range(1,10):
+                data = loadtxt(path.join(folder, '%s_ecc_eccp_%d.dat' %(ecc_type_name, iorder)))
+                if ecc_id == 1 and iorder == 1:
+                    Npart = data[:,4]
+                    Ncoll = data[:,5]
+                    dSdy = data[:,6]
+                    b = data[:,7]
+                    for event_id in range(len(Npart)):
+                       db.insertIntoTable("collisionParameters", (event_id, int(Npart[event_id]), int(Ncoll[event_id]), float(b[event_id]), float(dSdy[event_id])))
+                eccReal = data[:,2]
+                eccImag = data[:,3]
+                for event_id in range(len(eccReal)):
+                    db.insertIntoTable("eccentricities",(event_id, ecc_id, iorder, float(eccReal[event_id]), float(eccImag[event_id])))
+
+        # close connection to commit changes
+        db.closeConnection()
+
     def createDatabaseFromEventFolders(self, folder, subfolderPattern="event-(\d*)", databaseFilename="CollectedResults.db", collectMode="fromUrQMD", multiplicityFactor=1.0):
         """
             This function collect all results (ecc+flow) from subfolders
@@ -746,6 +780,18 @@ class EbeCollector(object):
         for aSubfolder, hydroEvent_id in matchedSubfolders:
             print("Collecting %s as with hydro event-id: %s" % (aSubfolder, hydroEvent_id))
             self.collectParticlesUrQMD(aSubfolder, hydroEvent_id, resultFilename, db) # collect particles from one hydro event
+    
+    def collectMinbiasEcc(self, folder, databaseFilename="MinbiasEcc.db"):
+        """
+            This function collects initial eccn statistical information from minimum bias events generated from  superMC
+            outputs into a database
+        """
+        # the data collection loop
+        db = SqliteDB(path.join(folder, databaseFilename))
+        print("-"*80)
+        print("Collecting initial minimum bias events information from superMC outputs...")
+        print("-"*80)
+        self.collectInitialeccnStatistics(folder, db) # collect eccn information from data files
 
 
     def mergeDatabases(self, toDB, fromDB):
