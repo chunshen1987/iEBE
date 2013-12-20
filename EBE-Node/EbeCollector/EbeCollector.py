@@ -5,6 +5,8 @@
 
 """
 
+import math
+from sys import exit
 from os import path, listdir
 import re
 import numpy as np
@@ -540,6 +542,73 @@ class EbeCollector(object):
         db.closeConnection()
 
 
+    def collectParticlesUrQMD(self, folder, hydroEvent_id, resultFilename, db):
+        """
+            This function collects particles momentum and space-time information from
+            UrQMD output file "resultFilename" into database for one hydro event with 
+            hydroEvent_id. It assigns each UrQMD run an additional UrQMDEvent_id. 
+        """
+        # first write the pid_lookup table, makes sure there is only one such table
+        if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
+            db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
+
+        # create tables
+        db.createTableIfNotExists("particle_list", (("hydroEvent_id","integer"), ("UrQMDEvent_id","interger"), ("pid","integer"), ("tau","real"), ("x","real"), ("y","real"), ("eta","real"), ("pT", "real"), ("phi_p", "real"), ("rapidity", "real")))
+
+        # check input file
+        UrQMDoutputFilePath = path.join(folder, resultFilename)
+        if not path.isfile(UrQMDoutputFilePath):
+            exit("Cannot find UrQMD output file: " + UrQMDoutputFilePath)
+
+        # convert UrQMD outputs and fill them into database
+        read_mode = "header_first_part"
+        header_count = 1 # the first read line is already part of the header line
+        data_row_count = 0
+        UrQMDEvent_id = 1
+        for aLine in open(UrQMDoutputFilePath):
+            if read_mode=="header_first_part":
+                if header_count <= 14: # skip first 14 lines
+                    header_count += 1
+                    continue
+                # now at 15th line
+                assert header_count==15, "No no no... Stop here."
+                try:
+                    data_row_count = int(aLine.split()[0])
+                except ValueError as e:
+                    print("The file "+ UrQMDoutputFilePath +" does not have a valid urqmd output file header!")
+                    exit(e)
+                read_mode = "header_second_part"
+            elif read_mode=="header_second_part":
+                # skip current line by switching to data reading mode
+                read_mode = "data_part"
+            elif read_mode=="data_part":
+                if data_row_count>0:
+                    # still have data to read
+                    try:
+                        p0, px, py, pz = map(lambda x: float(x.replace("D","E")), aLine[98:193].split())
+                        t, x, y, z = map(lambda x: float(x.replace("D","E")), aLine[245:338].split())
+                        pid = int(aLine[216:222])
+                        pT = math.sqrt(px*px + py*py)
+                        phi = math.atan2(py, px)
+                        rap = 0.5*math.log((p0 + pz)/(p0 - pz))
+                        tau = math.sqrt(t*t - z*z)
+                        eta = 0.5*math.log((t+z)/(t-z))
+                        db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, pid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap)))
+                    except ValueError as e:
+                        print("The file "+ UrQMDoutputFilePath +" does not have valid urqmd data!")
+                        exit(e)
+                    data_row_count -= 1
+                if data_row_count == 1: # note: not 0, but 1
+                    print("processing UrQMD event %d finished." % UrQMDEvent_id)
+                    UrQMDEvent_id += 1
+                    # switch back to header mode
+                    data_row_count = 0
+                    header_count = 0 # not pointing at the header line yet
+                    read_mode = "header_first_part"
+        
+        # close connection to commit changes
+        db.closeConnection()
+
     def createDatabaseFromEventFolders(self, folder, subfolderPattern="event-(\d*)", databaseFilename="CollectedResults.db", collectMode="fromUrQMD", multiplicityFactor=1.0):
         """
             This function collect all results (ecc+flow) from subfolders
@@ -649,6 +718,34 @@ class EbeCollector(object):
             print("!"*60)
             print("Mode string not found")
             print("!"*60)
+
+    def collectParticleinfo(self, folder, subfolderPattern="event-(\d*)", resultFilename="particle_list.dat", databaseFilename="particles.db"):
+        """
+            This function collects particles momentum and space-time information from UrQMD
+            outputs into a database
+        """
+        # get list of (matched subfolders, event id)
+        matchPattern = re.compile(subfolderPattern)
+        matchedSubfolders = []
+        for folder_index, aSubfolder in enumerate(listdir(folder)):
+            fullPath = path.join(folder, aSubfolder)
+            if not path.isdir(fullPath): continue # want only folders, not files
+            matchResult = matchPattern.match(aSubfolder)
+            if matchResult: # matched!
+                if len(matchResult.groups()): # folder name contains id
+                    hydroEvent_id = matchResult.groups()[0]
+                else:
+                    hydroEvent_id = folder_index
+                matchedSubfolders.append((fullPath, hydroEvent_id)) # matched!
+        
+        # the data collection loop
+        db = SqliteDB(path.join(folder, databaseFilename))
+        print("-"*60)
+        print("Collecting particle information from UrQMD outputs...")
+        print("-"*60)
+        for aSubfolder, hydroEvent_id in matchedSubfolders:
+            print("Collecting %s as with hydro event-id: %s" % (aSubfolder, hydroEvent_id))
+            self.collectParticlesUrQMD(aSubfolder, hydroEvent_id, resultFilename, db) # collect particles from one hydro event
 
 
     def mergeDatabases(self, toDB, fromDB):
