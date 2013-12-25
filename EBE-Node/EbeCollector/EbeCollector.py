@@ -519,7 +519,7 @@ class EbeCollector(object):
         # close connection to commit changes
         db.closeConnection()
 
-    def collectInitialeccnStatistics(self, folder, db):
+    def collectInitialeccnStatistics(self, folder, db, multiplicityFactor = 1.0):
         """
             This function collects eccn, Npart, Ncoll, dS/dy, impact parameter from
             superMC output files into database.
@@ -541,7 +541,7 @@ class EbeCollector(object):
                 if ecc_id == 1 and iorder == 1:
                     Npart = data[:,4]
                     Ncoll = data[:,5]
-                    dSdy = data[:,6]
+                    dSdy = data[:,6]/multiplicityFactor   #scale out the multiplicity factor used in superMC
                     b = data[:,7]
                     for event_id in range(len(Npart)):
                        db.insertIntoTable("collisionParameters", (event_id, int(Npart[event_id]), int(Ncoll[event_id]), float(b[event_id]), float(dSdy[event_id])))
@@ -678,7 +678,7 @@ class EbeCollector(object):
             print("Collecting %s as with hydro event-id: %s" % (aSubfolder, hydroEvent_id))
             self.collectParticlesUrQMD(aSubfolder, hydroEvent_id, resultFilename, db) # collect particles from one hydro event
     
-    def collectMinbiasEcc(self, folder, databaseFilename="MinbiasEcc.db"):
+    def collectMinbiasEcc(self, folder, databaseFilename="MinbiasEcc.db", multiplicityFactor = 1.0):
         """
             This function collects initial eccn statistical information from minimum bias events generated from  superMC
             outputs into a database
@@ -688,7 +688,7 @@ class EbeCollector(object):
         print("-"*80)
         print("Collecting initial minimum bias events information from superMC outputs...")
         print("-"*80)
-        self.collectInitialeccnStatistics(folder, db) # collect eccn information from data files
+        self.collectInitialeccnStatistics(folder, db, multiplicityFactor) # collect eccn information from data files
 
 
     def mergeDatabases(self, toDB, fromDB):
