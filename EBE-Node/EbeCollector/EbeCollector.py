@@ -67,6 +67,9 @@ class EbeCollector(object):
             "omega"             :   36,
             "anti_omega"        :   -36,
             "phi"               :   41,
+            "eta"               :   51,
+            "eta_prime"         :   52,
+            "gamma"             :   61,
         }
 
         for aParticle in self.pidDict.keys():
@@ -78,6 +81,39 @@ class EbeCollector(object):
                 self.pidDict[aParticle+"_thermal"] = self.pidDict[aParticle]+2000
             else:
                 self.pidDict[aParticle+"_thermal"] = self.pidDict[aParticle]-2000
+
+        #UrQMD pid Dictionary, name conversion defined as in binUltility
+        self.UrQMDpidDict = { #particle name, UrQMD id# : isospin*2000 + pid
+            2101        :    "pion_p",
+            -1899       :    "pion_m",
+            101         :    "pion_0",
+            1106        :    "kaon_p",
+            -894        :    "kaon_0",
+            -1106       :    "kaon_m",
+            894         :    "anti_kaon_0",
+            1001        :    "proton",
+            -999        :    "neutron",
+            -1001       :    "anti_proton",
+            999         :    "anti_neutron",
+            2040        :    "sigma_p",
+            -1960       :    "sigma_m",
+            40          :    "sigma_0",
+            -2040       :    "anti_sigma_p",
+            1960        :    "anti_sigma_m",
+            -40         :    "anti_sigma_0",
+            1049        :    "xi_0",
+            -951        :    "xi_m",
+            -1049       :    "anti_xi_0",
+            951         :    "anti_xi_m",
+            27          :    "lambda",
+            -27         :    "anti_lambda",
+            55          :    "omega",
+            -55         :    "anti_omega",
+            109         :    "phi",
+            102         :    "eta",
+            107         :    "eta_prime",
+            100         :    "gamma",
+        }
 
 
     def collectEccentricitiesAndRIntegrals(self, folder, event_id, db, oldStyleStorage=False):
@@ -471,6 +507,7 @@ class EbeCollector(object):
             exit("Cannot find UrQMD output file: " + UrQMDoutputFilePath)
 
         # convert UrQMD outputs and fill them into database
+        # this routine is copied and modified from binUltility
         read_mode = "header_first_part"
         header_count = 1 # the first read line is already part of the header line
         data_row_count = 0
@@ -497,13 +534,20 @@ class EbeCollector(object):
                     try:
                         p0, px, py, pz = map(lambda x: float(x.replace("D","E")), aLine[98:193].split())
                         t, x, y, z = map(lambda x: float(x.replace("D","E")), aLine[245:338].split())
+                        isospin2 = int(aLine[222:224])
                         pid = int(aLine[216:222])
+                        UrQMDpid = pid + isospin2*1000
+                        try:
+                            databasePid = self.pidDict[self.UrQMDpidDict[UrQMDpid]]
+                        except ValueError as e:
+                            print("Can not find particle id in the dictionary!")
+                            exit(e)
                         pT = math.sqrt(px*px + py*py)
                         phi = math.atan2(py, px)
                         rap = 0.5*math.log((p0 + pz)/(p0 - pz))
                         tau = math.sqrt(t*t - z*z)
                         eta = 0.5*math.log((t+z)/(t-z))
-                        db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, pid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap)))
+                        db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, databasePid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap)))
                     except ValueError as e:
                         print("The file "+ UrQMDoutputFilePath +" does not have valid urqmd data!")
                         exit(e)
