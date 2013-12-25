@@ -998,7 +998,7 @@ class EbeDBReader(object):
         allParticles = self.pid_lookup.items()
         allParticles.sort(key=lambda x: abs(x[1]))
         for aParticle, pid in allParticles:
-            numberOfEvents = len(self.get_V_n(particleName=aParticle))
+            numberOfEvents = self.db.selectFromTable("multiplicities", "count()", "pid = %d" % pid)[0][0]
             probes.append((aParticle, numberOfEvents))
         return probes
 
@@ -1008,8 +1008,8 @@ class EbeDBReader(object):
             and min of event_id.
         """
         whereClause = "ecc_id = 1 and r_power = 0 and n = 2"
-        EventId = self.db.selectFromTable("eccentricities", "event_id", whereClause)
-        return len(EventId)
+        Nevent = self.db.selectFromTable("eccentricities", "count()", whereClause)
+        return Nevent[0][0]
 
     def evaluateExpression(self, expression):
         """
