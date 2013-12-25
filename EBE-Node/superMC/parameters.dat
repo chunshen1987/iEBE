@@ -110,4 +110,3 @@ cc_fluctuation_Gamma_theta = 0.9175    # the scale parameter for Gamma distribut
 
 # For jet calculations
 output_TATB = 1           # 1: output; 0: no output; only effective when generating averaged profiles
-
