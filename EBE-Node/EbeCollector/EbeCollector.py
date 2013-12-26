@@ -631,6 +631,9 @@ class EbeCollector(object):
         # first write the pid_lookup table, makes sure there is only one such table
         if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
             db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
+        # write the particle mass table
+        if db.createTableIfNotExists("pid_Mass", (("name","text"), ("mass","real"))):
+            db.insertIntoTable("pid_Mass", list(self.masspidDict.items()))
 
         # create tables
         db.createTableIfNotExists("particle_list", (("hydroEvent_id","integer"), ("UrQMDEvent_id","interger"), ("pid","integer"), ("tau","real"), ("x","real"), ("y","real"), ("eta","real"), ("pT", "real"), ("phi_p", "real"), ("rapidity", "real")))
