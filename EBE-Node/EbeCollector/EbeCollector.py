@@ -82,7 +82,7 @@ class EbeCollector(object):
             else:
                 self.pidDict[aParticle+"_thermal"] = self.pidDict[aParticle]-2000
 
-        #UrQMD pid Dictionary, name conversion defined as in binUltility
+        #UrQMD pid Dictionary, name conversion defined as in binUtility
         self.UrQMDpidDict = { #particle name, UrQMD id# : isospin*2000 + pid
             2101        :    "pion_p",
             -1899       :    "pion_m",
@@ -554,7 +554,7 @@ class EbeCollector(object):
             exit("Cannot find UrQMD output file: " + UrQMDoutputFilePath)
 
         # convert UrQMD outputs and fill them into database
-        # this routine is copied and modified from binUltility
+        # this routine is copied and modified from binUtility
         read_mode = "header_first_part"
         header_count = 1 # the first read line is already part of the header line
         data_row_count = 0
