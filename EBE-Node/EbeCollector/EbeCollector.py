@@ -128,6 +128,50 @@ class EbeCollector(object):
             100         :    "gamma",
         }
 
+        #particle mass Dictionary (unit in GeV)
+        self.masspidDict = {
+            "pion"              :   0.13957,
+            "pion_p"            :   0.13957,
+            "pion_0"            :   0.13498,
+            "pion_m"            :   0.13957,
+            "kaon"              :   0.49368,
+            "kaon_p"            :   0.49368,
+            "kaon_0"            :   0.49765,
+            "anti_kaon"         :   0.49368,
+            "kaon_m"            :   0.49368,
+            "anti_kaon_0"       :   0.49765,
+            "nucleon"           :   0.93827,
+            "proton"            :   0.93827,
+            "neutron"           :   0.93957,
+            "anti_nucleon"      :   0.93827,
+            "anti_proton"       :   0.93827,
+            "anit_neutron"      :   0.93957,
+            "sigma"             :   1.18937,
+            "sigma_p"           :   1.18937,
+            "sigma_0"           :   1.19264,
+            "sigma_m"           :   1.19745,
+            "anti_sigma"        :   1.18937,
+            "anti_simga_p"      :   1.18937,
+            "anti_sigma_0"      :   1.19264,
+            "anti_simga_m"      :   1.19745,
+            "xi"                :   1.31483,
+            "xi_0"              :   1.31483,
+            "xi_m"              :   1.32131,
+            "anti_xi"           :   1.31483,
+            "anti_xi_0"         :   1.31483,
+            "anti_xi_m"         :   1.32131,
+            "lambda"            :   1.11568,
+            "anti_lambda"       :   1.11568,
+            "omega"             :   1.67243,
+            "anti_omega"        :   1.67243,
+            "phi"               :   1.01946,
+            "eta"               :   0.54775,
+            "eta_prime"         :   0.95778,
+            "gamma"             :   0.0,
+        }
+        for aParticle in self.masspidDict.keys():
+            self.masspidDict[aParticle+"_hydro"] = self.masspidDict[aParticle]
+            self.masspidDict[aParticle+"_thermal"] = self.masspidDict[aParticle]
 
     def collectEccentricitiesAndRIntegrals(self, folder, event_id, db, oldStyleStorage=False):
         """
