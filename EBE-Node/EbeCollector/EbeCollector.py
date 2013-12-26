@@ -95,7 +95,7 @@ class EbeCollector(object):
             "photon_HG_eq"       :  9005,
         })
         
-        #UrQMD pid Dictionary, name conversion defined as in binUltility
+        #UrQMD pid Dictionary, name conversion defined as in binUtility
         self.UrQMDpidDict = { #particle name, UrQMD id# : isospin*2000 + pid
             2101        :    "pion_p",
             -1899       :    "pion_m",
@@ -164,6 +164,10 @@ class EbeCollector(object):
             "anti_lambda"       :   1.11568,
             "omega"             :   1.67243,
             "anti_omega"        :   1.67243,
+            "rho"               :   0.77580,
+            "rho_p"             :   0.77580,
+            "rho_0"             :   0.77580,
+            "rho_m"             :   0.77580,
             "phi"               :   1.01946,
             "eta"               :   0.54775,
             "eta_prime"         :   0.95778,
@@ -644,7 +648,7 @@ class EbeCollector(object):
             exit("Cannot find UrQMD output file: " + UrQMDoutputFilePath)
 
         # convert UrQMD outputs and fill them into database
-        # this routine is copied and modified from binUltility
+        # this routine is copied and modified from binUtility
         read_mode = "header_first_part"
         header_count = 1 # the first read line is already part of the header line
         data_row_count = 0
