@@ -82,7 +82,7 @@ class EbeCollector(object):
             else:
                 self.pidDict[aParticle+"_thermal"] = self.pidDict[aParticle]-2000
 
-        #UrQMD pid Dictionary, name conversion defined as in binUltility
+        #UrQMD pid Dictionary, name conversion defined as in binUtility
         self.UrQMDpidDict = { #particle name, UrQMD id# : isospin*2000 + pid
             2101        :    "pion_p",
             -1899       :    "pion_m",
@@ -115,6 +115,50 @@ class EbeCollector(object):
             100         :    "gamma",
         }
 
+        #particle mass Dictionary (unit in GeV)
+        self.masspidDict = {
+            "pion"              :   0.13957,
+            "pion_p"            :   0.13957,
+            "pion_0"            :   0.13498,
+            "pion_m"            :   0.13957,
+            "kaon"              :   0.49368,
+            "kaon_p"            :   0.49368,
+            "kaon_0"            :   0.49765,
+            "anti_kaon"         :   0.49368,
+            "kaon_m"            :   0.49368,
+            "anti_kaon_0"       :   0.49765,
+            "nucleon"           :   0.93827,
+            "proton"            :   0.93827,
+            "neutron"           :   0.93957,
+            "anti_nucleon"      :   0.93827,
+            "anti_proton"       :   0.93827,
+            "anit_neutron"      :   0.93957,
+            "sigma"             :   1.18937,
+            "sigma_p"           :   1.18937,
+            "sigma_0"           :   1.19264,
+            "sigma_m"           :   1.19745,
+            "anti_sigma"        :   1.18937,
+            "anti_simga_p"      :   1.18937,
+            "anti_sigma_0"      :   1.19264,
+            "anti_simga_m"      :   1.19745,
+            "xi"                :   1.31483,
+            "xi_0"              :   1.31483,
+            "xi_m"              :   1.32131,
+            "anti_xi"           :   1.31483,
+            "anti_xi_0"         :   1.31483,
+            "anti_xi_m"         :   1.32131,
+            "lambda"            :   1.11568,
+            "anti_lambda"       :   1.11568,
+            "omega"             :   1.67243,
+            "anti_omega"        :   1.67243,
+            "phi"               :   1.01946,
+            "eta"               :   0.54775,
+            "eta_prime"         :   0.95778,
+            "gamma"             :   0.0,
+        }
+        for aParticle in self.masspidDict.keys():
+            self.masspidDict[aParticle+"_hydro"] = self.masspidDict[aParticle]
+            self.masspidDict[aParticle+"_thermal"] = self.masspidDict[aParticle]
 
     def collectEccentricitiesAndRIntegrals(self, folder, event_id, db, oldStyleStorage=False):
         """
@@ -497,6 +541,9 @@ class EbeCollector(object):
         # first write the pid_lookup table, makes sure there is only one such table
         if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
             db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
+        # write the particle mass table
+        if db.createTableIfNotExists("pid_Mass", (("name","text"), ("mass","real"))):
+            db.insertIntoTable("pid_Mass", list(self.masspidDict.items()))
 
         # create tables
         db.createTableIfNotExists("particle_list", (("hydroEvent_id","integer"), ("UrQMDEvent_id","interger"), ("pid","integer"), ("tau","real"), ("x","real"), ("y","real"), ("eta","real"), ("pT", "real"), ("phi_p", "real"), ("rapidity", "real")))
@@ -507,7 +554,7 @@ class EbeCollector(object):
             exit("Cannot find UrQMD output file: " + UrQMDoutputFilePath)
 
         # convert UrQMD outputs and fill them into database
-        # this routine is copied and modified from binUltility
+        # this routine is copied and modified from binUtility
         read_mode = "header_first_part"
         header_count = 1 # the first read line is already part of the header line
         data_row_count = 0
