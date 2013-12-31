@@ -546,7 +546,7 @@ class EbeCollector(object):
             db.insertIntoTable("pid_Mass", list(self.masspidDict.items()))
 
         # create tables
-        db.createTableIfNotExists("particle_list", (("hydroEvent_id","integer"), ("UrQMDEvent_id","interger"), ("pid","integer"), ("tau","real"), ("x","real"), ("y","real"), ("eta","real"), ("pT", "real"), ("phi_p", "real"), ("rapidity", "real")))
+        db.createTableIfNotExists("particle_list", (("hydroEvent_id","integer"), ("UrQMDEvent_id","interger"), ("pid","integer"), ("tau","real"), ("x","real"), ("y","real"), ("eta","real"), ("pT", "real"), ("phi_p", "real"), ("rapidity", "real"), ("pseudorapidity", "real")))
 
         # check input file
         UrQMDoutputFilePath = path.join(folder, resultFilename)
@@ -590,11 +590,13 @@ class EbeCollector(object):
                             print("Can not find particle id in the dictionary!")
                             exit(e)
                         pT = math.sqrt(px*px + py*py)
+                        pMag = math.sqrt(pT*pT + pz*pz)
                         phi = math.atan2(py, px)
                         rap = 0.5*math.log((p0 + pz)/(p0 - pz))
+                        pseudorap = 0.5*math.log((pMag + pz)/(pMag - pz))
                         tau = math.sqrt(t*t - z*z)
                         eta = 0.5*math.log((t+z)/(t-z))
-                        db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, databasePid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap)))
+                        db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, databasePid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap), float(pseudorap)))
                     except ValueError as e:
                         print("The file "+ UrQMDoutputFilePath +" does not have valid urqmd data!")
                         exit(e)
