@@ -52,6 +52,8 @@ C===============================================================================
 
 ! change to 1 to ignore checks
 #define silent_checkPi 0
+#define outputPiviolation .true.
+#define outputMovie .true.
 
 #define echo_level 5
 
@@ -268,7 +270,9 @@ C======output the chemical potential information at freeze out surface.====
 
       !Open(3771,FILE='movie/DPc.dat',STATUS='REPLACE')
       !Close(3771)
-      !Open(3773,FILE='movie/Vx.dat',STATUS='REPLACE')
+      if (outputMovie) then 
+         open(3773,FILE='movie/Evolution.dat',STATUS='REPLACE')
+      endif
       !Close(3773)
       !Open(3774,FILE='movie/U1.dat',STATUS='REPLACE')
       !Close(3774)
@@ -281,7 +285,13 @@ C======output the chemical potential information at freeze out surface.====
         IOSCARWrite = 43
         open(IOSCARWrite,File='results/OSCAR2008H.dat',Form='Formatted',
      &     status='REPLACE')   !output standard format VISH2+1 results for further hydro movie and jet quenching purpose
-      End If
+      EndIf
+      if (outputPiviolation) then
+         open(583, File='results/piViolation.dat',
+     &        Form='Formatted', status='REPLACE')
+         open(584, File='results/BulkpiViolation.dat',
+     &        Form='Formatted', status='REPLACE')
+      endif
 CSHEN======================================================================
 
       open(92,File='results/anisotropy.dat',status='REPLACE')
@@ -325,6 +335,9 @@ CSHEN======output OSCAR file Header end=====================================
       Close(83)
       close(IOSCARWrite)
       Close(377)
+      if(outputMovie) then 
+         close(3773)
+      endif
 
       End
 !-----------------------------------------------------------------------
@@ -426,10 +439,7 @@ C###############################################################################
       Double Precision Pi12Regulated(NX0:NX,NY0:NY,NZ0:NZ)
       Double Precision Pi22Regulated(NX0:NX,NY0:NY,NZ0:NZ)
       Double Precision Pi33Regulated(NX0:NX,NY0:NY,NZ0:NZ)
-
-      Double Precision oldTT00(NX0:NX,NY0:NY,NZ0:NZ)
-      Double Precision oldTT01(NX0:NX,NY0:NY,NZ0:NZ)
-      Double Precision oldTT02(NX0:NX,NY0:NY,NZ0:NZ)
+      Double Precision PPIRegulated(NX0:NX,NY0:NY,NZ0:NZ)
 
 CSHEN==========================================================================
 C======output relaxation time for both shear and bulk viscosity================
@@ -506,7 +516,7 @@ C-------------------------------------------------------------------------------
       Double Precision SEOSL7, PEOSL7, TEOSL7, SEOSL6
       Double Precision ss, ddt1, ddt2, ee1, ee2
       External SEOSL7
-      Integer iRegulateCounter
+      Integer iRegulateCounter, iRegulateCounterBulkPi
 
 !   ---Zhi-End---
 
@@ -982,40 +992,40 @@ CSHEN====END====================================================================
             XiTtP0(I,J,K)  = XiTtP(I,J,K)
 3006    Continue
 
-
       ! Initialize PiXXRegulated and backup oldTTXX
-      If (ViscousC>1D-6) Then
-
-      Pi00Regulated = Pi00
-      Pi01Regulated = Pi01
-      Pi02Regulated = Pi02
-      Pi11Regulated = Pi11
-      Pi22Regulated = Pi22
-      Pi12Regulated = Pi12
-      Pi33Regulated = Pi33
-
-      iRegulateCounter = 0D0
-
-      oldTT00 = TT00
-      oldTT01 = TT01
-      oldTT02 = TT02
-
-
-
-      If (ViscousC>1D-6) Then
-      If (echo_level>=3) Print*, "Regulation counts:", iRegulateCounter
-      Pi00 = Pi00Regulated
-      Pi01 = Pi01Regulated
-      Pi02 = Pi02Regulated
-      Pi11 = Pi11Regulated
-      Pi22 = Pi22Regulated
-      Pi12 = Pi12Regulated
-      Pi33 = Pi33Regulated
-      End If
-
-      TT00 = oldTT00 ! use the original TTXX's
-      TT01 = oldTT01
-      TT02 = oldTT02
+      if (ViscousC>1D-6 .or. VisBulk > 1D-6) then
+        
+        !shear
+        If (ViscousC>1D-6) Then
+          Pi00Regulated = Pi00
+          Pi01Regulated = Pi01
+          Pi02Regulated = Pi02
+          Pi11Regulated = Pi11
+          Pi22Regulated = Pi22
+          Pi12Regulated = Pi12
+          Pi33Regulated = Pi33
+          iRegulateCounter = 0D0
+          If (echo_level>=3) Print*, "Regulation counts:", 
+     &                               iRegulateCounter
+        else
+          Pi00 = 0D0 
+          Pi01 = 0D0 
+          Pi02 = 0D0 
+          Pi11 = 0D0 
+          Pi22 = 0D0 
+          Pi12 = 0D0 
+          Pi33 = 0D0 
+        endif
+        
+        !bulk
+        if(VisBulk > 1D-6) then
+          PPIRegulated = PPI
+          iRegulateCounterBulkPi = 0D0
+          If (echo_level>=3) Print*, "Regulation Bulk Pi counts:", 
+     &                               iRegulateCounterBulkPi
+        else
+          PPI = 0D0
+        endif
 
       call dpSc8(TT00,TT01,TT02,ScT00,ScT01,ScT02,Vx,Vy,
      &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22, PScT00,PScT01,PScT02,PScT33,
@@ -1026,83 +1036,114 @@ CSHEN====END====================================================================
 
         DIFFC = 0.125D0
         !DIFFC = 0D0
-        call UPShasta2 (Pi01,Vx,Vy,PScT01, NX0,NX,NY0,NY,NZ0,NZ, 0,0,  !Pi01
-     &           DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,-1,1, DIFFC)
-        call UPShasta2 (Pi02,Vx,Vy,PScT02, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &           DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,-1, DIFFC)
-        call UPShasta2 (Pi00,Vx,Vy,PScT00, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
-        call UPShasta2 (Pi33,Vx,Vy,PScT33, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
-        call UPShasta2 (Pi11,Vx,Vy,PScT11, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
-        call UPShasta2 (Pi12,Vx,Vy,PScT12, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
-        call UPShasta2 (Pi22,Vx,Vy,PScT22, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
-
-        call UPShasta2 (PPI,Vx,Vy,PISc, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
-     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+        if(ViscousC > 1D-6) then 
+         call UPShasta2 (Pi01,Vx,Vy,PScT01, NX0,NX,NY0,NY,NZ0,NZ, 0,0,  !Pi01
+     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,-1,1, DIFFC)
+         call UPShasta2 (Pi02,Vx,Vy,PScT02, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &            DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,-1, DIFFC)
+         call UPShasta2 (Pi00,Vx,Vy,PScT00, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &             DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+         call UPShasta2 (Pi33,Vx,Vy,PScT33, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &             DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+         call UPShasta2 (Pi11,Vx,Vy,PScT11, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &             DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+         call UPShasta2 (Pi12,Vx,Vy,PScT12, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &             DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+         call UPShasta2 (Pi22,Vx,Vy,PScT22, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &             DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+        endif
+        
+        if(VisBulk > 1D-6) then
+          call UPShasta2 (PPI,Vx,Vy,PISc, NX0,NX,NY0,NY,NZ0,NZ, 0,0,
+     &             DT,DX,DY, NXPhy0,NYPhy0,  NXPhy,NYPhy,1,1, DIFFC)
+        endif
 
 !CHANGES
 ! Boundary regulation immediately
-      DO K=NZ0,NZ
-      DO J=NYPhy0,NYPhy
-      DO I=NXPhy0,NXPhy
-        xx=DX*I
-        yy=DY*J
-        rr=sqrt(xx**2+yy**2)
-        ff=1.0/(Dexp((rr-R0Bdry)/Aeps)+1.0)
-        Pi00(I,J,K) = Pi00(I,J,K)*ff
-        Pi01(I,J,K) = Pi01(I,J,K)*ff
-        Pi02(I,J,K) = Pi02(I,J,K)*ff
-        Pi33(I,J,K) = Pi33(I,J,K)*ff
-        Pi11(I,J,K) = Pi11(I,J,K)*ff
-        Pi12(I,J,K) = Pi12(I,J,K)*ff
-        Pi22(I,J,K) = Pi22(I,J,K)*ff
-      End Do
-      End Do
-      End Do
-
-      Do ! pi evolution
-
-        call checkPiAll(iFailed, II, JJ, Time, Vx, Vy, Ed, PL,
-     &  NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
-     &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22,
-     &  Pi00Regulated,Pi01Regulated,Pi02Regulated,Pi33Regulated,
-     &  Pi11Regulated,Pi12Regulated,Pi22Regulated,echo_level)
-
-      If (iFailed==0) Exit
-      call regulatePi(iRegulateCounter,Time,NX0,NY0,NZ0,NX,NY,NZ,
-     &    NXPhy0,NXPhy,NYPhy0,NYPhy,
-     &    Ed,PL,PPI,
-     &    Pi00,Pi01,Pi02,Pi11,
-     &    Pi12,Pi22,Pi33,Vx,Vy,II,JJ)
-      If (echo_level>=7) Then
-        Print*, "After: Pi00,Pi11,Pi22,Pi33*T^2,Pi01,Pi02,Pi12=",
-     &      Pi00(II,JJ,1),Pi11(II,JJ,1),
-     &      Pi22(II,JJ,1),Pi33(II,JJ,1),
-     &      Pi01(II,JJ,1),Pi02(II,JJ,1),
-     &      Pi12(II,JJ,1)
-      End If
-      iRegulateCounter = iRegulateCounter + 1D0
-      If (echo_level>=3) Then
-        Print*, "Regulation counts:", iRegulateCounter
-      EndIf
-        !If (iRegulateCounter>=20) Exit
-
-      End Do ! pi evolution
-
+        DO K=NZ0,NZ
+        DO J=NYPhy0,NYPhy
+        DO I=NXPhy0,NXPhy
+          xx=DX*I
+          yy=DY*J
+          rr=sqrt(xx**2+yy**2)
+          ff=1.0/(Dexp((rr-R0Bdry)/Aeps)+1.0)
+          Pi00(I,J,K) = Pi00(I,J,K)*ff
+          Pi01(I,J,K) = Pi01(I,J,K)*ff
+          Pi02(I,J,K) = Pi02(I,J,K)*ff
+          Pi33(I,J,K) = Pi33(I,J,K)*ff
+          Pi11(I,J,K) = Pi11(I,J,K)*ff
+          Pi12(I,J,K) = Pi12(I,J,K)*ff
+          Pi22(I,J,K) = Pi22(I,J,K)*ff
+          PPI(I,J,K) = PPI(I,J,K)*ff
+        End Do
+        End Do
+        End Do
+        
+        if(ViscousC > 1D-6) then
+         if (outputPiviolation) then
+            call checkPiandoutputViolation(Time, DX, DY, Vx, Vy, Ed, PL,
+     &     NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &     Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22)
+         endif
+         Do ! pi evolution
+           call checkPiAll(iFailed, II, JJ, Time, Vx, Vy, Ed, PL,
+     &     NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &     Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22,
+     &     Pi00Regulated,Pi01Regulated,Pi02Regulated,Pi33Regulated,
+     &     Pi11Regulated,Pi12Regulated,Pi22Regulated,echo_level)
+         If (iFailed==0) Exit
+         call regulatePi(iRegulateCounter,Time,NX0,NY0,NZ0,NX,NY,NZ,
+     &       NXPhy0,NXPhy,NYPhy0,NYPhy,
+     &       Ed,PL,PPI,
+     &       Pi00,Pi01,Pi02,Pi11,
+     &       Pi12,Pi22,Pi33,Vx,Vy,II,JJ)
+         If (echo_level>=7) Then
+           Print*, "After: Pi00,Pi11,Pi22,Pi33*T^2,Pi01,Pi02,Pi12=",
+     &         Pi00(II,JJ,1),Pi11(II,JJ,1),
+     &         Pi22(II,JJ,1),Pi33(II,JJ,1),
+     &         Pi01(II,JJ,1),Pi02(II,JJ,1),
+     &         Pi12(II,JJ,1)
+         End If
+         iRegulateCounter = iRegulateCounter + 1D0
+         If (echo_level>=3) Then
+           Print*, "Regulation counts:", iRegulateCounter
+         EndIf
+         End Do ! pi evolution
+        endif
+      
+        if(VisBulk > 1D-6) then 
+          if(outputPiviolation) then
+            call checkBulkPiandoutputViolation(Time, Dx, Dy, Ed, PL,
+     &        NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &        PPI)
+          endif
+          Do ! BulkPi evolution
+            call checkBulkPi(iFailed, II, JJ, Time, Ed, PL,
+     &      NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &      PPI, echo_level)
+          If (iFailed==0) Exit
+          call regulateBulkPi(iRegulateCounterBulkPi,Time,NX0,NY0,NZ0,
+     &        NX,NY,NZ,NXPhy0,NXPhy,NYPhy0,NYPhy,Ed,PL,PPI,II,JJ)
+          If (echo_level>=7) Then
+            Print*, "After: PPI=", PPI(II,JJ,1)
+          End If
+          iRegulateCounterBulkPi = iRegulateCounterBulkPi + 1D0
+          If (echo_level>=3) Then
+            Print*, "Regulation BulkPi counts:", iRegulateCounterBulkPi
+          EndIf
+          End Do ! BulkPi evolution
+        endif
 
       else ! ideal hydro
 
-      Pi00 = 0D0
-      Pi01 = 0D0
-      Pi02 = 0D0
-      Pi11 = 0D0
-      Pi22 = 0D0
-      Pi12 = 0D0
-      Pi33 = 0D0
+        Pi00 = 0D0
+        Pi01 = 0D0
+        Pi02 = 0D0
+        Pi11 = 0D0
+        Pi22 = 0D0
+        Pi12 = 0D0
+        Pi33 = 0D0
+        PPI = 0D0
 
       call dpSc8(TT00,TT01,TT02,ScT00,ScT01,ScT02,Vx,Vy,
      &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22, PScT00,PScT01,PScT02,PScT33,
@@ -1111,7 +1152,7 @@ CSHEN====END====================================================================
      &  Ed,PL,Bd,Sd,Temp0,Temp,CMu, T00,T01,T02, IAA,CofAA,Time,DX,DY,
      &  DZ,DT,NXPhy0,NYPhy0,NXPhy,NYPhy,NX0,NX,NY0,NY,NZ0,NZ,PNEW,NNEW)  !PNEW NNEW  related to root finding
 
-      End If ! If (ViscousC>1D-6) Then
+      End If ! If (ViscousC>1D-6 .or. VisBulk > 1D-6) Then
 
 
       ! T(mu,nu) evolution
@@ -1138,7 +1179,18 @@ CSHEN====END====================================================================
       End Do
       End Do
 
-
+      if(outputMovie) then
+         DO K=NZ0,NZ
+         DO J=NYPhy0,NYPhy
+         DO I=NXPhy0,NXPhy
+           if(mod(I, 5) .eq. 0 .and. mod(J, 5) .eq. 0) then  
+             write(3773, '(4F18.8)')Time, I*Dx, J*Dy,
+     &             Temp(I, J, K)*0.19733D0
+           endif
+         enddo
+         enddo
+         enddo
+      endif
 CSHEN===========================================================================
 C====output the OSCAR body file from hydro evolution============ ===============
       if(IOSCAR) then
@@ -2153,6 +2205,15 @@ c       goto 199
        DPc22(I,J,K)=(-1.0)*D2U2-U2(I,J,K)*DU2+CS*(U2(I,J,K)**2+1.0)
        DPc12(I,J,K)=(-0.5)*(D2U1+D1U2)-0.5*(U1(I,J,K)*DU2+U2(I,J,K)*DU1)
      &                      +CS*(U1(I,J,K)*U2(I,J,K))
+       call checkSigma(U0(I,J,K), U1(I,J,K), U2(I,J,K),
+     &    DPc00(I,J,K), DPc01(I,J,K), DPc02(I,J,K),
+     &    DPc11(I,J,K), DPc12(I,J,K), DPc22(I,J,K), DPc33(I,J,K),
+     &    Itrigger)
+       !if(Itrigger .eq. 1) then
+       !  print*, D0U2, D2U0
+       !  print*, U0(I,J+1,K), U0(I,J-1,K)
+       !  stop
+       !endif
 
          SiLoc(I,J,K)=CS*3.0  !   CS=(D0U0+D1U1+D2U2+U0(I,J,K)/Time)/3.0
 
@@ -3392,8 +3453,8 @@ C--------------------------------------
         Call invertFunctionD(findEdHook,0D0,5D3,1D-3,ED(I,J,K),0D0,eeH)
 
         !eeH = quadESolver(ED(I,J,K),DM0,DM,PPI(I,J,K),IDebug,I,J) ! use Ed from last time step as a starting point
-        ED(I,J,K) = eeH
-        DM = dmax1(DM, 1e-10)
+        ED(I,J,K) = dmax1(eeH, 1D-10)
+        DM = dmax1(DM, 1D-10)
         VP = (DM0-eeH)/DM
 
         ee=Ed(I,J,NZ0)*HbarC        !fm-4 to GeV/fm3  peter unit
@@ -3403,7 +3464,7 @@ C--------------------------------------
 
         Vx(I,J,K) = VP*T01IJ/DM
         Vy(I,J,K) = VP*T02IJ/DM
- !----------------------------------------------------------------------
+!----------------------------------------------------------------------
  310   CONTINUE
  300   CONTINUE
 
@@ -3421,7 +3482,7 @@ C--------------------------------------
       DO K=NZ0,NZ
       DO J=NYPhy0,NYPhy
       DO I=NXPhy0,NXPhy
-        U0(I,J,K)=1D0/sqrt(1D0-Vx(I,J,K)**2-Vy(I,J,k)**2) ! also calculate U0 to save another separated loop
+        U0(I,J,K)=1D0/sqrt(1D0-Vx(I,J,K)**2-Vy(I,J,k)**2+1D-10) ! also calculate U0 to save another separated loop
         U1(I,J,K)=U0(I,J,K)*Vx(I,J,K)
         U2(I,J,K)=U0(I,J,K)*Vy(I,J,K)
       End Do
@@ -4705,9 +4766,6 @@ C----------------------------------------------------------------
 !-----------------------------------------------------------------------
 
 
-
-
-
       Subroutine checkPiAll(failed, II, JJ, Time, Vx, Vy, Ed, PL,
      &  NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
      &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22,
@@ -4746,13 +4804,14 @@ C----------------------------------------------------------------
       Integer say_level
 
       Integer I,J,K
-      Double Precision trace_pi, trans, TrPi2, ee
+      Double Precision trace_pi, trans, TrPi2
 
-      Double Precision traceAnormaly, eStr, vxS, vyS
-      Double Precision :: smallness = 1D-2
-      Double Precision :: accuracy = 1D-2
+      Double Precision :: Tideal_scale, pi_scale
+      Double Precision :: absNumericalzero = 1D-2
+      Double Precision :: relNumericalzero = 1D-2  !Xsi_0 in Zhi's thesis
 
       Double Precision maxPiRatio
+      Double Precision gamma_perp
       Common /maxPiRatio/ maxPiRatio
 
       failed = 0
@@ -4761,12 +4820,68 @@ C----------------------------------------------------------------
       Do J=NYPhy0-3,NYPhy+3
       Do I=NXPhy0-3,NXPhy+3
 
-        eStr = (Ed(I,J,K)+PL(I,J,K))*maxPiRatio
-        ee = Ed(I,J,K)*maxPiRatio
-        traceAnormaly = abs(Ed(I,J,K)-3D0*PL(I,J,K))*maxPiRatio
+        Tideal_scale = sqrt(Ed(I,J,K)**2 + 3*PL(I,J,K)**2)
+        
+        TrPi2 = Pi00(I,J,K)**2+Pi11(I,J,K)**2+Pi22(I,J,K)**2
+     &          +Pi33(I,J,K)**2
+     &          -2*Pi01(I,J,K)**2-2*Pi02(I,J,K)**2+2*Pi12(I,J,K)**2
 
+        pi_scale = sqrt(abs(TrPi2))
+        !Positivity of Tr(pi^2)
+        if(TrPi2 < -relNumericalzero*pi_scale) then
+          If (say_level>=9) Then
+            Print*, "Time=", Time
+            Print*, "Trace Pi^2 is negative!"
+            Print*, "I,J=", I,J
+            Print*, "Trace pi^2=", TrPi2
+            Print*, "Ed,PL=", Ed(I,J,K),PL(I,J,K)
+            Print*, "Before: Pi00,Pi11,Pi22,Pi33*T^2,Pi01,Pi02,Pi12=",
+     &        Pi00Regulated(I,J,K),Pi11Regulated(I,J,K),
+     &        Pi22Regulated(I,J,K),Pi33Regulated(I,J,K),
+     &        Pi01Regulated(I,J,K),Pi02Regulated(I,J,K),
+     &        Pi12Regulated(I,J,K)
+            Print*, "Before: Trace pi^2=",
+     &        Pi00Regulated(I,J,K)**2+Pi11Regulated(I,J,K)**2
+     &        +Pi22Regulated(I,J,K)**2+Pi33Regulated(I,J,K)**2
+     &        -2*Pi01Regulated(I,J,K)**2-2*Pi02Regulated(I,J,K)**2
+     &        +2*Pi12Regulated(I,J,K)**2
+          End If
+          II = I
+          JJ = J
+          failed = 1
+          return
+        endif
+
+        !Largeness of pi tensor Tr(pi^2)
+        If (pi_scale > max(maxPiRatio*Tideal_scale,
+     &      absNumericalzero)) Then
+          If (say_level>=9) Then
+          Print*, "Time=", Time
+          Print*, "pi is too large!"
+          Print*, "I,J=", I,J
+          Print*, "Trace pi^2=", TrPi2
+          Print*, "Ed,PL=", Ed(I,J,K),PL(I,J,K)
+          Print*, "Before: Pi00,Pi11,Pi22,Pi33*T^2,Pi01,Pi02,Pi12=",
+     &      Pi00Regulated(I,J,K),Pi11Regulated(I,J,K),
+     &      Pi22Regulated(I,J,K),Pi33Regulated(I,J,K),
+     &      Pi01Regulated(I,J,K),Pi02Regulated(I,J,K),
+     &      Pi12Regulated(I,J,K)
+          Print*, "Before: Trace pi^2=",
+     &      Pi00Regulated(I,J,K)**2+Pi11Regulated(I,J,K)**2
+     &      +Pi22Regulated(I,J,K)**2+Pi33Regulated(I,J,K)**2
+     &      -2*Pi01Regulated(I,J,K)**2-2*Pi02Regulated(I,J,K)**2
+     &      +2*Pi12Regulated(I,J,K)**2
+          End If
+          II = I
+          JJ = J
+          failed = 1
+          return
+        End If
+
+        !trace of pi tensor
         trace_pi = Pi00(I,J,K)-Pi11(I,J,K)-Pi22(I,J,K)-Pi33(I,J,K)
-        If (abs(trace_pi)>max(traceAnormaly*accuracy,smallness)) Then
+        If(abs(trace_pi) > max(relNumericalzero*pi_scale,
+     &     absNumericalzero) ) Then
           If (say_level>=9) Then
           Print*, "Time=", Time
           Print*, "Pi should be traceless!"
@@ -4790,8 +4905,12 @@ C----------------------------------------------------------------
           return
         End If
 
-        trans = Pi01(I,J,K)-Vx(I,J,K)*Pi11(I,J,K)-Vy(I,J,K)*Pi12(I,J,K)
-        If (abs(trans)>max(ee*accuracy,smallness)) Then ! VER-1.6.29RC3: compared with ed
+        !transversality of pi tensor  u_mu pi^{mu,x} = 0
+        gamma_perp = sqrt(1./(1. - Vx(I,J,K)**2 - Vy(I,J,K)**2 + 1D-30))
+        trans = gamma_perp*(Pi01(I,J,K) - Vx(I,J,K)*Pi11(I,J,K)
+     &                      - Vy(I,J,K)*Pi12(I,J,K))
+        If (abs(trans) > max(relNumericalzero*pi_scale, 
+     &      absNumericalzero)) Then
           If (say_level>=9) Then
           Print*, "Time=", Time
           Print*, "Tranversality violated!"
@@ -4816,8 +4935,11 @@ C----------------------------------------------------------------
           return
         End If
 
-        trans = Pi02(I,J,K)-Vx(I,J,K)*Pi12(I,J,K)-Vy(I,J,K)*Pi22(I,J,K)
-        If (abs(trans)>max(ee*accuracy,smallness)) Then ! VER-1.6.29RC3: compared with ed
+        !transversality of pi tensor  u_mu pi^{mu,y} = 0
+        trans = gamma_perp*(Pi02(I,J,K) - Vx(I,J,K)*Pi12(I,J,K)
+     &                      - Vy(I,J,K)*Pi22(I,J,K))
+        If (abs(trans) > max(relNumericalzero*pi_scale,
+     &      absNumericalzero)) Then
           If (say_level>=9) Then
           Print*, "Time=", Time
           Print*, "Tranversality violated!"
@@ -4842,8 +4964,11 @@ C----------------------------------------------------------------
           return
         End If
 
-        trans = Pi00(I,J,K)-Vx(I,J,K)*Pi01(I,J,K)-Vy(I,J,K)*Pi02(I,J,K)
-        If (abs(trans)>max(ee*accuracy,smallness)) Then ! VER-1.6.29RC3: compared with ed
+        !transversality of pi tensor  u_mu pi^{mu,tau} = 0
+        trans = gamma_perp*(Pi00(I,J,K) - Vx(I,J,K)*Pi01(I,J,K)
+     &                      - Vy(I,J,K)*Pi02(I,J,K))
+        If (abs(trans) > max(relNumericalzero*pi_scale,
+     &      absNumericalzero)) Then
           If (say_level>=9) Then
           Print*, "Time=", Time
           Print*, "Tranversality violated!"
@@ -4868,26 +4993,225 @@ C----------------------------------------------------------------
           return
         End If
 
+
+      End Do
+      End Do
+      End Do
+
+      End Subroutine
+!-----------------------------------------------------------------------
+
+      Subroutine checkSigma(u0, u1, u2, 
+     &           sigma00, sigma01, sigma02, sigma11, sigma12, sigma22,
+     &           sigma33, trigger)
+      !check the traceless + transversality of the velocity shear tensor
+      Implicit None
+
+      Double Precision u0, u1, u2
+
+      Integer I,J,K
+      Integer trigger
+      Double Precision sigma00, sigma01, sigma02, 
+     &                 sigma11, sigma12, sigma22, sigma33
+      Double Precision trace, trans0, trans1, trans2
+      
+      Double Precision :: absNumericalzero = 1D-2
+      Double Precision :: relNumericalzero = 1D-2  !Xsi_0 in Zhi's thesis
+ 
+      trigger = 0
+
+      trace = sigma00 - sigma11 - sigma22 - sigma33
+      trans0 = u0*sigma00 - u1*sigma01 - u2*sigma02
+      trans1 = u0*sigma01 - u1*sigma11 - u2*sigma12
+      trans2 = u0*sigma02 - u1*sigma12 - u2*sigma22
+
+      if(abs(trace) .gt. absNumericalzero) then
+         trigger = 1
+         print*, "velocity shear tensor: violate traceless"
+         print*, "trace = ", trace
+      endif
+      if(abs(trans0) .gt. absNumericalzero) then
+         trigger = 1
+         print*, "velocity shear tensor: violate transversality"
+         print*, "trans0 = ", trans0
+      endif
+      if(abs(trans1) .gt. absNumericalzero) then
+         trigger = 1
+         print*, "velocity shear tensor: violate transversality"
+         print*, "trans1 = ", trans1
+      endif
+      if(abs(trans2) .gt. absNumericalzero) then
+         trigger = 1
+         print*, "velocity shear tensor: violate transversality"
+         print*, "trans2 = ", trans2
+      endif
+
+      if(trigger .eq. 1) then
+         print*, "velocity shear tensor is not right!"
+         print*, u0, u1, u2
+         print*, sigma00, sigma01, sigma02, 0.0d0
+         print*, sigma01, sigma11, sigma12, 0.0d0
+         print*, sigma02, sigma12, sigma22, 0.0d0
+         print*, 0.0d0, 0.0d0, 0.0d0, sigma33
+      endif
+
+      end Subroutine
+
+!-----------------------------------------------------------------------
+      Subroutine checkPiandoutputViolation(Time, Dx, Dy, Vx, Vy, Ed, PL,
+     &  NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22)
+      ! Check size + tracelessness + transversality + positiveness of Tr(pi^2)
+      ! and output all the violation points in the transverse plane
+
+      Implicit None
+
+      Integer NXPhy0,NXPhy,NYPhy0,NYPhy,NX0,NX,NY0,NY,NZ0,NZ
+      Double Precision Time, Dx, Dy
+
+      Double Precision Ed(NX0:NX,NY0:NY,NZ0:NZ)
+      Double Precision PL(NX0:NX,NY0:NY,NZ0:NZ)
+
+      Double Precision Vx(NX0:NX,NY0:NY,NZ0:NZ)
+      Double Precision Vy(NX0:NX,NY0:NY,NZ0:NZ)
+
+      Double Precision Pi00(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+      Double Precision Pi01(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+      Double Precision Pi02(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+      Double Precision Pi33(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+      Double Precision Pi11(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+      Double Precision Pi12(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+      Double Precision Pi22(NX0:NX, NY0:NY, NZ0:NZ)    !Stress Tensor
+
+      Integer I,J,K
+      integer iFlag
+      double precision violationType
+      Double Precision trace_pi, trans, TrPi2
+
+      Double Precision :: Tideal_scale, pi_scale
+      Double Precision :: absNumericalzero = 1D-2
+      Double Precision :: relNumericalzero = 1D-2  !Xsi_0 in Zhi's thesis
+
+      Double Precision maxPiRatio
+      Double Precision gamma_perp
+      Common /maxPiRatio/ maxPiRatio
+
+      iFlag = 0
+
+      Do K=NZ0,NZ
+      Do J=NYPhy0-3,NYPhy+3
+      Do I=NXPhy0-3,NXPhy+3
+
+        violationType = 0D0
+        Tideal_scale = sqrt(Ed(I,J,K)**2 + 3*PL(I,J,K)**2)
+        
         TrPi2 = Pi00(I,J,K)**2+Pi11(I,J,K)**2+Pi22(I,J,K)**2
-     &          +Pi33(I,J,K)**2*Time**4
+     &          +Pi33(I,J,K)**2
      &          -2*Pi01(I,J,K)**2-2*Pi02(I,J,K)**2+2*Pi12(I,J,K)**2
-        If (TrPi2<-max(eStr*accuracy,smallness)) Then
+
+        pi_scale = sqrt(abs(TrPi2))
+        !Positivity of Tr(pi^2)
+        if(TrPi2 < -relNumericalzero*pi_scale) then
+          violationType = violationType + 1.0D0
+        endif
+
+        !Largeness of pi tensor Tr(pi^2)
+        If (pi_scale > max(maxPiRatio*Tideal_scale,
+     &      absNumericalzero)) Then
+          violationType = violationType + 0.1D0
+        End If
+
+        !trace of pi tensor
+        trace_pi = Pi00(I,J,K)-Pi11(I,J,K)-Pi22(I,J,K)-Pi33(I,J,K)
+        If(abs(trace_pi) > max(relNumericalzero*pi_scale,
+     &     absNumericalzero) ) Then
+          violationType = violationType + 0.01D0
+        End If
+
+        !transversality of pi tensor  u_mu pi^{mu,x} = 0
+        gamma_perp = sqrt(1./(1. - Vx(I,J,K)**2 - Vy(I,J,K)**2 + 1D-30))
+        trans = gamma_perp*(Pi01(I,J,K) - Vx(I,J,K)*Pi11(I,J,K) 
+     &                      - Vy(I,J,K)*Pi12(I,J,K))
+        If (abs(trans) > max(relNumericalzero*pi_scale, 
+     &      absNumericalzero)) Then
+          violationType = violationType + 0.001D0
+        End If
+
+        !transversality of pi tensor  u_mu pi^{mu,y} = 0
+        trans = gamma_perp*(Pi02(I,J,K) - Vx(I,J,K)*Pi12(I,J,K) 
+     &                      - Vy(I,J,K)*Pi22(I,J,K))
+        If (abs(trans) > max(relNumericalzero*pi_scale,
+     &      absNumericalzero)) Then
+          violationType = violationType + 0.001D0
+        End If
+
+        !transversality of pi tensor  u_mu pi^{mu,tau} = 0
+        trans = gamma_perp*(Pi00(I,J,K) - Vx(I,J,K)*Pi01(I,J,K) 
+     &                      - Vy(I,J,K)*Pi02(I,J,K))
+        If (abs(trans) > max(relNumericalzero*pi_scale,
+     &      absNumericalzero)) Then
+          violationType = violationType + 0.001D0
+        End If
+        
+        if(violationType > 0D0) then 
+           iFlag = 1
+           write(583, '(4F18.8)')Time, violationType, I*DX, J*DY
+        endif
+
+      End Do
+      End Do
+      End Do
+
+      if(iFlag .eq. 0) then 
+         write(583, '(4F18.8)')Time, 0D0, 10D0, 10D0
+      endif
+      End Subroutine
+!-----------------------------------------------------------------------
+
+      Subroutine checkBulkPi(failed, II, JJ, Time, Ed, PL,
+     &  NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &  PPI, say_level)
+      ! Check the size of Bulk pressure
+
+      Implicit None
+
+      Integer NXPhy0,NXPhy,NYPhy0,NYPhy,NX0,NX,NY0,NY,NZ0,NZ
+      Integer failed, II, JJ ! (II,JJ): where it fails
+      Double Precision Time
+
+      Double Precision Ed(NX0:NX,NY0:NY,NZ0:NZ)
+      Double Precision PL(NX0:NX,NY0:NY,NZ0:NZ)
+
+      Double Precision PPI(NX0:NX, NY0:NY, NZ0:NZ)     !Bulk pressure
+
+      Integer say_level  !Warning level
+
+      Integer I,J,K
+      Double Precision :: pressure_scale, bulkPi_scale
+      Double Precision :: absNumericalzero = 1D-2
+      Double Precision :: relNumericalzero = 1D-2  !Xsi_0 in Zhi's thesis
+
+      Double Precision maxBulkPiRatio
+      Common /maxBulkPiRatio/ maxBulkPiRatio
+
+      failed = 0
+
+      Do K=NZ0,NZ
+      Do J=NYPhy0-3,NYPhy+3
+      Do I=NXPhy0-3,NXPhy+3
+
+        !Largeness of bulk pressure
+        pressure_scale = abs(PL(I,J,K))
+        bulkPi_scale = abs(PPI(I,J,K))
+
+        If (bulkPi_scale > max(maxBulkPiRatio*pressure_scale,
+     &      absNumericalzero)) Then
           If (say_level>=9) Then
-          Print*, "Time=", Time
-          Print*, "Positivity of TrPi^2 violated!"
-          Print*, "I,J=", I,J
-          Print*, "Trace pi^2=", TrPi2
-          Print*, "Ed,PL=", Ed(I,J,K),PL(I,J,K)
-          Print*, "Before: Pi00,Pi11,Pi22,Pi33*T^2,Pi01,Pi02,Pi12=",
-     &      Pi00Regulated(I,J,K),Pi11Regulated(I,J,K),
-     &      Pi22Regulated(I,J,K),Pi33Regulated(I,J,K),
-     &      Pi01Regulated(I,J,K),Pi02Regulated(I,J,K),
-     &      Pi12Regulated(I,J,K)
-          Print*, "Before: Trace pi^2=",
-     &      Pi00Regulated(I,J,K)**2+Pi11Regulated(I,J,K)**2
-     &      +Pi22Regulated(I,J,K)**2+Pi33Regulated(I,J,K)**2*Time**4
-     &      -2*Pi01Regulated(I,J,K)**2-2*Pi02Regulated(I,J,K)**2
-     &      +2*Pi12Regulated(I,J,K)**2
+            Print*, "Time=", Time
+            Print*, "Bulk Pi is larger than pressure!"
+            Print*, "I,J=", I,J
+            Print*, "Bulk Pi=", PPI(I,J,K)
+            Print*, "Pressure=", PL(I,J,K)
           End If
           II = I
           JJ = J
@@ -4903,8 +5227,50 @@ C----------------------------------------------------------------
 !-----------------------------------------------------------------------
 
 
+      Subroutine checkBulkPiandoutputViolation(Time, Dx, Dy, Ed, PL,
+     &  NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
+     &  PPI)
+      ! Check the size of Bulk pressure and output all violation 
+      ! points in the transverse plane
 
+      Implicit None
 
+      Integer NXPhy0,NXPhy,NYPhy0,NYPhy,NX0,NX,NY0,NY,NZ0,NZ
+      Double Precision Time, Dx, Dy
+
+      Double Precision Ed(NX0:NX,NY0:NY,NZ0:NZ)
+      Double Precision PL(NX0:NX,NY0:NY,NZ0:NZ)
+
+      Double Precision PPI(NX0:NX, NY0:NY, NZ0:NZ)     !Bulk pressure
+
+      Integer violationType
+      Integer I,J,K
+      Double Precision :: pressure_scale, bulkPi_scale
+      Double Precision :: absNumericalzero = 1D-2
+      Double Precision :: relNumericalzero = 1D-2  !Xsi_0 in Zhi's thesis
+
+      Double Precision maxBulkPiRatio
+      Common /maxBulkPiRatio/ maxBulkPiRatio
+
+      Do K=NZ0,NZ
+      Do J=NYPhy0-3,NYPhy+3
+      Do I=NXPhy0-3,NXPhy+3
+
+        !Largeness of bulk pressure
+        pressure_scale = abs(PL(I,J,K))
+        bulkPi_scale = abs(PPI(I,J,K))
+
+        If (bulkPi_scale > max(maxBulkPiRatio*pressure_scale,
+     &      absNumericalzero)) Then
+          write(584, '(3F18.8)')Time, I*DX, J*DY
+        End If
+
+      End Do
+      End Do
+      End Do
+
+      End Subroutine
+!-----------------------------------------------------------------------
 
 
       Subroutine printMore(id, I, J, Time,
