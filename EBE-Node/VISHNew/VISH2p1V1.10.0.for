@@ -2205,10 +2205,10 @@ c       goto 199
        DPc22(I,J,K)=(-1.0)*D2U2-U2(I,J,K)*DU2+CS*(U2(I,J,K)**2+1.0)
        DPc12(I,J,K)=(-0.5)*(D2U1+D1U2)-0.5*(U1(I,J,K)*DU2+U2(I,J,K)*DU1)
      &                      +CS*(U1(I,J,K)*U2(I,J,K))
-       call checkSigma(U0(I,J,K), U1(I,J,K), U2(I,J,K),
-     &    DPc00(I,J,K), DPc01(I,J,K), DPc02(I,J,K),
-     &    DPc11(I,J,K), DPc12(I,J,K), DPc22(I,J,K), DPc33(I,J,K),
-     &    Itrigger)
+!       call checkSigma(U0(I,J,K), U1(I,J,K), U2(I,J,K),
+!     &    DPc00(I,J,K), DPc01(I,J,K), DPc02(I,J,K),
+!     &    DPc11(I,J,K), DPc12(I,J,K), DPc22(I,J,K), DPc33(I,J,K),
+!     &    Itrigger)
        !if(Itrigger .eq. 1) then
        !  print*, D0U2, D2U0
        !  print*, U0(I,J+1,K), U0(I,J-1,K)
