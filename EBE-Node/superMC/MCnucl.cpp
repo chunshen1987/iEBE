@@ -268,7 +268,7 @@ int MCnucl::getBinaryCollision()
         {
           participant.push_back(new Participant(nucl1[i],1));
           if(CCFluctuationModel > 5)
-             participant.back()->setfluctfactor(sampleFluctionFactor());
+             participant.back()->setfluctfactor(sampleFluctionFactorforParticipant());
           mapping_table1[i] = participant.size()-1;
         }
         nucl2[j]->setNumberOfCollision();
@@ -277,13 +277,13 @@ int MCnucl::getBinaryCollision()
         {
           participant.push_back(new Participant(nucl2[j],2));
           if(CCFluctuationModel > 5)
-             participant.back()->setfluctfactor(sampleFluctionFactor());
+             participant.back()->setfluctfactor(sampleFluctionFactorforParticipant());
           mapping_table2[j] = participant.size()-1;
         }
         // Take care of binary collision registration:
         binaryCollision.push_back(new CollisionPair((x1+x2)/2,(y1+y2)/2));
         if(CCFluctuationModel > 5)
-           binaryCollision.back()->setfluctfactor(sampleFluctionFactor());
+           binaryCollision.back()->setfluctfactor(sampleFluctionFactorforBinaryCollision());
         if (which_mc_model==5 && sub_model==2) // need to know which binary collision happened to which participants
         {
           int current_binaryCollision_index = binaryCollision.size()-1;
@@ -897,11 +897,28 @@ void MCnucl::dumpBinaryTable()
   of.close();
 }
 
-double MCnucl::sampleFluctionFactor()
+double MCnucl::sampleFluctionFactorforParticipant()
 {
+   double eps = 1e-8;
    double fluctfactor = 1.0;
+   double Gamma_k = 1./ccFluctuationGammaTheta;
+   double k_part = (1 - Alpha + eps)/2.*Gamma_k;
+   double theta_part = 2./(1 - Alpha + eps)*ccFluctuationGammaTheta;
    if(CCFluctuationModel == 6)  //Gamma distribution for MC-Glauber
-      fluctfactor = gsl_ran_gamma(gslRng, 1./ccFluctuationGammaTheta, ccFluctuationGammaTheta);
+      fluctfactor = gsl_ran_gamma(gslRng, k_part, theta_part);
+   
+   return(fluctfactor);
+}
+
+double MCnucl::sampleFluctionFactorforBinaryCollision()
+{
+   double eps = 1e-8;
+   double fluctfactor = 1.0;
+   double Gamma_k = 1./ccFluctuationGammaTheta;
+   double k_binary = (Alpha+eps)*Gamma_k;
+   double theta_binary = 1./(Alpha+eps)*ccFluctuationGammaTheta;
+   if(CCFluctuationModel == 6)  //Gamma distribution for MC-Glauber
+      fluctfactor = gsl_ran_gamma(gslRng, k_binary, theta_binary);
    
    return(fluctfactor);
 }

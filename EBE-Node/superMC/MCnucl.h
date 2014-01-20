@@ -105,6 +105,7 @@ public:
 
     void dumpBinaryTable();
 
-    double sampleFluctionFactor();
+    double sampleFluctionFactorforParticipant();
+    double sampleFluctionFactorforBinaryCollision();
 };
 #endif
