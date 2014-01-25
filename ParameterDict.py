@@ -1,5 +1,6 @@
 controlParameterList = {
-    'simulation_type'       :   'hydro', # 'hybrid' or 'hydro'
+    'simulation_type'       :   'hydro',  # 'hybrid' or 'hydro'
+    'niceness'              :   10,       # range from 0 to 19 for process priority, 0 for the highest priority
 }
 
 superMCParameters = {
