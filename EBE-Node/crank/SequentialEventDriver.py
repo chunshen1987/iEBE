@@ -39,6 +39,7 @@ allParameterLists = [
 
 controlParameterList = {
     'simulation_type'       :   'hybrid', # 'hybrid' or 'hydro'
+    'niceness'              :   10,       # range from 0 to 19 for process priority, 0 for the highest priority
     'numberOfEvents'        :   10, # how many sequential calculations
     'rootDir'               :   path.abspath('../'),
     'resultDir'             :   path.abspath('../finalResults'), # final results will be saved here, absolute
@@ -190,6 +191,7 @@ def generateSuperMCInitialConditions(numberOfEvents):
         Generate initial conditions using superMC. It then yield the absolute
         path for all the initial conditions.
     """
+    ProcessNiceness = controlParameterList['niceness']
     # set directory strings
     superMCDirectory = path.join(controlParameterList['rootDir'], superMCControl['mainDir'])
     superMCDataDirectory = path.join(superMCDirectory, superMCControl['dataDir'])
@@ -206,7 +208,7 @@ def generateSuperMCInitialConditions(numberOfEvents):
     # form assignment string
     assignments = formAssignmentStringFromDict(superMCParameters)
     # form executable string
-    executableString = "./" + superMCExecutable + assignments
+    executableString = "nice -n %d ./" % (ProcessNiceness) + superMCExecutable + assignments
     # execute!
     run(executableString, cwd=superMCDirectory)
 
@@ -221,6 +223,7 @@ def hydroWithInitialCondition(aFile):
         Perform a single hydro calculation with the given absolute path to an
         initial condition. Yield the result files.
     """
+    ProcessNiceness = controlParameterList['niceness']
     # set directory strings
     hydroDirectory = path.join(controlParameterList['rootDir'], hydroControl['mainDir'])
     hydroICDirectory = path.join(hydroDirectory, hydroControl['initialConditionDir'])
@@ -248,7 +251,7 @@ def hydroWithInitialCondition(aFile):
     # form assignment string
     assignments = formAssignmentStringFromDict(hydroParameters)
     # form executable string
-    executableString = "./" + hydroExecutable + assignments
+    executableString = "nice -n %d ./" % (ProcessNiceness) + hydroExecutable + assignments
     # execute!
     run(executableString, cwd=hydroDirectory)
 
@@ -269,6 +272,7 @@ def iSSWithHydroResultFiles(fileList):
         Perform iSS calculation using the given list of hydro result files.
         Return the path to the OSCAR file.
     """
+    ProcessNiceness = controlParameterList['niceness']
     # set directory strings
     iSSDirectory = path.join(controlParameterList['rootDir'], iSSControl['mainDir'])
     iSSOperationDirectory = path.join(iSSDirectory, iSSControl['operationDir']) # for both input & output
@@ -291,7 +295,7 @@ def iSSWithHydroResultFiles(fileList):
     # form assignment string
     assignments = formAssignmentStringFromDict(iSSParameters)
     # form executable string
-    executableString = "./" + iSSExecutable + assignments
+    executableString = "nice -n %d ./" % (ProcessNiceness) + iSSExecutable + assignments
     # execute!
     run(executableString, cwd=iSSDirectory)
 
@@ -312,6 +316,7 @@ def iSWithResonancesWithHydroResultFiles(fileList):
         Perform iS calculation using the given list of hydro result files,
         followed by resonance calculations and iInteSp calculations.
     """
+    ProcessNiceness = controlParameterList['niceness']
     # set directory strings
     iSDirectory = path.join(controlParameterList['rootDir'], iSControl['mainDir'])
     iSOperationDirectory = path.join(iSDirectory, iSControl['operationDir']) # for both input & output
@@ -333,7 +338,7 @@ def iSWithResonancesWithHydroResultFiles(fileList):
     move(path.join(iSDirectory, 'EOS', 'chosen_particle_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particle.dat'))
 
     # execute!
-    run("bash ./"+iSExecutionEntry, cwd=iSDirectory)
+    run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, cwd=iSDirectory)
 
     # save some of the important result files
     worthStoring = []
@@ -348,6 +353,7 @@ def iSSeventplaneAngleWithHydroResultFiles(fileList):
         Perform iSS calculation using the given list of hydro result files.
         Return the path to the OSCAR file.
     """
+    ProcessNiceness = controlParameterList['niceness']
     # set directory strings
     iSSDirectory = path.join(controlParameterList['rootDir'], iSSControl['mainDir'])
     iSSOperationDirectory = path.join(iSSDirectory, iSSControl['operationDir']) # for both input & output
@@ -371,7 +377,7 @@ def iSSeventplaneAngleWithHydroResultFiles(fileList):
     # form assignment string
     assignments = formAssignmentStringFromDict(iSSParameters)
     # form executable string
-    executableString = "./" + iSSExecutable + assignments
+    executableString = "nice -n %d ./" % (ProcessNiceness) + iSSExecutable + assignments
     # execute!
     run(executableString, cwd=iSSDirectory)
 
@@ -390,6 +396,7 @@ def photonEmissionWithHydroResultFiles(fileList):
     """
         Perform thermal photon calculation using the given list of hydro result files.
     """
+    ProcessNiceness = controlParameterList['niceness']
     # set directory strings
     photonEmDirectory = path.join(controlParameterList['rootDir'], photonEmissionControl['mainDir'])
     photonEmOperationDirectory = path.join(photonEmDirectory, photonEmissionControl['operationDir']) # for both input and output
@@ -411,7 +418,7 @@ def photonEmissionWithHydroResultFiles(fileList):
     # form assignment string
     assignments = formAssignmentStringFromDict(photonEmissionParameters)
     # form executable string
-    executableString = "./" + photonEmExecutable + assignments
+    executableString = "nice -n %d ./" % (ProcessNiceness) + photonEmExecutable + assignments
     # execute!
     run(executableString, cwd=photonEmDirectory)
 
@@ -429,6 +436,7 @@ def osc2uFromOSCARFile(OSCARFilePath):
         Execute osc2u program using the given path to the OSCAR file. Return the
         path to the output file.
     """
+    ProcessNiceness = controlParameterList['niceness']
     # set directory strings
     osc2uDirectory = path.join(controlParameterList['rootDir'], osc2uControl['mainDir'])
     osc2uOutputFilePath = path.join(osc2uDirectory, osc2uControl['outputFilename'])
@@ -443,7 +451,7 @@ def osc2uFromOSCARFile(OSCARFilePath):
 
     # check existence of the OSCAR file then execute
     if path.exists(OSCARFilePath):
-        run("./"+osc2uExecutable + " < " + OSCARFilePath, cwd=osc2uDirectory)
+        run("nice -n %d ./" % (ProcessNiceness) + osc2uExecutable + " < " + OSCARFilePath, cwd=osc2uDirectory)
 
     # save OSCAR file
     if osc2uControl['saveOSCAR']:
@@ -458,6 +466,7 @@ def urqmdFromOsc2uOutputFile(osc2uFilePath):
         Perform urqmd using osc2u output file. Return the path to the output
         file.
     """
+    ProcessNiceness = controlParameterList['niceness']
     # set directory strings
     urqmdDirectory = path.join(controlParameterList['rootDir'], urqmdControl['mainDir'])
     urqmdOutputFilePath = path.join(urqmdDirectory, urqmdControl['outputFilename'])
@@ -479,7 +488,7 @@ def urqmdFromOsc2uOutputFile(osc2uFilePath):
     # check existence of the osc2u output, move it then execute urqmd
     if path.exists(osc2uFilePath):
         move(osc2uFilePath, urqmdIC)
-        run("bash ./"+urqmdExecutionEntry, cwd=urqmdDirectory)
+        run("nice -n %d bash ./" % (ProcessNiceness) + urqmdExecutionEntry, cwd=urqmdDirectory)
 
     # save output file
     if urqmdControl['saveOutputFile']:
@@ -493,6 +502,7 @@ def binUrqmdResultFiles(urqmdOutputFile):
     """
         Bin the output from URQMD to generate flows etc.
     """
+    ProcessNiceness = controlParameterList['niceness']
     # set directory strings
     binUDirectory = path.join(controlParameterList['rootDir'], binUtilitiesControl['mainDir'])
     binUOperationDirectory = path.join(binUDirectory, binUtilitiesControl['operationDir'])
@@ -506,7 +516,7 @@ def binUrqmdResultFiles(urqmdOutputFile):
         raise ExecutionError("URQMD output file %s not found!" % urqmdOutputFile)
 
     # form executable string
-    executableString = "python ./" + binUExecutable + " " + urqmdOutputFile
+    executableString = "nice -n %d python ./" % (ProcessNiceness) + binUExecutable + " " + urqmdOutputFile
     # execute!
     run(executableString, cwd=binUDirectory)
 
@@ -523,6 +533,7 @@ def collectEbeResultsToDatabaseFrom(folder):
         Collect the mostly used results from subfolders that contain hydro
         results into a database, including ecc and flow etc.
     """
+    ProcessNiceness = controlParameterList['niceness']
     # set directory strings
     collectorDirectory = path.join(controlParameterList['rootDir'], EbeCollectorControl['mainDir'])
 
@@ -530,13 +541,13 @@ def collectEbeResultsToDatabaseFrom(folder):
     simulationType = controlParameterList['simulation_type']
     if simulationType == 'hybrid':
         collectorExecutable = EbeCollectorControl['executable_hybrid']
-        executableString = "python ./" + collectorExecutable + " %s %g %s %s" % (folder, 1.0/(iSSParameters['number_of_repeated_sampling']*(iSSParameters["y_RB"]-iSSParameters["y_LB"])), EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %g %s %s" % (folder, 1.0/(iSSParameters['number_of_repeated_sampling']*(iSSParameters["y_RB"]-iSSParameters["y_LB"])), EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     elif simulationType == 'hydro':
         collectorExecutable = EbeCollectorControl['executable_hydro']
-        executableString = "python ./" + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     elif simulationType == 'hydroEM':
         collectorExecutable = EbeCollectorControl['executable_hydroEM']
-        executableString = "python ./" + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     
     # execute
     run(executableString, cwd=collectorDirectory)
