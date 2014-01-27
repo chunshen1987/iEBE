@@ -112,7 +112,7 @@ public:
     int getSpectators();
     void dumpSpectatorsTable(int event);
 
-    double sampleFluctionFactorforParticipant();
-    double sampleFluctionFactorforBinaryCollision();
+    double sampleFluctuationFactorforParticipant();
+    double sampleFluctuationFactorforBinaryCollision();
 };
 #endif

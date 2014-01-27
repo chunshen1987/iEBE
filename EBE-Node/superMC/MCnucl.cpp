@@ -271,7 +271,7 @@ int MCnucl::getBinaryCollision()
         {
           participant.push_back(new Participant(nucl1[i],1));
           if(CCFluctuationModel > 5)
-             participant.back()->setfluctfactor(sampleFluctionFactorforParticipant());
+             participant.back()->setfluctfactor(sampleFluctuationFactorforParticipant());
           mapping_table1[i] = participant.size()-1;
         }
         nucl2[j]->setNumberOfCollision();
@@ -280,13 +280,13 @@ int MCnucl::getBinaryCollision()
         {
           participant.push_back(new Participant(nucl2[j],2));
           if(CCFluctuationModel > 5)
-             participant.back()->setfluctfactor(sampleFluctionFactorforParticipant());
+             participant.back()->setfluctfactor(sampleFluctuationFactorforParticipant());
           mapping_table2[j] = participant.size()-1;
         }
         // Take care of binary collision registration:
         binaryCollision.push_back(new CollisionPair((x1+x2)/2,(y1+y2)/2));
         if(CCFluctuationModel > 5)
-           binaryCollision.back()->setfluctfactor(sampleFluctionFactorforBinaryCollision());
+           binaryCollision.back()->setfluctfactor(sampleFluctuationFactorforBinaryCollision());
         if (which_mc_model==5 && sub_model==2) // need to know which binary collision happened to which participants
         {
           int current_binaryCollision_index = binaryCollision.size()-1;
@@ -952,7 +952,7 @@ void MCnucl::dumpSpectatorsTable(int event)
   of.close();
 }
 
-double MCnucl::sampleFluctionFactorforParticipant()
+double MCnucl::sampleFluctuationFactorforParticipant()
 {
    double eps = 1e-8;
    double fluctfactor = 1.0;
@@ -965,7 +965,7 @@ double MCnucl::sampleFluctionFactorforParticipant()
    return(fluctfactor);
 }
 
-double MCnucl::sampleFluctionFactorforBinaryCollision()
+double MCnucl::sampleFluctuationFactorforBinaryCollision()
 {
    double eps = 1e-8;
    double fluctfactor = 1.0;
