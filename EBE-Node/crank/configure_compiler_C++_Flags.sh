@@ -6,5 +6,5 @@ if [ "$CC" == "" ]; then
    CC=`which g++`;
    CFLAGS=" -O3"
 fi
-CFLAGS="$CFLAGS `gsl-config --cflags --libs`"
+CFLAGS="$CFLAGS -Wall"
 echo $CFLAGS
