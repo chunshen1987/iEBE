@@ -19,8 +19,10 @@ def checkCommand(cmdString, utilityName=None):
     """
         Try to execute "cmdString", then use "utilityName" to echo messages.
     """
+    tempfile = open("response.txt", 'w')
     if not utilityName: utilityName=cmdString
-    call("%s &> response.txt" % cmdString, shell=True, cwd=getcwd())
+    call("%s & " % cmdString, shell=True, cwd=getcwd(), stdout = tempfile, stderr = tempfile)
+    tempfile.close()
     if "command not found" in open("response.txt").readline():
         printWarning("%s *NOT* installed." % utilityName)
         unlink("response.txt")
@@ -120,9 +122,11 @@ def checkExecutables():
             print("Executable %s found." % exe)
 
     # compile if necessary and check again
+    tempfile = open(path.join("utilities", "CompileRecord.txt"), "w")
     if not existenceFlag:
         print("Start building executables...")
-        call("./compile_all.sh &> CompileRecord.txt", shell=True, cwd="utilities")
+        call("./compile_all.sh", shell=True, cwd="utilities", stdout = tempfile, stderr = tempfile)
+        tempfile.close()
         unlink(path.join("utilities", "CompileRecord.txt"))
 
         # check for existence of all executables again
