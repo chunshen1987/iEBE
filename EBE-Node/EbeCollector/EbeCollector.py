@@ -114,6 +114,39 @@ class EbeCollector(object):
             107         :    "eta_prime",
             100         :    "gamma",
         }
+        
+        #pdg pid Dictionary
+        self.PDGpidDict = { #pdg id#, particle name
+            211         :    "pion_p",
+            -211        :    "pion_m",
+            111         :    "pion_0",
+            321         :    "kaon_p",
+            311         :    "kaon_0",
+            -321        :    "kaon_m",
+            -311        :    "anti_kaon_0",
+            2212        :    "proton",
+            2112        :    "neutron",
+            -2212       :    "anti_proton",
+            -2112       :    "anti_neutron",
+            3222        :    "sigma_p",
+            3112        :    "sigma_m",
+            3212        :    "sigma_0",
+            -3222       :    "anti_sigma_p",
+            -3112       :    "anti_sigma_m",
+            -3212       :    "anti_sigma_0",
+            3322        :    "xi_0",
+            3312        :    "xi_m",
+            -3322       :    "anti_xi_0",
+            -3312       :    "anti_xi_m",
+            3122        :    "lambda",
+            -3122       :    "anti_lambda",
+            3334        :    "omega",
+            -3334       :    "anti_omega",
+            333         :    "phi",
+            221         :    "eta",
+            331         :    "eta_prime",
+            22         :    "gamma",
+        }
 
         #particle mass Dictionary (unit in GeV)
         self.masspidDict = {
@@ -531,6 +564,81 @@ class EbeCollector(object):
 
         # close connection to commit changes
         db.closeConnection()
+    
+    def collectParticlesOSCAR(self, folder, hydroEvent_id, resultFilename, db):
+        """
+            This function collects particles momentum and space-time information from
+            OSCAR format output file "resultFilename" into database for one hydro event with 
+            hydroEvent_id. It assigns each UrQMD run an additional UrQMDEvent_id. 
+        """
+        # first write the pid_lookup table, makes sure there is only one such table
+        if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
+            db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
+        # write the particle mass table
+        if db.createTableIfNotExists("pid_Mass", (("name","text"), ("mass","real"))):
+            db.insertIntoTable("pid_Mass", list(self.masspidDict.items()))
+
+        # create tables
+        db.createTableIfNotExists("particle_list", (("hydroEvent_id","integer"), ("UrQMDEvent_id","interger"), ("pid","integer"), ("tau","real"), ("x","real"), ("y","real"), ("eta","real"), ("pT", "real"), ("phi_p", "real"), ("rapidity", "real"), ("pseudorapidity", "real")))
+
+        # check input file
+        UrQMDoutputFilePath = path.join(folder, resultFilename)
+        if not path.isfile(UrQMDoutputFilePath):
+            exit("Cannot find UrQMD output file: " + UrQMDoutputFilePath)
+
+        # read in OSCAR outputs and fill them into database
+        # this routine is copied and modified from binUtility
+        read_mode = "header_first_part"
+        header_count = 1 # the first read line is already part of the header line
+        data_row_count = 0
+        UrQMDEvent_id = 1
+        for aLine in open(UrQMDoutputFilePath):
+            if read_mode == "header_first_part":
+                if header_count < 3: # skip first 3 lines
+                    header_count += 1
+                    continue
+                read_mode = "header_second_part"
+            elif read_mode == "header_second_part":
+                try:
+                    data_row_count = int(aLine.split()[1])
+                except ValueError as e:
+                    print("The file "+ UrQMDoutputFilePath +" does not have a valid urqmd output file header!")
+                    exit(e)
+                read_mode = "data_part"
+            elif read_mode=="data_part":
+                if data_row_count>0:
+                    # still have data to read
+                    try:
+                        px, py, pz, p0 = map(lambda x: float(x.replace("D","E")), aLine[25:126].split())
+                        x, y, z, t = map(lambda x: float(x.replace("D","E")), aLine[155:256].split())
+                        pdgId = int(aLine[15:22])
+                        try:
+                            databasePid = self.pidDict[self.PDGpidDict[pdgId]]
+                        except ValueError as e:
+                            print("Can not find particle id in the dictionary!")
+                            exit(e)
+                        pT = math.sqrt(px*px + py*py)
+                        pMag = math.sqrt(pT*pT + pz*pz)
+                        phi = math.atan2(py, px)
+                        rap = 0.5*math.log((p0 + pz)/(p0 - pz))
+                        pseudorap = 0.5*math.log((pMag + pz)/(pMag - pz))
+                        tau = math.sqrt(t*t - z*z)
+                        eta = 0.5*math.log((t+z)/(t-z))
+                        db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, databasePid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap), float(pseudorap)))
+                    except ValueError as e:
+                        print("The file "+ UrQMDoutputFilePath +" does not have valid urqmd data!")
+                        exit(e)
+                    data_row_count -= 1
+                if data_row_count == 0:
+                    print("processing UrQMD event %d finished." % UrQMDEvent_id)
+                    UrQMDEvent_id += 1
+                    # switch back to header mode
+                    data_row_count = 0
+                    header_count = 0 # not pointing at the header line yet
+                    read_mode = "header_second_part"
+        
+        # close connection to commit changes
+        db.closeConnection()
 
     def collectParticlesUrQMD(self, folder, hydroEvent_id, resultFilename, db):
         """
@@ -612,7 +720,7 @@ class EbeCollector(object):
         # close connection to commit changes
         db.closeConnection()
 
-    def collectInitialeccnStatistics(self, folder, db, multiplicityFactor = 1.0):
+    def collectInitialeccnStatistics(self, folder, db, multiplicityFactor = 1.0, deformedNuclei = False):
         """
             This function collects eccn, Npart, Ncoll, dS/dy, impact parameter from
             superMC output files into database.
@@ -626,6 +734,8 @@ class EbeCollector(object):
         # next create the eccentricities and collisionParameters table
         db.createTableIfNotExists("eccentricities", (("event_id","integer"), ("ecc_id", "integer"), ("n","integer"), ("ecc_real","real"), ("ecc_imag","real")))
         db.createTableIfNotExists("collisionParameters", (("event_id","integer"), ("Npart", "integer"), ("Ncoll","integer"), ("b","real"), ("total_entropy","real")))
+        if(deformedNuclei):
+            db.createTableIfNotExists("deformationParameters", (("event_id","integer"), ("cosTheta1", "real"), ("phi1","real"), ("cosTheta2","real"), ("phi2","real")))
 
         # the big loop
         for ecc_id, ecc_type_name in typeCollections:
@@ -637,7 +747,14 @@ class EbeCollector(object):
                     dSdy = data[:,6]/multiplicityFactor   #scale out the multiplicity factor used in superMC
                     b = data[:,7]
                     for event_id in range(len(Npart)):
-                       db.insertIntoTable("collisionParameters", (event_id, int(Npart[event_id]), int(Ncoll[event_id]), float(b[event_id]), float(dSdy[event_id])))
+                        db.insertIntoTable("collisionParameters", (event_id, int(Npart[event_id]), int(Ncoll[event_id]), float(b[event_id]), float(dSdy[event_id])))
+                    if(deformedNuclei):
+                        cosTheta1 = data[:,8]
+                        phi1 = data[:,9]
+                        cosTheta2 = data[:,10]
+                        phi2 = data[:,11]
+                        for event_id in range(len(Npart)):
+                            db.insertIntoTable("deformationParameters", (event_id, float(cosTheta1[event_id]), float(phi1[event_id]), float(cosTheta2[event_id]), float(phi2[event_id])))
                 eccReal = data[:,2]
                 eccImag = data[:,3]
                 for event_id in range(len(eccReal)):
@@ -743,7 +860,7 @@ class EbeCollector(object):
             print("Mode string not found")
             print("!"*60)
 
-    def collectParticleinfo(self, folder, subfolderPattern="event-(\d*)", resultFilename="particle_list.dat", databaseFilename="particles.db"):
+    def collectParticleinfo(self, folder, subfolderPattern="event-(\d*)", resultFilename="particle_list.dat", databaseFilename="particles.db", fileformat = 'UrQMD'):
         """
             This function collects particles momentum and space-time information from UrQMD
             outputs into a database
@@ -769,9 +886,16 @@ class EbeCollector(object):
         print("-"*60)
         for aSubfolder, hydroEvent_id in matchedSubfolders:
             print("Collecting %s as with hydro event-id: %s" % (aSubfolder, hydroEvent_id))
-            self.collectParticlesUrQMD(aSubfolder, hydroEvent_id, resultFilename, db) # collect particles from one hydro event
+            if fileformat == 'UrQMD':
+                self.collectParticlesUrQMD(aSubfolder, hydroEvent_id, resultFilename, db) # collect particles from one hydro event
+            elif fileformat == 'OSCAR':
+                self.collectParticlesOSCAR(aSubfolder, hydroEvent_id, resultFilename, db) # collect particles from one hydro event
+            else:
+                print("Error: can not recognize the input file format : %s", fileformat)
+                exit(-1)
+
     
-    def collectMinbiasEcc(self, folder, databaseFilename="MinbiasEcc.db", multiplicityFactor = 1.0):
+    def collectMinbiasEcc(self, folder, databaseFilename="MinbiasEcc.db", multiplicityFactor = 1.0, deformed = False):
         """
             This function collects initial eccn statistical information from minimum bias events generated from  superMC
             outputs into a database
@@ -781,7 +905,7 @@ class EbeCollector(object):
         print("-"*80)
         print("Collecting initial minimum bias events information from superMC outputs...")
         print("-"*80)
-        self.collectInitialeccnStatistics(folder, db, multiplicityFactor) # collect eccn information from data files
+        self.collectInitialeccnStatistics(folder, db, multiplicityFactor, deformed) # collect eccn information from data files
 
 
     def mergeDatabases(self, toDB, fromDB):
