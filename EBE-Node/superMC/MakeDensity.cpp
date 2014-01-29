@@ -182,17 +182,18 @@ void MakeDensity::generate_profile_ebe(int nevent)
     // compute density before rotation.
     mc->getTA2();
 
+    bool cutdSdypassFlag = true;
     for(int iy=0;iy<binRapidity;iy++) {
       mc->setDensity(iy);
-      if(iy == 0 && cutdSdy)
+      // cut total entropy
+      if(iy == 0 && cutdSdy == 1)
       {
          double totaldSdy = gettotaldSdy(iy);
          if(totaldSdy < cutdSdy_lowerBound || totaldSdy > cutdSdy_upperBound)
          {
-            event--;
+            cutdSdypassFlag = false;
             break;
          }
-         cout << totaldSdy*finalFactor << endl;
       }
       // output entropy profile
       if (use_sd)
@@ -227,7 +228,8 @@ void MakeDensity::generate_profile_ebe(int nevent)
     } // <-> for(int iy=0;iy<binRapidity;iy++)
 
     mc->deleteNucleus();
-    event++;
+    if(cutdSdypassFlag)
+      event++;
 
   //break; # for debugging
   } // <-> while(event<events)
@@ -337,11 +339,23 @@ void MakeDensity::generate_profile_average(int nevent)
     Npart = mc->getNpart1()+mc->getNpart2();
     // need to rotate compute density before rotation.
     mc->getTA2();
+    
+    bool cutdSdypassFlag = true;
     for(int iorder=0; iorder<number_of_orders; iorder++)
     {
       int order = iorder + average_from_order; // "real" order used for averaging
       for(int iy=0;iy<binRapidity;iy++) {
         mc->setDensity(iy);
+        // cut total entropy density
+        if(iy == 0 && cutdSdy == 1)
+        {
+           double totaldSdy = gettotaldSdy(iy);
+           if(totaldSdy < cutdSdy_lowerBound || totaldSdy > cutdSdy_upperBound)
+           {
+              cutdSdypassFlag = false;
+              break;
+           }
+        }
         // average entropy profile
         if (use_sd)
         {
@@ -391,8 +405,11 @@ void MakeDensity::generate_profile_average(int nevent)
       backup_counter = auto_backup_after_number_of_averaging;
     }
 
-    cout << "processing event: " << event << endl;
-    event++;
+    if(cutdSdypassFlag)
+    {
+      cout << "processing event: " << event << endl;
+      event++;
+    }
   } // <-> while(event<events)
 
   // output average results
@@ -521,8 +538,20 @@ void MakeDensity::generateEccTable(int nevent)
 
     // compute eccentricity.
     mc->getTA2();
+
+    bool cutdSdypassFlag = true;
     for(int iy=0;iy<binRapidity;iy++) {
       mc->setDensity(iy);
+      // cut total entropy
+      if(iy == 0 && cutdSdy == 1)
+      {
+         double totaldSdy = gettotaldSdy(iy);
+         if(totaldSdy < cutdSdy_lowerBound || totaldSdy > cutdSdy_upperBound)
+         {
+            cutdSdypassFlag = false;
+            break;
+         }
+      }
       // entropy first
       if (paraRdr->getVal("use_sd"))
       {
@@ -538,8 +567,11 @@ void MakeDensity::generateEccTable(int nevent)
     }
 
     mc->deleteNucleus();
-    cout << "processing event: " << event << endl;
-    event++;
+    if(cutdSdypassFlag)
+    {
+      cout << "processing event: " << event << endl;
+      event++;
+    }
   } // <-> while (event<=nevent)
 
 
