@@ -193,8 +193,19 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
     // compute density before rotation.
     mc->getTA2();
 
+    bool cutdSdypassFlag = true;
     for(int iy=0;iy<binRapidity;iy++) {
       mc->setDensity(iy);
+      // cut total entropy
+      if(iy == 0 && cutdSdy == 1)
+      {
+         double totaldSdy = gettotaldSdy(iy);
+         if(totaldSdy < cutdSdy_lowerBound || totaldSdy > cutdSdy_upperBound)
+         {
+            cutdSdypassFlag = false;
+            break;
+         }
+      }
       // output entropy profile
       if (use_sd)
       {
@@ -232,7 +243,8 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
     } // <-> for(int iy=0;iy<binRapidity;iy++)
 
     mc->deleteNucleus();
-    event++;
+    if(cutdSdypassFlag)
+      event++;
 
   //break; # for debugging
   } // <-> while(event<events)
