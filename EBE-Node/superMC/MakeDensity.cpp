@@ -823,6 +823,8 @@ void MakeDensity::generateEccTable(int nevent)
 void MakeDensity::dumpEccentricities(char* base_filename, double*** density, const int iy, int from_order, int to_order, double Npart_current, double Nbin_current, double b)
 // calculate and output eccentricities
 {
+    bool deformedFlag = false;
+    if(paraRdr->getVal("proj_deformed") == 1 or paraRdr->getVal("targ_deformed") == 1) deformedFlag = true;
     std::ofstream of;
     char buffer[200];
     double x,y,r,theta;
@@ -843,7 +845,7 @@ void MakeDensity::dumpEccentricities(char* base_filename, double*** density, con
     }
     xc /= total; yc /= total;
 
-
+/*
     // for overlapping area:
     // method 1, pi*sqrt(<x^2> <y^2>)
     double x2 = 0.0, y2 = 0.0, overlap_area1 = 0.0; // <x^2>, <y^2>, and different definitions for overlapping area
@@ -877,6 +879,7 @@ void MakeDensity::dumpEccentricities(char* base_filename, double*** density, con
         }
     }
     //cout << overlap_sum << "   " << overlap_area1 << "   " << overlap_area2 << endl;
+*/
 
     // for eccentricity:
     for (order=from_order; order<=to_order; order++)
@@ -916,24 +919,40 @@ void MakeDensity::dumpEccentricities(char* base_filename, double*** density, con
         // and output:
         sprintf(buffer, base_filename, order);
         of.open(buffer, std::ios_base::app);
-        of  << setprecision(8) << setw(16) <<  mom_real[order]
-            << setprecision(8) << setw(16) <<  mom_imag[order]
-            << setprecision(8) << setw(16) <<  momp_real[order]
-            << setprecision(8) << setw(16) <<  momp_imag[order]
-            << setprecision(5) << setw(10)  <<  Npart_current
-            << setprecision(5) << setw(10) <<  Nbin_current
-            << setprecision(8) << setw(16) <<  total*dx*dy // integrated profile measure
-            << setprecision(8) << setw(16) <<  b
-            << setprecision(8) << setw(16) <<  overlap_area1
-            << setprecision(8) << setw(16) <<  overlap_area2
-            << setprecision(8) << setw(16) <<  mc->lastCx1
-            << setprecision(8) << setw(16) <<  mc->lastPh1
-            << setprecision(8) << setw(16) <<  mc->lastCx2
-	      << setprecision(8) << setw(16) <<  mc->lastPh2
-            << setprecision(8) << setw(16) <<  xc
-            << setprecision(8) << setw(16) <<  yc
-	    //<< setprecision(3) << setw(12) <<  rapMin+(rapMax-rapMin)/binRapidity*iy
-            << endl;
+
+        if(deformedFlag)
+        {
+            of  << setprecision(8) << setw(16) <<  mom_real[order]
+                << setprecision(8) << setw(16) <<  mom_imag[order]
+                << setprecision(8) << setw(16) <<  momp_real[order]
+                << setprecision(8) << setw(16) <<  momp_imag[order]
+                << setprecision(5) << setw(10)  <<  Npart_current
+                << setprecision(5) << setw(10) <<  Nbin_current
+                << setprecision(8) << setw(16) <<  total*dx*dy // integrated profile measure
+                << setprecision(8) << setw(16) <<  b
+//                << setprecision(8) << setw(16) <<  overlap_area1
+//                << setprecision(8) << setw(16) <<  overlap_area2
+                << setprecision(8) << setw(16) <<  mc->lastCx1
+                << setprecision(8) << setw(16) <<  mc->lastPh1
+                << setprecision(8) << setw(16) <<  mc->lastCx2
+	          << setprecision(8) << setw(16) <<  mc->lastPh2
+//                << setprecision(8) << setw(16) <<  xc
+//                << setprecision(8) << setw(16) <<  yc
+//                << setprecision(3) << setw(12) <<  rapMin+(rapMax-rapMin)/binRapidity*iy
+                << endl;
+        }
+        else
+        {
+            of  << setprecision(8) << setw(16) <<  mom_real[order]
+                << setprecision(8) << setw(16) <<  mom_imag[order]
+                << setprecision(8) << setw(16) <<  momp_real[order]
+                << setprecision(8) << setw(16) <<  momp_imag[order]
+                << setprecision(5) << setw(10) <<  Npart_current
+                << setprecision(5) << setw(10) <<  Nbin_current
+                << setprecision(8) << setw(16) <<  total*dx*dy // integrated profile measure
+                << setprecision(8) << setw(16) <<  b
+                << endl;
+        }
         of.close();
     }
 
