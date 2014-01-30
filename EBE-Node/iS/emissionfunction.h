@@ -15,6 +15,7 @@ private:
   int pT_tab_length, phi_tab_length, eta_tab_length;
   long FO_length;
   Table *dN_ptdptdphidy;
+  Table *dE_ptdptdphidy;
   int number_of_chosen_particles;
   int *chosen_particles_01_table; // has length Nparticle, 0 means miss, 1 means include
   int *chosen_particles_sampling_table; // store particle index; the sampling process follows the order specified by this table
@@ -30,10 +31,14 @@ public:
   void calculate_dN_ptdptdphidy(int);
   void write_dN_ptdptdphidy_toFile();
   string dN_ptdptdphidy_filename; // where to save
+  string dE_ptdptdphidy_filename; // where to save
 
   void calculate_flows(int to_order, string, string);
+  void calculate_Energyflows(int to_order, string, string);
   string flow_differential_filename_old, flow_integrated_filename_old;
   string flow_differential_filename, flow_integrated_filename;
+  string energyflow_differential_filename_old, energyflow_integrated_filename_old;
+  string energyflow_differential_filename, energyflow_integrated_filename;
 
   void calculate_dN_ptdptdphidy_and_flows_4all(int to_order=9);
 
