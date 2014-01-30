@@ -15,11 +15,11 @@
 
 #define AMOUNT_OF_OUTPUT 0 // smaller value means less outputs
 #define F0_IS_NOT_SMALL 0 // set to 0 to agree with Azspectra; set to 1 for reality
-#define USE_HISTORIC_FORMAT 0 // 0: use new way of outputting
+#define USE_HISTORIC_FORMAT 1 // 0: use new way of outputting
 #define GROUPING_PARTICLES 1 // set to 1 to perform calculations for similar particles together
 #define PARTICLE_DIFF_TOLERANCE 0.01 // particles with mass and chemical potential (for each FZ-cell) difference less than this value will be considered to be identical (b/c Cooper-Frye)
 #define INCLUDE_DELTAF 1 // include delta f correction to particle distribution function in Cooper-Frye Formula
-#define CALCULATEDED3P true // calculate energy distribution E*dE/d^3p from Cooper-Frye formula
+#define CALCULATEDED3P false // calculate transverse energy distribution E*dE/d^3p from Cooper-Frye formula
 
 using namespace std;
 
