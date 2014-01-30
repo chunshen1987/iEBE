@@ -15,10 +15,11 @@
 
 #define AMOUNT_OF_OUTPUT 0 // smaller value means less outputs
 #define F0_IS_NOT_SMALL 0 // set to 0 to agree with Azspectra; set to 1 for reality
-#define USE_HISTORIC_FORMAT 1 // 0: use new way of outputting
+#define USE_HISTORIC_FORMAT 0 // 0: use new way of outputting
 #define GROUPING_PARTICLES 1 // set to 1 to perform calculations for similar particles together
 #define PARTICLE_DIFF_TOLERANCE 0.01 // particles with mass and chemical potential (for each FZ-cell) difference less than this value will be considered to be identical (b/c Cooper-Frye)
 #define INCLUDE_DELTAF 1 // include delta f correction to particle distribution function in Cooper-Frye Formula
+#define CALCULATEDED3P true // calculate energy distribution E*dE/d^3p from Cooper-Frye formula
 
 using namespace std;
 
@@ -33,6 +34,12 @@ EmissionFunctionArray::EmissionFunctionArray(double particle_y_in, Table* chosen
 
   dN_ptdptdphidy = new Table(pT_tab_length, phi_tab_length);
   dN_ptdptdphidy_filename = "results/dN_ptdptdphidy.dat";
+
+  if(CALCULATEDED3P)
+  {
+     dE_ptdptdphidy = new Table(pT_tab_length, phi_tab_length);
+     dE_ptdptdphidy_filename = "results/dE_ptdptdphidy.dat";
+  }
 
   particles = particles_in;
   Nparticles = Nparticles_in;
@@ -89,8 +96,15 @@ EmissionFunctionArray::EmissionFunctionArray(double particle_y_in, Table* chosen
 
   flow_differential_filename_old =  "results/v2data.dat";
   flow_integrated_filename_old = "results/v2data-inte.dat";
-  flow_differential_filename = "results/thermal_%d_vn.dat";
-  flow_integrated_filename = "results/thermal_%d_integrated_vn.dat";
+  flow_differential_filename = "results/thermal_%d_vndata.dat";
+  flow_integrated_filename = "results/thermal_%d_integrated_vndata.dat";
+  if(CALCULATEDED3P)
+  {
+     energyflow_differential_filename_old =  "results/ET_v2data.dat";
+     energyflow_integrated_filename_old = "results/ET_v2data-inte.dat";
+     energyflow_differential_filename = "results/thermal_%d_ET_vndata.dat";
+     energyflow_integrated_filename = "results/thermal_%d_ET_integrated_vndata.dat";
+  }
   last_particle_idx = -1;
 
 }
@@ -99,6 +113,7 @@ EmissionFunctionArray::EmissionFunctionArray(double particle_y_in, Table* chosen
 EmissionFunctionArray::~EmissionFunctionArray()
 {
   delete dN_ptdptdphidy;
+  if(CALCULATEDED3P) delete dE_ptdptdphidy;
   delete[] chosen_particles_01_table;
   delete[] chosen_particles_sampling_table;
 }
@@ -125,9 +140,13 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
 
   // for intermedia results
   double dN_ptdptdphidy_tab[pT_tab_length][phi_tab_length];
+  double dE_ptdptdphidy_tab[pT_tab_length][phi_tab_length];
   for (int i=0; i<pT_tab_length; i++)
   for (int j=0; j<phi_tab_length; j++)
+  {
     dN_ptdptdphidy_tab[i][j] = 0.0;
+    dE_ptdptdphidy_tab[i][j] = 0.0;
+  }
 
   // pre-calculated variables //!!!!!!
   double trig_phi_table[phi_tab_length][2]; // 2: 0,1-> cos,sin
@@ -175,6 +194,7 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
           double py = pT*trig_phi_table[j][1];
 
           double dN_ptdptdphidy_tmp = 0.0;
+          double dE_ptdptdphidy_tmp = 0.0;
 
           for (long l=0; l<FO_length; l++)
           {
@@ -244,10 +264,12 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
                      result = prefactor*degen*f0*(1+deltaf)*pdsigma*tau;
 
                   dN_ptdptdphidy_tmp += result*delta_eta;
+                  if(CALCULATEDED3P) dE_ptdptdphidy_tmp += result*delta_eta*pt;
               } // k
           } // l
 
           dN_ptdptdphidy_tab[i][j] = dN_ptdptdphidy_tmp;
+          if (CALCULATEDED3P) dE_ptdptdphidy_tab[i][j] = dE_ptdptdphidy_tmp;
           if (AMOUNT_OF_OUTPUT>0) print_progressbar((i*phi_tab_length+j)/progress_total);
       }
   //cout << int(100.0*(i+1)/pT_tab_length) << "% completed" << endl;
@@ -256,7 +278,10 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
 
   for (int i=0; i<pT_tab_length; i++)
   for (int j=0; j<phi_tab_length; j++)
+  {
     dN_ptdptdphidy->set(i+1,j+1,dN_ptdptdphidy_tab[i][j]);
+    if(CALCULATEDED3P) dE_ptdptdphidy->set(i+1,j+1,dE_ptdptdphidy_tab[i][j]);
+  }
 
   sw.toc();
   cout << endl << "Finished " << sw.takeTime() << " seconds." << endl;
@@ -268,6 +293,13 @@ void EmissionFunctionArray::write_dN_ptdptdphidy_toFile()
   ofstream of1(dN_ptdptdphidy_filename.c_str(), ios_base::app);
   dN_ptdptdphidy->printTable(of1);
   of1.close();
+
+  if(CALCULATEDED3P)
+  {
+     ofstream of2(dE_ptdptdphidy_filename.c_str(), ios_base::app);
+     dE_ptdptdphidy->printTable(of2);
+     of2.close();
+  }
 }
 
 
@@ -368,7 +400,6 @@ void EmissionFunctionArray::calculate_flows(int to_order, string flow_differenti
   }
 
 
-
   // store values
   // To mimic:
   // WRITE(30,941) " ", N, " ",X(N)," ",Y(N),
@@ -410,6 +441,128 @@ void EmissionFunctionArray::calculate_flows(int to_order, string flow_differenti
 //***************************************************************************
 
 
+//***************************************************************************
+void EmissionFunctionArray::calculate_Energyflows(int to_order, string flow_differential_filename_in, string flow_integrated_filename_in)
+// Calculate flow from order from_order to to_order and store them to files.
+{
+  Stopwatch sw;
+  sw.tic();
+
+  int from_order = 1;
+
+  int number_of_flows = to_order-from_order+1;
+
+  Table vn_diff(3+number_of_flows*3, pT_tab_length); // line format: pT, mT, dN/(pT dpT), flow_1_real, flow_1_imag, flow_1_norm, ...
+  Table vn_inte(6, to_order+1); // line format: order# (starting from 0), numerator_real, numerator_imag, flow_real, flow_imag, flow_norm
+
+  double mass = particles[last_particle_idx].mass;
+
+  //---------------------
+  // differential flow
+  //---------------------
+  //cout << "Calculating differential flows... ";
+
+  double normalization[pT_tab_length]; // normalization factor
+  for (int i=0; i<pT_tab_length; i++) normalization[i] = 0.0;
+
+  double vn[pT_tab_length][number_of_flows][2]; // diff_flow numerators; 2: 0,1->real,imag
+  for (int i=0; i<pT_tab_length; i++)
+  for (int t=0; t<number_of_flows; t++)
+    {vn[i][t][0]=0; vn[i][t][1]=0;}
+
+  for (int i=0; i<pT_tab_length; i++)
+  //for (int i=0; i<1; i++) // for debugging
+  {
+    double pT = pT_tab->get(1,i+1); // pT_weight = pT_tab->get(2,i+1);
+    double mT = sqrt(mass*mass + pT*pT);
+
+    // phi integration
+    for(int j=0; j<phi_tab_length; j++)
+    //for(int j=0; j<1; j++) // for debugging
+    {
+      double phi = phi_tab->get(1,j+1), phi_weight = phi_tab->get(2,j+1);
+      double dE = dE_ptdptdphidy->get(i+1,j+1);
+
+      normalization[i] += dE*phi_weight;
+      for (int order=from_order; order<=to_order; order++)
+      {
+        vn[i][order-from_order][0] += dE*phi_weight*cos(order*phi);
+        vn[i][order-from_order][1] += dE*phi_weight*sin(order*phi);
+      }
+    }
+
+    normalization[i] = normalization[i] + 1e-30;
+    // store values
+    vn_diff.set(1, i+1, pT);
+    vn_diff.set(2, i+1, mT-mass);
+    vn_diff.set(3, i+1, normalization[i]/(2.0*M_PI)); // 2*pi: azimuthal angle averaged
+    for (int t=0; t<number_of_flows; t++)
+    {
+      vn_diff.set(4+t*3, i+1, vn[i][t][0]/normalization[i]);
+      vn_diff.set(5+t*3, i+1, vn[i][t][1]/normalization[i]);
+      vn_diff.set(6+t*3, i+1, sqrt(vn[i][t][0]*vn[i][t][0]+vn[i][t][1]*vn[i][t][1])/normalization[i]);
+    }
+
+  }
+  //cout << "done." << endl;
+
+
+  //---------------------
+  // integrated flow
+  //---------------------
+  //cout << "Calculating integrated flows... ";
+
+  double normalizationi = 0;
+
+  double vni[number_of_flows][2]; // integrated_flow numerators; 2: 0,1->real,imag
+  for (int t=0; t<number_of_flows; t++) {vni[t][0]=0; vni[t][1]=0;}
+
+  for (int i=0; i<pT_tab_length; i++)
+  //for (int i=0; i<1; i++) // for debugging
+  {
+    double pT = pT_tab->get(1,i+1), pT_weight = pT_tab->get(2,i+1);
+
+    normalizationi += normalization[i]*pT*pT_weight;
+
+    for (int order=from_order; order<=to_order; order++)
+    {
+      vni[order-from_order][0] += vn[i][order-from_order][0]*pT*pT_weight;
+      vni[order-from_order][1] += vn[i][order-from_order][1]*pT*pT_weight;
+    }
+
+  }
+
+  vn_inte.set(1, 1, 0);
+  vn_inte.set(2, 1, normalizationi);
+  vn_inte.set(3, 1, 0);
+  vn_inte.set(4, 1, 1);
+  vn_inte.set(5, 1, 0);
+  vn_inte.set(6, 1, 1);
+
+  for (int t=0; t<number_of_flows; t++)
+  {
+    vn_inte.set(1, t+2, from_order+t);
+    vn_inte.set(2, t+2, vni[from_order+t-1][0]);
+    vn_inte.set(3, t+2, vni[from_order+t-1][1]);
+    vn_inte.set(4, t+2, vni[from_order+t-1][0]/normalizationi);
+    vn_inte.set(5, t+2, vni[from_order+t-1][1]/normalizationi);
+    vn_inte.set(6, t+2, sqrt(vni[from_order+t-1][0]*vni[from_order+t-1][0]+vni[from_order+t-1][1]*vni[from_order+t-1][1])/normalizationi);
+  }
+
+  // save to files
+  ofstream of1(flow_differential_filename_in.c_str(), ios_base::app);
+  vn_diff.printTable(of1);
+  of1.close();
+
+  ofstream of2(flow_integrated_filename_in.c_str(), ios_base::app);
+  vn_inte.printTable(of2);
+  of2.close();
+
+  sw.toc();
+  //cout << "calculate_flows finishes " << sw.takeTime() << " seconds." << endl;
+
+}
+//***************************************************************************
 
 
 
@@ -430,6 +583,12 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy_and_flows_4all(int to_order
           remove(dN_ptdptdphidy_filename.c_str());
           remove(flow_differential_filename_old.c_str());
           remove(flow_integrated_filename_old.c_str());
+          if(CALCULATEDED3P)
+          {
+             remove(dE_ptdptdphidy_filename.c_str());
+             remove(energyflow_differential_filename_old.c_str());
+             remove(energyflow_integrated_filename_old.c_str());
+          }
 
           particle_info* particle = NULL;
 
@@ -443,6 +602,7 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy_and_flows_4all(int to_order
             {
               cout << " -- Skipped." << endl;
               dN_ptdptdphidy->setAll(0.0);
+              if(CALCULATEDED3P) dE_ptdptdphidy->setAll(0.0);
               last_particle_idx = n; // fake a "calculation"
             }
             else
@@ -462,6 +622,17 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy_and_flows_4all(int to_order
             of2 << "# For: " << particle->name << endl;
             of2.close();
             calculate_flows(to_order, flow_differential_filename_old, flow_integrated_filename_old);
+            if(CALCULATEDED3P)
+            {
+               ofstream of1(energyflow_differential_filename_old.c_str(), ios_base::app);
+               of1 << "# Output for particle: " << particle->name << endl;
+               of1 << "#                 " << particle->monval << endl;
+               of1.close();
+               ofstream of2(energyflow_integrated_filename_old.c_str(), ios_base::app);
+               of2 << "# For: " << particle->name << endl;
+               of2.close();
+               calculate_Energyflows(to_order, energyflow_differential_filename_old, energyflow_integrated_filename_old);
+            }
           }
 
 
@@ -480,6 +651,9 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy_and_flows_4all(int to_order
             // prepare a huge array to store calculated dN_ptdptdphidy
             Table* dNs[Nparticles];
             for (int n=0; n<Nparticles; n++) dNs[n]=NULL;
+            
+            Table* dEs[Nparticles];
+            for (int n=0; n<Nparticles; n++) dEs[n]=NULL;
 
             // loop over chosen particles
             particle_info* particle = NULL;
@@ -503,6 +677,7 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy_and_flows_4all(int to_order
 
                 // Store calculated table
                 dNs[particle_idx] = new Table(*dN_ptdptdphidy);
+                if(CALCULATEDED3P) dEs[particle_idx] = new Table(*dE_ptdptdphidy);
 
                 char buffer_diff[500], buffer_inte[500];
                 sprintf(buffer_diff, flow_differential_filename.c_str(), monval);
@@ -510,6 +685,15 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy_and_flows_4all(int to_order
                 sprintf(buffer_inte, flow_integrated_filename.c_str(), monval);
                 remove(buffer_inte);
                 calculate_flows(to_order, buffer_diff, buffer_inte);
+                
+                if(CALCULATEDED3P)
+                {
+                   sprintf(buffer_diff, energyflow_differential_filename.c_str(), monval);
+                   remove(buffer_diff);
+                   sprintf(buffer_inte, energyflow_integrated_filename.c_str(), monval);
+                   remove(buffer_inte);
+                   calculate_Energyflows(to_order, buffer_diff, buffer_inte);
+                }
             }
 
             // write out dN / (ptdpt dphi dy) matrices
@@ -529,6 +713,26 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy_and_flows_4all(int to_order
                 }
             }
             of.close();
+
+            if(CALCULATEDED3P)
+            {
+               remove(dE_ptdptdphidy_filename.c_str());
+               ofstream of_E(dE_ptdptdphidy_filename.c_str(), ios_base::app);
+               Table zero(dE_ptdptdphidy->getNumberOfCols(), dE_ptdptdphidy->getNumberOfRows(), 0);
+               for (int n=0; n<Nparticles; n++)
+               {
+                   if (dEs[n]==NULL)
+                   {
+                       zero.printTable(of_E);
+                   }
+                   else
+                   {
+                       dEs[n]->printTable(of_E);
+                       delete dEs[n];
+                   }
+               }
+               of_E.close();
+            }
 
             sw.toc();
             cout << " -- Calculate_dN_ptdptdphidy_and_flows_4all finishes " << sw.takeTime() << " seconds." << endl;
