@@ -47,7 +47,7 @@ class EbeCollector(object):
             "neutron"           :   18,
             "anti_nucleon"      :   -16, # sum(-17, -18)
             "anti_proton"       :   -17,
-            "anit_neutron"      :   -18,
+            "anti_neutron"      :   -18,
             "sigma"             :   21, # sum(22, 23, 24)
             "sigma_p"           :   22,
             "sigma_0"           :   23,
