@@ -26,6 +26,9 @@ for aSubfolder in listdir(parentFolder):
     for aFile in listdir(subfolder):
         if path.splitext(aFile)[1] == ".db":
             print("Merging %s from %s..." % (aFile, aSubfolder))
-            collector.mergeDatabases(SqliteDB(path.join(parentFolder, aFile)), SqliteDB(path.join(subfolder, aFile))) # merge a database to a database in parent folder with the same name.
+            if path.splitext(aFile)[0] == "particles":
+                collector.mergeparticleDatabases(SqliteDB(path.join(parentFolder, aFile)), SqliteDB(path.join(subfolder, aFile))) # merge a database to a database in parent folder with the same name.
+            else:
+                collector.mergeDatabases(SqliteDB(path.join(parentFolder, aFile)), SqliteDB(path.join(subfolder, aFile))) # merge a database to a database in parent folder with the same name.
 
 print("Done.")

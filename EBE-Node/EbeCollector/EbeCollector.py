@@ -47,7 +47,7 @@ class EbeCollector(object):
             "neutron"           :   18,
             "anti_nucleon"      :   -16, # sum(-17, -18)
             "anti_proton"       :   -17,
-            "anti_neutron"      :   -18,
+            "anit_neutron"      :   -18,
             "sigma"             :   21, # sum(22, 23, 24)
             "sigma_p"           :   22,
             "sigma_0"           :   23,
@@ -910,7 +910,7 @@ class EbeCollector(object):
 
     def mergeDatabases(self, toDB, fromDB):
         """
-            Meger the database "fromDB" to "toDB"; both are assumed to be
+            Merge the database "fromDB" to "toDB"; both are assumed to be
             databases created from ebe calculations, meaning that they only
             contain tables specified in EbeCollector_readme.
         """
@@ -931,7 +931,28 @@ class EbeCollector(object):
                 toDB.insertIntoTable(aTable, list(map(shiftEID, fromDB.selectFromTable(aTable))))
         toDB.closeConnection() # commit
 
-
+    def mergeparticleDatabases(self, toDB, fromDB):
+        """
+            Merge the particle database "fromDB" to "toDB"; both are assumed to be
+            databases created from ebe hybrid calculations, which contains exact
+            tables as in particles.db.
+        """
+        for aTable in fromDB.getAllTableNames():
+            # first copy table structure
+            firstCreation = toDB.createTableIfNotExists(aTable, fromDB.getTableInfo(aTable))
+            if firstCreation:
+                # just copy
+                toDB.insertIntoTable(aTable, fromDB.selectFromTable(aTable))
+            else: # treatment depends on table type
+                if "pid" in aTable: continue # if it's a pid info table, nothing to be done
+                # not a pid info table: shift up hydroEvent_id by the current existing max
+                currentEventIdMax = toDB.selectFromTable(aTable, "max(hydroEvent_id)")[0][0]
+                def shiftEID(row):
+                    newRow = list(row)
+                    newRow[0] += currentEventIdMax
+                    return newRow
+                toDB.insertIntoTable(aTable, list(map(shiftEID, fromDB.selectFromTable(aTable))))
+        toDB.closeConnection() # commit
 
 
 
