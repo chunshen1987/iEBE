@@ -27,4 +27,5 @@ else:
 
 # call EbeCollector
 from EbeCollector import EbeCollector
+EbeCollector().collectParticleinfo(from_folder, subfolder_pattern)
 EbeCollector().createDatabaseFromEventFolders(from_folder, subfolder_pattern, database_filename, collectMode="fromUrQMD", multiplicityFactor=multiplicity_factor)
