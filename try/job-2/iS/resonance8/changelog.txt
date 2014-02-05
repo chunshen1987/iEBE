@@ -1,1 +1,0 @@
-06-16-2012: Chun fixed the "infinity" extrapolation problem by forcing dN to decay along fix phi direction: assume we know dN1 and dN2 at pT1 and pT2, pT1<pT2, if dN3>dN2 or dN3<0 at pT3, then replace it by (dN2/dN1)^((pT3-pT2)/(pT2-pT1)). Such a scan starts from small pT.
