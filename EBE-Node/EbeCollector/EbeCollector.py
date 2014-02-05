@@ -693,6 +693,7 @@ class EbeCollector(object):
                         pid = int(aLine[216:222])
                         UrQMDpid = pid + isospin2*1000
                         try:
+                            if pid == 100: UrQMDpid = 100 # UrQMD seems to have a bug for decay photon isospin and charge when running decay only mode
                             databasePid = self.pidDict[self.UrQMDpidDict[UrQMDpid]]
                         except ValueError as e:
                             print("Can not find particle id in the dictionary!")
