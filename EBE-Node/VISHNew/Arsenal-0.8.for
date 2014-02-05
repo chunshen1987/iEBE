@@ -279,8 +279,14 @@
           !Print*, XX1, XX2
         End If
       End Do ! <=> abs(XX2-XX1)>accuracy
-
-      varResult = XX2
+      
+      if(XX2 .lt. varL) then
+         varResult = varL
+      else if(XX2 .gt. varR) then
+         varResult = varR
+      else
+         varResult = XX2
+      endif
 
       End Subroutine
 !-----------------------------------------------------------------------

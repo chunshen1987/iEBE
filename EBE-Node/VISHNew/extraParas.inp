@@ -1,3 +1,4 @@
 2       ! regMethod :   1: use R0 and Fermi-Dirac function to regulate Pi; 2: use tanh
 0.141421      ! PiRatio :   Used to determine R0 by requiring that Pi/(e+p)<PiRatio
 10.0    ! maxPiRatio :    Used to determine Pi_max used in tanh regulation
+1.0     ! maxBulkPiRatio :    Used to determine Pi_max used in tanh regulation

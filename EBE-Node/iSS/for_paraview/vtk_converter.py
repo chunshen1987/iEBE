@@ -171,8 +171,17 @@ def convertToVtk(output_file, format_file, file_list, structured="auto"):
 
 
 if __name__ == '__main__':
-  if len(argv)<4:
-    print("Usage: vtk_converter.py output_file format_file file1 file2 ...");
+  if len(argv)<5:
+    print("Usage: vtk_converter.py output_file format_file structuredGrid file1 file2 ...");
   else:
-    output_file = argv[1]+"_%d"; format_file = argv[2];
-    convertToVtk(output_file, format_file, argv[3:], structured="auto");
+    output_file = argv[1]+"_%d"; format_file = argv[2]; 
+    structuredGrid = argv[3]
+    if structuredGrid.lower() == 'auto':
+       convertToVtk(output_file, format_file, argv[4:], structured="auto");
+    elif structuredGrid.lower() == 'yes':
+       convertToVtk(output_file, format_file, argv[4:], structured="yes");
+    elif structuredGrid.lower() == 'no':
+       convertToVtk(output_file, format_file, argv[4:], structured="no");
+    else:
+       print("please put yes/no for structuredGrid");
+
