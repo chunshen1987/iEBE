@@ -660,6 +660,9 @@ def sequentialEventDriverShell():
                 # bin the combined result file to get flows
                 binUrqmdResultFiles(urqmdOutputFilePath)
                 
+                # delete the huge final UrQMD combined file
+                remove(urqmdOutputFilePath)
+
             elif simulationType == 'hydro':
                 # perform iS calculation and resonance decays
                 iSWithResonancesWithHydroResultFiles(hydroResultFiles)
