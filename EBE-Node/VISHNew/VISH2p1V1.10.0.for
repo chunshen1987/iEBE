@@ -4808,7 +4808,7 @@ C----------------------------------------------------------------
 
       Double Precision :: Tideal_scale, pi_scale
       Double Precision :: absNumericalzero = 1D-2
-      Double Precision :: relNumericalzero = 1D-2  !Xsi_0 in Zhi's thesis
+      Double Precision :: relNumericalzero = 1D1  !Xsi_0 in Zhi's thesis
 
       Double Precision maxPiRatio
       Double Precision gamma_perp
