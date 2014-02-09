@@ -8,4 +8,5 @@ urlpatterns = patterns(
     url(r'$', views.home, name='query'),
     url(r'home/$', views.home, name='query'),
     url(r'query/$', views.query, name='query'),
+    url(r'query(?<params>.*)', views.query, name='query'),
 )
