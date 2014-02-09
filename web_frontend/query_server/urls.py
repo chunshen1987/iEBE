@@ -1,4 +1,5 @@
 from django.conf.urls import patterns, url
+import urllib2
 
 from query_server import views
 
