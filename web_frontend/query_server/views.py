@@ -1,15 +1,10 @@
 import logging
+from numpy import ndarray
 
 from django.http import HttpResponse
 from django.template import RequestContext, loader
 
-
-
 import bridge
-
-query_bridge = bridge.QueryBridge()
-logging.info("QueryBridge object is initialized. Make sure it is only "
-             "initialized once per server run.")
 
 
 def query(request):
@@ -21,17 +16,15 @@ def query(request):
                  expression, database_name, output_format)
 
     try:
+        query_bridge = bridge.QueryBridge()
         query_bridge.set_database(database_name)
         results = query_bridge.evaluate_expression(expression)
 
         # Make results iterable; special case when it is a string.
-        if not results or type(results) == str:
+        if type(results) == str:
             raise ValueError()
-        else:
-            try:
-                iter(results)
-            except TypeError:
-                results = [results]
+        elif type(results) != ndarray:
+            results = [results]
 
         template = loader.get_template("query_%s.tmpl" % output_format)
         context = RequestContext(request, {
