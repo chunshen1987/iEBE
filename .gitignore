@@ -2,6 +2,7 @@
 *.~
 *.dat
 *.e
+*.pyc
 .DS_Store
 results/
 obj/
