@@ -6,7 +6,7 @@ from EbeCollector import EbeDBReader
 EXPR_PARAM = "expr"
 DATABASE_PARAM = "database"
 
-DATABASE_RELATIVE_PATH = "query_server/databases"
+DATABASE_RELATIVE_PATH = "databases"
 
 
 class QueryBridge(object):

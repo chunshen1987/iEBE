@@ -1,13 +1,14 @@
+import logging
+import sys
+
 from django.shortcuts import render
 from django.http import HttpResponse
 
 import bridge
 
 query_bridge = bridge.QueryBridge()
-
-print
-print "Hello"
-print
+logging.info("QueryBridge object is initialized. Make sure it is only "
+             "initialized once per server run.")
 
 
 def query(request):
