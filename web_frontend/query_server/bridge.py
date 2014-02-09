@@ -5,6 +5,8 @@ from EbeCollector import EbeDBReader
 EXPR = "expr"
 DATABASE = "database"
 
+DATABASE_PATH = "../databases"
+
 
 class QueryBridge(object):
     def __init__(self, database_name=""):
