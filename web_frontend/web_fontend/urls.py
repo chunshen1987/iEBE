@@ -10,5 +10,5 @@ urlpatterns = patterns('',
 
     url(r'^admin/', include(admin.site.urls)),
 
-    url(r'^query', include('query_server.urls')),
+    url(r'', include('query_server.urls')),
 )
