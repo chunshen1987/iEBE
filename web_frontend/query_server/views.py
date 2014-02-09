@@ -8,7 +8,7 @@ import bridge
 
 
 def query(request):
-    output_format = request.GET.get(bridge.FORMAT, "plain")
+    output_format = request.GET.get(bridge.FORMAT, "table")
     database_name = request.GET.get(bridge.DATABASE_PARAM, "")
     expression = request.GET.get(bridge.EXPR_PARAM, "")
 

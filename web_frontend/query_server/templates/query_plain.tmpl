@@ -1,20 +1,3 @@
-{% if latest_poll_list %}
-    <ul>
-    {% for poll in latest_poll_list %}
-        <li><a href="/polls/{{ poll.id }}/">{{ poll.question }}</a></li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No polls are available.</p>
-{% endif %}
-
-
-{% if not expression %}
-    <div class="error">
-        <h2>
-            Error: expression not defined.
-        </h2>
-        <br>
-    </div>
-{% else %}
-    <div class="table"
+{% for value in query_result %}
+    {{ value }}<br>
+{% endfor %}
