@@ -5,6 +5,7 @@ from EbeCollector import EbeDBReader
 # The following strings are used as query parameters.
 EXPR_PARAM = "expr"
 DATABASE_PARAM = "database"
+FORMAT = "fmt"
 
 DATABASE_RELATIVE_PATH = "databases"
 
