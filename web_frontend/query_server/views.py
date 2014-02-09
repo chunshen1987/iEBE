@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 
+import EbeCollector
 
 def query(request):
     expression = request.GET.get("expr", "")
