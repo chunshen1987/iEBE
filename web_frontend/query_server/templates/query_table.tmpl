@@ -1,0 +1,22 @@
+{% if not query_content %}
+    <div class="error">
+        <h2>
+            Error: expression not defined.
+        </h2>
+        <br>
+    </div>
+{% else %}
+    <div>
+        <h3>
+            The result of query {{ query_content }} is:
+        </h3>
+        <br>
+        <table>
+            {% for value in query_result %}
+                <tr>
+                    <td>{{ value }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endif %}
