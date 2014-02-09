@@ -6,24 +6,26 @@ from EbeCollector import EbeDBReader
 EXPR_PARAM = "expr"
 DATABASE_PARAM = "database"
 
-DATABASE_RELATIVE_PATH = "databases"
+DATABASE_RELATIVE_PATH = "query_server/databases"
 
 
 class QueryBridge(object):
-    def __init__(self, database_name=""):
+    def __init__(self):
         self.database_name = ""
         self.reader = None
 
-        self.set_datebase(database_name)
-
     def set_database(self, database_name):
-        if not database_name.endwith(".db"):
+        if not database_name.endswith(".db"):
             database_name += ".db"
 
         if database_name != self.database_name:
-            self.database_name = database_name
+            # "str" is used to convert type from unicode to str.
+            self.database_name = str(database_name)
             self.reader = EbeDBReader(path.join(DATABASE_RELATIVE_PATH,
-                                                database_name))
+                                                self.database_name))
 
     def evaluate_expression(self, expr):
-        return self.reader.evaluateExpressionOnly(expr)
+        if self.reader:
+            return self.reader.evaluateExpressionOnly(expr)
+        else:
+            raise Exception("Invalid database.")
