@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 
-import EbeCollector
+import bridge
+
 
 def query(request):
     expression = request.GET.get("expr", "")
@@ -12,5 +13,5 @@ def query(request):
         return HttpResponse(expression)
 
 
-def home(request):
+def home(unused_request):
     return HttpResponse("Hello, this is the homepage.")
