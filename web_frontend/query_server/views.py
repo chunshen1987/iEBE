@@ -24,6 +24,9 @@ def query(request):
         query_bridge.set_database(database_name)
         results = query_bridge.evaluate_expression(expression)
 
+        if not results:
+            raise ValueError()
+
         # Make results iterable; special case when it is a string.
         if type(results) == str:
             raise ValueError()
@@ -52,5 +55,5 @@ def home(request):
     template = loader.get_template("query_homepage.tmpl")
     context = RequestContext(request, {
         "database_names": bridge.get_available_database_names(),
-        "formats": ["plain", "table"]})
+        "formats": ["table", "plain"]})
     return HttpResponse(template.render(context))

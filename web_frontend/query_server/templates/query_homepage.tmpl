@@ -16,7 +16,7 @@
             <option value="{{ fmt }}">{{ fmt }}</option>
         {% endfor %}
         </select><br>
-        Query expression: <input type="text" name="expr"><br>
+        Query expression: <input type="text" name="expr" style="width:600px"><br>
         <input type="submit" value="Calculate!">
     </form>
 </div>
@@ -37,5 +37,10 @@
     v_3(0.5)(pion), v_2(linspace(0,3,50))(proton)
     dN/dydpT([0,0.5,1])(total),
     v_2[2](pion), v_2[2](0.5)(kaon), e_2[2](e), e_3[4](s)
+    <h3>
+        Note:
+    </h3>
+    Symbols are case-sensitive. Also please make sure the quantity exists in the
+    database.
 </div>
 
