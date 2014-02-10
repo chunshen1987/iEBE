@@ -1,0 +1,41 @@
+<h2>
+    Welcome to iEBE module web interface!
+</h2>
+
+<div class="query_input">
+    <form action="query">
+        Database name:
+        <select name="database">
+        {% for db_name in database_names %}
+            <option value="{{ db_name }}">{{ db_name }}</option>
+        {% endfor %}
+        </select><br>
+        Output format:
+        <select name="fmt">
+        {% for fmt in formats %}
+            <option value="{{ fmt }}">{{ fmt }}</option>
+        {% endfor %}
+        </select><br>
+        Query expression: <input type="text" name="expr"><br>
+        <input type="submit" value="Calculate!">
+    </form>
+</div>
+
+<div class="query_help">
+    <h3>
+        Supported symbols:
+    </h3>
+    Ecc_{m,n}(ed), E_n(sd), ecc_{m,n}(e), Phi_{m,n}(s), {r^m}(ed),
+    V_{n}(pion), v_n(kaon), Psi_n(nucleon), dN/dy(pion)
+    V_{n}(pT)(pion), v_n([pT1, pT2, ...])(kaon), Psi_n(pT)(pion), dN/(dydpT)(total),
+    v_n[2](pion), e_n[4](ed), &ltsymbol&gt, |symbol|
+    <h3>
+        Here are some examples:
+    </h3>
+    E_2(s), e_{3,1}(e), ecc_3(ed), Phi_2(e),
+    V_2(pion), v_3(kaon), Psi_4(total), N(total),
+    v_3(0.5)(pion), v_2(linspace(0,3,50))(proton)
+    dN/dydpT([0,0.5,1])(total),
+    v_2[2](pion), v_2[2](0.5)(kaon), e_2[2](e), e_3[4](s)
+</div>
+

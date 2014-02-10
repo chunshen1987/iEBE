@@ -1,4 +1,4 @@
-from os import path
+from os import path, listdir
 from EbeCollector import EbeDBReader
 
 
@@ -30,3 +30,7 @@ class QueryBridge(object):
             return self.reader.evaluateExpressionOnly(expr)
         else:
             raise Exception("Invalid database.")
+
+
+def get_available_database_names(path=DATABASE_RELATIVE_PATH):
+    return [db_name for db_name in listdir(path) if db_name.endswith(".db")]

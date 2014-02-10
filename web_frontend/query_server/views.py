@@ -1,5 +1,6 @@
 import logging
 from numpy import ndarray
+import os
 
 from django.http import HttpResponse
 from django.template import RequestContext, loader
@@ -16,6 +17,9 @@ def query(request):
                  expression, database_name, output_format)
 
     try:
+        if not expression:
+            raise ValueError()
+
         query_bridge = bridge.QueryBridge()
         query_bridge.set_database(database_name)
         results = query_bridge.evaluate_expression(expression)
@@ -29,8 +33,7 @@ def query(request):
         template = loader.get_template("query_%s.tmpl" % output_format)
         context = RequestContext(request, {
             "query_content": expression,
-            "query_result": results,
-            })
+            "query_result": results})
         return HttpResponse(template.render(context))
 
     except ValueError:
@@ -40,10 +43,14 @@ def query(request):
             "database_param": bridge.DATABASE_PARAM,
             "expr_param": bridge.EXPR_PARAM,
             "fmt_plain": "plain",
-            "fmt_table": "table",
-            })
+            "fmt_table": "table"})
         return HttpResponse(template.render(context))
 
 
-def home(unused_request):
-    return HttpResponse("Hello, this is the homepage.")
+def home(request):
+    print bridge.get_available_database_names()
+    template = loader.get_template("query_homepage.tmpl")
+    context = RequestContext(request, {
+        "database_names": bridge.get_available_database_names(),
+        "formats": ["plain", "table"]})
+    return HttpResponse(template.render(context))
