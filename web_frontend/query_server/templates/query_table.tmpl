@@ -1,0 +1,12 @@
+{% if not query_content %}
+{% else %}
+    <div>
+        <h3>
+            The result of query {{ query_content }} is:
+        </h3>
+        <br>
+        {% for value in query_result %}
+               {{ value }},
+        {% endfor %}
+    </div>
+{% endif %}
