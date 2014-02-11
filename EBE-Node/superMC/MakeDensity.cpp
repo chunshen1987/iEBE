@@ -589,6 +589,8 @@ void MakeDensity::generate_profile_average(int nevent)
             }
         }
       } // <-> for(int iy=0;iy<binRapidity;iy++)
+      if(not cutdSdypassFlag)
+        break;
     } // <-> for(int iorder=0; iorder<number_of_orders; iorder++)
     mc->deleteNucleus();
 
@@ -836,7 +838,8 @@ void MakeDensity::dumpEccentricities(char* base_filename, double*** density, con
 // calculate and output eccentricities
 {
     bool deformedFlag = false;
-    if(paraRdr->getVal("proj_deformed") == 1 or paraRdr->getVal("targ_deformed") == 1) deformedFlag = true;
+    if(paraRdr->getVal("proj_deformed") == 1 or paraRdr->getVal("targ_deformed") == 1) 
+      deformedFlag = true;
     std::ofstream of;
     char buffer[200];
     double x,y,r,theta;
