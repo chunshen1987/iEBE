@@ -391,6 +391,8 @@ void MakeDensity::generate_profile_average(int nevent)
           }
         }
       } // <-> for(int iy=0;iy<binRapidity;iy++)
+      if(not cutdSdypassFlag)
+        break;
     } // <-> for(int iorder=0; iorder<number_of_orders; iorder++)
     mc->deleteNucleus();
     //cout << "processing event: " << event << endl;
