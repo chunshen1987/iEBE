@@ -40,6 +40,8 @@ protected:
     int Maxx,Maxy;
     int isKLN;
     double Xmin, Ymin, Xmax, Ymax;
+    double PTinte, PTmax, PTmin, dpt, MaxPT;
+    int    PT_order;
     double dx,dy;
     double siginNN, siginNN200;
     double rapidity;
@@ -81,17 +83,20 @@ public:
     double getTA1(int x,int y) {return TA1[x][y];}
     double getTA2(int x,int y) {return TA2[x][y];}
     double getRho(int i, int x,int y) {return rho->getDensity(i,x,y);}
+    double getRho(int i, int x,int y, int pt) {return rho->getDensity(i,x,y,pt);}
     void setRho(int i, int x,int y, double val) {rho->setDensity(i,x,y,val);}
     int getNcoll() {return Ncoll;}
     int getNpart1() {return Npart1;}
     int getNpart2() {return Npart2;}
-    double getdNdy() {return dndy*dx*dy;}
+    double getdNdy() 
+    {if(PTinte) return dndy*dx*dy; 
+        else return dndy*dx*dy*dpt;}
 
     void setOverSample(int i) {overSample=i;}
     void setRapidity(double y) {rapidity=y;}
     void generateNucleus(double b, OverLap* proj, OverLap* targ);
     void deleteNucleus();
-    void setDensity(int iy, int ipt=-1); // ipt<0: no dN/dydpt table used
+    void setDensity(int iy, int ipt); // ipt<0: no dN/dydpt table used
     void getTA2();
     int  getBinaryCollision();
     int  CentralityCut();
@@ -103,6 +108,7 @@ public:
     void makeTable();
     void makeTable(double, double, int);
     void dumpdNdyTable4Col(char filename[], double *** dNdyTable, const int iy);
+    void dumpdNdydptTable5Col(char filename[], double **** dNdydptTable, const int iy);    
     double getSigEff();
     int hit(double r);
     static double Angle(const double x,const double y);

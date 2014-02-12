@@ -38,7 +38,7 @@ double adaptiveSimpsonsAux(double (*f)(double), double a, double b, double epsil
 double adaptiveSimpsons(double (*f)(double), double a, double b,  double epsilon=1e-15, int maxRecursionDepth=50);
 
 double qiu_simpsons(double (*f)(double), double a, double b, double epsilon=1e-15, int maxRecursionDepth=50);
-
+double qiu_simpsonsRel(double (*f)(double), double a, double b, double epsilon=1e-15, int maxRecursionDepth=50);
 long binarySearch(vector<double>* A, double value, bool skip_out_of_range=false);
 
 void formatedPrint(ostream&, int count, ...);

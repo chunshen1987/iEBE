@@ -42,6 +42,17 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in)
   NpartMax = paraRdr->getVal("Npmax");
   NpartMin = paraRdr->getVal("Npmin");
 
+  // Unintegrated PT optns
+  PTinte = paraRdr->getVal("PT_flag");
+  PTmax  = paraRdr->getVal("PT_Max");
+  PTmin  = paraRdr->getVal("PT_Min");
+  dpt = paraRdr->getVal("d_PT");
+  MaxPT=(int)((PTmax-PTmin)/dpt+0.1)+1;
+  if(PTinte<0)
+      PT_order = paraRdr->getVal("PT_order");   
+  else
+      PT_order = 1; //does not apply when there is no PT integration
+
   //.... NN cross sections in mb
   double ecm = paraRdr->getVal("ecm");
   double sig = hadronxsec::totalXsection(200.0,0);
@@ -102,7 +113,7 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in)
     for(int iy=0;iy<Maxy;iy++) TA2[ix][iy] = 0;
   }
 
-  rho = new GlueDensity(Xmax,Ymax,dx,dy,binRapidity,rapMin,rapMax);
+  rho = new GlueDensity(Xmax,Ymax,PTmin,PTmax,dx,dy,dpt,binRapidity,rapMin,rapMax);
 
   Xcm=0.0, Ycm=0.0, angPart=0.0;
 
@@ -521,13 +532,14 @@ void MCnucl::setDensity(int iy, int ipt)
         {
           table_result = sixPoint2dInterp(di-i, dj-j, // x and y value, in lattice unit (dndyTable_step -> 1)
           dndyTable[iy][i][j], dndyTable[iy][i][j+1], dndyTable[iy][i][j+2], dndyTable[iy][i+1][j], dndyTable[iy][i+1][j+1], dndyTable[iy][i+2][j]);
+          rho->setDensity(iy,ir,jr,table_result);
         }
         else // with pt dependence
         {
           table_result = sixPoint2dInterp(di-i, dj-j, // x and y value, in lattice unit (dndyTable_step -> 1)
           dndydptTable[iy][i][j][ipt], dndydptTable[iy][i][j+1][ipt], dndydptTable[iy][i][j+2][ipt], dndydptTable[iy][i+1][j][ipt], dndydptTable[iy][i+1][j+1][ipt], dndydptTable[iy][i+2][j][ipt]);
+          rho->setDensity(iy,ir,jr, ipt, table_result);
         }
-        rho->setDensity(iy,ir,jr,table_result);
         //dndy += dndyTable[iy][i][j];
         dndy += table_result;
       }
@@ -700,7 +712,7 @@ int progress_counter = 0, progress_percent = 0, last_update = 0;
         double ta2 = dT*j;
         if(i>0 && j>0) {  // store corresponding dN/dy in lookup table
           // small-x gluons via kt-factorization
-          dndyTable[iy][i][j] = kln->getdNdy(y,ta1,ta2);
+          dndyTable[iy][i][j] = kln->getdNdy(y,ta1,ta2, -1, PT_order); 
           // add large-x partons via DHJ formula if required
           if (val)
             dndyTable[iy][i][j] += val->getdNdy(y,ta1,ta2);
@@ -754,6 +766,9 @@ void MCnucl::makeTable(double ptmin, double dpt, int iPtmax)
     }
   }
 
+
+int progress_counter = 0, progress_percent = 0, last_update = 0;
+//===========================================================================
   for(int iy=0;iy<binRapidity;iy++) { // loop over rapidity bins
     double y = rapMin+(rapMax-rapMin)/binRapidity*iy;
     for (int i=0; i<tmaxPt; i++) {   // loop over proj thickness
@@ -769,7 +784,14 @@ void MCnucl::makeTable(double ptmin, double dpt, int iPtmax)
             else
               // small-x gluons via kt-factorization;  fixed pt, no integration
               dndydptTable[iy][i][j][ipt] = kln->getdNdy(y,ta1,ta2,ptmin+ipt*dpt);
-          } else dndydptTable[iy][i][j][ipt] = 0.0;
+          } else dndydptTable[iy][i][j][ipt] = 0.0;        
+          progress_counter++;
+          progress_percent = (progress_counter*100) / (binRapidity*tmax*tmax*iptmax);
+          if(((progress_percent%10) == 0) && (progress_percent != last_update))
+          {
+           cout << progress_percent << "% : " << std::flush;
+           last_update = progress_percent;
+          }
         }
       }
     }
@@ -794,6 +816,35 @@ void MCnucl::dumpdNdyTable4Col(char filename[], double *** dNdyTable, const int 
              << fixed << setprecision(3) << setw(10) <<  ta2
              << setprecision(12) << setw(22) <<  dNdyTable[iy][i][j]
              << endl;
+        }
+      }
+    }
+     of.close();
+}
+
+
+void MCnucl::dumpdNdydptTable5Col(char filename[], double **** dNdydptTable, const int iy)
+{
+  ofstream of;
+  of.open(filename, std::ios_base::out);
+
+  double y = rapMin+(rapMax-rapMin)/binRapidity*iy;
+  double iptmax = MaxPT;
+
+    for(int i=0;i<tmax;i++) {   // loop over proj thickness
+      double ta1 = dT*i;
+      for(int j=0;j<tmax;j++) { // loop over targ thickness
+        double ta2 = dT*j;
+        if(i>0 && j>0) {
+          for(int ipt=0;ipt<iptmax; ipt++) { //loop over Pt
+            double ptstep = PTmin+ipt*dpt;
+          of << fixed << setprecision(3) << setw(10) <<  y
+             << fixed << setprecision(3) << setw(10) <<  ta1
+             << fixed << setprecision(3) << setw(10) <<  ta2
+             << fixed << setprecision(3) << setw(10) <<  ptstep;
+          of << scientific << setprecision(12) << setw(22) <<  dNdydptTable[iy][i][j][ipt]
+             << endl;
+             }
         }
       }
     }

@@ -6,7 +6,8 @@
 #include "UnintegPartonDist.h"
 #include "OverLap.h"
 #include <cmath>
-
+#include "arsenal.h"
+#include <fstream>
 //... kt factorization model for small-x gluon production
 
 class KLNModel : public Bases
@@ -19,6 +20,7 @@ private:
   int    dNdeta;       // =1: calculate dN/deta
   int    dEtdy;        // =1: calculate dE/dy
   double partonPt;    // produce parton with fixed pt
+  int    PT_order;    //order of pt in KLN pt integration  
   double g2hfac;      // g-->hadr conversion factor
   double alphaS;      // alpha strong for fixed coupling case
   double lambda;
@@ -45,7 +47,7 @@ private:
   KLNModel(double srt,int mode,UnintegPartonDist* f);
   virtual ~KLNModel();
 
-  double getdNdy(double y,double npart1,double npart2, double pt=-1.0);
+  double getdNdy(double y,double npart1,double npart2, double pt=-1.0, int pt_order=1);
   inline double getAlphaStrong(const double q2);
 
   double SaturationScale(double x,double npart);
@@ -69,6 +71,12 @@ private:
   double getEcm()                      {return ecm;}
   void setOptFixAlpha(int i)           {optFixAlpha=i;}
   double Dgl(int iFF, double z, double Q);
+
+ //Integrand for Simpson Integration
+  double func_simpson(double *x);         //integrand, depends on pt, kt, phi
+  double inte_kt(double );        // fix pt, integrate on kt, calls inte_phi() first
+  double func_phi(double );         //function which calls func_simpson()
+  double pt_spectra(double );   //the final function which only depends on pt
 
  protected:
   double ktF_MCintegral();

@@ -20,6 +20,15 @@ double KLNModel::CF = (Nc*Nc-1.0)/(2*Nc);
 double KLNModel::Norm=2./CF/hbarCsq;
 double KLNModel::Beta0 = (33.0-2.0*Nf)/(12*M_PI);
 
+
+//Simpson integration
+double pi = M_PI;
+double gl_pt,gl_kt;
+const double SimpsonPrecision = 1e-4;
+const double SimpsonRecurNum = 50;
+
+KLNModel *kln_global;
+
 //CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 // This is where the thickness functions are converted into gluon densities
 // via the Color-Glass Condensate Model
@@ -57,8 +66,8 @@ KLNModel::KLNModel(double srt, int mode, UnintegPartonDist* f)
                    // conversion factor for pt-integr. dN/dy
                    // (not for Et and hadrons from parton fragmentation)
 
-  partonPt = -1.0; // <0 indicates that we integrate over parton pt
-  Ptmin=0.05;      // set range of integral over pt (--> dNdy)
+  //partonPt = -1.0; // <0 indicates that we integrate over parton pt
+  Ptmin=0.1;      // set range of integral over pt (--> dNdy)
   Ptmax=12.0;
 }
 
@@ -85,24 +94,32 @@ double KLNModel::getJacobian(double eta, double pt2)
 // calculates dNdy or dNdyd2pt for AB collision at rapidity y for proj/targ
 // thickness given by npart1, npart2
 // this routine is used on the MC sampled nucleon configurations
-double KLNModel::getdNdy(double y, double npart1, double npart2, double pt)
+double KLNModel::getdNdy(double y, double npart1, double npart2, double pt, int pt_order)
 {
+  kln_global = this;
   Npart1=npart1;
   Npart2=npart2;
   rapidity=y;
   partonPt=pt;  // if >0 then pt is fixed, no integration
-
+  PT_order=pt_order;
   double trEtaY=1.0;
-  if(dNdeta<0) {  // global (pt-independent) y->eta Jacobian
-    double avg_pt = 0.13 + .32*pow(200./1000.,0.115);
-      // this call modifies variable "rapidity" from eta to y !
-    trEtaY=getJacobian(rapidity,avg_pt*avg_pt);
-  }
+  double result=0.0;
+  // MC integration over kt, pt, phi using bases()
+  if( pt <= 0)
+    result = trEtaY*g2hfac*Norm*ktF_MCintegral()*9./32.; //Zhi: the 9/32 factor converts 
+  // the normalization from the pervious version (the line below) to the normalization used 
+  // in Hirano's CGC code. Details: 9/32=(3/4/pi)^2*(pi^2/2) where the (3/4/pi)^2 is the 
+  // factor difference of the integrand "func", and the pi^2/2 factor is the difference of 
+  // the factor in front (g2hfac*Norm).
 
-  //cout << "->" << ktF_MCintegral() << endl;
+  // if no integration over pt, then use Adaptive Simpson to do kt and phi integration
+  else 
+   {result = trEtaY*g2hfac*Norm*pt_spectra(pt)*9./32.;
+ //  cout<<"pt>0?"<<endl; exit(0);
+   }   
+    
 
-  // MC integration over kt(,pt) using bases()
-  return trEtaY*g2hfac*Norm*ktF_MCintegral()*9./32.; //Zhi: the 9/32 factor converts the normalization from the pervious version (the line below) to the normalization used in Hirano's CGC code. Details: 9/32=(3/4/pi)^2*(pi^2/2) where the (3/4/pi)^2 is the factor difference of the integrand "func", and the pi^2/2 factor is the difference of the factor in front (g2hfac*Norm).
+  return result; 
   // HERE
   // return trEtaY*g2hfac*Norm*ktF_MCintegral();
 }
@@ -202,7 +219,7 @@ double KLNModel::ktF_MCintegral()
 double KLNModel::func(double* x)
 {
   double pt= Ptmin + x[0]*(Ptmax-Ptmin); // integrate over parton pt
-  if (partonPt>0.0) pt = partonPt;       // parton pt fixed, no integration
+  if (partonPt>=0.0) pt = partonPt;       // parton pt fixed, no integration
   double ktmax = pt;
   double kt= ktmax*x[1];
 
@@ -240,7 +257,14 @@ double KLNModel::func(double* x)
 
   double result = alp*fnc; //alpha_s*phi_A*phi_B
   if (partonPt < 0.0)
-    result *= 2.0*M_PI*(Ptmax-Ptmin)*pt; // d^2pT integration
+  {
+    if(PT_order==2)
+    {
+      result *= (Ptmax-Ptmin)*pt*pt; // pt^2 dpt for Tmn lookup table and fast free-streaming & matching calculation
+    }    
+    else
+      result *= 2.0*M_PI*(Ptmax-Ptmin)*pt; // d^2pT integration
+  }
   result /= mt*mt;      // 1/mt^2 factor
   result *= 2.0*M_PI*kt*ktmax;         // d^2kT integration
   result /= 4.0; //Jacobian due to symmetrization of integration
@@ -251,6 +275,84 @@ double KLNModel::func(double* x)
 
   return result;
 }
+
+/*****************************************************************************************/
+// Add an alternative integrand to do kt, phi integration, using adaptive simpson
+double KLNModel::func_simpson(double *x)
+{
+  double pt_vir = x[0], kt_vir = x[1], phi_vir = x[2];
+
+  // include phi integral.
+  double ktsq1 = 0.25*(pt_vir*pt_vir + kt_vir*kt_vir + 2*kt_vir*pt_vir*cos(phi_vir));
+  double ktsq2 = 0.25*(pt_vir*pt_vir + kt_vir*kt_vir - 2*pt_vir*kt_vir*cos(phi_vir));
+
+  transEtaY=1.0;
+  double mt=pt_vir;
+  double rap_save = rapidity;
+  if(dNdeta>0) {
+    // this call modifies variable "rapidity" from eta to y !
+    transEtaY=getJacobian(rapidity,pt_vir*pt_vir);
+    mt=sqrt(pt_vir*pt_vir+mHadron*mHadron);
+  }
+  double x1=mt/ecm*exp(rapidity);
+  double x2=mt/ecm/exp(rapidity);
+  rapidity = rap_save;
+  if(x1 > 1.0 || x2 > 1.0) return 0.0;
+
+  double qs2a= SaturationScale(x1,Npart1);
+  double qs2b= SaturationScale(x2,Npart2);
+
+  double fnc1  = waveFunction(qs2a,x1,ktsq1);
+  double fnc2  = waveFunction(qs2b,x2,ktsq2);
+  double fnc = fnc1*fnc2;
+
+  double scale = max(ktsq1,ktsq2);
+  double alp = getAlphaStrong(max(scale,mt*mt));
+
+  double result = alp*fnc; //alpha_s * phi_A * phi_B
+  // cout<<"alp*fnc="<<result<<endl;
+  result *= kt_vir;  //integration over d^2 k gives a k factor
+  result /= mt*mt;      // 1/mt^2 factor
+  result /= 4.0; //Jacobian due to symmetrization of integration
+  result *= transEtaY;   // y --> eta Jacobian
+  if(dEtdy){
+    return result*mt;
+  }
+
+  // cout<<"Test integrand: "<<endl;
+  // cout<<"pt="<<pt_vir<< " kt="<<kt_vir<<" phi="<<phi_vir<<endl
+  //     <<"ktsq1="<<ktsq1<<" ktsq2="<<ktsq2<<endl
+  //     <<"x1="<<x1<< " x2="<<x2<<" qs2a="<<qs2a<<" qs2b="<<qs2b<<endl
+  //     <<"fnc1="<<fnc1<<" fnc2="<<fnc2<<" scale="<<scale<<" alp="<<alp<<endl
+  //     <<"mt="<<mt<<" transEtaY="<<transEtaY<<" result= "<<result<<endl<<endl;   
+  return result;
+}
+
+double inte_kt_hook(double kt_vir) { return kln_global->inte_kt(kt_vir); }
+double KLNModel::pt_spectra(double pt_vir)
+{
+  gl_pt = pt_vir;
+  return qiu_simpsonsRel(&inte_kt_hook, 0.0, pt_vir, SimpsonPrecision, SimpsonRecurNum);
+}
+
+double func_phi_hook(double phi_vir) { return kln_global->func_phi(phi_vir); }
+double KLNModel::inte_kt(double kt_vir)
+{
+  gl_kt = kt_vir;
+  return qiu_simpsonsRel(&func_phi_hook, 0, 2.* pi, SimpsonPrecision, SimpsonRecurNum);
+}
+
+double KLNModel::func_phi(double phi_vir)
+{
+  double x[3] = {gl_pt, gl_kt, phi_vir};
+  return func_simpson(x);
+}
+
+
+//Changes end----------------------------------------------------------------------
+/*******************************************************************************/
+
+
 
 //ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 // Qs^2 for _gluon_ probe (adjoint) as a function of thickness

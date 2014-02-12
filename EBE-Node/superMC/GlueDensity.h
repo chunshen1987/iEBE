@@ -10,20 +10,26 @@ class GlueDensity
 protected:
     double ***density;
     double Xmax,Ymax,Xmin,Ymin,dx,dy;
+    double ****densitypt;
+    double PTmax, PTmin, dpt;
+    int    Maxx, Maxy, MaxPT;
     int    nRap;
     double rapMin, rapMax;
     double *dNdy;
     double *Xcm, *Ycm, *AngleG;
     double *Xcm2, *Ycm2, *XYcm;
     double sigX, sigY, sigXY;
-    int    Maxx, Maxy;
 public:
-    GlueDensity(double xmax, double ymax,double dx0,double dy0,
-		    int nrap, double rmin, double rmax);
+    GlueDensity(double xmax, double ymax, double ptmin, double ptmax, double dx0,double dy0,
+            double dpt, int nrap, double rmin, double rmax);
     ~GlueDensity();
 
     void setDensity(int i, int ix, int iy,double a) {density[i][ix][iy]=a;}
     double getDensity(int iy, int i, int j) {return density[iy][i][j];}
+
+    void setDensity(int i, int ix, int iy,int ipt, double a) {densitypt[i][ix][iy][ipt]=a;}
+    double getDensity(int iy, int i, int j, int ipt) {return densitypt[iy][i][j][ipt];}
+        
     double getXcm(int i) {return Xcm[i];}
     double getYcm(int i) {return Ycm[i];}
     double getXcm2(int i) {return Xcm2[i];}

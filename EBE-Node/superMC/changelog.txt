@@ -1,6 +1,14 @@
 ***** Note: If the compiler complains that "lgsl not found", try to disable the "-fast" option in the Zmake.sh script. *****
 
 
+
+============================
+Ver1.6.x (01-30-2013)
+============================
+Branch version of 1.6.0. Add gluon pt-differential options for KLN model.
+
+
+
 ============================
 Ver1.6.0 (01-30-2013)
 ============================

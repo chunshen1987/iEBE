@@ -571,6 +571,50 @@ double qiu_simpsons(double (*f)(double), // ptr to function
 }
 
 //**********************************************************************
+double qiu_simpsonsRel(double (*f)(double), // ptr to function
+                    double a, double b, // interval [a,b]
+                    double epsilon, int maxRecursionDepth) // recursion maximum
+// My version of the adaptive simpsons integration method.
+{
+  double f_1=f(a)+f(b), f_2=0., f_4=0.; // sum of values of f(x) that will be weighted by 1, 2, 4 respectively, depending on where x is
+  double sum_previous=0., sum_current=0.; // previous and current sum (intgrated value)
+
+  long count = 1; // how many new mid-points are there
+  double length = (b-a), // helf length of the interval
+         step = length/count; // mid-points are located at a+(i+0.5)*step, i=0..count-1
+
+  int currentRecursionDepth = 1;
+
+  f_4 = f(a+0.5*step); // mid point of [a,b]
+  sum_current = (length/6)*(f_1 + f_2*2. + f_4*4.); // get the current sum
+
+  do
+  {
+    sum_previous = sum_current; // record the old sum
+    f_2 += f_4; // old mid-points with weight 4 will be new mid-points with weight 2
+
+    count*=2; // increase number of mid-points
+    step/=2.0; // decrease jumping step by half
+    f_4 = 0.; // prepare to sum up f_4
+    for (int i=0; i<count; i++) f_4 += f(a+step*(i+0.5)); // sum up f_4
+
+    sum_current = (length/6/count)*(f_1 + f_2*2. + f_4*4.); // calculate current sum
+    //cout << sum_current << endl;
+
+    if (currentRecursionDepth>maxRecursionDepth)
+    {
+      cout << endl << "Warning qiu_simpsons: maximum recursion depth reached!" << endl << endl;
+      break; // safety treatment
+    }
+    else currentRecursionDepth++;
+
+  } while (abs(sum_current-sum_previous)/(sum_current-sum_previous)>epsilon);
+
+  return sum_current;
+}
+
+
+//**********************************************************************
 string toLower(string str)
 // Convert all character in string to lower case
 {

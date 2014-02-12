@@ -4,8 +4,8 @@
 
 using namespace std;
 
-GlueDensity::GlueDensity(double xmax, double ymax,double dx0,double dy0,
-	int ny, double rapmin, double rapmax)
+GlueDensity::GlueDensity(double xmax, double ymax, double ptmin, double ptmax, double dx0,double dy0,double dpt0, 
+    int ny, double rapmin, double rapmax)
 {
     Xmax=xmax;
     Ymax=ymax;
@@ -18,6 +18,11 @@ GlueDensity::GlueDensity(double xmax, double ymax,double dx0,double dy0,
     nRap=ny;
     rapMin=rapmin;
     rapMax=rapmax;
+
+    PTmax=ptmax;
+    PTmin=ptmin;
+    dpt=dpt0;
+    MaxPT=(int)((PTmax-PTmin)/dpt+0.1)+1;
 
     dNdy = new double [nRap];
     Xcm = new double [nRap];
@@ -34,6 +39,19 @@ GlueDensity::GlueDensity(double xmax, double ymax,double dx0,double dy0,
 	dNdy[iy]=0.0; Xcm[iy]=0.0; Ycm[iy]=0.0; AngleG[iy]=0.0;
 	Xcm2[iy]=0.0; Ycm2[iy]=0.0; XYcm[iy]=0.0;
     }
+
+    //density with pt dependence
+    densitypt  = new double*** [nRap];
+    for(int iy=0;iy<nRap;iy++) {
+    densitypt[iy] =  new double** [Maxx];
+    for(int i=0;i<Maxx;i++) {
+        densitypt[iy][i] = new double* [Maxy];
+        for(int j=0;j<Maxy;j++) {
+            densitypt[iy][i][j]=new double[MaxPT];
+                      for(int ipt=0;ipt<MaxPT; ipt++)
+                            densitypt[iy][i][j][ipt]=0;}
+        }
+    }    
 }
 
 
@@ -44,6 +62,16 @@ GlueDensity::~GlueDensity()
 	delete [] density[iy];
     }
     delete [] density;
+
+//clean densitypt
+    for(int iy=0;iy<nRap;iy++) {
+    for(int i=0;i<Maxx;i++) {
+        for(int j=0;j<Maxy;j++) delete [] densitypt[iy][i][j];
+        delete [] densitypt[iy][i];
+        }
+    delete [] densitypt[iy];
+    }
+    delete [] densitypt;     
 }
 
 

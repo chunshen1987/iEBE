@@ -26,7 +26,7 @@ protected:
   int cutdSdy;
   double cutdSdy_lowerBound, cutdSdy_upperBound;
   double siginNN;
-  int Maxx, Maxy;
+  int Maxx, Maxy, MaxPT;
   double Xmin, Ymin, Xmax, Ymax;
   double dx,dy;
   int    binRapidity;
@@ -36,7 +36,9 @@ protected:
   double Nbin;
   double Alpha;
   double finalFactor;
+  double PTinte, PTmax, PTmin, dpt, MixedMode;
   EOS eos;
+  int Operation;
 
   ParameterReader *paraRdr;
 
@@ -48,6 +50,8 @@ protected:
   void dumpDensity(std::ofstream& o, const int iy, const double wei);
   void dumpDensityBlock(char filename[], double *** data, const int iy);
   void dumpDensity4Col(char filename[], double *** data, const int iy);
+  void dumpDensity5Col(char filename[], double **** data, const int iy);
+  void dumpDesityptCol(char filename[], double **** data, const int iy);
   void generate(int nevent);
   void generate_profile_ebe_Jet(int nevent);
   void generate_profile_ebe(int nevent);
@@ -56,6 +60,8 @@ protected:
   void dumpEccentricities(char* base_filename, double*** density, const int iy, int from_order, int to_order, double Npart_current, double Nbin_current, double b);
   void setSd(double*** data, int iy);
   void setEd(double*** data, int iy);
+  void setSd(double**** data, int iy);
+  void setEd(double**** data, int iy);
   double gettotaldSdy(const int iy);
 };
 
