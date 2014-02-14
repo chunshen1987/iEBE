@@ -210,6 +210,12 @@ class EbeCollector(object):
             self.masspidDict[aParticle+"_hydro"] = self.masspidDict[aParticle]
             self.masspidDict[aParticle+"_thermal"] = self.masspidDict[aParticle]
 
+        # charged hadrons list
+        self.charged_hadron_list = [ 
+            "pion_p", "pion_m", "kaon_p", "kaon_m", "proton", "anti_proton",
+            "sigma_p", "sigma_m", "anti_sigma_p", "anti_sigma_m",
+            "xi_m", "anti_xi_m"]
+
     def collectEccentricitiesAndRIntegrals(self, folder, event_id, db, oldStyleStorage=False):
         """
             This function collects initial eccentricities and r-integrals into
@@ -658,12 +664,19 @@ class EbeCollector(object):
         # close connection to commit changes
         db.closeConnection()
 
-    def collectParticlesOSCAR(self, folder, hydroEvent_id, resultFilename, db):
+    def collectParticlesOSCAR(self, folder, hydroEvent_id, resultFilename, db, particles_to_collect, rap_range):
         """
             This function collects particles momentum and space-time information from
             OSCAR format output file "resultFilename" into database for one hydro event with 
             hydroEvent_id. It assigns each UrQMD run an additional UrQMDEvent_id. 
         """
+        pid_to_collect = []
+        for aParticle in particles_to_collect:
+            if aParticle == "charged":
+                pid_to_collect += map(lambda x: self.pidDict[x], self.charged_hadron_list)
+            else:
+                pid_to_collect += [self.pidDict[aParticle]]
+        
         # first write the pid_lookup table, makes sure there is only one such table
         if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
             db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
@@ -710,14 +723,16 @@ class EbeCollector(object):
                         except ValueError as e:
                             print("Can not find particle id in the dictionary!")
                             exit(e)
-                        pT = math.sqrt(px*px + py*py)
-                        pMag = math.sqrt(pT*pT + pz*pz)
-                        phi = math.atan2(py, px)
-                        rap = 0.5*math.log((p0 + pz)/(p0 - pz))
-                        pseudorap = 0.5*math.log((pMag + pz)/(pMag - pz))
-                        tau = math.sqrt(t*t - z*z)
-                        eta = 0.5*math.log((t+z)/(t-z))
-                        db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, databasePid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap), float(pseudorap)))
+                        if databasePid in pid_to_collect:
+                            rap = 0.5*math.log((p0 + pz)/(p0 - pz))
+                            if rap < rap_range[1] and rap > rap_range[0]:
+                                pT = math.sqrt(px*px + py*py)
+                                pMag = math.sqrt(pT*pT + pz*pz)
+                                phi = math.atan2(py, px)
+                                pseudorap = 0.5*math.log((pMag + pz)/(pMag - pz))
+                                tau = math.sqrt(t*t - z*z)
+                                eta = 0.5*math.log((t+z)/(t-z))
+                                db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, databasePid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap), float(pseudorap)))
                     except ValueError as e:
                         print("The file "+ UrQMDoutputFilePath +" does not have valid urqmd data!")
                         exit(e)
@@ -733,12 +748,19 @@ class EbeCollector(object):
         # close connection to commit changes
         db.closeConnection()
 
-    def collectParticlesUrQMD(self, folder, hydroEvent_id, resultFilename, db):
+    def collectParticlesUrQMD(self, folder, hydroEvent_id, resultFilename, db, particles_to_collect, rap_range):
         """
             This function collects particles momentum and space-time information from
             UrQMD output file "resultFilename" into database for one hydro event with 
             hydroEvent_id. It assigns each UrQMD run an additional UrQMDEvent_id. 
         """
+        pid_to_collect = []
+        for aParticle in particles_to_collect:
+            if aParticle == "charged":
+                pid_to_collect += map(lambda x: self.pidDict[x], self.charged_hadron_list)
+            else:
+                pid_to_collect += [self.pidDict[aParticle]]
+
         # first write the pid_lookup table, makes sure there is only one such table
         if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
             db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
@@ -794,14 +816,16 @@ class EbeCollector(object):
                         except ValueError as e:
                             print("Can not find particle id in the dictionary!")
                             exit(e)
-                        pT = math.sqrt(px*px + py*py)
-                        pMag = math.sqrt(pT*pT + pz*pz)
-                        phi = math.atan2(py, px)
-                        rap = 0.5*math.log((p0 + pz)/(p0 - pz))
-                        pseudorap = 0.5*math.log((pMag + pz)/(pMag - pz))
-                        tau = math.sqrt(t*t - z*z)
-                        eta = 0.5*math.log((t+z)/(t-z))
-                        db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, databasePid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap), float(pseudorap)))
+                        if UrQMDpid in pid_to_collect:
+                            rap = 0.5*math.log((p0 + pz)/(p0 - pz))
+                            if rap < rap_range[1] and rap > rap_range[0]:
+                                pT = math.sqrt(px*px + py*py)
+                                pMag = math.sqrt(pT*pT + pz*pz)
+                                phi = math.atan2(py, px)
+                                pseudorap = 0.5*math.log((pMag + pz)/(pMag - pz))
+                                tau = math.sqrt(t*t - z*z)
+                                eta = 0.5*math.log((t+z)/(t-z))
+                                db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, databasePid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap), float(pseudorap)))
                     except ValueError as e:
                         print("The file "+ UrQMDoutputFilePath +" does not have valid urqmd data!")
                         exit(e)
@@ -970,7 +994,7 @@ class EbeCollector(object):
             print("Mode string not found")
             print("!"*60)
 
-    def collectParticleinfo(self, folder, subfolderPattern="event-(\d*)", resultFilename="particle_list.dat", databaseFilename="particles.db", fileformat = 'UrQMD'):
+    def collectParticleinfo(self, folder, subfolderPattern="event-(\d*)", resultFilename="particle_list.dat", databaseFilename="particles.db", fileformat = 'UrQMD', particles_to_collect = ['charged'], rap_range = (-2.5, 2.5)):
         """
             This function collects particles momentum and space-time information from UrQMD
             outputs into a database
@@ -997,9 +1021,9 @@ class EbeCollector(object):
         for aSubfolder, hydroEvent_id in matchedSubfolders:
             print("Collecting %s as with hydro event-id: %s" % (aSubfolder, hydroEvent_id))
             if fileformat == 'UrQMD':
-                self.collectParticlesUrQMD(aSubfolder, hydroEvent_id, resultFilename, db) # collect particles from one hydro event
+                self.collectParticlesUrQMD(aSubfolder, hydroEvent_id, resultFilename, db, particles_to_collect, rap_range) # collect particles from one hydro event
             elif fileformat == 'OSCAR':
-                self.collectParticlesOSCAR(aSubfolder, hydroEvent_id, resultFilename, db) # collect particles from one hydro event
+                self.collectParticlesOSCAR(aSubfolder, hydroEvent_id, resultFilename, db, particles_to_collect, rap_range) # collect particles from one hydro event
             else:
                 print("Error: can not recognize the input file format : %s", fileformat)
                 exit(-1)
