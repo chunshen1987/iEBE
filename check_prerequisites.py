@@ -21,7 +21,7 @@ def checkCommand(cmdString, utilityName=None):
     """
     tempfile = open("response.txt", 'w')
     if not utilityName: utilityName=cmdString
-    call("%s & " % cmdString, shell=True, cwd=getcwd(), stdout = tempfile, stderr = tempfile)
+    call("%s " % cmdString, shell=True, cwd=getcwd(), stdout = tempfile, stderr = tempfile)
     tempfile.close()
     if "command not found" in open("response.txt").readline():
         printWarning("%s *NOT* installed." % utilityName)
