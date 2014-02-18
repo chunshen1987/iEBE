@@ -372,7 +372,7 @@ def iSSeventplaneAngleWithHydroResultFiles(fileList):
             raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
             move(aFile, iSSOperationDirectory)
-    copy(path.join(iSSDirectory, 'EOS', 'chosen_particles_pion.dat'), path.join(iSSDirectory, 'EOS', 'chosen_particles.dat'))
+    copy(path.join(iSSDirectory, 'EOS', 'chosen_particles_HydroEM.dat'), path.join(iSSDirectory, 'EOS', 'chosen_particles.dat'))
 
     # form assignment string
     assignments = formAssignmentStringFromDict(iSSParameters)
