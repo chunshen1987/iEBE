@@ -405,7 +405,56 @@ int main()
     perform_eta_integration(&Xi_A_total_N, Xi_A_dN_dy, mass);
     calculate_and_output_spectra_and_vn(Xi_A_dN_dy, Xi_A_total_N, particle_name, mass);
 
-
+    //for decay photon cocktail
+    //for pion 0
+    double pion_zero_mass = 0.13498; mass = pion_zero_mass;
+    particle_name = "pion_0";
+    Table pion_zero_dN_dy("results/spec_111.dat");
+    Table pion_zero_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&pion_zero_total_N, pion_zero_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(pion_zero_dN_dy, pion_zero_total_N, particle_name, mass);
+    //for eta
+    double eta_mass = 0.54775; mass = eta_mass;
+    particle_name = "eta";
+    Table eta_dN_dy("results/spec_221.dat");
+    Table eta_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&eta_total_N, eta_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(eta_dN_dy, eta_total_N, particle_name, mass);
+    //for omega
+    double omega_mass = 0.78259; mass = omega_mass;
+    particle_name = "omega_782";
+    Table omega_dN_dy("results/spec_223.dat");
+    Table omega_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&omega_total_N, omega_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(omega_dN_dy, omega_total_N, particle_name, mass);
+    //direct photons (short lived resonances)
+    double gamma_mass = 0.0; mass = gamma_mass;
+    particle_name = "direct_gamma_shortdecay";
+    Table gamma_direct_dN_dy("results/spec_22.dat");
+    Table gamma_direct_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&gamma_direct_total_N, gamma_direct_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(gamma_direct_dN_dy, gamma_direct_total_N, particle_name, mass);
+    //pi^0 decay photons
+    mass = gamma_mass;
+    particle_name = "decay_gamma_pi0";
+    Table gamma_pi0_dN_dy("results/spec_21.dat");
+    Table gamma_pi0_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&gamma_pi0_total_N, gamma_pi0_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(gamma_pi0_dN_dy, gamma_pi0_total_N, particle_name, mass);
+    //eta decay photons
+    mass = gamma_mass;
+    particle_name = "decay_gamma_eta";
+    Table gamma_eta_dN_dy("results/spec_20.dat");
+    Table gamma_eta_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&gamma_eta_total_N, gamma_eta_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(gamma_eta_dN_dy, gamma_eta_total_N, particle_name, mass);
+    //omega decay photons
+    mass = gamma_mass;
+    particle_name = "decay_gamma_omega";
+    Table gamma_omega_dN_dy("results/spec_19.dat");
+    Table gamma_omega_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&gamma_omega_total_N, gamma_omega_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(gamma_omega_dN_dy, gamma_omega_total_N, particle_name, mass);
 
     //----------------------------------
     // Next, for all charged particles
