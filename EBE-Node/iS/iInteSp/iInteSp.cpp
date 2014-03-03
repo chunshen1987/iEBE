@@ -444,8 +444,8 @@ int main()
     calculate_and_output_spectra_and_vn(phi_dN_dy, phi_total_N, particle_name, mass);
     //for Sigma0
     double Sigma0_mass = 1.19264; mass = Sigma0_mass;
-    particle_name = "Sigma0";
-    Table Sigma0_dN_dy("results/spec_223.dat");
+    particle_name = "Sigma_0";
+    Table Sigma0_dN_dy("results/spec_3212.dat");
     Table Sigma0_total_N(pT_tab_length, phi_tab_length);
     perform_eta_integration(&Sigma0_total_N, Sigma0_dN_dy, mass);
     calculate_and_output_spectra_and_vn(Sigma0_dN_dy, Sigma0_total_N, particle_name, mass);
