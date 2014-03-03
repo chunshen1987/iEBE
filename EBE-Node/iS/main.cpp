@@ -77,9 +77,9 @@ int main()
    for (int i=0; i<Maxparticle; i++) particle[i].decays=0; // to avoid infinite loop
    int Nparticle=read_resonance(particle);
    cout <<"particle number: " << Nparticle << endl;
-   if(N_stableparticle >0)
+   if(N_stableparticle > 0)
    {
-      cout << " -- EOS is partically chemical equilibrium " << endl;
+      cout << " -- EOS is partially chemical equilibrium " << endl;
       calculate_particle_mu(Nparticle, FOsurf_ptr, FO_length, particle, particle_mu);
    }
    else
@@ -87,12 +87,13 @@ int main()
       cout << " -- EOS is chemical equilibrium. " << endl;
       for(int i=0; i<Nparticle; i++)
         for(int j=0; j<FO_length; j++)
-           FOsurf_ptr[i].particle_mu[j] = 0.0e0;
+           FOsurf_ptr[j].particle_mu[i] = 0.0e0;
    }
    cout << endl << " -- Read in data finished!" << endl << endl;
 
+   // for(int j=0; j < FO_length; j++)
    // for(int j=0; j<Nparticle; j++)
-   // cout << FOsurf_ptr[0].particle_mu[j] << endl;
+   //     cout << FOsurf_ptr[0].particle_mu[j] << endl;
 
    // Next, Zhi's turn...
 

@@ -138,7 +138,7 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
 
   FO_surf* surf = &FOsurf_ptr[0];
 
-  // for intermedia results
+  // for intermediate results
   double dN_ptdptdphidy_tab[pT_tab_length][phi_tab_length];
   double dE_ptdptdphidy_tab[pT_tab_length][phi_tab_length];
   for (int i=0; i<pT_tab_length; i++)
@@ -204,7 +204,6 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
               double Pdec = surf->Pdec;
               double Edec = surf->Edec;
               double deltaf_prefactor = 1.0/(2.0*Tdec*Tdec*(Edec+Pdec))*INCLUDE_DELTAF;
-
               double mu = surf->particle_mu[last_particle_idx];
 
               double tau = surf->tau;
