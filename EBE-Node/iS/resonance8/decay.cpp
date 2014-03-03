@@ -13,11 +13,11 @@
 #include	"int.h"
 
 
-#define	PTS3	12		/* normalization of 3-body decay */
-#define	PTS4	12		/* inv. mass integral 3-body    */
+#define	PTS3	12          /* normalization of 3-body decay */
+#define	PTS4	12          /* inv. mass integral 3-body    */
 
 #define	PTN1	8
-#define	PTN2	8		/* 2-body between the poles     */
+#define	PTN2	8          /* 2-body between the poles     */
 
 
 
