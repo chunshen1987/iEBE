@@ -1,15 +1,15 @@
 controlParameterList = {
-    'simulation_type'       :   'hydroEM', # 'hybrid' or 'hydro'
+    'simulation_type'       :   'hydroEM_with_decaycocktail', # 'hybrid' or 'hydro'
     'niceness'              :   10,       # range from 0 to 19 for process priority, 0 for the highest priority
 }
 
 superMCParameters = {
     'which_mc_model'                :   5,
     'sub_model'                     :   1,
-    'Npmin'                         :   223,
-    'Npmax'                         :   417,
-    'bmin'                          :   0.0,
-    'bmax'                          :   7.7,
+    'Npmin'                         :   126,
+    'Npmax'                         :   302,
+    'bmin'                          :   5.86,
+    'bmax'                          :   9.77,
     'ecm'                           :   2760,
     'finalFactor'                   :   56.763,
     'alpha'                         :   0.118,

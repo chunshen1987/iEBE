@@ -52,7 +52,7 @@ bmax = 2.0                  # Maximum sampled impact parameter
 Npmin = 350                 # Minimum participant nucleon cut
 Npmax = 1000              # Maximum participant nucleon cut
 
-cutdSdy = 1               # cut centrality with additional requirements on total entropy density (without normalization factor)
+cutdSdy = 0               # cut centrality with additional requirements on total entropy density (without normalization factor)
 cutdSdy_lowerBound =  551.864          # lower bound of the allowed total entropy density
 cutdSdy_upperBound =  10000000.0       # upper bound of the allowed total entropy density
 
@@ -64,7 +64,7 @@ backup_number = 10000     # Backs up the averaged profile every "n" events. 0 me
                           # every step. Use a neg number to turn it off
 
 # Operation Mode Optns
-operation = 2             # (1) Generate n transverse density profiles for n events 
+operation = 1             # (1) Generate n transverse density profiles for n events 
                           # (input for event-by-event hydro)
                           # (2) Generate n transverse density profiles for n events 
                           # and their corresponding binary collision table and eccentricities
@@ -109,4 +109,4 @@ cc_fluctuation_k = 0.75   # constant k; used when cc_fluctuation_model is set to
 cc_fluctuation_Gamma_theta = 0.9175    # the scale parameter for Gamma distribution theta = 0.9175 (from KNO scaling)
 
 # For jet calculations
-output_TATB = 1           # 1: output; 0: no output; only effective when generating averaged profiles
+output_TATB = 0           # 1: output; 0: no output; only effective when generating averaged profiles

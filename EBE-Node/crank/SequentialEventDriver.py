@@ -169,6 +169,7 @@ EbeCollectorControl = {
     'executable_hybrid'     :   'EbeCollectorShell_hydroWithUrQMD.py',
     'executable_hydro'      :   'EbeCollectorShell_pureHydro.py',
     'executable_hydroEM'    :   'EbeCollectorShell_HydroEM.py',
+    'executable_hydroEM_with_decaycocktail'    :   'EbeCollectorShell_HydroEM_with_decaycocktail.py',
 }
 EbeCollectorParameters = {
     'subfolderPattern'      :   '"event-(\d*)"',
@@ -335,7 +336,7 @@ def iSWithResonancesWithHydroResultFiles(fileList):
             raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
             move(aFile, iSOperationDirectory)
-    move(path.join(iSDirectory, 'EOS', 'chosen_particle_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particle.dat'))
+    move(path.join(iSDirectory, 'EOS', 'chosen_particles_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
 
     # execute!
     run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, cwd=iSDirectory)
@@ -418,7 +419,7 @@ def iSWithResonancesWithdecayPhotonWithHydroResultFiles(fileList):
         else:
             move(aFile, iSOperationDirectory)
     # make sure all hadrons up to 2 GeV are calculated
-    move(path.join(iSDirectory, 'EOS', 'chosen_particle_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particle.dat'))
+    move(path.join(iSDirectory, 'EOS', 'chosen_particles_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
     # make sure to use the pdg table with tagged decay photons
     move(path.join(iSDirectory, 'EOS', 'pdg_decayPhotonCocktail.dat'), path.join(iSDirectory, 'EOS', 'pdg.dat'))
 
@@ -432,6 +433,9 @@ def iSWithResonancesWithdecayPhotonWithHydroResultFiles(fileList):
     for aFile in glob(path.join(iSOperationDirectory, "*")):
         if aFile in worthStoring:
             move(aFile, controlParameterList['eventResultDir'])
+    
+    # return hydro h5 file path
+    return (hydroH5Filepath,)
 
 def photonEmissionWithHydroResultFiles(fileList):
     """
@@ -588,6 +592,9 @@ def collectEbeResultsToDatabaseFrom(folder):
         executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     elif simulationType == 'hydroEM':
         collectorExecutable = EbeCollectorControl['executable_hydroEM']
+        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+    elif simulationType == 'hydroEM_with_decaycocktail':
+        collectorExecutable = EbeCollectorControl['executable_hydroEM_with_decaycocktail']
         executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     
     # execute

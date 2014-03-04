@@ -410,7 +410,7 @@ void writespec(int particlemax, char outdir[FILEDIM])
             printf(" Produce %s \n", filename2);
             out = fopen(filename,"w");
             out2 = fopen(filename2, "w");
-            for(k=0;k<particle[i].nphi;k++)//Print out the desired data.
+            for(k=0;k<particle[i].nphi;k++) //Print out the desired data.
             {
                 for(j=0;j<particle[i].npt;j++)
                 {
