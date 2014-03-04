@@ -105,6 +105,7 @@ void read_decdat_mu(string path, int FO_length, int N_stable, double** particle_
 
 int read_resonance(particle_info* particle)
 {
+   double eps = 1e-15;
    int Nparticle=0;
    cout << " -- Read in particle resonance decay table...";
    ifstream resofile("EOS/pdg.dat");
@@ -167,25 +168,25 @@ int read_resonance(particle_info* particle)
             particle[local_i].decays_branchratio[j]=particle[local_i-1].decays_branchratio[j];
             for (int k=0; k< Maxdecaypart; k++)
             {
-               int idx = 0;  
-               for(int ii=0; ii < local_i; ii++) // find the index for decay particle
-               {
-                  if(particle[local_i-1].decays_part[j][k] == particle[ii].monval)
-                  {
-                     idx = ii;
-                     break;
-                  }
-               }
-               if(idx == local_i-1 && particle[local_i-1].stable == 0)  // check
-               {
-                  cout << "Error: can not find decay particle index for anti-baryon!" << endl;
-                  cout << "particle monval : " << particle[local_i-1].decays_part[j][k] << endl;
-                  exit(1);
-               }
-               if(particle[idx].baryon == 0 && particle[idx].charge == 0 && particle[idx].strange == 0)
+               if(particle[local_i-1].decays_part[j][k] == 0)
                   particle[local_i].decays_part[j][k]= particle[local_i-1].decays_part[j][k];
                else
-                  particle[local_i].decays_part[j][k]= -particle[local_i-1].decays_part[j][k];
+               {
+                  int idx; 
+                  for(idx = 0; idx < local_i; idx++) // find the index for decay particle
+                     if(particle[idx].monval == particle[local_i-1].decays_part[j][k])
+                        break;
+                  if(idx == local_i && particle[local_i-1].stable == 0 && particle[local_i-1].decays_branchratio[j] > eps)  // check
+                  {
+                     cout << "Error: can not find decay particle index for anti-baryon!" << endl;
+                     cout << "particle monval : " << particle[local_i-1].decays_part[j][k] << endl;
+                     exit(1);
+                  }
+                  if(particle[idx].baryon == 0 && particle[idx].charge == 0 && particle[idx].strange == 0)
+                     particle[local_i].decays_part[j][k]= particle[local_i-1].decays_part[j][k];
+                  else
+                     particle[local_i].decays_part[j][k]= -particle[local_i-1].decays_part[j][k];
+               }
             }
          }
        }
