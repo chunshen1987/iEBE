@@ -151,6 +151,12 @@ CSHEN===EOS from tables end====================================================
       Double Precision T0 ! initial time tau_0
       Common /T0/ T0
 
+C *******************************J.Liu changes*******************************
+
+      Integer InitialURead
+      Common/LDInitial/ InitialURead  ! IintURead =1 read initial velocity profile
+C *******************************J.Liu changes end***************************
+
       call prepareInputFun() ! this is the initialization function in InputFun.for
 
       Print *, "Read parameters from Vishydro.inp file."
@@ -212,7 +218,13 @@ C------ output hydro evolution file  ----------------------------
       Read(1,*) Cha
       Read(1,*) IhydroJetoutput
 
+C ***************************J.Liu changes***************************
+C------- Parameters for initial profile from Laudan matching-----------------------
+      Read(1,*) Cha
+      Read(1,*) Cha
+      Read(1,*) InitialURead  
       CLOSE(1)
+C ***************************J.Liu changes end***************************
 C===========================================================================
 
       DX=0.1d0

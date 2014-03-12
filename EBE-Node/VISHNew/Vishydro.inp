@@ -30,3 +30,6 @@
 0.03        !Edec0                 lowest freeze-out energy for Ifreez=2   T=70
 *
 1           !IhydroJetoutput       switch for output hydro evolution history into hdf5 file
+*
+*
+1           !InitialURead

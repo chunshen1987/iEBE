@@ -94,6 +94,16 @@
 
       Dimension CC(NX0:NX, NY0:NY, NZ0:NZ) !Check
 
+C ******************** J.Liu changes**********************************
+C output T00, T11 and T22 debug**
+      Dimension TToo(NXPhy0:NXPhy, NYPhy0:NYPhy, NZ0:NZ)  !T00
+      Dimension TTXX(NXPhy0:NXPhy, NYPhy0:NYPhy, NZ0:NZ)  !T11
+      Dimension TTYY(NXPhy0:NXPhy, NYPhy0:NYPhy, NZ0:NZ)  !T22
+      Dimension PL_ori(NX0:NX, NY0:NY, NZ0:NZ) !calculated from un-rescaled energy density
+
+C ******************** J.Liu changes end******************************
+
+
 CSHEN==========================================================================
 C======output relaxation time for both shear and bulk viscosity================
       Dimension VRelaxT(NX0:NX, NY0:NY, NZ0:NZ) !viscous coeficient relaxation time
@@ -140,7 +150,6 @@ C-------------------------------------------------------------------------------
       Parameter (gt=169.0d0/4.0d0)!total freedom of Quarks and Gluond  Nf=2.5  !change another in InitialES
       Parameter (HbarC=0.19733d0) !for changcing between fm and GeV ! Hbarc=0.19733=GeV*fm
 
-
 C--------------------------------------------------------------------------------------------------------
       parameter(NNEW=4)
       DIMENSION PNEW(NNEW)    !related to root finding
@@ -155,6 +164,9 @@ C-------------------------------------------------------------------------------
       COMMON /Initialization/ IInit     !
       Common/IEOS2dec/ IEOS2dec
       Common/R0Aeps/ R0,Aeps
+
+      Integer InitialURead   ! specify if read in more profiles 
+      Common/LDInitial/ InitialURead
 
       Common /Timestep/ DT_1, DT_2
       Double Precision Time
@@ -252,8 +264,8 @@ CSHEN=====Using a smaller time step for short initialization time \tau_0
        endif
 CSHEN====END============================================================
 
-!---------------- Four flow velocity initialization---------------------
-
+C !---------------- Four flow velocity initialization---------------------
+      If (InitialURead .eq. 0) then
         do 2560 K = NZ0,NZ
         do 2560 I = NXPhy0-3,NXPhy+3
         do 2560 J = NYPhy0-3,NYPhy+3
@@ -267,6 +279,57 @@ CSHEN====END============================================================
           PU0(I,J,K) = sqrt(1.0+PU1(I,J,K)**2+PU2(I,J,K)**2)
 2560   continue
 
+      else
+c---------------- Four flow velocity initialization---------------------
+c----------------changed by J.Liu---------------------------------------------------------
+        tolerance = 1D-10
+        ed_max = 0.0   !
+        u_regulated = 0.D0
+        OPEN(UNIT = 21, FILE = 'Initial/ux_profile_kln.dat', 
+     &      STATUS = 'OLD', FORM = 'FORMATTED') ! read from Landau matched profile
+        OPEN(UNIT = 22, FILE = 'Initial/uy_profile_kln.dat', 
+     &      STATUS = 'OLD', FORM = 'FORMATTED') ! read from Landau matched profile
+
+c find maximum energy density to do the flow velocity regulation
+C         do 2607 K = NZ0,NZ
+C         do 2607 I = NXPhy0, NXPhy
+C         do 2607 J = NYPhy0, NYPhy
+C           if(Ed(I,J,K) .gt. ed_max) then
+C             ed_max = Ed(I,J,K)
+C c             write(*,*) ed_max, '  ', Ed(I,J,K)
+C           end if
+C 2607    continue
+C         write(*,*) 'Maximum energy density: ',ed_max, 
+C      &   'tolerance for energy density: ', tolerance,
+C      &   'regulate u: ', u_regulated       
+
+        do 2561 K = NZ0,NZ
+        do 2561 I = NXPhy0,NXPhy
+          read(21,*)  (U1(I,J,K),J=NYPhy0,NYPhy)
+          read(22,*)  (U2(I,J,K),J=NYPhy0,NYPhy)        
+
+          do J=NYPhy0, NYPhy
+c Regulate dilute region where energy density is small but u_mu is very large
+c Ed(I,J,K) < Ed_max, dilute region
+!             if ((Ed(I,J,K)/ed_max) .lt. tolerance) then
+!               U1(I,J,K) = u_regulated
+!               U2(I,J,K) = u_regulated 
+!             end if
+! Regulation ends
+
+            U0(I,J,K)  = sqrt(1.0+U1(I,J,K)**2+U2(I,J,K)**2)
+            PU1(I,J,K) = U1(I,J,K)
+            PU2(I,J,K) = U2(I,J,K)
+            PU0(I,J,K) = U0(I,J,K)
+          end do
+c          write(211,'(261(D24.14))')  (U1(I,J,NZ0), J=NYPhy0, NYPhy) !add this line for debug
+c          write(212,'(261(D24.14))')  (U2(I,J,NZ0), J=NYPhy0, NYPhy) !add this line for debug
+c
+c          write(210,'(261(D24.14))')  (U0(I,J,NZ0), J=NYPhy0, NYPhy) !add this line for debug
+2561   continue
+          close(21)
+          close(22)
+      Endif  ! InitialURead 
 
 !------------------- Energy initialization -----------------------------
 
@@ -280,14 +343,27 @@ CSHEN====END============================================================
 C====Input the initial condition from file====
 !           Unit: fm^-4
           If (IEin==0) Then
-            OPEN(2,file='Initial/InitialEd.dat',status='old')
+            If (InitialURead .eq. 0) then
+              OPEN(2,file='Initial/InitialEd.dat',status='old')
+            else
+              OPEN(2,file='Initial/ed_profile_kln.dat',
+     &         status='old', FORM = 'FORMATTED')
+            Endif
+
             do 2562 I = NXPhy0,NXPhy
               read(2,*)  (Ed(I,J,NZ0), J=NYPhy0,NYPhy)
 2562        continue
             Ed=Ed/HbarC
             close(2)
+
           Else If (IEin==1 .AND. IEOS==7) Then
-            OPEN(2,file='Initial/InitialSd.dat',status='old') ! read from file first
+            If(InitialURead .eq. 0) then
+              OPEN(2,file='Initial/InitialSd.dat',status='old') ! read from file first
+              read(2,*) !skip the first line
+            else 
+              OPEN(2,file='Initial/sd_profile_kln.dat',status='old') ! read from file first  
+            Endif
+
             Do I = NXPhy0,NXPhy
               read(2,*)  (Sd(I,J,NZ0), J=NYPhy0,NYPhy)
             End Do
@@ -315,7 +391,7 @@ C====Input the initial condition from file====
 
 !---------- Use sFactor ------------------------------------------------
 ! VER-1.03: add support for sFactor parameter
-      If (IEOS==7) Then ! use sFactor
+      If (IEin==1 .AND. IEOS==7) Then ! use sFactor. J.Liu: add condition IEin==0
         Sd = Sd*sFactor
         Print*, "sFactor=", sFactor
         Do I = NXPhy0,NXPhy
@@ -328,6 +404,24 @@ C====Input the initial condition from file====
         call EntropyTemp3 (Ed,PL, Temp,CMu,Sd,
      &         NX0,NY0,NZ0, NX,NY,NZ, NXPhy0,NYPhy0, NXPhy,NYPhy)
       End If
+
+
+C *************************J.Liu changes************************************
+C support rescaling factor if initialized by reading energy density
+      If (IEin==0 .AND. IEOS==7) Then ! use sFactor
+
+C calculate pressure table for rescaling bulk pressure
+        call EntropyTemp3 (Ed,PL_ori, Temp,CMu,Sd,
+     &         NX0,NY0,NZ0, NX,NY,NZ, NXPhy0,NYPhy0, NXPhy,NYPhy)
+
+C recalculate the temperature etc. using scaled energy density
+        Ed = Ed*sFactor
+        Print*, "sFactor=", sFactor
+        call EntropyTemp3 (Ed,PL, Temp,CMu,Sd,
+     &         NX0,NY0,NZ0, NX,NY,NZ, NXPhy0,NYPhy0, NXPhy,NYPhy)
+      End If
+C *************************J.Liu changes end********************************
+
 
       do 2571 K = NZ0,NZ
       do 2571 I = NX0,NX
@@ -346,18 +440,72 @@ C====Input the initial condition from file====
      &  NX0,NY0,NZ0, NX,NY,NZ, Time, NXPhy0,NYPhy0, NXPhy,NYPhy,
      &  VRelaxT,VRelaxT0)
 
+!-------------- Jia changes--------------------------------------------
+C Read in pi_mu nu and overwrite what TransportPi6() gives. Then scale this tensor
+        If(InitialURead .ne. 0) then
+          write(*,*) "Start to read in Pi_mu nu profile"
+            OPEN(200,file='Initial/Pi00_kln.dat',
+     &         status='old', FORM = 'FORMATTED')
+            OPEN(201,file='Initial/Pi01_kln.dat',
+     &         status='old', FORM = 'FORMATTED')
+            OPEN(202,file='Initial/Pi02_kln.dat',
+     &         status='old', FORM = 'FORMATTED')                 
+            OPEN(233,file='Initial/Pi33_kln.dat',
+     &         status='old', FORM = 'FORMATTED')
+            OPEN(211,file='Initial/Pi11_kln.dat',
+     &         status='old', FORM = 'FORMATTED')
+            OPEN(212,file='Initial/Pi12_kln.dat',
+     &         status='old', FORM = 'FORMATTED')
+            OPEN(222,file='Initial/Pi22_kln.dat',
+     &         status='old', FORM = 'FORMATTED')            
+            OPEN(232,file='Initial/BulkPi_kln.dat',
+     &         status='old', FORM = 'FORMATTED')                            
+            do 206 I = NXPhy0,NXPhy
+              read(200,*)  (Pi00(I,J,NZ0), J=NYPhy0, NYPhy)
+              read(201,*)  (Pi01(I,J,NZ0), J=NYPhy0, NYPhy)
+              read(202,*)  (Pi02(I,J,NZ0), J=NYPhy0, NYPhy)
+              read(233,*)  (Pi33(I,J,NZ0), J=NYPhy0, NYPhy)
+              read(211,*)  (Pi11(I,J,NZ0), J=NYPhy0, NYPhy)
+              read(212,*)  (Pi12(I,J,NZ0), J=NYPhy0, NYPhy)
+              read(222,*)  (Pi22(I,J,NZ0), J=NYPhy0, NYPhy)
+              read(232,*)  (PPI(I,J,NZ0), J=NYPhy0, NYPhy)
+              If (IEOS==7) Then ! use sFactor
+                do J = NYPhy0, NYPhy
+                   Pi00(I,J,NZ0)=Pi00(I,J,NZ0)*sFactor/HbarC  
+                   Pi01(I,J,NZ0)=Pi01(I,J,NZ0)*sFactor/HbarC
+                   Pi02(I,J,NZ0)=Pi02(I,J,NZ0)*sFactor/HbarC
+                   Pi33(I,J,NZ0)=Pi33(I,J,NZ0)*sFactor/HbarC
+                   Pi11(I,J,NZ0)=Pi11(I,J,NZ0)*sFactor/HbarC
+                   Pi12(I,J,NZ0)=Pi12(I,J,NZ0)*sFactor/HbarC
+                   Pi22(I,J,NZ0)=Pi22(I,J,NZ0)*sFactor/HbarC
+                   PPI(I,J,NZ0) =sfactor*PL_ori(I,J,NZ0)-PL(I,J,NZ0)
+     &                  + sFactor*PPI(I,J,NZ0)/HbarC                
+                end do              
+              End If
+206        continue
+          close(200)
+          close(201)
+          close(202)
+          close(233)
+          close(211)
+          close(212)
+          close(222)
+          close(232)
+        Endif   ! InitalURead
 
-      End If
+
+!-------------- changes end--------------------------------------------
+      End If  !ViscousC>1D-6
 
 !CHANGES
 !   ---Zhi-Changes---
 !-------Regulate Pi(mu,nu) before adding it to T tensor
-!      If (ViscousC>1D-6) Then
-!        call regulatePi(Time,NX0,NY0,NZ0,NX,NY,NZ,
-!     &  NXPhy0,NXPhy,NYPhy0,NYPhy,
-!     &  Ed,PL,PPI,
-!     &  Pi00,Pi01,Pi02,Pi11,Pi12,Pi22,Pi33,Vx,Vy)
-!      End If
+C       If (ViscousC>1D-6) Then
+C         call regulatePi(Time,NX0,NY0,NZ0,NX,NY,NZ,
+C      &  NXPhy0,NXPhy,NYPhy0,NYPhy,
+C      &  Ed,PL,PPI,
+C      &  Pi00,Pi01,Pi02,Pi11,Pi12,Pi22,Pi33,Vx,Vy)
+C       End If
 !-------End of regulation---------
 !       ---Zhi-End---
 
@@ -382,6 +530,74 @@ C====Input the initial condition from file====
 
 
 2570  continue
+
+
+
+C C ****************************J.Liu changes********************************
+C C inspect initial profiles: output T00, T11 and T22 right after initalization
+C         open(1822,File='results/T00.dat',status='REPLACE')
+C         open(1823,File='results/T11.dat',status='REPLACE')
+C         open(1824,File='results/T22.dat',status='REPLACE')
+
+C         open(1825,File='results/Ed.dat',status='REPLACE')
+C         open(1826,File='results/PPI.dat',status='REPLACE')
+C         open(1827,File='results/PL.dat',status='REPLACE')
+C         open(1828,File='results/U0.dat',status='REPLACE')
+C         open(1829,File='results/U1.dat',status='REPLACE')
+C         open(1830,File='results/U2.dat',status='REPLACE')
+
+C         open(1831,File='results/Pi00.dat',status='REPLACE')
+C         open(1832,File='results/Pi11.dat',status='REPLACE')
+C         open(1833,File='results/Pi22.dat',status='REPLACE')        
+   
+C         do 2534 K = NZ0,NZ
+C         do 2534 I = NXPhy0,NXPhy
+C         do 2534 J = NYPhy0,NYPhy
+C         TToo(I, J, K) = (Ed(I,J,K)+PL(I,J,K)+PPI(I,J,K))*U0(I,J,K)
+C      &  *U0(I,J,K) - (PL(I,J,K)+PPI(I,J,K)) +Pi00(I,J,K)
+
+C         TTXX(I, J, K) = (Ed(I,J,K)+PL(I,J,K))*U1(I,J,K)*U1(I,J,K)
+C      &   +PL(I,J,K)+Pi11(I,J,K)+PPI(I,J,K)
+C      &   +PPI(I,J,K)*U1(I,J,K)*U1(I,J,K)
+
+C         TTYY(I, J, K) = (Ed(I,J,K)+PL(I,J,K))*U2(I,J,K)*U2(I,J,K)
+C      &   +PL(I,J,K)+Pi22(I,J,K)+PPI(I,J,K)
+C      &   +PPI(I,J,K)*U2(I,J,K)*U2(I,J,K)
+C 2534    continue  
+
+C         do 2535 I = NXPhy0, NXPhy           
+C         write(1822,'(261e20.8)')(TToo(I, J, NZ0),J=NYPhy0, NYPhy)
+C         write(1823,'(261e20.8)')(TTXX(I, J, NZ0),J=NYPhy0, NYPhy)
+C         write(1824,'(261e20.8)')(TTYY(I, J, NZ0),J=NYPhy0, NYPhy)
+
+C         write(1825,'(261e20.8)')(Ed(I, J, NZ0),J=NYPhy0, NYPhy)
+C         write(1826,'(261e20.8)')(PPI(I, J, NZ0),J=NYPhy0, NYPhy)
+C         write(1827,'(261e20.8)')(PL(I, J, NZ0),J=NYPhy0, NYPhy)
+C         write(1828,'(261e20.8)')(U0(I, J, NZ0),J=NYPhy0, NYPhy)
+C         write(1829,'(261e20.8)')(U1(I, J, NZ0),J=NYPhy0, NYPhy)
+C         write(1830,'(261e20.8)')(U2(I, J, NZ0),J=NYPhy0, NYPhy)
+
+C         write(1831,'(261e20.8)')(Pi00(I, J, NZ0),J=NYPhy0, NYPhy)
+C         write(1832,'(261e20.8)')(Pi11(I, J, NZ0),J=NYPhy0, NYPhy)
+C         write(1833,'(261e20.8)')(Pi22(I, J, NZ0),J=NYPhy0, NYPhy)        
+C 2535    continue
+
+C         close(1822)
+C         close(1823)
+C         close(1824) 
+
+C         close(1825)
+C         close(1826)
+C         close(1827)
+C         close(1828)
+C         close(1829)
+C         close(1830)       
+
+C         close(1831)
+C         close(1832)
+C         close(1833)
+C C ****************************J.Liu changes end****************************
+
 
        call dpSc8(TT00,TT01,TT02,ScT00,ScT01,ScT02,Vx,Vy,
      &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22, PScT00,PScT01,PScT02,PScT33,

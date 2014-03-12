@@ -58,13 +58,13 @@ cutdSdy_upperBound =  10000000.0       # upper bound of the allowed total entrop
 
 
 # Monte Carlo Optns
-nev = 20000               # Number of collision events simulated
+nev = 1               # Number of collision events simulated
 randomSeed = -1           # If randomSeed < 0 then CPU time is used to seed
 backup_number = 10000     # Backs up the averaged profile every "n" events. 0 means 
                           # every step. Use a neg number to turn it off
 
 # Operation Mode Optns
-operation = 9             # (1) Generate n transverse density profiles for n events 
+operation = 1             # (1) Generate n transverse density profiles for n events 
                           # (input for event-by-event hydro)
                           # (2) Generate n transverse density profiles for n events 
                           # and their corresponding binary collision table and eccentricities
@@ -75,7 +75,7 @@ operation = 9             # (1) Generate n transverse density profiles for n eve
                           # the data in a table
 
 # Operation Mode Sub-Optns
-finalFactor = 56.763           # 1,3,9-> Scale the final density profile by this factor
+finalFactor = 41.6           # 1,3,9-> Scale the final density profile by this factor
 average_from_order = 2    # 3-> Generate rotated and averaged profiles for each order 
                           # beginning with this order
 average_to_order = 2      # 3-> Generate rotated and averaged profiles for each order 
@@ -89,16 +89,16 @@ ecc_to_order = 9          # 9-> Calculate the eccentricity of the profile for ea
 # Print to File Optns
 use_sd = 1                # Boolean toggle to print the raw CGC and Glauber output 
                           # (CGC: gluon density; Glb: (1-alpha)/2*WN + alpha*BC) 
-use_ed = 1                # Boolean toggle to covert the entropy profile using the 
+use_ed = 0                # Boolean toggle to covert the entropy profile using the 
                           # EOS and print the energy profile (do not use if Et=1)
 use_4col = 0              # Boolean toggle to print 4 column format (rap, x, y, data)
 use_block = 1             # Boolean toggle to print matrix format (good for matlab)
 use_5col = 0              # Boolean toggle to print 5 column format (rap, x, y, pt, data)
-use_ptCol = 1             # Boolean toggle to print pt-unintegrated table, working in mixed mode
+use_ptCol = 0             # Boolean toggle to print pt-unintegrated table, working in mixed mode
 
 
 # P_T spectura optns
-PT_Flag = 1               # Boolena toogle to output PT-integrated gluon density; if < 0, output pT unintegrated particle spectra; PT_Flag can not take 0
+PT_Flag = 1               # Boolean toggle to output PT-integrated gluon density; if < 0, output pT unintegrated particle spectra; PT_Flag can not take 0
 mixedMode = 0             # if > 0, calculate both the pT-unintegrated particle spectra and pT-integrated particle density
                           # All the following parameters in this block will only be effective when pT_Flag < 0 and mixedMode > 0
 PT_Min = 0.1              # Minimum value of PT
