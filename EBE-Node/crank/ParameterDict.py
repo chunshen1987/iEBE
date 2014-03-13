@@ -1,5 +1,5 @@
 controlParameterList = {
-    'simulation_type'       :   'hydroEM', # 'hybrid' or 'hydro'
+    'simulation_type'       :   'hydroEM_preEquilibrium', # 'hybrid' or 'hydro'
     'niceness'              :   10,       # range from 0 to 19 for process priority, 0 for the highest priority
 }
 
@@ -14,6 +14,13 @@ superMCParameters = {
     'finalFactor'                   :   56.763,
     'alpha'                         :   0.118,
     'lambda'                        :   0.288,
+}
+
+preEquilibriumParameters = {
+    'event_mode'            :    1,  
+    'taumin'                :    0.6,
+    'taumax'                :    0.6,
+    'dtau'                  :    0.2,
 }
 
 hydroParameters = {

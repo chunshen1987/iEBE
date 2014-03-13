@@ -3,11 +3,11 @@
 
 # Event number option
 event_mode = -1                      # if positive, only process this one event
-nevents = 1                         # total number of events need to be processed
+nevents = 1                          # total number of events need to be processed
 
 # Grid option
-xmax = 13                           # Max grid value in x-direction with unit fm
-ymax = 13                           # Max grid value in y-direction with unit fm
+xmax = 13                            # Max grid value in x-direction with unit fm
+ymax = 13                            # Max grid value in y-direction with unit fm
 dx   = 0.1                           # Step size in x-direction in fm
 dy   = 0.1                           # Step size in y-direction in fm
 ny   = 1                             # total number of rapidity bin
@@ -24,8 +24,6 @@ output=1                             # 1: output all data tables; 2: only output
 # Matching time option
 tau0  =0.01                          # Initial time of free-streaming
 taumin=0.6                           # Minimum value of matching time in fm/c
-taumax=0.6                         # Max value of matching time in fm/c
-dtau  =0.2                            # Step size in mathing time in fm/c
-
-
+taumax=0.6                           # Max value of matching time in fm/c
+dtau  =0.2                           # Step size in matching time in fm/c
 

@@ -76,6 +76,21 @@ superMCParameters = {
     'operation'                     :   1,
 }
 
+preEquilibriumControl = {
+    'mainDir'                       :   'fs',
+    'initialConditionDir'           :   'data/events', # where initial conditions are stored
+    'initialConditionFile'          :   'sd_event_1_block.dat', # IC filename
+    'resultDir'                     :   'data/result/event_1/%g', # pre-equilibrium results folder
+    'resultFiles'                   :   '*', # results files
+    'executable'                    :   'lm.e',
+}
+preEquilibriumParameters = {
+    'event_mode'            :    1,  
+    'taumin'                :    0.6,
+    'taumax'                :    0.6,
+    'dtau'                  :    0.2,
+}
+
 hydroControl = {
     'mainDir'               :   'VISHNew',
     'initialConditionDir'   :   'Initial', # hydro initial condition folder, relative
@@ -95,7 +110,8 @@ hydroParameters = {
     'T0'        :   0.6, # tau_0
     'Edec'      :   0.3, # 0.3->160 MeV, 0.18->120 MeV
     'factor'    :   1.0,
-    'IhydroJetoutput'   :   1,   #switch for output hydro evolution history into hdf5 file
+    'IhydroJetoutput'   :   1,   # switch for output hydro evolution history into hdf5 file
+    'InitialURead'      :   1,   # switch to read in initial flow velocity and shear tensor
 }
 
 iSSControl = {
@@ -266,6 +282,91 @@ def hydroWithInitialCondition(aFile):
         # yield it
         yield path.join(hydroResultsDirectory, aFile)
 
+def hydro_with_pre_equilbirium(aFile):
+    """
+        Perform a single pre-equilibrium evolution and hydro calculation with 
+        the given absolute path to an initial condition. Yield the result 
+        files.
+    """
+    ProcessNiceness = controlParameterList['niceness']
+    # set directory strings
+    # pre-equilibrium model
+    pre_equilibrium_directory = path.join(
+        controlParameterList['rootDir'], preEquilibriumControl['mainDir'])
+    pre_equilibrium_ic_directory = path.join(
+        pre_equilibrium_directory, preEquilibriumControl['initialConditionDir']
+    )
+    pre_equilibrium_results_directory = path.join(
+        pre_equilibrium_directory, preEquilibriumControl['resultDir'] 
+                                   % preEquilibriumParameters['taumin']
+    )
+    pre_equilibrium_executable = preEquilibriumControl['executable']
+
+    # hydro model
+    hydroDirectory = path.join(controlParameterList['rootDir'], 
+                               hydroControl['mainDir'])
+    hydroICDirectory = path.join(hydroDirectory, 
+                                 hydroControl['initialConditionDir'])
+    hydroResultsDirectory = path.join(hydroDirectory, 
+                                      hydroControl['resultDir'])
+    hydroExecutable = hydroControl['executable']
+
+    # check executable
+    checkExistenceOfExecutable(path.join(pre_equilibrium_directory, 
+                                         pre_equilibrium_executable))
+    checkExistenceOfExecutable(path.join(hydroDirectory, hydroExecutable))
+
+    # clean up initial and results folder
+    cleanUpFolder(pre_equilibrium_ic_directory)
+    cleanUpFolder(pre_equilibrium_results_directory)
+    cleanUpFolder(hydroICDirectory)
+    cleanUpFolder(hydroResultsDirectory)
+
+    # check existence of the initial conditions
+    if not path.exists(aFile):
+        raise ExecutionError("Hydro initial condition file %s not found!" 
+                             % aFile)
+
+    # storing initial condition file
+    if hydroControl['saveICFile']:
+        copy(aFile, controlParameterList['eventResultDir'])
+
+    # first move initial condition to the pre-equilibrium folder
+    move(aFile, path.join(pre_equilibrium_ic_directory, 
+                          preEquilibriumControl['initialConditionFile']))
+
+    # form assignment string
+    assignments = formAssignmentStringFromDict(preEquilibriumParameters)
+    # form executable string
+    executableString = ("nice -n %d ./" % (ProcessNiceness) 
+                        + pre_equilibrium_executable + assignments)
+    # execute!
+    run(executableString, cwd=pre_equilibrium_directory)
+
+    # then move pre-equilibrium results to hydro folder
+    for aFile in glob(path.join(pre_equilibrium_results_directory, 
+                                preEquilibriumControl['resultFiles'])):
+        file_name = aFile.split('/')[-1].split('kln')[0] + 'kln.dat'
+        move(aFile, path.join(hydroICDirectory, file_name))
+    # form assignment string
+    assignments = formAssignmentStringFromDict(hydroParameters)
+    # form executable string
+    executableString = ("nice -n %d ./" % (ProcessNiceness) 
+                        + hydroExecutable + assignments)
+    # execute!
+    run(executableString, cwd=hydroDirectory)
+
+    # yield result files
+    worthStoring = []
+    for aGlob in hydroControl['saveResultGlobs']:
+        worthStoring.extend(glob(path.join(hydroResultsDirectory, aGlob)))
+    for aFile in glob(path.join(hydroResultsDirectory, 
+                                hydroControl['resultFiles'])):
+        # check if this file worth storing, then copy to event result folder
+        if aFile in worthStoring:
+            copy(aFile, controlParameterList['eventResultDir'])
+        # yield it
+        yield path.join(hydroResultsDirectory, aFile)
 
 def iSSWithHydroResultFiles(fileList):
     """
@@ -549,6 +650,10 @@ def collectEbeResultsToDatabaseFrom(folder):
         collectorExecutable = EbeCollectorControl['executable_hydroEM']
         executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     
+    elif simulationType == 'hydroEM_preEquilibrium':
+        collectorExecutable = EbeCollectorControl['executable_hydroEM']
+        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+    
     # execute
     run(executableString, cwd=collectorDirectory)
 
@@ -638,9 +743,15 @@ def sequentialEventDriverShell():
 
             # print current progress to terminal
             print("Starting event %d..." % event_id)
-
-            # perform hydro calculations and get a list of all the result filenames
-            hydroResultFiles = [aFile for aFile in hydroWithInitialCondition(aInitialConditionFile)]
+            
+            if simulationType == 'hydroEM_preEquilibrium':
+                # perform hydro calculations with pre-equilibrium evolution and get a list of all the result filenames
+                hydroResultFiles = [aFile for aFile in 
+                             hydro_with_pre_equilbirium(aInitialConditionFile)]
+            else:
+                # perform hydro calculations and get a list of all the result filenames
+                hydroResultFiles = [aFile for aFile in 
+                              hydroWithInitialCondition(aInitialConditionFile)]
             
             # fork simulation type here
             if simulationType == 'hybrid':
@@ -668,6 +779,11 @@ def sequentialEventDriverShell():
                 iSWithResonancesWithHydroResultFiles(hydroResultFiles)
             
             elif simulationType == 'hydroEM':
+                h5file = iSSeventplaneAngleWithHydroResultFiles(hydroResultFiles)
+                # perform EM radiation calculation
+                photonEmissionWithHydroResultFiles(h5file)
+            
+            elif simulationType == 'hydroEM_preEquilibrium':
                 h5file = iSSeventplaneAngleWithHydroResultFiles(hydroResultFiles)
                 # perform EM radiation calculation
                 photonEmissionWithHydroResultFiles(h5file)
