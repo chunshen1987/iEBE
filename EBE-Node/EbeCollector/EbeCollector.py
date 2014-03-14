@@ -34,14 +34,14 @@ class EbeCollector(object):
             "charged"           :   1,
             "pion"              :   6, # sum(7, 8, -7)
             "pion_p"            :   7,
-            "pion_0"            :   8,
+            "pion0"            :   8,
             "pion_m"            :   -7,
             "kaon"              :   11, # sum(12, 13)
             "kaon_p"            :   12,
-            "kaon_0"            :   13,
+            "kaon0"            :   13,
             "anti_kaon"         :   -11, # sum(-12, -13)
             "kaon_m"            :   -12,
-            "anti_kaon_0"       :   -13,
+            "anti_kaon0"       :   -13,
             "nucleon"           :   16, # sum(17, 18)
             "proton"            :   17,
             "neutron"           :   18,
@@ -50,17 +50,17 @@ class EbeCollector(object):
             "anti_neutron"      :   -18,
             "sigma"             :   21, # sum(22, 23, 24)
             "sigma_p"           :   22,
-            "sigma_0"           :   23,
+            "sigma0"           :   23,
             "sigma_m"           :   24,
             "anti_sigma"        :   -21,
             "anti_sigma_p"      :   -22,
-            "anti_sigma_0"      :   -23,
+            "anti_sigma0"      :   -23,
             "anti_sigma_m"      :   -24,
             "xi"                :   26, # sum(27, 28)
-            "xi_0"              :   27,
+            "xi0"              :   27,
             "xi_m"              :   28,
             "anti_xi"           :   -26,
-            "anti_xi_0"         :   -27,
+            "anti_xi0"         :   -27,
             "anti_xi_m"         :   -28,
             "lambda"            :   31,
             "anti_lambda"       :   -31,
@@ -69,11 +69,14 @@ class EbeCollector(object):
             "phi"               :   41,
             "rho"               :   46, #sum(47, 48, -47)
             "rho_p"             :   47,
-            "rho_0"             :   48,
+            "rho0"             :   48,
             "rho_m"             :   -47,
             "eta"               :   51,
             "eta_prime"         :   52,
             "gamma"             :   61,
+            "omega782"         :   65,
+            "eta"               :   71,
+            "etap"          :   72,
         }
 
         for aParticle in self.pidDict.keys():
@@ -93,17 +96,24 @@ class EbeCollector(object):
             "photon_QGP_eq"      :  9003,
             "photon_HG_tot"      :  9004,
             "photon_HG_eq"       :  9005,
+            "direct_gamma_shortdecay_hydro"   :  9006,
+            "decay_gamma_pi0_hydro" : 9007,
+            "decay_gamma_eta_hydro" : 9008,
+            "decay_gamma_omega_hydro" : 9009,
+            "decay_gamma_phi_hydro" : 9010,
+            "decay_gamma_etap_hydro" : 9011,
+            "decay_gamma_Sigma0_hydro" : 9012,
         })
         
         #UrQMD pid Dictionary, name conversion defined as in binUtility
         self.UrQMDpidDict = { #particle name, UrQMD id# : isospin*2000 + pid
             2101        :    "pion_p",
             -1899       :    "pion_m",
-            101         :    "pion_0",
+            101         :    "pion0",
             1106        :    "kaon_p",
-            -894        :    "kaon_0",
+            -894        :    "kaon0",
             -1106       :    "kaon_m",
-            894         :    "anti_kaon_0",
+            894         :    "anti_kaon0",
             1001        :    "proton",
             -999        :    "neutron",
             -1001       :    "anti_proton",
@@ -113,10 +123,10 @@ class EbeCollector(object):
             40          :    "sigma_0",
             -2040       :    "anti_sigma_p",
             1960        :    "anti_sigma_m",
-            -40         :    "anti_sigma_0",
+            -40         :    "anti_sigma0",
             1049        :    "xi_0",
             -951        :    "xi_m",
-            -1049       :    "anti_xi_0",
+            -1049       :    "anti_xi0",
             951         :    "anti_xi_m",
             27          :    "lambda",
             -27         :    "anti_lambda",
@@ -124,7 +134,7 @@ class EbeCollector(object):
             -55         :    "anti_omega",
             109         :    "phi",
             102         :    "eta",
-            107         :    "eta_prime",
+            107         :    "etap",
             100         :    "gamma",
         }
         
@@ -132,24 +142,24 @@ class EbeCollector(object):
         self.PDGpidDict = { #pdg id#, particle name
             211         :    "pion_p",
             -211        :    "pion_m",
-            111         :    "pion_0",
+            111         :    "pion0",
             321         :    "kaon_p",
-            311         :    "kaon_0",
+            311         :    "kaon0",
             -321        :    "kaon_m",
-            -311        :    "anti_kaon_0",
+            -311        :    "anti_kaon0",
             2212        :    "proton",
             2112        :    "neutron",
             -2212       :    "anti_proton",
             -2112       :    "anti_neutron",
             3222        :    "sigma_p",
             3112        :    "sigma_m",
-            3212        :    "sigma_0",
+            3212        :    "sigma0",
             -3222       :    "anti_sigma_p",
             -3112       :    "anti_sigma_m",
-            -3212       :    "anti_sigma_0",
-            3322        :    "xi_0",
+            -3212       :    "anti_sigma0",
+            3322        :    "xi0",
             3312        :    "xi_m",
-            -3322       :    "anti_xi_0",
+            -3322       :    "anti_xi0",
             -3312       :    "anti_xi_m",
             3122        :    "lambda",
             -3122       :    "anti_lambda",
@@ -157,7 +167,7 @@ class EbeCollector(object):
             -3334       :    "anti_omega",
             333         :    "phi",
             221         :    "eta",
-            331         :    "eta_prime",
+            331         :    "etap",
             22         :    "gamma",
         }
 
@@ -165,14 +175,14 @@ class EbeCollector(object):
         self.masspidDict = {
             "pion"              :   0.13957,
             "pion_p"            :   0.13957,
-            "pion_0"            :   0.13498,
+            "pion0"            :   0.13498,
             "pion_m"            :   0.13957,
             "kaon"              :   0.49368,
             "kaon_p"            :   0.49368,
-            "kaon_0"            :   0.49765,
+            "kaon0"            :   0.49765,
             "anti_kaon"         :   0.49368,
             "kaon_m"            :   0.49368,
-            "anti_kaon_0"       :   0.49765,
+            "anti_kaon0"       :   0.49765,
             "nucleon"           :   0.93827,
             "proton"            :   0.93827,
             "neutron"           :   0.93957,
@@ -181,17 +191,17 @@ class EbeCollector(object):
             "anit_neutron"      :   0.93957,
             "sigma"             :   1.18937,
             "sigma_p"           :   1.18937,
-            "sigma_0"           :   1.19264,
+            "sigma0"           :   1.19264,
             "sigma_m"           :   1.19745,
             "anti_sigma"        :   1.18937,
             "anti_sigma_p"      :   1.18937,
-            "anti_sigma_0"      :   1.19264,
+            "anti_sigma0"      :   1.19264,
             "anti_sigma_m"      :   1.19745,
             "xi"                :   1.31483,
-            "xi_0"              :   1.31483,
+            "xi0"              :   1.31483,
             "xi_m"              :   1.32131,
             "anti_xi"           :   1.31483,
-            "anti_xi_0"         :   1.31483,
+            "anti_xi0"         :   1.31483,
             "anti_xi_m"         :   1.32131,
             "lambda"            :   1.11568,
             "anti_lambda"       :   1.11568,
@@ -199,16 +209,22 @@ class EbeCollector(object):
             "anti_omega"        :   1.67243,
             "rho"               :   0.77580,
             "rho_p"             :   0.77580,
-            "rho_0"             :   0.77580,
+            "rho0"             :   0.77580,
             "rho_m"             :   0.77580,
             "phi"               :   1.01946,
             "eta"               :   0.54775,
-            "eta_prime"         :   0.95778,
+            "etap"         :   0.95778,
             "gamma"             :   0.0,
         }
         for aParticle in self.masspidDict.keys():
             self.masspidDict[aParticle+"_hydro"] = self.masspidDict[aParticle]
             self.masspidDict[aParticle+"_thermal"] = self.masspidDict[aParticle]
+
+        # charged hadrons list
+        self.charged_hadron_list = [ 
+            "pion_p", "pion_m", "kaon_p", "kaon_m", "proton", "anti_proton",
+            "sigma_p", "sigma_m", "anti_sigma_p", "anti_sigma_m",
+            "xi_m", "anti_xi_m"]
 
     def collectEccentricitiesAndRIntegrals(self, folder, event_id, db, oldStyleStorage=False):
         """
@@ -477,6 +493,107 @@ class EbeCollector(object):
         # close connection to commit changes
         db.closeConnection()
     
+    def collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(self, folder, event_id, db, useSubfolder="spectra"):
+        """
+            This function collects integrated and differential flows data
+            and multiplicity and spectra data from "folder" into the
+            database "db" using event id "event_id".
+
+            This function fills the following table: "pid_lookup",
+            "inte_vn", "diff_vn", "multiplicities", "spectra".
+
+            This funtion should only be applied to a folder where flow
+            files are generated by the iS (or iSS with calculate flow
+            mode) module as in pure hydro calculations. As such, the
+            subfolder name "useSubfolder" will be appended to "folder"
+            automatically.
+        """
+        # add one more sub-directory
+        folder = path.join(folder, useSubfolder)
+
+        # collection of file name patterns, pid, and particle name. The file format is determined from the "filename_format.dat" file
+        toCollect = {
+            "Charged"       :   "charged_hydro", # string in filename, particle name
+            "pion_p"        :   "pion_p_hydro",
+            "pion_0"        :   "pion0_hydro",
+            "Kaon_p"        :   "kaon_p_hydro",
+            "proton"        :   "proton_hydro",
+            "eta"           :   "eta_hydro",
+            "etaprime"      :   "etap_hydro",
+            "Sigma_p"       :   "sigma_p_hydro",
+            "Sigma_0"       :   "sigma0_hydro",
+            "omega_782"     :   "omega782_hydro",
+            "Xi_m"          :   "xi_m_hydro",
+            "Omega"         :   "omega_hydro",
+            "Lambda"        :   "lambda_hydro",
+            "phi"           :   "phi_hydro",
+            "thermal_211"   :   "pion_p_thermal",
+            "thermal_321"   :   "kaon_p_thermal",
+            "thermal_2212"  :   "proton_thermal",
+            "thermal_213"   :   "rho_p_thermal",
+            "thermal_333"   :   "phi_thermal",
+            "direct_gamma_shortdecay" : "direct_gamma_shortdecay_hydro",
+            "decay_gamma_pi0" : "decay_gamma_pi0_hydro",
+            "decay_gamma_eta" : "decay_gamma_eta_hydro",
+            "decay_gamma_omega" : "decay_gamma_omega_hydro",
+            "decay_gamma_etaprime" : "decay_gamma_etap_hydro",
+            "decay_gamma_phi" : "decay_gamma_phi_hydro",
+            "decay_gamma_Sigma0" : "decay_gamma_Sigma0_hydro",
+        }
+        filename_inte = "%s_integrated_vndata.dat" # filename for integrated flow files, %s is the "string in filename" defined in toCollect
+        filename_diff = "%s_vndata.dat" # filename for differential flow files
+
+        # first write the pid_lookup table, makes sure there is only one such table
+        if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
+            db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
+
+        # next create various tables
+        db.createTableIfNotExists("inte_vn", (("event_id","integer"), ("pid","integer"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("diff_vn", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("multiplicities", (("event_id","integer"), ("pid","integer"), ("N","real")))
+        db.createTableIfNotExists("spectra", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("N","real")))
+
+        # the big loop
+        for particle_string_infile in toCollect.keys():
+            pid = self.pidDict[toCollect[particle_string_infile]]
+
+            # first, differential flow
+            particle_filename = path.join(folder, filename_diff % particle_string_infile)
+            if path.exists(particle_filename):
+                # extract differential flow and spectra information
+                diff_flow_block = np.loadtxt(particle_filename)
+                largest_n = int(diff_flow_block.shape[1]/3) # should be an integer
+                # write flow table
+                for aRow in diff_flow_block:
+                    for n in range(1, largest_n):
+                        db.insertIntoTable("diff_vn",
+                            (event_id, pid, aRow[0], n, aRow[3*n], aRow[3*n+1])
+                        )
+                    # write spectra table
+                    db.insertIntoTable("spectra",
+                        (event_id, pid, aRow[0], aRow[2]*(2*np.pi)*aRow[0])
+                    )
+
+
+            # next, integrated flow
+            particle_filename = path.join(folder, filename_inte % particle_string_infile)
+            if path.exists(particle_filename):
+                # extract integrated flow and multiplicity information
+                inte_flow_block = np.loadtxt(particle_filename)
+                largest_n = inte_flow_block.shape[0]
+                # write flow table
+                for n in range(1, largest_n):
+                    db.insertIntoTable("inte_vn",
+                        (event_id, pid, n, inte_flow_block[n,3], inte_flow_block[n,4])
+                    )
+                # write multiplicity table
+                db.insertIntoTable("multiplicities",
+                    (event_id, pid, inte_flow_block[0,1])
+                )
+
+        # close connection to commit changes
+        db.closeConnection()
+    
     def collectEccentricityfrom11P5N(self, folder, db):
         """
             This function collect eccentricity data
@@ -658,12 +775,19 @@ class EbeCollector(object):
         # close connection to commit changes
         db.closeConnection()
 
-    def collectParticlesOSCAR(self, folder, hydroEvent_id, resultFilename, db):
+    def collectParticlesOSCAR(self, folder, hydroEvent_id, resultFilename, db, particles_to_collect, rap_range):
         """
             This function collects particles momentum and space-time information from
             OSCAR format output file "resultFilename" into database for one hydro event with 
             hydroEvent_id. It assigns each UrQMD run an additional UrQMDEvent_id. 
         """
+        pid_to_collect = []
+        for aParticle in particles_to_collect:
+            if aParticle == "charged":
+                pid_to_collect += map(lambda x: self.pidDict[x], self.charged_hadron_list)
+            else:
+                pid_to_collect += [self.pidDict[aParticle]]
+        
         # first write the pid_lookup table, makes sure there is only one such table
         if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
             db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
@@ -710,14 +834,16 @@ class EbeCollector(object):
                         except ValueError as e:
                             print("Can not find particle id in the dictionary!")
                             exit(e)
-                        pT = math.sqrt(px*px + py*py)
-                        pMag = math.sqrt(pT*pT + pz*pz)
-                        phi = math.atan2(py, px)
-                        rap = 0.5*math.log((p0 + pz)/(p0 - pz))
-                        pseudorap = 0.5*math.log((pMag + pz)/(pMag - pz))
-                        tau = math.sqrt(t*t - z*z)
-                        eta = 0.5*math.log((t+z)/(t-z))
-                        db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, databasePid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap), float(pseudorap)))
+                        if databasePid in pid_to_collect:
+                            rap = 0.5*math.log((p0 + pz)/(p0 - pz))
+                            if rap < rap_range[1] and rap > rap_range[0]:
+                                pT = math.sqrt(px*px + py*py)
+                                pMag = math.sqrt(pT*pT + pz*pz)
+                                phi = math.atan2(py, px)
+                                pseudorap = 0.5*math.log((pMag + pz)/(pMag - pz))
+                                tau = math.sqrt(t*t - z*z)
+                                eta = 0.5*math.log((t+z)/(t-z))
+                                db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, databasePid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap), float(pseudorap)))
                     except ValueError as e:
                         print("The file "+ UrQMDoutputFilePath +" does not have valid urqmd data!")
                         exit(e)
@@ -733,12 +859,19 @@ class EbeCollector(object):
         # close connection to commit changes
         db.closeConnection()
 
-    def collectParticlesUrQMD(self, folder, hydroEvent_id, resultFilename, db):
+    def collectParticlesUrQMD(self, folder, hydroEvent_id, resultFilename, db, particles_to_collect, rap_range):
         """
             This function collects particles momentum and space-time information from
             UrQMD output file "resultFilename" into database for one hydro event with 
             hydroEvent_id. It assigns each UrQMD run an additional UrQMDEvent_id. 
         """
+        pid_to_collect = []
+        for aParticle in particles_to_collect:
+            if aParticle == "charged":
+                pid_to_collect += map(lambda x: self.pidDict[x], self.charged_hadron_list)
+            else:
+                pid_to_collect += [self.pidDict[aParticle]]
+
         # first write the pid_lookup table, makes sure there is only one such table
         if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
             db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
@@ -794,14 +927,16 @@ class EbeCollector(object):
                         except ValueError as e:
                             print("Can not find particle id in the dictionary!")
                             exit(e)
-                        pT = math.sqrt(px*px + py*py)
-                        pMag = math.sqrt(pT*pT + pz*pz)
-                        phi = math.atan2(py, px)
-                        rap = 0.5*math.log((p0 + pz)/(p0 - pz))
-                        pseudorap = 0.5*math.log((pMag + pz)/(pMag - pz))
-                        tau = math.sqrt(t*t - z*z)
-                        eta = 0.5*math.log((t+z)/(t-z))
-                        db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, databasePid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap), float(pseudorap)))
+                        if UrQMDpid in pid_to_collect:
+                            rap = 0.5*math.log((p0 + pz)/(p0 - pz))
+                            if rap < rap_range[1] and rap > rap_range[0]:
+                                pT = math.sqrt(px*px + py*py)
+                                pMag = math.sqrt(pT*pT + pz*pz)
+                                phi = math.atan2(py, px)
+                                pseudorap = 0.5*math.log((pMag + pz)/(pMag - pz))
+                                tau = math.sqrt(t*t - z*z)
+                                eta = 0.5*math.log((t+z)/(t-z))
+                                db.insertIntoTable("particle_list", (hydroEvent_id, UrQMDEvent_id, databasePid, float(tau), float(x), float(y), float(eta), float(pT), float(phi), float(rap), float(pseudorap)))
                     except ValueError as e:
                         print("The file "+ UrQMDoutputFilePath +" does not have valid urqmd data!")
                         exit(e)
@@ -959,6 +1094,15 @@ class EbeCollector(object):
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
                 self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db, useSubfolder="") # collect hadron flow
                 self.collectFLowsAndMultiplicities_photon(aSubfolder, event_id, db, useSubfolder="") # collect photon flow
+        elif collectMode == "fromHydroEM_with_decaycocktail":
+            print("-"*60)
+            print("Using fromHydroEM_with_decaycocktail mode")
+            print("-"*60)
+            for aSubfolder, event_id in matchedSubfolders:
+                print("Collecting %s as with event-id: %s" % (aSubfolder, event_id))
+                self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
+                self.collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(aSubfolder, event_id, db, useSubfolder="") # collect hadron and decay photon flow
+                self.collectFLowsAndMultiplicities_photon(aSubfolder, event_id, db, useSubfolder="") # collect thermal photon flow
         elif collectMode == "fromPureHydro11P5N":
             print("-"*60)
             print("Using fromPureHydro11P5N mode")
@@ -970,7 +1114,7 @@ class EbeCollector(object):
             print("Mode string not found")
             print("!"*60)
 
-    def collectParticleinfo(self, folder, subfolderPattern="event-(\d*)", resultFilename="particle_list.dat", databaseFilename="particles.db", fileformat = 'UrQMD'):
+    def collectParticleinfo(self, folder, subfolderPattern="event-(\d*)", resultFilename="particle_list.dat", databaseFilename="particles.db", fileformat = 'UrQMD', particles_to_collect = ['charged'], rap_range = (-2.5, 2.5)):
         """
             This function collects particles momentum and space-time information from UrQMD
             outputs into a database
@@ -997,9 +1141,9 @@ class EbeCollector(object):
         for aSubfolder, hydroEvent_id in matchedSubfolders:
             print("Collecting %s as with hydro event-id: %s" % (aSubfolder, hydroEvent_id))
             if fileformat == 'UrQMD':
-                self.collectParticlesUrQMD(aSubfolder, hydroEvent_id, resultFilename, db) # collect particles from one hydro event
+                self.collectParticlesUrQMD(aSubfolder, hydroEvent_id, resultFilename, db, particles_to_collect, rap_range) # collect particles from one hydro event
             elif fileformat == 'OSCAR':
-                self.collectParticlesOSCAR(aSubfolder, hydroEvent_id, resultFilename, db) # collect particles from one hydro event
+                self.collectParticlesOSCAR(aSubfolder, hydroEvent_id, resultFilename, db, particles_to_collect, rap_range) # collect particles from one hydro event
             else:
                 print("Error: can not recognize the input file format : %s", fileformat)
                 exit(-1)

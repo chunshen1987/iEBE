@@ -132,7 +132,7 @@ iSSParameters = {
 iSControl = {
     'mainDir'           :   'iS',
     'operationDir'      :   'results',
-    'saveResultGlobs'   :   ['*_vndata.dat', 'v2data*'], # files in the operation directory matching these globs will be saved
+    'saveResultGlobs'   :   ['dN_ptdptdphidy.dat', '*_vndata.dat', 'v2data*'], # files in the operation directory matching these globs will be saved
     'executables'       :   ('iS.e', 'resonance.e', 'iInteSp.e'),
     'entryShell'        :   'iS_withResonance.sh',
 }
@@ -185,6 +185,7 @@ EbeCollectorControl = {
     'executable_hybrid'     :   'EbeCollectorShell_hydroWithUrQMD.py',
     'executable_hydro'      :   'EbeCollectorShell_pureHydro.py',
     'executable_hydroEM'    :   'EbeCollectorShell_HydroEM.py',
+    'executable_hydroEM_with_decaycocktail'    :   'EbeCollectorShell_HydroEM_with_decaycocktail.py',
 }
 EbeCollectorParameters = {
     'subfolderPattern'      :   '"event-(\d*)"',
@@ -436,7 +437,7 @@ def iSWithResonancesWithHydroResultFiles(fileList):
             raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
             move(aFile, iSOperationDirectory)
-    move(path.join(iSDirectory, 'EOS', 'chosen_particle_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particle.dat'))
+    move(path.join(iSDirectory, 'EOS', 'chosen_particles_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
 
     # execute!
     run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, cwd=iSDirectory)
@@ -473,7 +474,7 @@ def iSSeventplaneAngleWithHydroResultFiles(fileList):
             raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
             move(aFile, iSSOperationDirectory)
-    copy(path.join(iSSDirectory, 'EOS', 'chosen_particles_pion.dat'), path.join(iSSDirectory, 'EOS', 'chosen_particles.dat'))
+    copy(path.join(iSSDirectory, 'EOS', 'chosen_particles_HydroEM.dat'), path.join(iSSDirectory, 'EOS', 'chosen_particles.dat'))
 
     # form assignment string
     assignments = formAssignmentStringFromDict(iSSParameters)
@@ -490,6 +491,50 @@ def iSSeventplaneAngleWithHydroResultFiles(fileList):
         if aFile in worthStoring:
             move(aFile, controlParameterList['eventResultDir'])
 
+    # return hydro h5 file path
+    return (hydroH5Filepath,)
+
+def iSWithResonancesWithdecayPhotonWithHydroResultFiles(fileList):
+    """
+        Perform iS calculation using the given list of hydro result files,
+        followed by resonance calculations and iInteSp calculations with decay photons.
+    """
+    ProcessNiceness = controlParameterList['niceness']
+    # set directory strings
+    iSDirectory = path.join(controlParameterList['rootDir'], iSControl['mainDir'])
+    iSOperationDirectory = path.join(iSDirectory, iSControl['operationDir']) # for both input & output
+    hydroH5Filepath = path.join(iSOperationDirectory, 'JetData.h5')
+    iSExecutables = iSControl['executables']
+    iSExecutionEntry = iSControl['entryShell']
+
+    # check executable
+    checkExistenceOfExecutables([path.join(iSDirectory, aExe) for aExe in iSExecutables])
+
+    # clean up operation folder
+    cleanUpFolder(iSOperationDirectory)
+
+    # check existence of hydro result files and move them to operation folder
+    for aFile in fileList:
+        if not path.exists(aFile):
+            raise ExecutionError("Hydro result file %s not found!" % aFile)
+        else:
+            move(aFile, iSOperationDirectory)
+    # make sure all hadrons up to 2 GeV are calculated
+    copy(path.join(iSDirectory, 'EOS', 'chosen_particles_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
+    # make sure to use the pdg table with tagged decay photons
+    copy(path.join(iSDirectory, 'EOS', 'pdg_decayPhotonCocktail.dat'), path.join(iSDirectory, 'EOS', 'pdg.dat'))
+
+    # execute!
+    run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, cwd=iSDirectory)
+
+    # save some of the important result files
+    worthStoring = []
+    for aGlob in iSControl['saveResultGlobs']:
+        worthStoring.extend(glob(path.join(iSOperationDirectory, aGlob)))
+    for aFile in glob(path.join(iSOperationDirectory, "*")):
+        if aFile in worthStoring:
+            move(aFile, controlParameterList['eventResultDir'])
+    
     # return hydro h5 file path
     return (hydroH5Filepath,)
 
@@ -649,6 +694,9 @@ def collectEbeResultsToDatabaseFrom(folder):
     elif simulationType == 'hydroEM':
         collectorExecutable = EbeCollectorControl['executable_hydroEM']
         executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+    elif simulationType == 'hydroEM_with_decaycocktail':
+        collectorExecutable = EbeCollectorControl['executable_hydroEM_with_decaycocktail']
+        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     
     elif simulationType == 'hydroEM_preEquilibrium':
         collectorExecutable = EbeCollectorControl['executable_hydroEM']
@@ -784,7 +832,8 @@ def sequentialEventDriverShell():
                 photonEmissionWithHydroResultFiles(h5file)
             
             elif simulationType == 'hydroEM_preEquilibrium':
-                h5file = iSSeventplaneAngleWithHydroResultFiles(hydroResultFiles)
+                # perform iS calculation and resonance decays
+                h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(hydroResultFiles)
                 # perform EM radiation calculation
                 photonEmissionWithHydroResultFiles(h5file)
 

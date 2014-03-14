@@ -29,6 +29,10 @@ try:
         databaseFilename = argv[5]
     else:
         databaseFilename = "collected.db"
+    if len(argv)>=7:
+        databaseFilename_particles = argv[6]
+    else:
+        databaseFilename_particles = "particles.db"
 except:
     print("Usage: autoZippedResultsCombiner.py parent_folder expected_number_of_zip_files [subfolder_pattern] [watch_time_interval (seconds)] [database_filename]")
     exit()
@@ -57,3 +61,4 @@ while keepWatching:
 
 stdout.flush()
 call("python ./combineEbeDatabasesFromZippedResults.py %s %s" % (parentFolder, databaseFilename), shell=True)
+#call("python ./combineEbeDatabasesFromZippedResults.py %s %s" % (parentFolder, databaseFilename_particles), shell=True)

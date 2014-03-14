@@ -35,13 +35,13 @@ int main()
    
    int max, maxdecay, bound;
    
-   printf("START of reso decays !\n");
+   printf("START of resonance decays !\n");
    //Read in the data from "reso.inp, including the results folder and the spectra data      
-   datin = fopen("reso.inp","r");
-   fscanf(datin,"%s%s",specfile,dummy);
-   std::cout << specfile << std::endl;
-   fscanf(datin,"%s%s",outdir,dummy);
-   fscanf(datin,"%i%s",&bound,dummy);
+   datin = fopen("reso.inp", "r");
+   fscanf(datin, "%s%s", specfile, dummy);
+   //std::cout << specfile << std::endl;
+   fscanf(datin, "%s%s", outdir, dummy);
+   fscanf(datin, "%i%s", &bound, dummy);
    fclose(datin);
    //Read in the spectra and decays using "resoweak.dat" as a database of particles
    readspec(specfile, &max, &maxdecay);

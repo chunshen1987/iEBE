@@ -1007,16 +1007,6 @@ C======Using a smaller time step for short initialization time \tau_0
             endif
 CSHEN====END====================================================================
 
-      if(IhydroJetoutput .eq. 1) then
-!        output hydro infos
-!        Units: [ed]=GeV/fm^3, [sd]=fm^-3, [p]=GeV/fm^3, [T]=GeV, [Vx]=[Vy]=1
-!        Units: [Pi]=GeV/fm^3, [PPi]=GeV/fm^3
-         Call writeHydroBlock(ITime-1, Ed*HbarC, Sd, PL*HbarC,
-     &      Temp*HbarC,Vx, Vy, Pi00*HbarC, Pi01*HbarC, Pi02*HbarC, 
-     &      Pi02*HbarC*0.0d0, Pi11*HbarC, Pi12*HbarC, Pi12*HbarC*0.0d0,
-     &      Pi22*HbarC, Pi22*HbarC*0.0d0, Pi33*HbarC, PPI*HbarC)
-!        output hydro infos, end
-      endif
 
 !   ---Zhi-Changes---
         Call determineR0(NX0,NY0,NZ0,NX,NY,NZ,Ed,PL,Sd,
@@ -1232,6 +1222,18 @@ CSHEN====END====================================================================
          enddo
          enddo
       endif
+      
+      if(IhydroJetoutput .eq. 1) then
+!        output hydro infos
+!        Units: [ed]=GeV/fm^3, [sd]=fm^-3, [p]=GeV/fm^3, [T]=GeV, [Vx]=[Vy]=1
+!        Units: [Pi]=GeV/fm^3, [PPi]=GeV/fm^3
+         Call writeHydroBlock(ITime-1, Ed*HbarC, Sd, PL*HbarC,
+     &      Temp*HbarC,Vx, Vy, Pi00*HbarC, Pi01*HbarC, Pi02*HbarC, 
+     &      Pi02*HbarC*0.0d0, Pi11*HbarC, Pi12*HbarC, Pi12*HbarC*0.0d0,
+     &      Pi22*HbarC, Pi22*HbarC*0.0d0, Pi33*HbarC, PPI*HbarC)
+!        output hydro infos, end
+      endif
+
 CSHEN===========================================================================
 C====output the OSCAR body file from hydro evolution============ ===============
       if(IOSCAR) then
