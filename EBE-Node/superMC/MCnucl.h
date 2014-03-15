@@ -31,6 +31,7 @@ protected:
     GaussianNucleonsCal *gaussCal; // for Gaussian shaped nucleons calculations
     Large_x* val;
     double **TA1,**TA2;
+    double **rho_binary;
     GlueDensity *rho;
     int tmax, tmaxPt;
     double dT;
@@ -80,6 +81,7 @@ public:
 
     double getTA1(int x,int y) {return TA1[x][y];}
     double getTA2(int x,int y) {return TA2[x][y];}
+    double get_rho_binary(int x, int y) {return rho_binary[x][y];}
     double getRho(int i, int x,int y) {return rho->getDensity(i,x,y);}
     void setRho(int i, int x,int y, double val) {rho->setDensity(i,x,y,val);}
     int getNcoll() {return Ncoll;}
@@ -93,6 +95,7 @@ public:
     void deleteNucleus();
     void setDensity(int iy, int ipt=-1); // ipt<0: no dN/dydpt table used
     void getTA2();
+    void calculate_rho_binary();    // calculate binary collision density in the transverse plane
     int  getBinaryCollision();
     int  CentralityCut();
     void setCentralityCut(int Nmin, int Nmax)

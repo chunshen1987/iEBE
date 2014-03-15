@@ -37,7 +37,7 @@ GaussianNucleonsCal::GaussianNucleonsCal(ParameterReader* paraRdr_in)
   }
   else if (shape_of_nucleons==2) // "classical" gaussian nucleons
   {
-    width = sqrt(0.1*sigmaNN_in/M_PI)/sqrt(8); // rms-radius of a gaussian = rms-radius of a disc with radius R, where 4*PI*R^2=sigmaNN
+    width = sqrt(0.1*sigmaNN_in/M_PI)/sqrt(8); // rms-radius of a gaussian = rms-radius of a disc with radius R, where 2*PI*(2R)^2=sigmaNN
     sigma_gg = getSigEff(sigmaNN_in, width);
   }
   else if (shape_of_nucleons==4) // manually fix nucleon width

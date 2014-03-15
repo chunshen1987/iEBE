@@ -483,8 +483,41 @@ void MakeDensity::generate_profile_average(int nevent)
       }
     }
   }
+  
+  // binary density profile (rotated using entropy density):
+  char file_rho_binary_sd_4col[] = "data/rho_binary_fromSd_order_%d_4col.dat";
+  char file_rho_binary_sd_block[] = "data/rho_binary_fromSd_order_%d_block.dat";
+  double **** rho_binary_sd  = new double*** [number_of_orders];
+  for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
+  {
+    rho_binary_sd[iorder] = new double** [binRapidity];
+    for(int iy=0;iy<binRapidity;iy++) {
+      rho_binary_sd[iorder][iy] =  new double* [Maxx]();
+      for(int i=0;i<Maxx;i++) {
+          rho_binary_sd[iorder][iy][i] = new double[Maxy]();
+          for (int j=0;j<Maxy;j++) rho_binary_sd[iorder][iy][i][j]=0;
+      }
+    }
+  }
+  
+  // binary density profile (rotated using energy density):
+  char file_rho_binary_ed_4col[] = "data/rho_binary_fromEd_order_%d_4col.dat";
+  char file_rho_binary_ed_block[] = "data/rho_binary_fromEd_order_%d_block.dat";
+  double **** rho_binary_ed  = new double*** [number_of_orders];
+  for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
+  {
+    rho_binary_ed[iorder] = new double** [binRapidity];
+    for(int iy=0;iy<binRapidity;iy++) {
+      rho_binary_ed[iorder][iy] =  new double* [Maxx]();
+      for(int i=0;i<Maxx;i++) {
+          rho_binary_ed[iorder][iy][i] = new double[Maxy]();
+          for (int j=0;j<Maxy;j++) rho_binary_ed[iorder][iy][i][j]=0;
+      }
+    }
+  }
 
   int output_TATB = paraRdr->getVal("output_TATB");
+  int output_rho_binary = paraRdr->getVal("output_rho_binary");
 
   long event = 1;
 
@@ -543,6 +576,7 @@ void MakeDensity::generate_profile_average(int nevent)
         {
             mc->rotateGrid(iy, order); // rotate grid according to gluon density <-> according to entropy density. Note that different rapidity slices are rotated separately, and this does not quite make sense.
             mc->getTA2();
+            mc->calculate_rho_binary();
             mc->setDensity(iy); // now it's after rotation
             setSd(dens_tmp, iy); // includes factor multiplication
             // averaging --- entropy density:
@@ -559,6 +593,15 @@ void MakeDensity::generate_profile_average(int nevent)
                     TATB_Sd[iorder][iy][i][j] = (TATB_Sd[iorder][iy][i][j]*(event-1) + mc->getTA1(i,j)*mc->getTA2(i,j))/(double)(event); // event = number of succeeded events
                 }
             }
+            // dumping binary density profile
+            if (output_rho_binary)
+            {
+                for(int i=0;i<Maxx;i++)
+                for(int j=0;j<Maxy;j++)
+                {
+                    rho_binary_sd[iorder][iy][i][j] = (rho_binary_sd[iorder][iy][i][j]*(event-1) + mc->get_rho_binary(i,j))/(double)(event); // event = number of succeeded events
+                }
+            }
         }
         // average energy profile
         if (use_ed)
@@ -571,6 +614,7 @@ void MakeDensity::generate_profile_average(int nevent)
             }
             mc->rotateGrid(iy, order); // rotate grid according to energy density. Note that different rapidity slices are rotated separately, and this does not quite make sense.
             mc->getTA2();
+            mc->calculate_rho_binary();
             mc->setDensity(iy); // now it's after rotation
             setEd(dens_tmp, iy); // includes factor multiplication
             // averaging --- entropy density:
@@ -585,6 +629,15 @@ void MakeDensity::generate_profile_average(int nevent)
                 for(int j=0;j<Maxy;j++)
                 {
                     TATB_Ed[iorder][iy][i][j] = (TATB_Ed[iorder][iy][i][j]*(event-1) + mc->getTA1(i,j)*mc->getTA2(i,j))/(double)(event); // event = number of succeeded events
+                }
+            }
+            // dumping binary density profile
+            if (output_rho_binary)
+            {
+                for(int i=0;i<Maxx;i++)
+                for(int j=0;j<Maxy;j++)
+                {
+                    rho_binary_ed[iorder][iy][i][j] = (rho_binary_ed[iorder][iy][i][j]*(event-1) + mc->get_rho_binary(i,j))/(double)(event); // event = number of succeeded events
                 }
             }
         }
@@ -673,6 +726,35 @@ void MakeDensity::generate_profile_average(int nevent)
                 }
             }
         }
+        // output binary collision density
+        if (output_rho_binary) {
+            // rho_binary from entropy
+            if (use_sd) {
+                if (use_4col)
+                {
+                  sprintf(buffer, file_rho_binary_sd_4col, order);
+                  dumpDensity4Col(buffer, rho_binary_sd[iorder], iy);
+                }
+                if (use_block)
+                {
+                  sprintf(buffer, file_rho_binary_sd_block, order);
+                  dumpDensityBlock(buffer, rho_binary_sd[iorder], iy);
+                }
+            }
+            // rho_binary from energy
+            if (use_ed) {
+                if (use_4col)
+                {
+                  sprintf(buffer, file_rho_binary_ed_4col, order);
+                  dumpDensity4Col(buffer, rho_binary_ed[iorder], iy);
+                }
+                if (use_block)
+                {
+                  sprintf(buffer, file_rho_binary_ed_block, order);
+                  dumpDensityBlock(buffer, rho_binary_ed[iorder], iy);
+                }
+            }
+        }
     }
   }
 
@@ -718,6 +800,24 @@ void MakeDensity::generate_profile_average(int nevent)
     delete [] TATB_Ed[iorder];
   }
   delete [] TATB_Ed;
+  
+  for(int iorder=0; iorder<number_of_orders; iorder++) {
+    for(int iy=0;iy<binRapidity;iy++) {
+      for(int i=0;i<Maxx;i++) delete [] rho_binary_sd[iorder][iy][i];
+      delete [] rho_binary_sd[iorder][iy];
+    }
+    delete [] rho_binary_sd[iorder];
+  }
+  delete [] rho_binary_sd;
+
+  for(int iorder=0; iorder<number_of_orders; iorder++) {
+    for(int iy=0;iy<binRapidity;iy++) {
+      for(int i=0;i<Maxx;i++) delete [] rho_binary_ed[iorder][iy][i];
+      delete [] rho_binary_ed[iorder][iy];
+    }
+    delete [] rho_binary_ed[iorder];
+  }
+  delete [] rho_binary_ed;
 
 }
 //----------------------------------------------------------------------
