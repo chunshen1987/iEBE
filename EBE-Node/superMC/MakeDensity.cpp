@@ -155,6 +155,51 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
   int use_ed = paraRdr->getVal("use_ed");
   int use_block = paraRdr->getVal("use_block");
   int use_4col = paraRdr->getVal("use_4col");
+  
+  int output_rho_binary = paraRdr->getVal("output_rho_binary");
+  int output_TA = paraRdr->getVal("output_TA");
+
+  // binary density profile (rotated using entropy density):
+  char file_rho_binary_4col[] = "data/rho_binary_event_%d_4col.dat";
+  char file_rho_binary_block[] = "data/rho_binary_event_%d_block.dat";
+  double ***rho_binary_sd = new double** [binRapidity];
+  for(int iy=0;iy<binRapidity;iy++)
+  {
+    rho_binary_sd[iy] =  new double* [Maxx]();
+    for(int i=0;i<Maxx;i++)
+    {
+        rho_binary_sd[iy][i] = new double[Maxy]();
+        for (int j=0;j<Maxy;j++)
+           rho_binary_sd[iy][i][j]=0;
+    }
+  }
+  // nuclear thickness function profile
+  char file_TA_4col[] = "data/nuclear_thickness_TA_event_%d_4col.dat";
+  char file_TA_block[] = "data/nuclear_thickness_TA_event_%d_block.dat";
+  double ***nuclear_TA_sd = new double** [binRapidity];
+  for(int iy=0;iy<binRapidity;iy++)
+  {
+    nuclear_TA_sd[iy] =  new double* [Maxx]();
+    for(int i=0;i<Maxx;i++)
+    {
+        nuclear_TA_sd[iy][i] = new double[Maxy]();
+        for (int j=0;j<Maxy;j++)
+           nuclear_TA_sd[iy][i][j]=0;
+    }
+  }
+  char file_TB_4col[] = "data/nuclear_thickness_TB_event_%d_4col.dat";
+  char file_TB_block[] = "data/nuclear_thickness_TB_event_%d_block.dat";
+  double ***nuclear_TB_sd = new double** [binRapidity];
+  for(int iy=0;iy<binRapidity;iy++)
+  {
+    nuclear_TB_sd[iy] =  new double* [Maxx]();
+    for(int i=0;i<Maxx;i++)
+    {
+        nuclear_TB_sd[iy][i] = new double[Maxy]();
+        for (int j=0;j<Maxy;j++)
+           nuclear_TB_sd[iy][i][j]=0;
+    }
+  }
 
   char buffer[200];
   double b;
@@ -240,6 +285,48 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
             dumpDensityBlock(buffer, dens2, iy);
           }
       }
+      // output binary collision density
+      if (output_rho_binary)
+      {
+         mc->calculate_rho_binary();
+         for(int i=0;i<Maxx;i++)
+            for(int j=0;j<Maxy;j++)
+               rho_binary_sd[iy][i][j] = mc->get_rho_binary(i,j);
+         if (use_4col)
+         {
+             sprintf(buffer,file_rho_binary_4col,event);
+             dumpDensity4Col(buffer, rho_binary_sd, iy);
+         }
+         if (use_block)
+         {
+           sprintf(buffer,file_rho_binary_block,event);
+           dumpDensityBlock(buffer, rho_binary_sd, iy);
+         }
+      }
+      // output nuclear thickness function
+      if (output_TA)
+      {
+         for(int i=0;i<Maxx;i++)
+            for(int j=0;j<Maxy;j++)
+            {
+               nuclear_TA_sd[iy][i][j] = mc->getTA1(i,j);
+               nuclear_TB_sd[iy][i][j] = mc->getTA2(i,j);
+            }
+         if (use_4col)
+         {
+             sprintf(buffer,file_TA_4col,event);
+             dumpDensity4Col(buffer, nuclear_TA_sd, iy);
+             sprintf(buffer,file_TB_4col,event);
+             dumpDensity4Col(buffer, nuclear_TB_sd, iy);
+         }
+         if (use_block)
+         {
+           sprintf(buffer,file_TA_block,event);
+           dumpDensityBlock(buffer, nuclear_TA_sd, iy);
+           sprintf(buffer,file_TB_block,event);
+           dumpDensityBlock(buffer, nuclear_TB_sd, iy);
+         }
+      }
     } // <-> for(int iy=0;iy<binRapidity;iy++)
 
     mc->deleteNucleus();
@@ -261,6 +348,26 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
     delete [] dens2[iy];
   }
   delete [] dens2;
+
+  for(int iy=0;iy<binRapidity;iy++)
+  {
+    for(int i=0;i<Maxx;i++)
+       delete [] rho_binary_sd[iy][i];
+    delete [] rho_binary_sd[iy];
+  }
+  delete [] rho_binary_sd;
+  for(int iy=0;iy<binRapidity;iy++)
+  {
+    for(int i=0;i<Maxx;i++)
+    {
+       delete [] nuclear_TA_sd[iy][i];
+       delete [] nuclear_TB_sd[iy][i];
+    }
+    delete [] nuclear_TA_sd[iy];
+    delete [] nuclear_TB_sd[iy];
+  }
+  delete [] nuclear_TA_sd;
+  delete [] nuclear_TB_sd;
 }
 //----------------------------------------------------------------------
 
