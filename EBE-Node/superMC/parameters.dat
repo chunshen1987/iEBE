@@ -58,7 +58,7 @@ cutdSdy_upperBound =  10000000.0       # upper bound of the allowed total entrop
 
 
 # Monte Carlo Optns
-nev = 10                  # Number of collision events simulated
+nev = 1                  # Number of collision events simulated
 randomSeed = -1           # If randomSeed < 0 then CPU time is used to seed
 backup_number = 10000     # Backs up the averaged profile every "n" events. 0 means 
                           # every step. Use a neg number to turn it off
@@ -110,4 +110,5 @@ cc_fluctuation_Gamma_theta = 0.9175    # the scale parameter for Gamma distribut
 
 # For jet calculations
 output_TATB = 1           # 1: output; 0: no output; only effective when generating averaged profiles
-output_rho_binary = 1     # 1: output; 0: no output; only effective when generating averaged profiles
+output_rho_binary = 1     # 1: output binary collision density
+output_TA = 1             # 1: output nuclear thickness function

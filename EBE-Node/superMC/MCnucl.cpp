@@ -504,15 +504,14 @@ void MCnucl::calculate_rho_binary()
             if (shape_of_nucleons == 1)
             {
                if(dc <= dsq) 
-                  tab += (10.0/siginNN)*(Alpha + (1.-Alpha)*binaryCollision[icoll]->additional_weight); // second part in the parenthesis is for Uli-Glb model
+                  tab += (10.0/siginNN);
             }
             else if (shape_of_nucleons>=2 && shape_of_nucleons<=9)
             {
                if (dc > (5.*gaussCal->entropy_gaussian_width)*(5.*gaussCal->entropy_gaussian_width)) 
                   continue; // skip small numbers to speed up
-               tab += GaussianNucleonsCal::get2DHeightFromWidth(gaussCal->entropy_gaussian_width)*exp(-dc/(2*gaussCal->entropy_gaussian_width*gaussCal->entropy_gaussian_width))*(Alpha + (1.-Alpha)*binaryCollision[icoll]->additional_weight); 
+               tab += GaussianNucleonsCal::get2DHeightFromWidth(gaussCal->entropy_gaussian_width)*exp(-dc/(2*gaussCal->entropy_gaussian_width*gaussCal->entropy_gaussian_width)); 
                // this density is normalized to 1, to be consistent with the disk-like treatment; 
-               // second part in the last parenthesis is for Uli-Glb model
             }
          }
          rho_binary[ir][jr] = tab;

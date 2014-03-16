@@ -515,9 +515,74 @@ void MakeDensity::generate_profile_average(int nevent)
       }
     }
   }
-
+  
+  // nuclear thickness function profile (rotated using entropy density):
+  char file_TA_sd_4col[] = "data/nuclear_thickness_TA_fromSd_order_%d_4col.dat";
+  char file_TA_sd_block[] = "data/nuclear_thickness_TA_fromSd_order_%d_block.dat";
+  double **** nuclear_TA_sd  = new double*** [number_of_orders];
+  for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
+  {
+    nuclear_TA_sd[iorder] = new double** [binRapidity];
+    for(int iy=0;iy<binRapidity;iy++) {
+      nuclear_TA_sd[iorder][iy] =  new double* [Maxx]();
+      for(int i=0;i<Maxx;i++) {
+          nuclear_TA_sd[iorder][iy][i] = new double[Maxy]();
+          for (int j=0;j<Maxy;j++) nuclear_TA_sd[iorder][iy][i][j]=0;
+      }
+    }
+  }
+  
+  // nuclear thickness function profile (rotated using entropy density):
+  char file_TA_ed_4col[] = "data/nuclear_thickness_TA_fromEd_order_%d_4col.dat";
+  char file_TA_ed_block[] = "data/nuclear_thickness_TA_fromEd_order_%d_block.dat";
+  double **** nuclear_TA_ed  = new double*** [number_of_orders];
+  for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
+  {
+    nuclear_TA_ed[iorder] = new double** [binRapidity];
+    for(int iy=0;iy<binRapidity;iy++) {
+      nuclear_TA_ed[iorder][iy] =  new double* [Maxx]();
+      for(int i=0;i<Maxx;i++) {
+          nuclear_TA_ed[iorder][iy][i] = new double[Maxy]();
+          for (int j=0;j<Maxy;j++) nuclear_TA_ed[iorder][iy][i][j]=0;
+      }
+    }
+  }
+  
+  // nuclear thickness function profile (rotated using entropy density):
+  char file_TB_sd_4col[] = "data/nuclear_thickness_TB_fromSd_order_%d_4col.dat";
+  char file_TB_sd_block[] = "data/nuclear_thickness_TB_fromSd_order_%d_block.dat";
+  double **** nuclear_TB_sd  = new double*** [number_of_orders];
+  for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
+  {
+    nuclear_TB_sd[iorder] = new double** [binRapidity];
+    for(int iy=0;iy<binRapidity;iy++) {
+      nuclear_TB_sd[iorder][iy] =  new double* [Maxx]();
+      for(int i=0;i<Maxx;i++) {
+          nuclear_TB_sd[iorder][iy][i] = new double[Maxy]();
+          for (int j=0;j<Maxy;j++) nuclear_TB_sd[iorder][iy][i][j]=0;
+      }
+    }
+  }
+  
+  // nuclear thickness function profile (rotated using entropy density):
+  char file_TB_ed_4col[] = "data/nuclear_thickness_TB_fromEd_order_%d_4col.dat";
+  char file_TB_ed_block[] = "data/nuclear_thickness_TB_fromEd_order_%d_block.dat";
+  double **** nuclear_TB_ed  = new double*** [number_of_orders];
+  for(int iorder=0; iorder<number_of_orders; iorder++) // iorder starts from 0
+  {
+    nuclear_TB_ed[iorder] = new double** [binRapidity];
+    for(int iy=0;iy<binRapidity;iy++) {
+      nuclear_TB_ed[iorder][iy] =  new double* [Maxx]();
+      for(int i=0;i<Maxx;i++) {
+          nuclear_TB_ed[iorder][iy][i] = new double[Maxy]();
+          for (int j=0;j<Maxy;j++) nuclear_TB_ed[iorder][iy][i][j]=0;
+      }
+    }
+  }
+  
   int output_TATB = paraRdr->getVal("output_TATB");
   int output_rho_binary = paraRdr->getVal("output_rho_binary");
+  int output_TA = paraRdr->getVal("output_TA");
 
   long event = 1;
 
@@ -554,7 +619,7 @@ void MakeDensity::generate_profile_average(int nevent)
     Npart = mc->getNpart1()+mc->getNpart2();
     // need to rotate compute density before rotation.
     mc->getTA2();
-    
+
     bool cutdSdypassFlag = true;
     for(int iorder=0; iorder<number_of_orders; iorder++)
     {
@@ -602,6 +667,16 @@ void MakeDensity::generate_profile_average(int nevent)
                     rho_binary_sd[iorder][iy][i][j] = (rho_binary_sd[iorder][iy][i][j]*(event-1) + mc->get_rho_binary(i,j))/(double)(event); // event = number of succeeded events
                 }
             }
+            // dumping nuclear thickness function
+            if (output_TA)
+            {
+                for(int i=0;i<Maxx;i++)
+                for(int j=0;j<Maxy;j++)
+                {
+                    nuclear_TA_sd[iorder][iy][i][j] = (nuclear_TA_sd[iorder][iy][i][j]*(event-1) + mc->getTA1(i,j))/(double)(event); // event = number of succeeded events
+                    nuclear_TB_sd[iorder][iy][i][j] = (nuclear_TB_sd[iorder][iy][i][j]*(event-1) + mc->getTA2(i,j))/(double)(event); // event = number of succeeded events
+                }
+            }
         }
         // average energy profile
         if (use_ed)
@@ -638,6 +713,16 @@ void MakeDensity::generate_profile_average(int nevent)
                 for(int j=0;j<Maxy;j++)
                 {
                     rho_binary_ed[iorder][iy][i][j] = (rho_binary_ed[iorder][iy][i][j]*(event-1) + mc->get_rho_binary(i,j))/(double)(event); // event = number of succeeded events
+                }
+            }
+            // dumping nuclear thickness function
+            if (output_TA)
+            {
+                for(int i=0;i<Maxx;i++)
+                for(int j=0;j<Maxy;j++)
+                {
+                    nuclear_TA_ed[iorder][iy][i][j] = (nuclear_TA_ed[iorder][iy][i][j]*(event-1) + mc->getTA1(i,j))/(double)(event); // event = number of succeeded events
+                    nuclear_TB_ed[iorder][iy][i][j] = (nuclear_TB_ed[iorder][iy][i][j]*(event-1) + mc->getTA2(i,j))/(double)(event); // event = number of succeeded events
                 }
             }
         }
@@ -727,7 +812,8 @@ void MakeDensity::generate_profile_average(int nevent)
             }
         }
         // output binary collision density
-        if (output_rho_binary) {
+        if (output_rho_binary)
+        {
             // rho_binary from entropy
             if (use_sd) {
                 if (use_4col)
@@ -752,6 +838,44 @@ void MakeDensity::generate_profile_average(int nevent)
                 {
                   sprintf(buffer, file_rho_binary_ed_block, order);
                   dumpDensityBlock(buffer, rho_binary_ed[iorder], iy);
+                }
+            }
+        }
+        // output nuclear thickness function
+        if (output_TA)
+        {
+            // thickness function from entropy
+            if (use_sd) {
+                if (use_4col)
+                {
+                  sprintf(buffer, file_TA_sd_4col, order);
+                  dumpDensity4Col(buffer, nuclear_TA_sd[iorder], iy);
+                  sprintf(buffer, file_TB_sd_4col, order);
+                  dumpDensity4Col(buffer, nuclear_TB_sd[iorder], iy);
+                }
+                if (use_block)
+                {
+                  sprintf(buffer, file_TA_sd_block, order);
+                  dumpDensityBlock(buffer, nuclear_TA_sd[iorder], iy);
+                  sprintf(buffer, file_TB_sd_block, order);
+                  dumpDensityBlock(buffer, nuclear_TB_sd[iorder], iy);
+                }
+            }
+            // thickness function from energy
+            if (use_ed) {
+                if (use_4col)
+                {
+                  sprintf(buffer, file_TA_ed_4col, order);
+                  dumpDensity4Col(buffer, nuclear_TA_ed[iorder], iy);
+                  sprintf(buffer, file_TB_ed_4col, order);
+                  dumpDensity4Col(buffer, nuclear_TB_ed[iorder], iy);
+                }
+                if (use_block)
+                {
+                  sprintf(buffer, file_TA_ed_block, order);
+                  dumpDensityBlock(buffer, nuclear_TA_ed[iorder], iy);
+                  sprintf(buffer, file_TB_ed_block, order);
+                  dumpDensityBlock(buffer, nuclear_TB_ed[iorder], iy);
                 }
             }
         }
@@ -818,6 +942,30 @@ void MakeDensity::generate_profile_average(int nevent)
     delete [] rho_binary_ed[iorder];
   }
   delete [] rho_binary_ed;
+  
+  for(int iorder=0; iorder<number_of_orders; iorder++) {
+    for(int iy=0;iy<binRapidity;iy++) {
+      for(int i=0;i<Maxx;i++)
+      {
+         delete [] nuclear_TA_sd[iorder][iy][i];
+         delete [] nuclear_TA_ed[iorder][iy][i];
+         delete [] nuclear_TB_sd[iorder][iy][i];
+         delete [] nuclear_TB_ed[iorder][iy][i];
+      }
+      delete [] nuclear_TA_sd[iorder][iy];
+      delete [] nuclear_TA_ed[iorder][iy];
+      delete [] nuclear_TB_sd[iorder][iy];
+      delete [] nuclear_TB_ed[iorder][iy];
+    }
+    delete [] nuclear_TA_sd[iorder];
+    delete [] nuclear_TA_ed[iorder];
+    delete [] nuclear_TB_sd[iorder];
+    delete [] nuclear_TB_ed[iorder];
+  }
+  delete [] nuclear_TA_sd;
+  delete [] nuclear_TA_ed;
+  delete [] nuclear_TB_sd;
+  delete [] nuclear_TB_ed;
 
 }
 //----------------------------------------------------------------------
