@@ -266,9 +266,9 @@ void LdMatching::ReadTable(string filename)
   cout << "Start to read in data table " << filename << endl;
   while (!DataFile.eof())
   {
-    string comment_line;  //store comment line
-    getline(DataFile, comment_line);  //read in to skip the comment line
-    cout << comment_line << endl;
+    //string comment_line;  //store comment line
+    //getline(DataFile, comment_line);  //read in to skip the comment line
+    //cout << comment_line << endl;
     
     for(int iy=0;iy<nRap;iy++)
       for(int i=0;i<Maxx;i++)

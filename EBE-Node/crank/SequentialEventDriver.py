@@ -21,6 +21,8 @@ allParameterLists = [
     'controlParameterList',
     'superMCControl',
     'superMCParameters',
+    'preEquilibriumControl',
+    'preEquilibriumParameters',
     'hydroControl',
     'hydroParameters',
     'iSSControl',
