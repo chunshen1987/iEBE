@@ -701,7 +701,7 @@ def collectEbeResultsToDatabaseFrom(folder):
         executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     
     elif simulationType == 'hydroEM_preEquilibrium':
-        collectorExecutable = EbeCollectorControl['executable_hydroEM']
+        collectorExecutable = EbeCollectorControl['executable_hydroEM_with_decaycocktail']
         executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     
     # execute
