@@ -81,5 +81,3 @@ if __name__ == '__main__':
         print(e(expr))
     except:
         print("Usage: uhg.py database_filename 'symbols to be evaluated'")
-else:
-    h()
