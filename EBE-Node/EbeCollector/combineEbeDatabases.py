@@ -28,6 +28,8 @@ for aSubfolder in listdir(parentFolder):
             print("Merging %s from %s..." % (aFile, aSubfolder))
             if path.splitext(aFile)[0] == "particles":
                 collector.mergeparticleDatabases(SqliteDB(path.join(parentFolder, aFile)), SqliteDB(path.join(subfolder, aFile))) # merge a database to a database in parent folder with the same name.
+            elif path.splitext(aFile)[0] == "minbiasEcc":
+                collector.mergeMinbiasDatabases(SqliteDB(path.join(parentFolder, aFile)), SqliteDB(path.join(subfolder, aFile))) # merge a database to a database in parent folder with the same name.
             else:
                 collector.mergeDatabases(SqliteDB(path.join(parentFolder, aFile)), SqliteDB(path.join(subfolder, aFile))) # merge a database to a database in parent folder with the same name.
 

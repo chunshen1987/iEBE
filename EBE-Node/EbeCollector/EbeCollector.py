@@ -981,6 +981,29 @@ class EbeCollector(object):
                     return newRow
                 toDB.insertIntoTable(aTable, list(map(shiftEID, fromDB.selectFromTable(aTable))))
         toDB.closeConnection() # commit
+    
+    def mergeMinbiasDatabases(self, toDB, fromDB):
+        """
+            Merge the particle database "fromDB" to "toDB"; both are assumed to be
+            databases created from minbias run in superMC, which contains exact
+            tables as in minbiasEcc.db.
+        """
+        for aTable in fromDB.getAllTableNames():
+            # first copy table structure
+            firstCreation = toDB.createTableIfNotExists(aTable, fromDB.getTableInfo(aTable))
+            if firstCreation:
+                # just copy
+                toDB.insertIntoTable(aTable, fromDB.selectFromTable(aTable))
+            else: # treatment depends on table type
+                if "ecc_id_lookup" in aTable: continue # if it's an id info table, nothing to be done
+                # not an id info table: shift up event_id by the current existing max
+                currentEventIdMax = toDB.selectFromTable(aTable, "max(event_id)")[0][0]
+                def shiftEID(row):
+                    newRow = list(row)
+                    newRow[0] += currentEventIdMax
+                    return newRow
+                toDB.insertIntoTable(aTable, list(map(shiftEID, fromDB.selectFromTable(aTable))))
+        toDB.closeConnection() # commit
 
 
 
