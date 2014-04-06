@@ -1,5 +1,5 @@
 ! Modified according to InputFun-1.26test3 (1.27RC), call with Vx and Vy in regulatePi
-! Multiple regualtions
+! Multiple regulations
 
 C*****************************************************************************
 C                                                                            *
@@ -66,7 +66,7 @@ C===============================================================================
        Integer NXPhy0, NYPhy0
        Integer NXPhy, NYPhy
        Integer NX, NY, NZ
-       Integer NX0,NY0, NZ0         ! dimesion
+       Integer NX0,NY0, NZ0         ! dimension
 
 CSHEN===========================================================================
        Logical :: IOSCAR=.false.            ! trigger for output OSCAR format hydro results, False: not output, True: output
@@ -111,7 +111,6 @@ CSHEN===EOS from tables end====================================================
        Common /ViscousC / ViscousC,VisBeta, IVisflag ! Related to Shear Viscosity
        Common /ViscousBulk/ Visbulk, BulkTau,IRelaxBulk  ! Related to bulk Visousity
 
-       Common /ITeta/ ITeta
        Common /bb/ b  !impact parameter
        Common/dxdy/ ddx, ddy
        Common /TT0/ TT0   !T0
@@ -2427,18 +2426,14 @@ C#####################################################
 
        Integer :: IVisflag
 
-       Common /ViscousC / ViscousC,VisBeta, IVisflag ! Related to Visous Coeficient eta and beta2
-       Common /ViscousBulk/ Visbulk, BulkTau,IRelaxBulk  ! Related to bulk Visous Coeficient Xi and beta0
+       Common /ViscousC / ViscousC,VisBeta, IVisflag ! Related to Viscous Coefficient eta and beta2
+       Common /ViscousBulk/ Visbulk, BulkTau,IRelaxBulk  ! Related to bulk Viscous Coefficient Xi and beta0
 
-       Common /ITeta/ ITeta
-       Common /Tde/ Tde, Rdec1, Rdec2,TempIni !Decoupling Temperature !decoupling redious
+       Common /Tde/ Tde, Rdec1, Rdec2,TempIni !Decoupling Temperature !decoupling radius
        Common/R0Aeps/ R0,Aeps
        Common/R0Bdry/ R0Bdry
-       Parameter (HbarC=0.19733d0) !for changcing between fm and GeV ! Hbarc=0.19733=GeV*fm
+       Parameter (HbarC=0.19733d0) !for changing between fm and GeV ! Hbarc=0.19733=GeV*fm
 
-
-      ITeta=1
-      If(ITeta.eq.1) then
       do 10 k=1,1
       do 10 j=NYPhy0-2,NYPhy+2 ! -2,NYPhy+2
       do 10 i=NXPhy0-2,NXPhy+2
@@ -2449,7 +2444,7 @@ C#####################################################
 CSHEN==========================================================================
 C=======for temperature dependent \eta/s=======================================
       if(IVisflag.eq.1) then
-        ViscousC = ViscousCTemp(Temp(i,j,k))      !CSHEN: for temperatrure dependent \eta/s
+        ViscousC = ViscousCTemp(Temp(i,j,k))      !CSHEN: for temperature dependent \eta/s
       endif
 CSHEN======end=================================================================
 !------------- for shear pressure -----------
@@ -2480,53 +2475,43 @@ CSHEN======end=================================================================
       end if
 
 !------------ for bulk pressure------------
-              ttemp= Temp(i,j,k)*HbarC ! input function as Temp
-              e3pep=(Ed(i,j,k)-3.0*PL(i,j,k))/(Ed(i,j,k)+PL(i,j,k))
+      ttemp= Temp(i,j,k)*HbarC ! input function as Temp
+      e3pep=(Ed(i,j,k)-3.0*PL(i,j,k))/(Ed(i,j,k)+PL(i,j,k))
 
-           If (VisBulk.ge.0.00001) then
-
-                eta=0.08*Sd(i,j,k)
-
-                VBulk(i,j,k)=VisBulk*BulkAdSH0(eta,ttemp)
-
-               If (IRelaxBulk.eq.0) then
-                TTpi=DMax1(0.1d0,
-     &                      120* VBulk(i,j,k)/DMax1(Sd(i,j,k),0.1d0))
-                VRelaxT0(i,j,k)=1.0/TTpi
-               else if (IRelaxBulk.eq.1) then
-                VRelaxT0(i,j,k)=1.0/BulkTau
-               else if (IRelaxBulk.eq.2) then
-                VRelaxT0(i,j,k)=2*3.1415926*Temp(i,j,k)/1.5
-               else
-                Print*,'This option is not supported by this version'
-                Print*,'IRelaxBulk'
-                Stop
-              end if
-
-              VCBeta0(i,j,k)=VisBulkBeta*6.0/(Sd(i,j,k)*Temp(i,j,k))
-              XiTtP(i,j,k)=(VBulk(i,j,k)*Temp(i,j,k))*VRelaxT0(i,j,k)  !(Xi T/tau_Pi)  for extra term in full I-S
-
-              VBulk(i,j,k)=VBulk(i,j,k)*ff
-              VRelaxT0(i,j,k)=VRelaxT0(i,j,k)*ff
-           else
-              VBulk(i,j,k)=0.0
-              VCBeta0(i,j,k)=0.0
-              VRelaxT0(i,j,k)=0.0
-              XiTtP(i,j,k)=0.0
-           end if
-
-10        continue
+      If (VisBulk.ge.0.00001) then
+        !eta=ViscousC*Sd(i,j,k)
+        !VBulk(i,j,k)=VisBulk*BulkAdSH0(eta,ttemp)
+        VBulk(i,j,k) = ViscousZetasTemp(Ed(i,j,k)*HbarC)*Sd(i,j,k)
+        If (IRelaxBulk.eq.0) then
+          TTpi=DMax1(0.1d0, 120* VBulk(i,j,k)/DMax1(Sd(i,j,k),0.1d0))
+          VRelaxT0(i,j,k)=1.0/TTpi
+        else if (IRelaxBulk.eq.1) then
+          VRelaxT0(i,j,k)=1.0/BulkTau
+        else if (IRelaxBulk.eq.2) then
+          VRelaxT0(i,j,k)=2*3.1415926*Temp(i,j,k)/1.5
+        else if (IRelaxBulk .eq. 3) then
+          VRelaxT0(i,j,k) = 9.0*VBulk(i,j,k)/(Ed(i,j,k) - 3.*PL(i,j,k))
+        else
+          Print*,'This option is not supported by this version'
+          Print*,'IRelaxBulk'
+          Stop
         end if
+        VCBeta0(i,j,k)=VisBulkBeta*6.0/(Sd(i,j,k)*Temp(i,j,k))
+        XiTtP(i,j,k)=(VBulk(i,j,k)*Temp(i,j,k))*VRelaxT0(i,j,k)  !(Xi T/tau_Pi)  for extra term in full I-S
 
+        VBulk(i,j,k)=VBulk(i,j,k)*ff
+        VRelaxT0(i,j,k)=VRelaxT0(i,j,k)*ff
+      else
+        VBulk(i,j,k)=0.0
+        VCBeta0(i,j,k)=0.0
+        VRelaxT0(i,j,k)=0.0
+        XiTtP(i,j,k)=0.0
+      end if
 
+10    continue
 
-        If (ITeta.ne.1.and.ITeta.ne.2) then
-          print*,'alart  viscousCoefi, reset ITeta, ITeta ',ITeta
-        end if
-
-
-       Return
-       End
+      Return
+      End
 
 CSHEN======================================================================
 C====eta/s dependent on local temperature==================================
@@ -2541,6 +2526,22 @@ C====eta/s dependent on local temperature==================================
       Common /ViscousC / ViscousC,VisBeta, IVisflag ! Related to Shear Viscosity
 
       ViscousCTemp = ViscousC
+      return
+      end
+
+C====zeta/s dependent on local temperature==================================
+      double precision function ViscousZetasTemp(Ed)
+      ! Ed input should be in unit of GeV/fm^3
+      Implicit double precision (A-H, O-Z)
+      Parameter (pi=3.1415926d0)
+
+      de = 0.01d0
+      p1 = PEOSL7(Ed - de/2.)
+      p2 = PEOSL7(Ed + de/2.)
+      cs2 = (p2 - p1)/de   !cs^2 = dP/de
+
+      ViscousZetasTemp = 1./(8*pi)*(1./3. - cs2)
+
       return
       end
 
