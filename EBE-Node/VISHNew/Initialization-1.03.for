@@ -359,7 +359,6 @@ C====Input the initial condition from file====
           Else If (IEin==1 .AND. IEOS==7) Then
             If(InitialURead .eq. 0) then
               OPEN(2,file='Initial/InitialSd.dat',status='old') ! read from file first
-              read(2,*) !skip the first line
             else 
               OPEN(2,file='Initial/sd_profile_kln.dat',status='old') ! read from file first  
             Endif
