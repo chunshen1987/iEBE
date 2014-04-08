@@ -32,6 +32,7 @@ class EbeCollector(object):
         self.pidDict = { # particle_name, pid
             "total"             :   0,
             "charged"           :   1,
+            "charged_eta"       :   2,
             "pion"              :   6, # sum(7, 8, -7)
             "pion_p"            :   7,
             "pion_0"            :   8,
@@ -398,6 +399,7 @@ class EbeCollector(object):
         # collection of file name patterns, pid, and particle name. The file format is determined from the "filename_format.dat" file
         toCollect = {
             "Charged"       :   "charged_hydro", # string in filename, particle name
+            "Charged_eta"   :   "charged_eta_hydro", # string in filename, particle name
             "pion_p"        :   "pion_p_hydro",
             "Kaon_p"        :   "kaon_p_hydro",
             "proton"        :   "proton_hydro",
