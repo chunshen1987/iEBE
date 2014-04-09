@@ -32,7 +32,7 @@ C   Main Features includes:
 C   --- Use "full" I-S equations [3].
 C   --- Includes shear[1-2] and bulk viscosity[4].
 C   --- Use Optical Glauber Initialization.
-C   --- Has several availible EOS's: EOS I, SM-EOS Q, and EOS L [5].
+C   --- Has several available EOS's: EOS I, SM-EOS Q, and EOS L [5].
 C   --- Choose to freeze-out by constant energy density/temperature
 C
 C   For details, please refer to Song's Ph.D thesis[5] Chap.3 as well as Ref[1-4].
@@ -235,8 +235,7 @@ C===========================================================================
       Print *, "Now read parameters specified from CML"
 
       Call readInputFromCML2() ! check CML to see if there are any modifications on parameters
-
-            Write (*,*) "Have:", "IEOS=", IEOS, "A=", A, ! write out parameter for a check
+      Write (*,*) "Have:", "IEOS=", IEOS, "A=", A, ! write out parameter for a check
      &    "IInit=", IInit, "dT=", dT_1,
      &    "eta/s=",ViscousC,"b=",b,"Rx2=",Rx2,"Ry2=",Ry2,
      &    "EK=", EK, "tau0=", T0, "EDec=", EDec, ! energy unit: GeV/fm^3
@@ -265,7 +264,7 @@ CSHEN===END================================================================
 
       CALL UNLINK ('results/surface.dat')
       CALL UNLINK ('results/decdat2.dat')
-      CALL UNLINK ('results/decdat_mu.dat')   !CSHEN chemical potential for EOS6
+      CALL UNLINK ('results/decdat_mu.dat')   !CSHEN chemical potential for PCE
 
       OPEN(98,FILE='results/surface.dat',FORM='FORMATTED',
      &        STATUS='REPLACE')
@@ -292,7 +291,6 @@ C======output the chemical potential information at freeze out surface.====
       if (outputMovie) then 
          open(3773,FILE='movie/Evolution.dat',STATUS='REPLACE')
       endif
-      !Close(3773)
       !Open(3774,FILE='movie/U1.dat',STATUS='REPLACE')
       !Close(3774)
       !Open(3775,FILE='movie/Vy.dat',STATUS='REPLACE')
@@ -314,7 +312,6 @@ C======output the chemical potential information at freeze out surface.====
 CSHEN======================================================================
 
       open(92,File='results/anisotropy.dat',status='REPLACE')
-
 
       call InputEOSParameter !  EOS related parameter
 
@@ -467,8 +464,8 @@ C###############################################################################
 
 CSHEN==========================================================================
 C======output relaxation time for both shear and bulk viscosity================
-      Dimension VRelaxT(NX0:NX, NY0:NY, NZ0:NZ) !viscous coeficient relaxation time
-      Dimension VRelaxT0(NX0:NX, NY0:NY, NZ0:NZ) !viscous coeficient relaxation time
+      Dimension VRelaxT(NX0:NX, NY0:NY, NZ0:NZ) !viscous coefficient relaxation time
+      Dimension VRelaxT0(NX0:NX, NY0:NY, NZ0:NZ) !viscous coefficient relaxation time
 CSHEN==========================================================================
 
 
@@ -506,7 +503,7 @@ C-------------------------------------------------------------------------------
       parameter(NNEW=4)
       DIMENSION PNEW(NNEW)    !related to root finding
       COMMON /EOSSEL/ IEOS   !Type of EOS
-      Common /Tde/ Tde, Rdec1, Rdec2,TempIni !Decoupling Temperature !decoupling redious
+      Common /Tde/ Tde, Rdec1, Rdec2,TempIni !Decoupling Temperature !decoupling radius
       common/Edec/Edec
       common/Prefreezeout/Edec0, Ifreez
       common/Edec1/Edec1
@@ -521,7 +518,7 @@ C-------------------------------------------------------------------------------
 
       Common /Timestep/ DT_1, DT_2
 
-      COMMON /IEin/ IEin     !  type of initialization  entropy/enrgy
+      COMMON /IEin/ IEin     !  type of initialization  entropy/energy
 ! ---Zhi-Changes---
       Common /RxyBlock/ Rx2, Ry2
       Common /EK/ EK, HWN
@@ -530,11 +527,11 @@ C-------------------------------------------------------------------------------
 
       Integer NN ! For initial anisotropy calcualtion
       Double Precision XX, YY, TotalE, XC, YC, angle, RR
-      Double Precision XN(0:9), YN(0:9), Weight ! For initial anisotropy calcualtion
+      Double Precision XN(0:9), YN(0:9), Weight ! For initial anisotropy calculation
       Double Precision XNP(0:9), YNP(0:9), WeightP ! XN' and YN', the one using r^n in the weight
 
       Common /ViscousC / ViscousC,VisBeta, IVisflag ! Related to Shear Viscosity
-      Common /ViscousBulk/ Visbulk, BulkTau,IRelaxBulk  ! Related to bulk Visousity
+      Common /ViscousBulk/ Visbulk, BulkTau,IRelaxBulk  ! Related to bulk Viscosity
       Common /sFactor/ sFactor
 
       Double Precision SEOSL7, PEOSL7, TEOSL7, SEOSL6
@@ -568,7 +565,7 @@ CSHEN===EOS from tables========================================================
       Integer :: EOSne                 !total rows of energy density
 
       Integer, Parameter :: RegEOSMudatasize = EOSMUDATALENGTH   !converted EOS Mu table data size
-      Integer, Parameter :: IMax_Mu = EOSMUMAXPARTICLE        !maximum allowed stable particles for partically chemical equilibrium EOS
+      Integer, Parameter :: IMax_Mu = EOSMUMAXPARTICLE        !maximum allowed stable particles for partially chemical equilibrium EOS
       Integer :: Inumparticle       !number of stable particles in PCE, 0 for chemical equilibrium EOS
       Integer :: EOS_Mu_ne            !total rows in mu table
       double precision :: EOS_Mu_e0   !lowest energy density in mu table
@@ -664,7 +661,8 @@ CSHEN===EOS from tables end====================================================
         Write (111,*)
       End Do
       Close(111)
-     
+    
+      ! output fluid cells outside the freeze out surface at initial time
       if(Ifreez .ne. 0) then
       DA0=(dx*NDX)*(dy*NDY)
       DA1=0.0
@@ -843,11 +841,7 @@ CSHEN=====================================================================
       Print *, "-----------------------------------------------------"
 
 !-----------------------------------------------------------------------
-
-
       ! Then repeat above eccentricity calculation for entropy-defined eccentricities
-
-
       ! first center
       XC = 0D0
       YC = 0D0
@@ -943,7 +937,7 @@ CSHEN=====================================================================
 
 !-----------------------------------------------------------------------
 
-      ! Finally, calcualte the "overlap" area
+      ! Finally, calculate the "overlap" area
       XC = 0D0
       YC = 0D0
       TotalE = 0D0
@@ -987,7 +981,6 @@ CSHEN=====================================================================
       Write (383, '(E20.12)') CONSTPI*sqrt(XN(2)*YN(2))
       Close (383)
 
-
 !----------- Initial profile related output finishes here --------------
 !=======================================================================
 !=======================================================================
@@ -1009,7 +1002,7 @@ CSHEN====END====================================================================
 
 !   ---Zhi-Changes---
         Call determineR0(NX0,NY0,NZ0,NX,NY,NZ,Ed,PL,Sd,
-     &  Pi00,Pi01,Pi02,Pi11,Pi12,Pi22,Pi33)  !fermi-direc function to regulate boundary (by determine a suitable R0)
+     &  Pi00,Pi01,Pi02,Pi11,Pi12,Pi22,Pi33)  !fermi-dirac function to regulate boundary (by determine a suitable R0)
 
         DO 3006 K = NZ0,NZ !Store last step U0 U1 U2
         DO 3006 J = NY0,NY
@@ -1376,8 +1369,6 @@ C=========fill up rest redundant step for the output file=======================
 
 CSHEN===End=====================================================================
 
-
-
       Return
       End
 
@@ -1455,7 +1446,7 @@ c      IF (MOD(N+1,NDT).EQ.0) THEN   !** N+1 ***********************************
 CSHEN======================================================================
 C=============add chemical potential for EOS-PCE
       Integer, Parameter :: RegEOSMudatasize = EOSMUDATALENGTH   !converted EOS Mu table data size
-      Integer, Parameter :: IMax_Mu = EOSMUMAXPARTICLE        !maximum allowed stable particles for partically chemical equilibrium EOS
+      Integer, Parameter :: IMax_Mu = EOSMUMAXPARTICLE        !maximum allowed stable particles for partially chemical equilibrium EOS
       Integer :: Inumparticle       !number of stable particles in PCE, 0 for chemical equilibrium EOS
       Integer :: EOS_Mu_ne            !total rows in mu table
       double precision :: EOS_Mu_e0   !lowest energy density in mu table
@@ -3176,11 +3167,15 @@ C####################################################################
        Function Thickness(xx,yy)
 C----------Nuclear Thickness Function------------
        Implicit Double Precision (A-H, O-Z)
+       integer iz, iz_min, iz_max
        Common /thick/ TRo0, TEta, TRA  !Para in Nuclear Thickness Function
 
-           Thickness=0.0
-           ddz=TRA/100.0
-       do 10 zz=(-5.0)*TRA,(5.0)*TRA,ddz
+       Thickness=0.0
+       ddz=TRA/100.0
+       iz_min = -5.0*TRA/ddz
+       iz_max = 5.0*TRA/ddz
+       do 10 iz = iz_min, iz_max, 1
+            zz = iz*ddz
             r=sqrt(xx**2+yy**2+zz**2)
             RoAr=TRo0/(Exp((r-TRA)/TEta)+1.0)
             Thickness=Thickness+RoAr*ddz
@@ -3188,24 +3183,24 @@ C----------Nuclear Thickness Function------------
 
        Return
        End
-C#################################################################
-       Subroutine CheckThickness
-C----------Check Thickness Func.
-       Implicit Double Precision (A-H, O-Z)
-       Common /thick/ TRo0, TEta, TRA  !Para in Nuclear Thickness Function
-           ARo=0.0
-           dx=TRA/10.0
-           dy=TRA/10.0
-            i=0
-         do 10 x=(-5.0)*TRA,(5.0)*TRA,dx
-            i=i+1
-           If(mod(i,10).eq.0)  Print*,x, 'check Thickness'
-          do 10 y=(-5.0)*TRA,(5.0)*TRA,dy
-              ARo=ARo+Thickness(x,y)*dx*dy
- 10      continue
-
-       Return
-       End
+!C#################################################################
+!       Subroutine CheckThickness
+!C----------Check Thickness Func.
+!       Implicit Double Precision (A-H, O-Z)
+!       Common /thick/ TRo0, TEta, TRA  !Para in Nuclear Thickness Function
+!         ARo=0.0
+!         dx=TRA/10.0
+!         dy=TRA/10.0
+!         i=0
+!         do 10 x=(-5.0)*TRA,(5.0)*TRA,dx
+!            i=i+1
+!           If(mod(i,10).eq.0)  Print*,x, 'check Thickness'
+!          do 10 y=(-5.0)*TRA,(5.0)*TRA,dy
+!              ARo=ARo+Thickness(x,y)*dx*dy
+! 10      continue
+!
+!       Return
+!       End
 
 
 
@@ -3254,12 +3249,32 @@ C###################################################################
 C~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 C###################################################################
+      SUBROUTINE FYSCOR_withBulkvis(T00,T01,T02,BulkPi)
+*************************************************************
+** THIS ROUTINE ASSERTS THAT THE VELOCITY OF THE ENERGY     *
+** FLOW CAN'T EXCEED 1 AND THAT ENERGY DENSITY IS POSITIVE  *
+** OR ZERO.                                                 *
+*************************************************************
+      Implicit Double Precision (A-H, O-Z)
+      temp = T00*(T00 + BulkPi)
+      W = T01*T01+T02*T02
+      IF (W .GT. temp) THEN ! regulate the violation
+        C=0.999*temp/W
+        T01=C*T01
+        T02=C*T02
+      END IF
+
+      RETURN
+      END
+
+C###################################################################
       Subroutine dpSc8(TT00,TT01,TT02,ScT00,ScT01,ScT02,Vx,Vy,
      &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22, PScT00,PScT01,PScT02,PScT33,
      &  PScT11,PScT12,PScT22,etaTtp0,etaTtp,  PPI,PISc, XiTtP0,XiTtP,
      &  U0,U1,U2, PU0,PU1,PU2,SxyT,Stotal,StotalBv,StotalSv,
      &  Ed,PL,Bd,Sd,Temp0,Temp,CMu, T00,T01,T02, IAA,CofAA,Time,DX,DY,
-     &  DZ,DT,NXPhy0,NYPhy0,NXPhy,NYPhy,NX0,NX,NY0,NY,NZ0,NZ, PNEW,NNEW)  !PNEW NNEW related to root finding
+     &  DZ,DT,NXPhy0,NYPhy0,NXPhy,NYPhy,NX0,NX,NY0,NY,NZ0,NZ, PNEW,NNEW)
+      !PNEW NNEW related to root finding
 
         Implicit Double Precision (A-H, O-Z)
         Dimension TT00(NX0:NX, NY0:NY, NZ0:NZ)
@@ -3320,15 +3335,15 @@ C-------------------------------------------
         Dimension Temp(NX0:NX, NY0:NY, NZ0:NZ) !Local Temperature
         Dimension CMu(NX0:NX, NY0:NY, NZ0:NZ) !Local chemical potential
 
-        Dimension VCoefi(NX0:NX, NY0:NY, NZ0:NZ) !viscous coeficient
-        Dimension VCBeta(NX0:NX, NY0:NY, NZ0:NZ) !viscous coeficient  Beta 2
-        Dimension VRelaxT(NX0:NX, NY0:NY, NZ0:NZ) !viscous coeficient relaxation Time
-        Dimension SiLoc(NX0:NX, NY0:NY, NZ0:NZ) ! Local expansion rate \sita
+        Dimension VCoefi(NX0:NX, NY0:NY, NZ0:NZ) !viscous coefficient
+        Dimension VCBeta(NX0:NX, NY0:NY, NZ0:NZ) !viscous coefficient  Beta 2
+        Dimension VRelaxT(NX0:NX, NY0:NY, NZ0:NZ) !viscous coefficient relaxation Time
+        Dimension SiLoc(NX0:NX, NY0:NY, NZ0:NZ) ! Local expansion rate \theta
         Dimension DLnT(NX0:NX, NY0:NY, NZ0:NZ) ! DlnT(x,y) terms  !added 02/2008
 
-       Dimension VBulk(NX0:NX, NY0:NY, NZ0:NZ) !viscous coeficient-bulk vicosity \xi
-       Dimension VCBeta0(NX0:NX, NY0:NY, NZ0:NZ) !viscous coeficient Beta0
-       Dimension VRelaxT0(NX0:NX, NY0:NY, NZ0:NZ) !viscous coeficient relaxation time \tau_PI
+       Dimension VBulk(NX0:NX, NY0:NY, NZ0:NZ) !viscous coefficient-bulk viscosity \xi
+       Dimension VCBeta0(NX0:NX, NY0:NY, NZ0:NZ) !viscous coefficient Beta0
+       Dimension VRelaxT0(NX0:NX, NY0:NY, NZ0:NZ) !viscous coefficient relaxation time \tau_PI
 
         Dimension etaTtp(NX0:NX, NY0:NY, NZ0:NZ)  !extra (eta T)/tau_pi terms in I-S eqn 02/2008
         Dimension etaTtp0(NX0:NX, NY0:NY, NZ0:NZ)  !extra (eta T)/tau_pi terms in I-S eqn 02/2008
@@ -3361,7 +3376,7 @@ C-------------------------------------------
        Common /ViscousBulk/ Visbulk, BulkTau,IRelaxBulk
 
         DIMENSION PNEW(NNEW)!something related to root finding
-       Parameter(XC0=1.0d-15, AAC=1.0d-16) !root finding acurcy
+       Parameter(XC0=1.0d-15, AAC=1.0d-16) !root finding accuracy
 
         LOGICAL V1FOUND,V2FOUND,V3FOUND,V4FOUND
         COMMON /EOSSEL/ IEOS
@@ -3372,7 +3387,7 @@ C-------------------------------------------
        Common/dxdy/ ddx, ddy
        Common /TT0/ TT0
 
-       Parameter (HbarC=0.19733d0) !for changcing between fm and GeV ! Hbarc=0.19733=GeV*fm
+       Parameter (HbarC=0.19733d0) !for changing between fm and GeV ! Hbarc=0.19733=GeV*fm
 
        Common /Nsm/ Nsm
        Common /Accu/Accu
@@ -3390,7 +3405,7 @@ C-------------------------------------------
         end if
 
 
-      PNEW(1)=XC0   !dimemsion related to newton rootfinding
+      PNEW(1)=XC0   !dimension related to newton root finding
       PNEW(2)=33335.5
       PNEW(3)=0.3
       PNEW(4)=0.3
@@ -3419,27 +3434,27 @@ C-------------------------------------------
         T01M=TT01(I,J,K)/Time-Pi01(I,J,K)   ! ---Zhi-Changes---
         T02M=TT02(I,J,K)/Time-Pi02(I,J,K)   ! ---Zhi-Changes---
         PLM=PL(I,J,K)
+        BulkPi = PPI(I,J,K)
 
 
-      CALL FYSCOR(T00M,T01M,T02M,CC)  !T00=AMIN1(T00,0.0)and  other treatment ???????
-*                                         *** ABORT SMALL NUMBERS TO AVOID UNDERFLOW **
-      T00(I,J,K)=T00M
+        !CALL FYSCOR(T00M,T01M,T02M,CC)  !T00=AMIN1(T00,0.0)and  other treatment ???????
+        !*** ABORT SMALL NUMBERS TO AVOID UNDERFLOW **
+        call FYSCOR_withBulkvis(T00M, T01M, T02M, BulkPi)
 
-          IF ( ABS(T01M).GT.AAC) THEN
-            T01(I,J,K)=T01M
-          ELSE
-            T01(I,J,K)=0.0
-            Pi01(I,J,k)=0.0   !song viscous
-            Pi01(I,J,K)=0.0
-          END IF
+        T00(I,J,K)=T00M
 
-          IF (ABS(T02M).GT.AAC) THEN
-            T02(I,J,K)=T02M
-          ELSE
-            T02(I,J,K)=0.0
-            Pi02(i,j,k)=0.0 !song viscous
-            Pi02(I,J,K)=0.0
-          END IF
+        IF ( ABS(T01M).GT.AAC) THEN
+          T01(I,J,K)=T01M
+        ELSE
+          T01(I,J,K)=0.0
+          Pi01(I,J,k)=0.0   !song viscous
+        END IF
+        IF (ABS(T02M).GT.AAC) THEN
+          T02(I,J,K)=T02M
+        ELSE
+          T02(I,J,K)=0.0
+          Pi02(I,J,K)=0.0
+        END IF
  100  CONTINUE
 
 C---------------------------------------------------------------
@@ -4582,7 +4597,7 @@ C----------------------------------------------------------------
 
 !======================================================================
       Double Precision Function findEdHook(ee)
-      ! Root finding by interating quadratic equation formula for the equation
+      ! Root finding by iterating quadratic equation formula for the equation
       ! (M0+cs^2*e+Pi)(M0-e)=M^2
 
       Implicit None
@@ -4601,11 +4616,11 @@ C----------------------------------------------------------------
       Double Precision :: RSDM0, RSDM, RSPPI
       Common /findEdHookData/ RSDM0, RSDM, RSPPI ! M0, M, Pi (see 0510014)
 
-      Double Precision cs2 ! energy denstiy from previous interation, p/e, presure
+      Double Precision cs2 ! energy density from previous iteration, p/e, pressure
       ! Note that cs2 is not dp/de, but rather p/e!!!
 
       Double Precision, Parameter :: zero=1e-30 ! a small number
-      Double Precision, Parameter :: HbarC=0.19733d0 !for changcing between fm and GeV ! Hbarc=0.19733=GeV*fm
+      Double Precision, Parameter :: HbarC=0.19733d0 !for changing between fm and GeV ! Hbarc=0.19733=GeV*fm
 
       Double Precision A,B ! intermedia step variables
 
