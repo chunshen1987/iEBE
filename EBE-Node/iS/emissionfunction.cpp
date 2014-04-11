@@ -138,6 +138,9 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
 
   FO_surf* surf = &FOsurf_ptr[0];
 
+  double *bulkvisCoefficients = new double [3];
+  getbulkvisCoefficients(particle_idx, bulkvisCoefficients);
+
   // for intermedia results
   double dN_ptdptdphidy_tab[pT_tab_length][phi_tab_length];
   double dE_ptdptdphidy_tab[pT_tab_length][phi_tab_length];
@@ -221,6 +224,7 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
               double pi12 = surf->pi12;
               double pi22 = surf->pi22;
               double pi33 = surf->pi33;
+              double bulkPi = surf->bulkPi;
 
               double v2 = vx*vx + vy*vy;
               double gammaT = 1.0/sqrt(1.0 - v2);
@@ -247,7 +251,8 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
                   double pt = mT*hypertrig_etas_table[k][0];
                   double pz = mT*hypertrig_etas_table[k][1];
 
-                  double expon = (gammaT*(pt*1 - px*vx - py*vy) - mu) / Tdec;
+                  double pdotu = gammaT*(pt*1 - px*vx - py*vy);
+                  double expon = (pdotu - mu) / Tdec;
                   double f0 = 1./(exp(expon)+sign);       //thermal equilibrium distributions
 
                   // Must adjust this to be correct for the p*del \tau term.  The plus sign is
@@ -257,14 +262,15 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
                   //viscous corrections
                   double Wfactor = pt*pt*pi00 - 2.0*pt*px*pi01 - 2.0*pt*py*pi02 + px*px*pi11 + 2.0*px*py*pi12 + py*py*pi22 + pz*pz*pi33;
                   double deltaf = (1 - F0_IS_NOT_SMALL*sign*f0)*Wfactor*deltaf_prefactor;
+                  double bulk_deltaf = (1. - F0_IS_NOT_SMALL*sign*f0)*bulkPi*(bulkvisCoefficients[0] + bulkvisCoefficients[1]*pdotu + bulkvisCoefficients[2]*pdotu*pdotu);
                   double result;
                   if(1+deltaf < 0.0) //set results to zero when delta f turns whole expression to negative
                      result = 0.0;
                   else
-                     result = prefactor*degen*f0*(1+deltaf)*pdsigma*tau;
+                     result = prefactor*degen*f0*(1. + deltaf + bulk_deltaf)*pdsigma*tau;
 
                   dN_ptdptdphidy_tmp += result*delta_eta;
-                  if(CALCULATEDED3P) dE_ptdptdphidy_tmp += result*delta_eta*pt;
+                  if(CALCULATEDED3P) dE_ptdptdphidy_tmp += result*delta_eta*mT;
               } // k
           } // l
 
@@ -761,4 +767,12 @@ bool EmissionFunctionArray::particles_are_the_same(int idx1, int idx2)
     }
 
     return true;
+}
+
+void EmissionFunctionArray::getbulkvisCoefficients(int particle_idx, double* bulkvisCoefficients)
+{
+   bulkvisCoefficients[0] = -65.85/hbarC;  // B0 [fm^3/GeV]
+   bulkvisCoefficients[1] = 171.27/hbarC;  // D0 [fm^3/GeV^2]
+   bulkvisCoefficients[2] = -63.05/hbarC;  // E0 [fm^3/GeV^3]
+   return;
 }

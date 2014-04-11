@@ -46,6 +46,7 @@ void read_decdat(string path, int length, FO_surf* surf_ptr)
      decdat >> surf_ptr[i].pi11;
      decdat >> surf_ptr[i].pi12;
      decdat >> surf_ptr[i].pi22;
+     decdat >> surf_ptr[i].bulkPi;
   }
   decdat.close();
   cout<<"done"<<endl;
