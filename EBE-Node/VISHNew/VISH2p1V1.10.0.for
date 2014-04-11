@@ -1049,6 +1049,7 @@ CSHEN====END====================================================================
         else
           PPI = 0D0
         endif
+        
 
       call dpSc8(TT00,TT01,TT02,ScT00,ScT01,ScT02,Vx,Vy,
      &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22, PScT00,PScT01,PScT02,PScT33,
@@ -3224,10 +3225,39 @@ C###################################################################
       RETURN
       END
 
+C###################################################################
+      SUBROUTINE FYSCOR_velocity(T00,T01,T02,Ed,PL,BulkPi)
+*************************************************************
+** THIS ROUTINE ASSERTS THAT THE VELOCITY OF THE ENERGY     *
+** FLOW CAN'T EXCEED 1 AND THAT ENERGY DENSITY IS POSITIVE  *
+** OR ZERO.                                                 *
+*************************************************************
+      Implicit none
+      double precision T00, T01, T02, Ed, PL, BulkPi
+      double precision cstilde2
+      double precision M0, M
+      double precision scaleFactor
+      double precision temp1
+
+      cstilde2 = PL/Ed
+      T00 = dMax1(0.0d0, T00)
+      M0 = T00
+      M = sqrt(T01**2 + T02**2)
+      if (M0 .lt. M) then
+        scaleFactor = 0.999*M0/M
+        T01 = scaleFactor*T01
+        T02 = scaleFactor*T02
+      endif
+      temp1 = 2.*sqrt(cstilde2)*M - M0*(1.+cstilde2)
+      if (BulkPi .lt. temp1) then
+        BulkPi = temp1 + 1D-3*abs(temp1)
+      endif
+      
+      RETURN
+      END
 
 C###################################################################
       SUBROUTINE FYSCOR2(T00,T01,T02,PL,C)
-
 *************************************************************
 ** THIS ROUTINE ASSERTS THAT THE VELOCITY OF THE ENERGY     *
 ** FLOW CAN'T EXCEED 1 AND THAT ENERGY DENSITY IS POSITIVE  *
@@ -3256,10 +3286,12 @@ C###################################################################
 ** OR ZERO.                                                 *
 *************************************************************
       Implicit Double Precision (A-H, O-Z)
-      temp = T00*(T00 + BulkPi)
-      W = T01*T01+T02*T02
-      IF (W .GT. temp) THEN ! regulate the violation
-        C=0.999*temp/W
+      temp = dmax1(0.0d0, T00)
+      temp = temp*(temp + BulkPi)
+      temp = dmax1(0.0d0, temp)
+      W = sqrt(T01*T01+T02*T02)
+      IF (W .GT. sqrt(temp)) THEN ! regulate the violation
+        C=0.999*sqrt(temp)/W
         T01=C*T01
         T02=C*T02
       END IF
@@ -3394,7 +3426,7 @@ C-------------------------------------------
        common/Edec1/Edec1
 
       ! ----- Use in root search -----
-      Double Precision :: RSDM0, RSDM, RSPPI
+      Double Precision :: RSDM0, RSDM, RSPPI, RSee
       Common /findEdHookData/ RSDM0, RSDM, RSPPI ! M0, M, Pi (see 0510014)
 
          Nsm=5
@@ -3434,27 +3466,38 @@ C-------------------------------------------
         T01M=TT01(I,J,K)/Time-Pi01(I,J,K)   ! ---Zhi-Changes---
         T02M=TT02(I,J,K)/Time-Pi02(I,J,K)   ! ---Zhi-Changes---
         PLM=PL(I,J,K)
+        EdM = Ed(I,J,K)
         BulkPi = PPI(I,J,K)
 
-
-        !CALL FYSCOR(T00M,T01M,T02M,CC)  !T00=AMIN1(T00,0.0)and  other treatment ???????
         !*** ABORT SMALL NUMBERS TO AVOID UNDERFLOW **
-        call FYSCOR_withBulkvis(T00M, T01M, T02M, BulkPi)
+        !CALL FYSCOR(T00M,T01M,T02M,CC)  !T00=AMIN1(T00,0.0)and  other treatment ???????
+        !call FYSCOR_withBulkvis(T00M, T01M, T02M, BulkPi)
+        call FYSCOR_velocity(T00M, T01M, T02M, EdM, PLM, BulkPi)
 
-        T00(I,J,K)=T00M
-
-        IF ( ABS(T01M).GT.AAC) THEN
-          T01(I,J,K)=T01M
-        ELSE
-          T01(I,J,K)=0.0
+        if(T00M .gt. AAC) then
+          T00(I,J,K) = T00M
+          PPI(I,J,K) = BulkPi
+          IF (ABS(T01M).GT.AAC) THEN
+            T01(I,J,K)=T01M
+          ELSE
+            T01(I,J,K)=0.0
+            Pi01(I,J,k)=0.0   !song viscous
+          END IF
+          IF (ABS(T02M).GT.AAC) THEN
+            T02(I,J,K)=T02M
+          ELSE
+            T02(I,J,K)=0.0
+            Pi02(I,J,K)=0.0
+          END IF
+        else
+          T00(I,J,K) = 1D-30
+          T01(I,J,K) = 0.0
+          T02(I,J,K) = 0.0
           Pi01(I,J,k)=0.0   !song viscous
-        END IF
-        IF (ABS(T02M).GT.AAC) THEN
-          T02(I,J,K)=T02M
-        ELSE
-          T02(I,J,K)=0.0
           Pi02(I,J,K)=0.0
-        END IF
+          PPI(I,J,K) = 0.0
+          PL(I,J,K) = 0.0
+        endif
  100  CONTINUE
 
 C---------------------------------------------------------------
@@ -3508,13 +3551,28 @@ C--------------------------------------
         RSDM = DM
         RSPPI = PPI(I,J,K)
 
-        eeH = findEdHook(1D0)
-        Call invertFunctionD(findEdHook,0D0,5D3,1D-3,ED(I,J,K),0D0,eeH)
+        !eeH = findEdHook(1D0)
+        !Call invertFunctionD(findEdHook,0D0,5D3,1D-3,ED(I,J,K),0D0,eeH)
+        VP_local = findvHook(0.0D0)
+        Call invertFunctionD(findvHook, 0.0D0, 1.0D0, 1D-6, 0.0, 0D0, 
+     &                       VP_local)
+        U0_local = findU0Hook(0.0D0)
+        Call invertFunctionD(findU0Hook, 1D0, 5D3, 1D-6, 1.0, 0D0, 
+     &                       U0_local)
+        U0_critial = 1.21061
+        if(U0_local .gt. U0_critial) then
+          VP_local = sqrt(1. - 1./U0_local/U0_local)
+        else
+          U0_local = 1./sqrt(1. - VP_local*VP_local)
+        endif
+         
+        eeH = DM0 - VP_local*DM
 
         !eeH = quadESolver(ED(I,J,K),DM0,DM,PPI(I,J,K),IDebug,I,J) ! use Ed from last time step as a starting point
         ED(I,J,K) = dmax1(eeH, 1D-10)
         DM = dmax1(DM, 1D-10)
-        VP = (DM0-eeH)/DM
+        !VP = (DM0-eeH)/DM
+        VP = VP_local
 
         ee=Ed(I,J,NZ0)*HbarC        !fm-4 to GeV/fm3  peter unit
         Ba=Bd(I,J,K)                !unit
@@ -3523,6 +3581,14 @@ C--------------------------------------
 
         Vx(I,J,K) = VP*T01IJ/DM
         Vy(I,J,K) = VP*T02IJ/DM
+        if (isnan(Vx(I,J,K))) then
+          print*, 'vx', VP_local, U0_local, VP, T01IJ, DM
+          stop
+        endif
+        if (isnan(Vy(I,J,K))) then
+          print*, 'vy', VP_local, U0_local, VP, T02IJ, DM
+          stop
+        endif
 !----------------------------------------------------------------------
  310   CONTINUE
  300   CONTINUE
@@ -3863,7 +3929,7 @@ C-------------------------------------------------------------------------------
      &      + PScT11(i,j,k) + PScT12(i,j,k) + PScT22(i,j,k)
      &      + PScT33(i,j,k)
 
-      If (TIME > TT0+0.8) Then
+      If (TIME > TT0) Then
       If (PScTSum .ne. PScTSum) Then
         Print *, "Invalid PScT terms!"
         Print *, "i,j,k=", i,j,k
@@ -4632,7 +4698,71 @@ C----------------------------------------------------------------
       End Function
 !----------------------------------------------------------------------
 
+!======================================================================
+      Double Precision Function findvHook(v)
+      ! Root finding by iterating quadratic equation formula for the equation
+      ! (M0+cstilde^2*e+Pi)v=M
 
+      Implicit None
+
+      Double Precision PEPS
+      Double Precision v
+
+      Double Precision :: RSDM0, RSDM, RSPPI, RSee
+      Common /findEdHookData/ RSDM0, RSDM, RSPPI ! M0, M, Pi (see 0510014)
+
+      Double Precision cstilde2 ! energy density from previous iteration, p/e, pressure
+      ! Note that cstilde2 is NOT dp/de, but rather p/e!!!
+
+      Double Precision, Parameter :: zero=1e-30 ! a small number
+      Double Precision, Parameter :: HbarC=0.19733d0 !for changing between fm and GeV ! Hbarc=0.19733=GeV*fm
+
+      Double Precision A ! temporary variables
+
+      RSee = RSDM0 - v*RSDM
+      cstilde2=PEPS(0.0d0, RSee*Hbarc)/dmax1(abs(RSee),zero)/Hbarc
+      A=RSDM0*(1+cstilde2)+RSPPI
+
+      findvHook = v - (2*RSDM)/(A + sqrt(dmax1(A*A 
+     &                  - 4*cstilde2*RSDM*RSDM, 1D-30)) + 1D-30)
+      if(isnan(findvHook)) then
+        print*, cstilde2, A, v
+        print*, A*A - 4*cstilde2*RSDM*RSDM
+        print*, A + sqrt(A*A - 4*cstilde2*RSDM*RSDM)
+        print*, RSDM0, RSDM, RSPPI, RSee
+        stop
+      endif
+      End Function
+!----------------------------------------------------------------------
+
+!======================================================================
+      Double Precision Function findU0Hook(U0)
+      ! Root finding by iterating quadratic equation formula for the equation
+      Implicit None
+
+      Double Precision PEPS
+      Double Precision v, U0
+
+      Double Precision :: RSDM0, RSDM, RSPPI, RSee
+      Common /findEdHookData/ RSDM0, RSDM, RSPPI ! M0, M, Pi (see 0510014)
+
+      Double Precision cstilde2 ! energy density from previous iteration, p/e, pressure
+      ! Note that cstilde2 is NOT dp/de, but rather p/e!!!
+
+      Double Precision, Parameter :: zero=1e-30 ! a small number
+      Double Precision, Parameter :: HbarC=0.19733d0 !for changing between fm and GeV ! Hbarc=0.19733=GeV*fm
+
+      Double Precision A ! temporary variables
+
+      RSee = RSDM0 - v*RSDM
+      cstilde2=PEPS(0.0d0, RSee*Hbarc)/dmax1(abs(RSee),zero)/Hbarc
+      A=RSDM0*(1+cstilde2)+RSPPI
+      v = (2*RSDM)/(A+sqrt(dmax1(A*A-4*cstilde2*RSDM*RSDM, 1D-30)) 
+     &              + 1D-30)
+
+      findU0Hook = U0 - 1/sqrt(1-v*v)
+      End Function
+!----------------------------------------------------------------------
 
 
 !======================================================================
