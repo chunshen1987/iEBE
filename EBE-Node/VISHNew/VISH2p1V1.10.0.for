@@ -489,6 +489,7 @@ C-------------------------------------------------------------------------------
       DIMENSION F0Pi12(NX0:NX,NY0:NY),FPi12(NX0:NX,NY0:NY)   !Stress Tensor in previous and current step
       DIMENSION F0Pi22(NX0:NX,NY0:NY),FPi22(NX0:NX,NY0:NY)   !Stress Tensor in previous and current step
       DIMENSION F0Pi33(NX0:NX,NY0:NY),FPi33(NX0:NX,NY0:NY)   !Stress Tensor in previous and current step
+      DIMENSION F0PPI(NX0:NX,NY0:NY),FPPI(NX0:NX,NY0:NY)   !Stress Tensor in previous and current step
 
 
       CHARACTER*60 EARTERM
@@ -1285,7 +1286,6 @@ C      NDT = 5
             TEM1(I,J) = Temp(I,J,NZ0)*HbarC
 
             If (ViscousC>1D-6) Then
-
               FPi00(I,J) = Pi00(I,J,NZ0)
               FPi01(I,J) = Pi01(I,J,NZ0)
               FPi02(I,J) = Pi02(I,J,NZ0)
@@ -1294,6 +1294,10 @@ C      NDT = 5
               FPi22(I,J) = Pi22(I,J,NZ0)
               FPi33(I,J) = Pi33(I,J,NZ0)
             End If
+            if(VisBulk > 1D-6) then
+              FPPI(I,J) = PPI(I,J,NZ0)
+            endif
+
 5300  CONTINUE
 
 !      Call FreezeoutPro9 (EDEC,TFREEZ, TFLAG, IEOS,NDX,NDY,NDT,
@@ -1304,9 +1308,10 @@ C      NDT = 5
 
       Call FreezeoutPro10 (EDEC, IEOS, NDX, NDY, NDT,
      &     EPS0,EPS1,V10,V20,V11,V21, NINT, IW,
-     &     F0Pi00,F0Pi01,F0Pi02,F0Pi33, F0Pi11,F0Pi12,F0Pi22,
-     &     FPi00,FPi01,FPi02,FPi33,FPi11,FPi12,FPi22, N,T,
-     &     DX,DY,DT,NXPhy,NYPhy,NX0,NX,NY0,NY)
+     &     F0Pi00,F0Pi01,F0Pi02,F0Pi33,F0Pi11,F0Pi12,F0Pi22,
+     &     FPi00,FPi01,FPi02,FPi33,FPi11,FPi12,FPi22, 
+     &     F0PPI, FPPI,
+     &     N,T,DX,DY,DT,NXPhy,NYPhy,NX0,NX,NY0,NY)
 
       print*,'after freezeout'
 
@@ -1321,7 +1326,6 @@ c                END IF
           TEM0(I,J) = TEM1(I,J)
 
           If (ViscousC>1D-6) Then
-
             F0Pi00(I,J) = Pi00(I,J,NZ0)
             F0Pi01(I,J) = Pi01(I,J,NZ0)
             F0Pi02(I,J) = Pi02(I,J,NZ0)
@@ -1330,7 +1334,9 @@ c                END IF
             F0Pi22(I,J) = Pi22(I,J,NZ0)
             F0Pi33(I,J) = Pi33(I,J,NZ0)
           End If
-
+          if(VisBulk > 1D-6) then
+            F0PPI(I,J) = PPI(I,J,NZ0)
+          endif
 5400  CONTINUE
 
       Print*, 'NINT', NINT
@@ -1735,8 +1741,9 @@ C###############################################################################
       Subroutine FreezeoutPro10(Edec, IEOS, NDX, NDY, NDT,
      &     EPS0,EPS1,V10,V20,V11,V21, NINT, IW,
      &     F0Pi00,F0Pi01,F0Pi02,F0Pi33,F0Pi11,F0Pi12,F0Pi22,
-     &     FPi00,FPi01,FPi02,FPi33,FPi11,FPi12,FPi22, N, T,
-     &     DX,DY,DT,NXPhy,NYPhy,NX0,NX,NY0,NY)
+     &     FPi00,FPi01,FPi02,FPi33,FPi11,FPi12,FPi22, 
+     &     F0PPI, FPPI,
+     &     N,T,DX,DY,DT,NXPhy,NYPhy,NX0,NX,NY0,NY)
 *     a subroutine to calculate the freeze-out surface using cornelius from P. Huovinen
 *     T=Time   N, Timestep for the largest Loop.
       Implicit none
@@ -1769,6 +1776,8 @@ C###############################################################################
       double precision, Dimension(NX0:NX,NY0:NY) :: FPi22   !Stress Tensor in previous and current step
       double precision, Dimension(NX0:NX,NY0:NY) :: F0Pi33
       double precision, Dimension(NX0:NX,NY0:NY) :: FPi33   !Stress Tensor in previous and current step
+      double precision, Dimension(NX0:NX,NY0:NY) :: F0PPI
+      double precision, Dimension(NX0:NX,NY0:NY) :: FPPI   !Bulk Stress Tensor in previous and current step
 
       double precision, Dimension(0:1,0:1,0:1) :: Cube
       double precision, Dimension(0:2,4) :: dSigma
@@ -1786,6 +1795,7 @@ C###############################################################################
       double precision :: v1mid, v2mid
       double precision :: CPi00, CPi01, CPi02
       double precision :: CPi11, CPi12, CPi22, CPi33
+      double precision :: CPPI
       double precision :: BN, Pdec, ee, Tdec
       double precision :: BAMU, SMU
       double precision :: DA0, DA1, DA2
@@ -1895,6 +1905,8 @@ CSHEN======================================================================
      &             NX0,NY0,NX,NY,DTFreeze,DXFreeze,DYFreeze,CPi22,0)
            CALL P4(I,J,NDX,NDY,NDT,Vmidpoint,F0Pi33,FPi33,
      &             NX0,NY0,NX,NY,DTFreeze,DXFreeze,DYFreeze,CPi33,0)
+           CALL P4(I,J,NDX,NDY,NDT,Vmidpoint,F0PPI,FPPI,
+     &             NX0,NY0,NX,NY,DTFreeze,DXFreeze,DYFreeze,CPPI,0)
            BN   = 0.0
            Pdec = PEPS(0.0d0,Edec)
 
@@ -1927,7 +1939,8 @@ CSHEN======================================================================
              WRITE(99,2555) Tmid, DA0, DA1, DA2, v1mid, v2mid, Edec, BN,
      &                      Tdec, BAMU, SMU, Pdec, CPi33*HbarC,
      &                      CPi00*HbarC,CPi01*HbarC,CPi02*HbarC,
-     &                      CPi11*HbarC,CPi12*HbarC,CPi22*HbarC
+     &                      CPi11*HbarC,CPi12*HbarC,CPi22*HbarC,
+     &                      CPPI*HbarC
              IF (WRITINGX) THEN  !write to SurfaceX.dat
                 write(82,2553) Tmid, Sqrt(Xmid**2+Ymid**2),
      &                Sqrt(v1mid**2+v2mid**2), Xmid, v1mid, Ymid, v2mid
@@ -1964,7 +1977,7 @@ CSHEN======================================================================
  500    CONTINUE
 
 2553   FORMAT(8F20.8)
-2555   FORMAT(19E20.8E3)
+2555   FORMAT(20E20.8E3)
 2565   FORMAT(14E14.6)
 
       Return
