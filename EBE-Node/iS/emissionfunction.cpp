@@ -19,6 +19,7 @@
 #define GROUPING_PARTICLES 1 // set to 1 to perform calculations for similar particles together
 #define PARTICLE_DIFF_TOLERANCE 0.01 // particles with mass and chemical potential (for each FZ-cell) difference less than this value will be considered to be identical (b/c Cooper-Frye)
 #define INCLUDE_DELTAF 1 // include delta f correction to particle distribution function in Cooper-Frye Formula
+#define INCLUDE_BULKDELTAF 1 // include delta f correction to particle distribution function in Cooper-Frye Formula
 #define CALCULATEDED3P false // calculate transverse energy distribution E*dE/d^3p from Cooper-Frye formula
 
 using namespace std;
@@ -139,7 +140,6 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
   FO_surf* surf = &FOsurf_ptr[0];
 
   double *bulkvisCoefficients = new double [3];
-  getbulkvisCoefficients(particle_idx, bulkvisCoefficients);
 
   // for intermedia results
   double dN_ptdptdphidy_tab[pT_tab_length][phi_tab_length];
@@ -228,7 +228,8 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
 
               double v2 = vx*vx + vy*vy;
               double gammaT = 1.0/sqrt(1.0 - v2);
-
+              
+              getbulkvisCoefficients(particle_idx, Tdec, bulkvisCoefficients);
 
               for (int k=0; k<eta_tab_length; k++)
               {
@@ -288,6 +289,8 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
     dN_ptdptdphidy->set(i+1,j+1,dN_ptdptdphidy_tab[i][j]);
     if(CALCULATEDED3P) dE_ptdptdphidy->set(i+1,j+1,dE_ptdptdphidy_tab[i][j]);
   }
+
+  delete [] bulkvisCoefficients;
 
   sw.toc();
   cout << endl << "Finished " << sw.takeTime() << " seconds." << endl;
@@ -769,10 +772,24 @@ bool EmissionFunctionArray::particles_are_the_same(int idx1, int idx2)
     return true;
 }
 
-void EmissionFunctionArray::getbulkvisCoefficients(int particle_idx, double* bulkvisCoefficients)
+void EmissionFunctionArray::getbulkvisCoefficients(int particle_idx, double Tdec, double* bulkvisCoefficients)
 {
-   bulkvisCoefficients[0] = -65.85/hbarC;  // B0 [fm^3/GeV]
-   bulkvisCoefficients[1] = 171.27/hbarC;  // D0 [fm^3/GeV^2]
-   bulkvisCoefficients[2] = -63.05/hbarC;  // E0 [fm^3/GeV^3]
+   if(INCLUDE_BULKDELTAF)
+   {
+      particle_info* particle = &particles[particle_idx];
+      double mass = particle->mass; // [GeV]
+      double mass_fm = mass/hbarC;  // [1/fm]
+      double Tdec_fm = Tdec/hbarC;  // [1/fm]
+
+      bulkvisCoefficients[0] = exp(-15.04512474*Tdec_fm + 11.76194266)*(mass_fm*mass_fm)/hbarC; // B0 [fm^3/GeV]
+      bulkvisCoefficients[1] = exp( -12.45699277*Tdec_fm + 11.4949293)/hbarC/hbarC;  // D0 [fm^3/GeV^2]
+      bulkvisCoefficients[2] = -exp(-14.45087586*Tdec_fm + 11.62716548)/hbarC/hbarC/hbarC;  // E0 [fm^3/GeV^3]
+   }
+   else
+   {
+      bulkvisCoefficients[0] = 0.0;  // B0 [fm^3/GeV]
+      bulkvisCoefficients[1] = 0.0;  // D0 [fm^3/GeV^2]
+      bulkvisCoefficients[2] = 0.0;  // E0 [fm^3/GeV^3]
+   }
    return;
 }

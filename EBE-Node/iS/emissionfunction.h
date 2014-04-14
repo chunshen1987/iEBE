@@ -41,7 +41,7 @@ public:
   string energyflow_differential_filename, energyflow_integrated_filename;
 
   void calculate_dN_ptdptdphidy_and_flows_4all(int to_order=9);
-  void getbulkvisCoefficients(int particle_idx, double* bulkvisCoefficients);
+  void getbulkvisCoefficients(int particle_idx, double Tdec, double* bulkvisCoefficients);
 
 };
 
