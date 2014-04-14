@@ -39,10 +39,12 @@ PhotonEmission::PhotonEmission(ParameterReader* paraRdr_in)
    int Eqtb_length = neta*nrapidity*np*nphi;
    Eq_localrest_Tb = new double [Eqtb_length];
    pi_photon_Tb = new double [Eqtb_length];
+   bulkPi_Tb = new double [Eqtb_length];
    for(int i=0;i<Eqtb_length;i++)
    {
      Eq_localrest_Tb[i] = 0.0;
      pi_photon_Tb[i] = 0.0;
+     bulkPi_Tb[i] = 0.0;
    }
 
    dNd2pTdphidy_eq = new double** [np];
@@ -144,6 +146,7 @@ PhotonEmission::~PhotonEmission()
    delete [] lambda;
    delete [] Eq_localrest_Tb;
    delete [] pi_photon_Tb;
+   delete [] bulkPi_Tb;
 
    delete photon_QGP;
    delete photon_HG;
@@ -271,6 +274,7 @@ void PhotonEmission::calPhotonemission(HydroinfoH5* hydroinfo_ptr, double* eta_p
   }
 
   double e_local, p_local, temp_local, vx_local, vy_local;
+  double bulkPi_local;
   double tau_local;
   double eta_local;
   double* volume = new double [neta];
@@ -308,6 +312,7 @@ void PhotonEmission::calPhotonemission(HydroinfoH5* hydroinfo_ptr, double* eta_p
            for(int mu = 0; mu < 4; mu++)
               for(int nu = 0; nu < 4; nu++)
                  pi_tensor_lab[mu][nu] = fluidCellptr->pi[mu][nu];
+           bulkPi_local = fluidCellptr->bulkPi;
 
            getTransverseflow_u_mu_low(flow_u_mu_low, vx_local, vy_local);
            double prefactor_pimunu = 1./(2.*(e_local + p_local));
@@ -343,6 +348,7 @@ void PhotonEmission::calPhotonemission(HydroinfoH5* hydroinfo_ptr, double* eta_p
 
                Eq_localrest_Tb[idx_Tb] = Eq_localrest_temp;
                pi_photon_Tb[idx_Tb] = pi_photon*prefactor_pimunu;
+               bulkPi_Tb[idx_Tb] = bulkPi_local;
                idx_Tb++;
              }
              }
@@ -351,40 +357,40 @@ void PhotonEmission::calPhotonemission(HydroinfoH5* hydroinfo_ptr, double* eta_p
            if(temp_local > T_sw_high)
            {
              double QGP_fraction = 1.0;
-             photon_QGP->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local, volume, QGP_fraction);
+             photon_QGP->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local, volume, QGP_fraction);
            }
            else if(temp_local > T_sw_low)
            {
              double QGP_fraction = (temp_local - T_sw_low)/(T_sw_high - T_sw_low);
              double HG_fraction = 1 - QGP_fraction;
-             photon_QGP->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local, volume, QGP_fraction);
-             photon_HG->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local, volume, HG_fraction);
+             photon_QGP->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local, volume, QGP_fraction);
+             photon_HG->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local, volume, HG_fraction);
              if(calHGIdFlag == 1)
              {
-                photon_pirho->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_KstarK->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_piK->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_piKstar->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_pipi->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_rhoK->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_rho->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_pirho_omegat->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_pirho->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_KstarK->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_piK->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_piKstar->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_pipi->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_rhoK->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_rho->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_pirho_omegat->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
              }
            }
            else
            {
              double HG_fraction = 1.0;
-             photon_HG->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local, volume, HG_fraction);
+             photon_HG->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local, volume, HG_fraction);
              if(calHGIdFlag == 1)
              {
-                photon_pirho->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_KstarK->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_piK->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_piKstar->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_pipi->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_rhoK->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_rho->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
-                photon_pirho_omegat->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_pirho->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_KstarK->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_piK->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_piKstar->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_pipi->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_rhoK->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_rho->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
+                photon_pirho_omegat->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local,  volume, HG_fraction);
              }
            }
          }

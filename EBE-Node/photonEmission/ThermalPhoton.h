@@ -24,9 +24,11 @@ class ThermalPhoton
       //photon emission rate
       Table2D* Photonemission_eqrateTable_ptr;
       Table2D* Photonemission_viscous_rateTable_ptr;
+      Table2D* Photonemission_bulkvis_rateTable_ptr;
       
       double** Emission_eqrateTb_ptr;
       double** Emission_viscous_rateTb_ptr;
+      double** Emission_bulkvis_rateTb_ptr;
       double* EmissionrateTb_Yidxptr;
       double EmissionrateTb_Xmin;
       double EmissionrateTb_Ymin;
@@ -44,13 +46,16 @@ class ThermalPhoton
       double *theta;
 
       double ***dNd2pTdphidy_eq, ***dNd2pTdphidy_vis, ***dNd2pTdphidy_tot;
+      double ***dNd2pTdphidy_bulkvis;
       double *dNd2pT_eq, **vnpT_cos_eq, **vnpT_sin_eq;
       double *dNd2pT_vis, **vnpT_cos_vis, **vnpT_sin_vis;
+      double *dNd2pT_bulkvis, **vnpT_cos_bulkvis, **vnpT_sin_bulkvis;
       double *dNd2pT_tot, **vnpT_cos_tot, **vnpT_sin_tot;
 
-      double dNdy_eq, dNdy_vis, dNdy_tot;
+      double dNdy_eq, dNdy_vis, dNdy_tot, dNdy_bulkvis;
       double *vn_cos_eq, *vn_sin_eq;
       double *vn_cos_vis, *vn_sin_vis;
+      double *vn_cos_bulkvis, *vn_sin_bulkvis;
       double *vn_cos_tot, *vn_sin_tot;
 
    public:
@@ -72,11 +77,11 @@ class ThermalPhoton
       double getPhotonSpMatrix_tot(int i, int j, int k) {return(dNd2pTdphidy_tot[i][j][k]);};
 
 
-      void getPhotonemissionRate(double* Eq, double* pi_zz, int Eq_length, double T, double* eqrate_ptr, double* visrate_ptr);
+      void getPhotonemissionRate(double* Eq, double* pi_zz, double* bulkPi, int Eq_length, double T, double* eqrate_ptr, double* visrate_ptr, double* bulkvis_ptr);
 
       //void calPhotonemission(double Eq, double T, double volume, int i, int j, int k);
       
-      void calThermalPhotonemission(double* Eq, double* pi_zz, int Tb_length, double T, double* volume, double fraction);
+      void calThermalPhotonemission(double* Eq, double* pi_zz, double* bulkPi, int Tb_length, double T, double* volume, double fraction);
       void calPhoton_SpvnpT();
       void outputPhoton_SpvnpT(string path);
       void interpolation2D_bilinear(double varX, double* varY, int Y_length, double** Table2D_ptr, double* results);

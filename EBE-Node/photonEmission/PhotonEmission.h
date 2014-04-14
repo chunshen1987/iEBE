@@ -36,6 +36,7 @@ class PhotonEmission
       double** lambda; // Lorentz boost transverse only
       double* Eq_localrest_Tb;
       double* pi_photon_Tb;
+      double* bulkPi_Tb;
 
       double ***dNd2pTdphidy_eq, *dNd2pT_eq;
       double **vnpT_cos_eq, **vnpT_sin_eq;
