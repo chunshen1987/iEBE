@@ -2495,7 +2495,8 @@ CSHEN======end=================================================================
         else if (IRelaxBulk.eq.2) then
           VRelaxT0(i,j,k)=2*3.1415926*Temp(i,j,k)/1.5
         else if (IRelaxBulk .eq. 3) then
-          VRelaxT0(i,j,k) = 9.0*VBulk(i,j,k)/(Ed(i,j,k) - 3.*PL(i,j,k))
+          TauPi = 9.0*VBulk(i,j,k)/(Ed(i,j,k) - 3.*PL(i,j,k))
+          VRelaxT0(i,j,k) = 1.0/DMax1(0.1d0, TauPi)
         else
           Print*,'This option is not supported by this version'
           Print*,'IRelaxBulk'
@@ -2540,7 +2541,7 @@ C====zeta/s dependent on local temperature==================================
       Implicit double precision (A-H, O-Z)
       Parameter (pi=3.1415926d0)
 
-      de = 0.01d0
+      de = 0.05*Ed
       p1 = PEOSL7(Ed - de/2.)
       p2 = PEOSL7(Ed + de/2.)
       cs2 = (p2 - p1)/de   !cs^2 = dP/de
