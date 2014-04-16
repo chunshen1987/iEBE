@@ -54,7 +54,7 @@ bool GaussianNucleonsCal::testCollision(double b)
 // Simulate if there is a collision at impact parameter b. The size of
 // nucleons are read from those public variables.
 {
-  if (drand48() < 1.-exp( -sigma_gg*exp(-b*b/(4.*width*width))/(4*M_PI*width*width) ))
+  if (drand48() < 1.-exp( -sigma_gg*exp(-b*b/(2.*width*width))/(2*M_PI*width*width) ))
     return true;
   else
     return false;
