@@ -7,7 +7,7 @@
       integer dummy
       real rand
 
-      ranf = dble(rand(0))
+      ranf = dble(rand())
 
       return
       end

@@ -1,6 +1,5 @@
-c $Id: comstr.f,v 1.1.1.1 1996/12/02 15:56:06 weber Exp $
+c $Id: comstr.f,v 1.2 1999/01/18 09:56:58 ernst Exp $
 
-claw§§ 6->8
       parameter (njspin=8)
   
       real*8  PJSPNS,PMIX1S(3,njspin),PMIX2S(3,njspin),PBARS,

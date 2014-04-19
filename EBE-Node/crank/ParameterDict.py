@@ -1,6 +1,6 @@
 controlParameterList = {
-    'simulation_type'       :   'hydro', # 'hybrid' or 'hydro'
-    'niceness'              :   10,       # range from 0 to 19 for process priority, 0 for the highest priority
+    'simulation_type'       :   'hybrid',  # 'hybrid' or 'hydro'
+    'niceness'              :   0,       # range from 0 to 19 for process priority, 0 for the highest priority
 }
 
 superMCParameters = {
@@ -10,6 +10,9 @@ superMCParameters = {
     'Npmax'                         :   1000,
     'bmin'                          :   13,
     'bmax'                          :   20,
+    'cutdSdy'                       :   0,
+    'cutdSdy_lowerBound'            :   100,
+    'cutdSdy_upperBound'            :   1000,
     'ecm'                           :   2760,
     'finalFactor'                   :   56.763,
     'alpha'                         :   0.118,
@@ -23,7 +26,7 @@ hydroParameters = {
 }
 
 iSSParameters = {
-    'number_of_repeated_sampling'   :   10,
+    'number_of_repeated_sampling'   :   1,
     'y_LB'                          :   -2.5,
     'y_RB'                          :   2.5,
 }

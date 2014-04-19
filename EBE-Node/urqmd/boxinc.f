@@ -1,11 +1,7 @@
-c $Id: boxinc.f,v 1.2 1997/04/29 12:44:22 brandste Exp $
+c $Id: boxinc.f,v 1.3 1999/01/18 09:56:53 ernst Exp $
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
-c 
 c     Unit     : all modules using the box
-c     Author   : Mathias Brandstetter
-c     Date     : 01/24/96
-c     Update   : 10/09/96
 c     Version  : 1.0
 c
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -32,7 +28,7 @@ c      half edge lengt of a cube
 	real*8  lboxhalbe
 c      double edge length of a cube
         real*8  lboxd
-c      Impuls
+c      momenta
 	real*8 mbp0, mbpx, mbpy, mbpz
 	
 	common /boxic/ cbox,boxflag, mbox, bptityp, bptiso3, bptpart
@@ -40,5 +36,3 @@ c      Impuls
 	common /boxrc/ lbox, lboxhalbe, lboxd, bptpmax, edens
 	common /boxrc/ mbp0, mbpx, mbpy, mbpz
 	
-c Ende der Include Datei boxinc.f
-c Mathias Brandstetter

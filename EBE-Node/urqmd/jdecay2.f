@@ -1,8 +1,6 @@
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         subroutine nbodydec(rm)
 c
-c     Unit     : Collision Term
-c     Author   : Jens Konopka
-c     Date     : 11/02/97
 c     Revision : 1.0
 c
 c input:  rm: Resonance mass
@@ -16,6 +14,7 @@ c     this  approach  can be  found in  M.M. Block and J.D. Jackson, Z.
 c     Phys. C 3, 255 (1980). The original  routine is contained in  CPC
 c     (Code ACGJ). It has been modified for uQMD purposes.
 c     More documentation and better readability are to follow.
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
         implicit none
         integer j,i,imin1
@@ -30,6 +29,8 @@ c     More documentation and better readability are to follow.
      +   z10, pp1dot,ener1,p2, p1s, z5, sintheta, phii,psin,
      +   p1sq, u, u1, ximin,ximax,delu,energy,pi,wmax,w,esys,z2,s,
      +   z8,reci,b, delxi,a,delz,ranf
+
+        integer ntry
 
         LOGICAL MASSLESS                                  
 
@@ -60,7 +61,9 @@ C
 
 C       Main Calculation                                                        
 C                                                                               
+        ntry=0
 60        W=1.    !Initial weight, for each new event.                          
+          ntry=ntry+1
           MASS=M1 !Initial M=total mass of ALL particles.                       
           ENERGY=p4loc(0)    !Initialize E to E*=cms energy.                       
 
@@ -111,7 +114,7 @@ C
 c          IF (W.GT.WMAX) WMAX=W   ! Update WMAX.                                
                         ! This routine selects W=1 (unweighted events).         
           Z3=ranf(0)                                                        
-          IF (W.LT.WMAX*Z3) THEN                                                
+          IF (W.LT.WMAX*Z3.and.ntry.le.1000) THEN                                                
              GOTO 60                                                            
           ENDIF                                                                 
         ! We have accepted event, so see if we Lorentz transform it.    
@@ -181,8 +184,10 @@ c               WRITE (5,*)
         RETURN                                                                  
         END                                                                     
 !-------------------------------------------------------------------------      
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         FUNCTION F1(V1,V2)                                                 
-        ! Function F1(V1,V2)=SQR(1+(V1-V2)**2-2*(V1+V2))=2*(P*)/(E*).
+c        ! Function F1(V1,V2)=SQR(1+(V1-V2)**2-2*(V1+V2))=2*(P*)/(E*).
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         implicit none
         REAL*8 F1, F2, V1, V2
         F2=1.+(V1-V2)**2-2.*(V1+V2)                                             
@@ -193,9 +198,10 @@ c               WRITE (5,*)
         ENDIF                                                                   
         END                                                                     
 
-
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       function M_inv_2(v01,vx1,vy1,vz1,
      +                 v02,vx2,vy2,vz2)
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 M_inv_2,v01,vx1,vy1,vz1,
      +               v02,vx2,vy2,vz2 
 
@@ -206,9 +212,11 @@ c               WRITE (5,*)
       return 
       end
 
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       function M_inv_3(v01,vx1,vy1,vz1,
      +                 v02,vx2,vy2,vz2,
      +                 v03,vx3,vy3,vz3)
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 M_inv_3,v01,vx1,vy1,vz1,
      +               v02,vx2,vy2,vz2, 
      +               v03,vx3,vy3,vz3 
@@ -224,13 +232,14 @@ c               WRITE (5,*)
 
 
 
-
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine jdecay(rm)
 C        input px,py,pz : CM-momenta of total system                   
 C              rm:        Mass of resonance (sqrt(s))
 c for pnew and pgen : 
 c      first index: 1=px, 2=py, 3=pz, 4=E, 5=m0
 c      second index: particle number
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       implicit none
        include 'newpart.f'
        real*8 pgen(5,mprt),rnd(mprt),u(3),beta(3),wt,tmp

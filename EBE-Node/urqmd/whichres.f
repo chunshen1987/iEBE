@@ -1,9 +1,7 @@
-c $Id: whichres.f,v 1.5 1998/06/15 13:35:37 weber Exp $
+c $Id: whichres.f,v 1.7 2007/01/30 14:50:32 bleicher Exp $
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       integer function whichres(m,class)
-c     Unit     : Collision Term
-c     Author   : L. Winckelmann,  Markus Hofmann, Christoph Ernst
-c     Date     : 09/22/94 , 5/9/95
+c
 c     Revision : 1.0  
 cinput   m          : Mass of the resonance
 cinput   class      : class of resonance: see subr. getrange
@@ -29,9 +27,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine whichi(i,im,ip,m)
-c     Unit     : Collision Term
-c     Author   : L. Winckelmann, Christoph Ernst
-c     Date     : 09/22/94 , 5/9/95
+c
 c     Revision : 1.0  
 cinput   m         : Mass of the resonance
 cinput   im,ip	 : lower and upper limit of itypes
@@ -63,9 +59,7 @@ c        f(i) = breitwig(m,i)
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine getrange(class,i1,i2)
-c     Unit     : Collision Term
-c     Author   : Markus Hofmann, L.A.Winckelmann
-c     Date     : 09/22/94
+c
 c     Revision : 1.0 
 c
 cinput  class  : class  of resonance:
@@ -137,9 +131,7 @@ c  something went wrong
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine getinw(i,m,class,mmax)
-c Unit     : Collision Term
-c Author   : L. Winckelmann
-c Date     : 09/22/94
+c
 c Revision : 1.0 
 c
 cinput    i   : Resonance ID
@@ -178,9 +170,6 @@ claw next line is for debug purpose
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       entry getirg(ii,iim,iip)
-c Unit     : Collision Term
-c Author   : L. Winckelmann
-c Date     : ???
 c
 cinput ii       : particle ID
 coutput iim,iip : minimal and maximal itype of particle's class
@@ -207,9 +196,7 @@ c only one particle (ii) within range
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 function massdist(m,class)
-c Unit     : Collision Term
-c Author   : Markus Hofmann, L. Winckelmann, Christoph Ernst
-c Date     : 09/22/94
+c
 c Revision : 1.0 
 c
 cinput  m        : mass to look at
@@ -239,45 +226,13 @@ c         massdist=massdist+breitwig(m,i)
       return
       end
 
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-c      real*8 function breitwig(m,ires)
-cce This is no longer used -> fbrwig, fbwnorm
-cc     Unit     : Collision Term
-cc     Author   : Markus Hofmann
-cc     Date     : 09/22/94
-cc     Revision : 1.0 
-cc     BREIT WIGNER MASS DISTRIBUTION WITH MASS_DEPENDENT WIDTH FOR ONE
-cC     PARTICLUAR RESONANCE CHOSEN BY IRES
-cc     input:
-cc           m     : mass at which the BW-distribution shall be evaluated
-cc           ires  : ityp of the resonance
-cc     output:
-cc            BREITWIG:  value of BW-distribution at mass m
-cc     function calls:
-cCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-c      implicit none
-c      real*8 m,gam2,mres,massit,widit,fwidth
-c      integer ires,ires1,isoit
-c      include 'comres.f'
-c      ires1 = ires
-c      mres = massit(ires1)
-cc      if(ires1.ge.minmes)then
-c        gam2 = widit(ires1)**2
-cc      else
-cc        gam2 = fwidth(ires1,isoit(ires1),m)**2
-cc      end if
-c      breitwig = gam2/((m-mres)**2+gam2/4.0)
-c      return 
-c      end
-
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       real*8 function pcms(ecm,m1,m2)
 c calculates the CM-momentum in a 2-body decay/coll. depending on ecm
-c Author: L.Winckelmann  Thu Aug  3 13:46:57 CEDT 1995
       implicit none
       real*8 ecm,m1,m2,s
 
-      if (ecm.lt.m1+m2) then
+      if (ecm.le.m1+m2) then
          pcms = 0.0
          return
       endif
@@ -289,7 +244,7 @@ c Author: L.Winckelmann  Thu Aug  3 13:46:57 CEDT 1995
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       real*8 function bcms(ecm,m1,m2)
 c calculates the CM-velocity in a 2-body decay/coll. depending on ecm
-c Author: L.Winckelmann Thu Aug  3 13:46:57 CEDT 1995
+
       implicit none
       real*8 ecm,m1,m2,s
 

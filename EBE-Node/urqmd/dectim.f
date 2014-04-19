@@ -1,10 +1,7 @@
-c $Id: dectim.f,v 1.6 1997/08/25 08:17:16 weber Exp $
+c $Id: dectim.f,v 1.9 2007/01/30 14:50:24 bleicher Exp $
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 function dectim(ind,iproc)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass (IQMD-modified source)
-c     Date     : 05/04/94
 c     Revision : 1.0
 C
 cinput ind : ID of particle
@@ -25,6 +22,13 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       integer ind,iproc
       real*8 gg,wid,tau,ranf,fwidth,widit,fbwnorm,mr,massit
       real*8 tmp,factor
+
+c... keep unknown PYTHIA particles stable
+      if(abs(ityp(ind)).gt.1000) then
+         DECTIM=1.d34
+         return
+      endif
+
 c
 c first determine width of resonace
 c

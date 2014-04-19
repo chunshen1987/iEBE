@@ -1,11 +1,8 @@
-c $Id: saveinfo.f,v 1.3 1997/08/19 12:21:26 bass Exp $
+c $Id: saveinfo.f,v 1.7 2002/05/03 00:31:19 weber Exp $
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
       subroutine saveinfo(ind,itag)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass (new source)
-c     Date     : 09/21/94
 c     Revision : 1.0
 c
 cinput ind:  particle ID
@@ -23,13 +20,15 @@ c
       include 'coms.f'
 c
       integer ind,itag,islot,j
-      integer itypt(2),lstcollt(2),iso3t(2),ncollt(2)
-      integer charget(2),spint(2),stridt(2),origint(2)
+      integer lstcollt(2),ncollt(2)
+      integer charget(2),spint(2),stridt(2)
+c     origint(2),uidt(2)
       real*8 r0t(2),rxt(2),ryt(2),rzt(2),
      p      r0tt(2),rxtt(2),rytt(2),rztt(2),
      @     p0t(2),pxt(2),pyt(2),pzt(2),fmasst(2),tdectime(2),
      @     xtotfact(2),tformt(2),p0tdt(2,2),pxtdt(2,2),pytdt(2,2),
-     @     pztdt(2,2),fmasstdt(2,2),ityptdt(2,2),iso3tdt(2,2)
+     @     pztdt(2,2),fmasstdt(2,2)
+      integer ityptdt(2,2),iso3tdt(2,2)
       save
 c
       if(ind.eq.0) return
@@ -62,6 +61,7 @@ cpot
          spint(islot)=spin(ind)
          tdectime(islot)=dectime(ind)
          stridt(islot)=strid(ind)
+         uidt(islot)=uid(ind)
          xtotfact(islot)=xtotfac(ind)
          tformt(islot)=tform(ind)
 ctd
@@ -102,6 +102,7 @@ cpot
          spin(ind)=spint(islot)
          dectime(ind)=tdectime(islot)
          strid(ind)=stridt(islot)
+         uid(ind)=uidt(islot)
          xtotfac(ind)=xtotfact(islot)
          tform(ind)=tformt(islot)
 ctd
@@ -115,7 +116,6 @@ ctd
             iso3td(j,ind)=iso3tdt(j,islot)
  12      continue
 
-c         ...
       endif
       return
       end
