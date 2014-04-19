@@ -10,10 +10,10 @@ c sab 05.03.1992
       end
 c
 c
-      integer function mclock()
-      mclock = 0;
-      return 
-      end
+c      integer function mclock()
+c      mclock = 0;
+c      return 
+c      end
 
 
       subroutine SSEED(ranseed)
