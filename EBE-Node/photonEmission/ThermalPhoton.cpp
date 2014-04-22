@@ -315,8 +315,9 @@ void ThermalPhoton::calThermalPhotonemission(double* Eq, double* pi_zz, double* 
              temp_bulkvis_sum += em_bulkvis[idx + i*n_pt_point]*volume[i]*fraction;
           }
           dNd2pTdphidy_eq[l][m][k] += temp_eq_sum;
-          dNd2pTdphidy_vis[l][m][k] += temp_vis_sum;
-          dNd2pTdphidy_bulkvis[l][m][k] += temp_bulkvis_sum;
+          dNd2pTdphidy_vis[l][m][k] += temp_eq_sum + temp_vis_sum;
+          dNd2pTdphidy_bulkvis[l][m][k] += temp_eq_sum + temp_bulkvis_sum;
+          dNd2pTdphidy_tot[l][m][k] += temp_eq_sum + temp_vis_sum + temp_bulkvis_sum;
           idx++;
         }
       }
@@ -336,11 +337,6 @@ void ThermalPhoton::calThermalPhotonemission(double* Eq, double* pi_zz, double* 
 void ThermalPhoton::calPhoton_SpvnpT()
 //calculate the photon spectra and differential vn at mid-rapidity
 {
-   for(int k=0; k<nrapidity; k++)
-     for(int l=0; l<np; l++)
-       for(int m=0; m<nphi; m++)
-          dNd2pTdphidy_tot[l][m][k] = dNd2pTdphidy_eq[l][m][k] + dNd2pTdphidy_vis[l][m][k] + dNd2pTdphidy_bulkvis[l][m][k];
-   
    int k = 0;  //calculate at y = 0
    for(int i=0;i<np;i++)
    {
