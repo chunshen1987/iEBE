@@ -439,7 +439,7 @@ def iSWithResonancesWithHydroResultFiles(fileList):
             raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
             move(aFile, iSOperationDirectory)
-    move(path.join(iSDirectory, 'EOS', 'chosen_particles_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
+    copy(path.join(iSDirectory, 'EOS', 'chosen_particles_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
 
     # execute!
     run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, cwd=iSDirectory)
