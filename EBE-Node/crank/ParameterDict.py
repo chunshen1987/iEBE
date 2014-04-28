@@ -1,6 +1,6 @@
 controlParameterList = {
     'simulation_type'       :   'hydroEM_preEquilibrium', # 'hybrid' or 'hydro'
-    'niceness'              :   10,       # range from 0 to 19 for process priority, 0 for the highest priority
+    'niceness'              :   0,       # range from 0 to 19 for process priority, 0 for the highest priority
 }
 
 superMCParameters = {

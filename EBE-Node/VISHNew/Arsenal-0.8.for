@@ -236,7 +236,8 @@
       Integer impatience ! number of iterations
 
 !     initialize parameters
-      accuracy = dd*1e-3
+      !accuracy = dd*1e-3
+      accuracy = dd
 
       tolerance = 60
       impatience = 0
