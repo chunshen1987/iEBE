@@ -524,7 +524,7 @@ class EbeCollector(object):
             "eta"           :   "eta_hydro",
             "etaprime"      :   "etap_hydro",
             "Sigma_p"       :   "sigma_p_hydro",
-            "Sigma_0"       :   "sigma0_hydro",
+            "Sigma_0"       :   "sigma_0_hydro",
             "omega_782"     :   "omega782_hydro",
             "Xi_m"          :   "xi_m_hydro",
             "Omega"         :   "omega_hydro",

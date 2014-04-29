@@ -263,9 +263,9 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
                   //viscous corrections
                   double Wfactor = pt*pt*pi00 - 2.0*pt*px*pi01 - 2.0*pt*py*pi02 + px*px*pi11 + 2.0*px*py*pi12 + py*py*pi22 + pz*pz*pi33;
                   double deltaf = (1 - F0_IS_NOT_SMALL*sign*f0)*Wfactor*deltaf_prefactor;
-                  double bulk_deltaf = (1. - F0_IS_NOT_SMALL*sign*f0)*bulkPi*(bulkvisCoefficients[0] + bulkvisCoefficients[1]*pdotu + bulkvisCoefficients[2]*pdotu*pdotu);
+                  double bulk_deltaf = -(1. - F0_IS_NOT_SMALL*sign*f0)*bulkPi*(bulkvisCoefficients[0] + bulkvisCoefficients[1]*pdotu + bulkvisCoefficients[2]*pdotu*pdotu);
                   double result;
-                  if(1+deltaf < 0.0) //set results to zero when delta f turns whole expression to negative
+                  if(1 + deltaf + bulk_deltaf < 0.0) //set results to zero when delta f turns whole expression to negative
                      result = 0.0;
                   else
                      result = prefactor*degen*f0*(1. + deltaf + bulk_deltaf)*pdsigma*tau;
@@ -781,13 +781,13 @@ void EmissionFunctionArray::getbulkvisCoefficients(int particle_idx, double Tdec
       double mass_fm = mass/hbarC;  // [1/fm]
       double Tdec_fm = Tdec/hbarC;  // [1/fm]
 
-      bulkvisCoefficients[0] = exp(-15.04512474*Tdec_fm + 11.76194266)*(mass_fm*mass_fm)/hbarC; // B0 [fm^3/GeV]
+      bulkvisCoefficients[0] = exp(-15.04512474*Tdec_fm + 11.76194266)*(mass_fm*mass_fm)/hbarC; //B0[fm^3/GeV]
       bulkvisCoefficients[1] = exp( -12.45699277*Tdec_fm + 11.4949293)/hbarC/hbarC;  // D0 [fm^3/GeV^2]
-      bulkvisCoefficients[2] = -exp(-14.45087586*Tdec_fm + 11.62716548)/hbarC/hbarC/hbarC;  // E0 [fm^3/GeV^3]
+      bulkvisCoefficients[2] = -exp(-14.45087586*Tdec_fm + 11.62716548)/pow(hbarC, 3);  // E0 [fm^3/GeV^3]
    }
    else
    {
-      bulkvisCoefficients[0] = 0.0;  // B0 [fm^3/GeV]
+      bulkvisCoefficients[0] = 0.0; //B0[fm^3/GeV]
       bulkvisCoefficients[1] = 0.0;  // D0 [fm^3/GeV^2]
       bulkvisCoefficients[2] = 0.0;  // E0 [fm^3/GeV^3]
    }
