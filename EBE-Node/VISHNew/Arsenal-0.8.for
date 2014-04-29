@@ -207,7 +207,7 @@
 
 
 ************************************************************************
-      Subroutine invertFunctionD(func,varL,varR,dd,varI,varX,varResult)
+      Subroutine invertFunctionD(func,varL,varR,acc,varI,varX,varResult)
 !     Purpose:
 !       Return the varResult=func^-1(varX) using Newton method.
 !       -- func: double precision 1-argument function to be inverted
@@ -224,7 +224,8 @@
 
 !     declare input parameters
       Double Precision func
-      Double Precision varL, varR, dd, varI, varX, varResult
+      Double Precision varL, varR, acc, varI, varX, varResult
+      Double precision dd
 
 !     pre-fixed parameters
       Double Precision accuracy
@@ -236,8 +237,8 @@
       Integer impatience ! number of iterations
 
 !     initialize parameters
-      !accuracy = dd*1e-3
-      accuracy = dd
+      accuracy = acc
+      dd = DMAX1(1D-6,1D-3*abs(varR - varL))
 
       tolerance = 60
       impatience = 0
@@ -279,6 +280,7 @@
           Stop
           !Print*, XX1, XX2
         End If
+        dd = abs(XX2 - XX1)*0.05
       End Do ! <=> abs(XX2-XX1)>accuracy
       
       if(XX2 .lt. varL) then

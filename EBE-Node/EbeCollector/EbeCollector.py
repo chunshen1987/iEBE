@@ -518,7 +518,7 @@ class EbeCollector(object):
             "Charged"       :   "charged_hydro", # string in filename, particle name
             "Charged_eta"   :   "charged_eta_hydro", # string in filename, particle name
             "pion_p"        :   "pion_p_hydro",
-            "pion_0"        :   "pion0_hydro",
+            "pion_0"        :   "pion_0_hydro",
             "Kaon_p"        :   "kaon_p_hydro",
             "proton"        :   "proton_hydro",
             "eta"           :   "eta_hydro",
