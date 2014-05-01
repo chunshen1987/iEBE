@@ -3568,10 +3568,10 @@ C--------------------------------------
         !eeH = findEdHook(1D0)
         !Call invertFunctionD(findEdHook,0D0,5D3,1D-3,ED(I,J,K),0D0,eeH)
         VP_local = findvHook(0.0D0)
-        Call invertFunctionD(findvHook, 0.0D0, 1.0D0, 1D-8, 0.0, 0D0, 
+        Call invertFunctionD(findvHook, 0.0D0, 1.0D0, 1D-6, 0.0, 0D0, 
      &                       VP_local)
         U0_local = findU0Hook(0.0D0)
-        Call invertFunctionD(findU0Hook, 1D0, 5D3, 1D-8, 1.0, 0D0, 
+        Call invertFunctionD(findU0Hook, 1D0, 5D3, 1D-6, 1.0, 0D0, 
      &                       U0_local)
         U0_critial = 1.21061
         if(U0_local .gt. U0_critial) then
