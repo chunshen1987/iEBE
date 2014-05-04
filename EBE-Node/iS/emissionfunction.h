@@ -24,6 +24,10 @@ private:
   FO_surf* FOsurf_ptr;
   int last_particle_idx; // store the last particle index being used by calculate_dN_ptdptdphidy function
   bool particles_are_the_same(int, int);
+
+  //array for bulk delta f coefficients
+  Table *bulkdf_coeff;
+
 public:
   EmissionFunctionArray(double particle_y_in, Table* chosen_particle, Table* pT_tab_in, Table* phi_tab_in, Table* eta_tab_in, particle_info* particles_in, int Nparticles, FO_surf* FOsurf_ptr_in, long FO_length_in);
   ~EmissionFunctionArray();
@@ -41,7 +45,7 @@ public:
   string energyflow_differential_filename, energyflow_integrated_filename;
 
   void calculate_dN_ptdptdphidy_and_flows_4all(int to_order=9);
-  void getbulkvisCoefficients(int particle_idx, double Tdec, double* bulkvisCoefficients);
+  void getbulkvisCoefficients(double Tdec, double* bulkvisCoefficients);
 
 };
 

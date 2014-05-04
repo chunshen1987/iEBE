@@ -108,6 +108,8 @@ EmissionFunctionArray::EmissionFunctionArray(double particle_y_in, Table* chosen
   }
   last_particle_idx = -1;
 
+  //arrays for bulk delta f coefficients
+  bulkdf_coeff = new Table ("EOS/BulkDf_Coefficients_Hadrons_s95p-v0-PCE.dat");
 }
 
 
@@ -117,6 +119,7 @@ EmissionFunctionArray::~EmissionFunctionArray()
   if(CALCULATEDED3P) delete dE_ptdptdphidy;
   delete[] chosen_particles_01_table;
   delete[] chosen_particles_sampling_table;
+  delete bulkdf_coeff;
 }
 
 
@@ -229,7 +232,7 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
               double v2 = vx*vx + vy*vy;
               double gammaT = 1.0/sqrt(1.0 - v2);
               
-              getbulkvisCoefficients(particle_idx, Tdec, bulkvisCoefficients);
+              getbulkvisCoefficients(Tdec, bulkvisCoefficients);
 
               for (int k=0; k<eta_tab_length; k++)
               {
@@ -263,7 +266,7 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
                   //viscous corrections
                   double Wfactor = pt*pt*pi00 - 2.0*pt*px*pi01 - 2.0*pt*py*pi02 + px*px*pi11 + 2.0*px*py*pi12 + py*py*pi22 + pz*pz*pi33;
                   double deltaf = (1 - F0_IS_NOT_SMALL*sign*f0)*Wfactor*deltaf_prefactor;
-                  double bulk_deltaf = -(1. - F0_IS_NOT_SMALL*sign*f0)*bulkPi*(bulkvisCoefficients[0] + bulkvisCoefficients[1]*pdotu + bulkvisCoefficients[2]*pdotu*pdotu);
+                  double bulk_deltaf = -(1. - F0_IS_NOT_SMALL*sign*f0)*bulkPi*(bulkvisCoefficients[0]*mass*mass + bulkvisCoefficients[1]*pdotu + bulkvisCoefficients[2]*pdotu*pdotu);
                   double result;
                   if(1 + deltaf + bulk_deltaf < 0.0) //set results to zero when delta f turns whole expression to negative
                      result = 0.0;
@@ -772,18 +775,21 @@ bool EmissionFunctionArray::particles_are_the_same(int idx1, int idx2)
     return true;
 }
 
-void EmissionFunctionArray::getbulkvisCoefficients(int particle_idx, double Tdec, double* bulkvisCoefficients)
+void EmissionFunctionArray::getbulkvisCoefficients(double Tdec, double* bulkvisCoefficients)
 {
    if(INCLUDE_BULKDELTAF)
    {
-      particle_info* particle = &particles[particle_idx];
-      double mass = particle->mass; // [GeV]
-      double mass_fm = mass/hbarC;  // [1/fm]
       double Tdec_fm = Tdec/hbarC;  // [1/fm]
 
-      bulkvisCoefficients[0] = exp(-15.04512474*Tdec_fm + 11.76194266)*(mass_fm*mass_fm)/hbarC; //B0[fm^3/GeV]
-      bulkvisCoefficients[1] = exp( -12.45699277*Tdec_fm + 11.4949293)/hbarC/hbarC;  // D0 [fm^3/GeV^2]
-      bulkvisCoefficients[2] = -exp(-14.45087586*Tdec_fm + 11.62716548)/pow(hbarC, 3);  // E0 [fm^3/GeV^3]
+      // load from file
+      bulkvisCoefficients[0] = bulkdf_coeff->interp(1, 2, Tdec_fm, 5)/pow(hbarC, 3);  //B0 [fm^3/GeV^3]
+      bulkvisCoefficients[1] = bulkdf_coeff->interp(1, 3, Tdec_fm, 5)/pow(hbarC, 2);  // D0 [fm^3/GeV^2]
+      bulkvisCoefficients[2] = bulkdf_coeff->interp(1, 4, Tdec_fm, 5)/pow(hbarC, 3);  // E0 [fm^3/GeV^3]
+      
+      // parameterization for mu = 0
+      //bulkvisCoefficients[0] = exp(-15.04512474*Tdec_fm + 11.76194266)/pow(hbarC, 3); //B0[fm^3/GeV^3]
+      //bulkvisCoefficients[1] = exp( -12.45699277*Tdec_fm + 11.4949293)/hbarC/hbarC;  // D0 [fm^3/GeV^2]
+      //bulkvisCoefficients[2] = -exp(-14.45087586*Tdec_fm + 11.62716548)/pow(hbarC, 3);  // E0 [fm^3/GeV^3]
    }
    else
    {
