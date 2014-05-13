@@ -3251,7 +3251,7 @@ C###################################################################
       double precision cstilde2
       double precision M0, M
       double precision scaleFactor
-      double precision temp1
+      double precision temp1, temp2
 
       cstilde2 = PL/Ed
       T00 = dMax1(0.0d0, T00)
@@ -3262,9 +3262,15 @@ C###################################################################
         T01 = scaleFactor*T01
         T02 = scaleFactor*T02
       endif
+
       temp1 = 2.*sqrt(cstilde2)*M - M0*(1.+cstilde2)
       if (BulkPi .lt. temp1) then
         BulkPi = temp1 + 1D-3*abs(temp1)
+      endif
+
+      temp2 = (M - M0)*(1 + cstilde2)
+      if (BulkPi .lt. temp2) then
+        BulkPi = 0.999*temp2
       endif
       
       RETURN
@@ -3568,10 +3574,14 @@ C--------------------------------------
         !eeH = findEdHook(1D0)
         !Call invertFunctionD(findEdHook,0D0,5D3,1D-3,ED(I,J,K),0D0,eeH)
         VP_local = findvHook(0.0D0)
-        Call invertFunctionD(findvHook, 0.0D0, 1.0D0, 1D-6, 0.0, 0D0, 
+        Call invertFunctionH(findvHook, 0.0D0, 1.0D0, 0.0, 1D-6, 
      &                       VP_local)
+        U0_guess = 1./sqrt(1. - VP_local*VP_local)
+        U0_low_boundary = dmax1(1.0, 0.5*U0_guess)
+        U0_upper_boundary = 1.5*U0_guess
         U0_local = findU0Hook(0.0D0)
-        Call invertFunctionD(findU0Hook, 1D0, 5D3, 1D-6, 1.0, 0D0, 
+        Call invertFunctionH(findU0Hook, U0_low_boundary, 
+     &                       U0_upper_boundary, 0.0, 1D-6,
      &                       U0_local)
         U0_critial = 1.21061
         if(U0_local .gt. U0_critial) then

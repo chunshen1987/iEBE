@@ -79,6 +79,7 @@
 
 
 
+
 ************************************************************************
       Subroutine interpLinear(table,tableSize,var0,dVar,varX,varResult)
 !     Purpose:
@@ -272,7 +273,10 @@
         F3 = (F1-F2)/(X1-X2) ! derivative at XX1
 
         XX2 = XX1 - F0/F3 ! Newton's mysterious method
-
+!     maintain XX2 in the boundary
+        if(XX2.lt.varL) XX2=varL
+        if(XX2.gt.varR) XX2=varR
+        
         impatience = impatience + 1
         If (impatience>tolerance) Then
           Print *, "Subroutine invertFunctionD: ",
@@ -293,6 +297,129 @@
 
       End Subroutine
 !-----------------------------------------------------------------------
+
+
+
+************************************************************************
+      Subroutine invertFunctionH(func,varL,varR,yy,acc,varResult)
+!     Newton/Bisect hybrid root search algorithm.
+!     Adapted from W.Press et.al. Numerical Recipies in C.
+!     Purpose:
+!       Return the varResult=func^-1(varX) using Newton method and Bisection.
+!
+!       -- func: double precision 1-argument function to be inverted
+!       -- varL: left boundary (for numeric derivative)
+!       -- varR: right boundary (for numeric derivative)
+!       -- varResult: the return inverted value
+!
+!   Solve: f(x)=yy with f(x)=table(x)-varX => f'(x)=table'(x)
+!
+      Implicit None
+
+!     declare input parameters
+      Double Precision func
+      Double Precision varL, varR, acc, varX, varResult, yy
+      Double Precision dd ! step size of numerical derivative
+
+!     pre-fixed parameters
+      Double Precision accuracy
+      Integer tolerance
+
+!     declare local variables
+      Double Precision df, dx, dxold, f, fh, fl
+      Double Precision temp, xh, xl, rts ! intermedia variables
+      Integer impatience ! number of iterations
+      Double Precision numericalZero
+
+!     initialize parameters
+      accuracy = acc
+      tolerance = 60
+      impatience = 0
+      numericalZero = 1D-18
+      dd = DMAX1(1D-6,1D-3*abs(varR - varL))
+
+!     initial value, left and right point
+      fl = func(varL) - yy
+      fh = func(varR) - yy
+      if(fl*fh>0) then
+        print*, "invertFunctionH error!"
+        print*, "No solution at given boundary!"
+        stop
+      EndIf
+
+!     Check initial value is solution
+      if(abs(fl)<numericalZero) then
+        varResult = varL 
+        return
+      elseif (abs(fh)<numericalZero) then
+        varResult = varR
+        return
+      endif
+
+!     maintain f(xl)<0
+      if(fl < 0.0) then
+        xl = varL
+        xh = varR
+      else
+        xh = varL
+        xl = varR
+      EndIf
+
+!     Initial guess
+      rts = (xl+xh)/2.0
+      dxold = abs(varR-varL)
+      dx=dxold
+      f = func(rts) - yy
+      df = (func(rts+dd) - func(rts-dd))/(2.0*dd)
+
+      Do While (impatience<tolerance)
+!     Apply Bisection if Newton shoots out of boundary or converges too slow
+        if((((rts-xh)*df-f)*((rts-xl)*df-f).ge.0.0)
+     &    .or. (abs(2.0*f) > abs(dxold*df))) then
+          dxold = dx
+          dx = 0.5*(xh-xl)
+          rts= xl+dx
+          if(abs(xl-rts)<numericalZero) then
+            varResult = rts
+            return
+          EndIf
+        else
+          dxold = dx
+          dx = f/df
+          temp = rts
+          rts = rts-dx
+          if(abs(temp-rts)<numericalZero) then
+            varResult = rts
+            return
+          EndIf
+        EndIf
+
+!       Converge criteria
+        if(abs(dx)<accuracy) then
+          varResult = rts
+          return
+        EndIf
+!       if not converge, calculate function and its derivative again
+        dd = (xh - xl)/20.0
+        f = func(rts) - yy
+        df = (func(rts+dd) - func(rts-dd))/(2.0*dd)
+!       maintain the bracket on the root
+        if(f<0.0) then
+          xl=rts
+        else
+          xh=rts
+        endif
+
+        impatience = impatience+1
+      EndDo
+
+      print*, "invertFunctionH error!"
+      print*, "reached maximum iteration but hadn't found root!"
+      stop 
+
+      End Subroutine
+!-----------------------------------------------------------------------
+
 
 
 ************************************************************************
