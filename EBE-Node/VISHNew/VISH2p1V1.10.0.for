@@ -2453,7 +2453,7 @@ C=======for temperature dependent \eta/s=======================================
       endif
 CSHEN======end=================================================================
 !------------- for shear pressure -----------
-      If (ViscousC.ge.0.00001) then
+      If (ViscousC.ge.1D-6) then
         VCoefi(i,j,k)=ViscousC*Sd(i,j,k)
         VCBeta(i,j,k)=VisBeta*3.0/dmax1(Sd(i,j,k)*Temp(i,j,k),1e-30)
         VRelaxT(i,j,k)=1.0/dmax1(2.0*VCoefi(i,j,k)*VCBeta(i,j,k),1e-30)
@@ -2483,7 +2483,7 @@ CSHEN======end=================================================================
       ttemp= Temp(i,j,k)*HbarC ! input function as Temp
       e3pep=(Ed(i,j,k)-3.0*PL(i,j,k))/(Ed(i,j,k)+PL(i,j,k))
 
-      If (VisBulk.ge.0.00001) then
+      If (VisBulk.ge.1D-6) then
         !eta=ViscousC*Sd(i,j,k)
         !VBulk(i,j,k)=VisBulk*BulkAdSH0(eta,ttemp)
         VBulk(i,j,k) = ViscousZetasTemp(Ed(i,j,k)*HbarC)*Sd(i,j,k)
