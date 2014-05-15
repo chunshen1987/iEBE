@@ -3268,7 +3268,7 @@ C###################################################################
         BulkPi = temp1 + 1D-3*abs(temp1)
       endif
 
-      temp2 = (M - M0)*(1 + cstilde2)
+      temp2 = (M - M0)
       if (BulkPi .lt. temp2) then
         BulkPi = 0.999*temp2
       endif
