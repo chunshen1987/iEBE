@@ -1,5 +1,5 @@
 controlParameterList = {
-    'simulation_type'       :   'hydroEM_preEquilibrium', # 'hybrid' or 'hydro'
+    'simulation_type'       :   'hydroEM_with_decaycocktail', # 'hybrid' or 'hydro'
     'niceness'              :   0,       # range from 0 to 19 for process priority, 0 for the highest priority
 }
 
@@ -14,6 +14,7 @@ superMCParameters = {
     'finalFactor'                   :   56.763,
     'alpha'                         :   0.118,
     'lambda'                        :   0.288,
+    'operation'                     :   2,
 }
 
 preEquilibriumParameters = {
@@ -28,6 +29,7 @@ hydroParameters = {
     'T0'        :   0.6, # tau_0
     'Edec'      :   0.18,
     'IhydroJetoutput' :   1,  # switch for output hydro evolution history into hdf5 file
+    'InitialURead'    :   0,
 }
 
 iSSParameters = {
@@ -42,5 +44,7 @@ photonEmissionParameters = {
     'dx'          :   0.5,
     'dy'          :   0.5,
     'dTau'        :   0.1,
+    'T_sw_high'   :   170,
+    'T_sw_low'    :   150,
     'calHGIdFlag' :   0,
 }

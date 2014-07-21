@@ -55,7 +55,9 @@ controlParameterList = {
 superMCControl = {
     'mainDir'                       :   'superMC',
     'dataDir'                       :   'data', # where initial conditions are stored, relative
-    'dataFiles'                     :   '*event*.dat', # data filenames
+    'saveICFile'                    :   True, # whether to save initial condition file
+    'dataFiles'                     :   '*event_%d*.dat', # data filenames
+    'initialFiles'                  :   '*event*_block*.dat',  #initial density profile filenames
     'numberOfEventsParameterName'   :   'nev',
     'executable'                    :   'superMC.e',
 }
@@ -232,7 +234,7 @@ def generateSuperMCInitialConditions(numberOfEvents):
     run(executableString, cwd=superMCDirectory)
 
     # yield initial conditions
-    for aFile in glob(path.join(superMCDataDirectory, superMCControl['dataFiles'])):
+    for aFile in glob(path.join(superMCDataDirectory, superMCControl['initialFiles'])):
         # then yield it
         yield path.join(superMCDataDirectory, aFile)
 
@@ -794,6 +796,11 @@ def sequentialEventDriverShell():
             # print current progress to terminal
             print("Starting event %d..." % event_id)
             
+            if superMCControl['saveICFile']:
+                superMCDataDirectory = path.join(controlParameterList['rootDir'], superMCControl['mainDir'], superMCControl['dataDir'])
+                for aFile in glob(path.join(superMCDataDirectory, superMCControl['dataFiles'] % event_id)):
+                    copy(aFile, controlParameterList['eventResultDir'])
+            
             if simulationType == 'hydroEM_preEquilibrium':
                 # perform hydro calculations with pre-equilibrium evolution and get a list of all the result filenames
                 hydroResultFiles = [aFile for aFile in 
@@ -830,6 +837,11 @@ def sequentialEventDriverShell():
             
             elif simulationType == 'hydroEM':
                 h5file = iSSeventplaneAngleWithHydroResultFiles(hydroResultFiles)
+                # perform EM radiation calculation
+                photonEmissionWithHydroResultFiles(h5file)
+    
+            elif simulationType == 'hydroEM_with_decaycocktail':
+                h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(hydroResultFiles)
                 # perform EM radiation calculation
                 photonEmissionWithHydroResultFiles(h5file)
             

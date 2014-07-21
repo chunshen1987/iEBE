@@ -518,6 +518,12 @@
 
       Double Precision sFactor ! multiplicity factor on entropy density
       Common /sFactor/ sFactor
+       
+      Integer :: IhydroJetoutput   ! Output control for hydro evolution history
+      Common /hydroJetoutput/ IhydroJetoutput
+      
+      Integer InitialURead
+      Common/LDInitial/ InitialURead  ! IintURead =1 read initial velocity profile
 
       Integer NDX, NDY, NDT
       Common /NXYTD/ NDX, NDY, NDT
@@ -615,6 +621,9 @@
         If (varName=="ndt") NDT=IResult
 
         If (varName=="visbeta") VisBeta=DResult ! VisBeta, used for proper time tau_pi
+        
+        If (varName=="initialuread") InitialURead=IResult ! read in initial flow velocity profiles
+        If (varName=="ihydrojetoutput") IhydroJetoutput=IResult ! output hydro evolution
 
       End Do ! ArgIndex
 
