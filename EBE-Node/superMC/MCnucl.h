@@ -113,6 +113,7 @@ public:
     int hit(double r);
     static double Angle(const double x,const double y);
 
+    void dumpparticipantTable(char filename[]);
     void dumpBinaryTable(char filename[]);
 
     int getSpectators();

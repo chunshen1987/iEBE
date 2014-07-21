@@ -156,6 +156,7 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
 {
   // binary profile:
   char file_binary[] = "data/BinaryCollisionTable_event_%d.dat";
+  char file_participant[] = "data/ParticipantTable_event_%d.dat";
 
   // entropy profile:
   char file1_ecc[] = "data/sn_ecc_eccp_%%d_event_%d.dat";
@@ -219,6 +220,8 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
       }
     }
     Npart = mc->getNpart1()+mc->getNpart2();
+    sprintf(buffer, file_participant, event);
+    mc->dumpparticipantTable(buffer); // for collision profile
     int Spectator = mc->getSpectators();
     mc->dumpSpectatorsTable(event);
     sprintf(buffer, file_binary, event);

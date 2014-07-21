@@ -957,6 +957,23 @@ void MCnucl::dumpBinaryTable(char filename[])
   */
 }
 
+void MCnucl::dumpparticipantTable(char filename[])
+{
+  double x,y;
+  ofstream of;
+
+  of.open(filename, std::ios_base::app);
+  for (int idx=0; idx<participant.size(); idx++)
+  {
+    x = participant[idx]->getX();
+    y = participant[idx]->getY();
+    of  << setprecision(3) << setw(10) << x
+        << setprecision(3) << setw(10) << y
+        << endl;
+  }
+  of.close();
+}
+
 int MCnucl::getSpectators()
 {
   int count = 0;
