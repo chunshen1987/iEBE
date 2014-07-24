@@ -13,12 +13,14 @@ from sys import stdout
 from shutil import move, copy, rmtree
 from glob import glob
 from subprocess import call
+import numpy as np
 
 class ExecutionError(Exception): pass # used to signal my own exception
 
 # set global default parameters
 allParameterLists = [
     'controlParameterList',
+    'centralityParameters',
     'superMCControl',
     'superMCParameters',
     'preEquilibriumControl',
@@ -52,6 +54,11 @@ controlParameterList = {
     'cleanCMD'              :   'make clean',
 }
 
+centralityParameters = {
+    'centrality': '0-5%',  # centrality bin
+    'cut_type': 'total_entropy',
+    # centrality cut variable: total_entropy or Npart
+}
 superMCControl = {
     'mainDir'                       :   'superMC',
     'dataDir'                       :   'data', # where initial conditions are stored, relative
@@ -68,6 +75,11 @@ superMCParameters = {
     'Npmax'                         :   1000,
     'bmin'                          :   0,
     'bmax'                          :   20,
+    'cutdSdy'                       :   1,
+    'cutdSdy_lowerBound'            :   551.864,
+    'cutdSdy_upperBound'            :   1000000.0,
+    'Aproj'                         :   208,
+    'Atarg'                         :   208,
     'ecm'                           :   2760,
     'Aproj'                         :   208,
     'Atarg'                         :   208,
@@ -78,6 +90,7 @@ superMCParameters = {
     'alpha'                         :   0.118,
     'lambda'                        :   0.288,
     'operation'                     :   1,
+    'cc_fluctuation_model'          :   6,
 }
 
 preEquilibriumControl = {
@@ -205,6 +218,123 @@ def readInParameters():
                 exec("%s.update(ParameterDict.%s)" % (aParameterList, aParameterList))
     except (IOError, SyntaxError):
         raise ExecutionError("Errors trying to open/read the ParameterDict.py file!")
+
+
+def translate_centrality_cut():
+    """
+    translate the centrality boundaries to Npart, dS/dy, b values and update
+    the parameter lists for simulations
+    """
+    cut_type = centralityParameters['cut_type']
+    if cut_type not in ['total_entropy', 'Npart']:
+        print "invalid centrality cut type: ", cut_type
+        exit(1)
+
+    centrality_string = centralityParameters['centrality']
+    centrality_lower_bound = float(centrality_string.split('-')[0])
+    centrality_upper_bound = float(
+        centrality_string.split('-')[1].split('%')[0])
+
+    if superMCParameters['which_mc_model'] == 5:
+        model_name = 'MCGlb'
+    elif superMCParameters['which_mc_model'] == 1:
+        model_name = 'MCKLN'
+
+    if superMCParameters['cc_fluctuation_model'] != 0:
+        multiplicity_fluctuation = 'withMultFluct'
+    else:
+        multiplicity_fluctuation = 'noMultFluct'
+
+    collision_energy = str(superMCParameters['ecm'])
+
+    Aproj = superMCParameters['Aproj']
+    Atrag = superMCParameters['Atarg']
+    nucleus_name_dict = {
+        208: 'Pb',
+        197: 'Au',
+        238: 'U',
+        63: 'Cu',
+        1: 'p',
+        2: 'd',
+        3: 'He',
+    }
+    if Aproj == Atrag:  #symmetric collision
+        nucleus_name = nucleus_name_dict[Aproj]+nucleus_name_dict[Atrag]
+    else:  # asymmetric collision
+        nucleus_name = (nucleus_name_dict[min(Aproj, Atrag)]
+                        + nucleus_name_dict[max(Aproj, Atrag)])
+
+    centrality_cut_file_name = (
+        'iebe_centralityCut_%s_%s_sigmaNN_gauss_d0.9_%s.dat'
+        % (cut_type, model_name + nucleus_name + collision_energy,
+           multiplicity_fluctuation)
+    )
+
+    try:
+        centrality_cut_file = np.loadtxt(
+            path.join(path.abspath('../centrality_cut_tables'),
+                      centrality_cut_file_name))
+    except IOError:
+        print "Can not find the centrality cut table for the collision system"
+        exit(1)
+
+    centrality_lower_idx = (
+        centrality_cut_file[:, 0].searchsorted(centrality_lower_bound+1e-30))
+    centrality_upper_idx = (
+        centrality_cut_file[:, 0].searchsorted(centrality_upper_bound))
+
+    cut_value_upper = (
+        (centrality_cut_file[centrality_lower_idx-1, 1]
+         - centrality_cut_file[centrality_lower_idx, 1])
+        /(centrality_cut_file[centrality_lower_idx-1, 0]
+          - centrality_cut_file[centrality_lower_idx, 0])
+        *(centrality_lower_bound
+          - centrality_cut_file[centrality_lower_idx-1, 0])
+        + centrality_cut_file[centrality_lower_idx-1, 1]
+    )
+    cut_value_low = (
+        (centrality_cut_file[centrality_upper_idx-1, 1]
+         - centrality_cut_file[centrality_upper_idx, 1])
+        /(centrality_cut_file[centrality_upper_idx-1, 0]
+          - centrality_cut_file[centrality_upper_idx, 0])
+        *(centrality_upper_bound
+          - centrality_cut_file[centrality_upper_idx-1, 0])
+        + centrality_cut_file[centrality_upper_idx-1, 1]
+    )
+    if cut_type == 'total_entropy':
+        superMCParameters['cutdSdy'] = 1
+        npart_min = min(
+            centrality_cut_file[centrality_lower_idx-1:centrality_upper_idx+1, 2]
+        )
+        npart_max = max(
+            centrality_cut_file[centrality_lower_idx-1:centrality_upper_idx+1, 3]
+        )
+        b_min = min(
+            centrality_cut_file[centrality_lower_idx-1:centrality_upper_idx+1, 4]
+        )
+        b_max = max(
+            centrality_cut_file[centrality_lower_idx-1:centrality_upper_idx+1, 5]
+        )
+        superMCParameters['cutdSdy_lowerBound'] = cut_value_low
+        superMCParameters['cutdSdy_upperBound'] = cut_value_upper
+    elif cut_type == 'Npart':
+        superMCParameters['cutdSdy'] = 0
+        b_min = min(
+            centrality_cut_file[centrality_lower_idx-1:centrality_upper_idx+1, 4]
+        )
+        b_max = max(
+            centrality_cut_file[centrality_lower_idx-1:centrality_upper_idx+1, 5]
+        )
+    superMCParameters['Npmax'] = npart_max
+    superMCParameters['Npmin'] = npart_min
+    superMCParameters['bmax'] = b_max
+    superMCParameters['bmin'] = b_min
+
+    print centrality_lower_bound, '-', centrality_upper_bound, '% :'
+    print cut_type, ':', cut_value_low, '-', cut_value_upper
+    print "Npart: ", npart_min, '-', npart_max
+    print "b: ", b_min, '-', b_max
+
 
 
 def generateSuperMCInitialConditions(numberOfEvents):
@@ -769,13 +899,15 @@ def sequentialEventDriverShell():
     try:
         # read parameters
         readInParameters()
+        translate_centrality_cut()
+        exit(1)
 
         # create result folder
         resultDir = controlParameterList['resultDir']
         if path.exists(resultDir):
             rmtree(resultDir)
             makedirs(resultDir)
-            
+
         # get simulation type
         simulationType = controlParameterList['simulation_type']
 
@@ -814,20 +946,20 @@ def sequentialEventDriverShell():
             if simulationType == 'hybrid':
                 # perform iSS calculation and return the path to the OSCAR file
                 OSCARFilePath = iSSWithHydroResultFiles(hydroResultFiles)
-    
+
                 # perform osc2u
                 osc2uOutputFilePath = osc2uFromOSCARFile(OSCARFilePath)
-    
+
                 # now urqmd
                 urqmdOutputFilePath = urqmdFromOsc2uOutputFile(osc2uOutputFilePath)
-    
+
                 # copy and concatnate final results from all hydro events into one file
                 combinedUrqmdFile = path.join(controlParameterList['resultDir'], controlParameterList['combinedUrqmdFile'])
                 open(combinedUrqmdFile, 'a').writelines(open(urqmdOutputFilePath).readlines())
-    
+
                 # bin the combined result file to get flows
                 binUrqmdResultFiles(urqmdOutputFilePath)
-                
+
                 # delete the huge final UrQMD combined file
                 remove(urqmdOutputFilePath)
 
