@@ -78,8 +78,6 @@ superMCParameters = {
     'cutdSdy'                       :   1,
     'cutdSdy_lowerBound'            :   551.864,
     'cutdSdy_upperBound'            :   1000000.0,
-    'Aproj'                         :   208,
-    'Atarg'                         :   208,
     'ecm'                           :   2760,
     'Aproj'                         :   208,
     'Atarg'                         :   208,
