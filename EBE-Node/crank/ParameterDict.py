@@ -1,19 +1,23 @@
 controlParameterList = {
-    'simulation_type'       :   'hydro', # 'hybrid' or 'hydro'
+    'simulation_type'       :   'hydro',  # 'hybrid' or 'hydro'
     'niceness'              :   10,       # range from 0 to 19 for process priority, 0 for the highest priority
+}
+
+centralityParameters = {
+    'centrality': '20-30%',  # centrality bin
+    'cut_type': 'total_entropy',
+    # centrality cut variable: total_entropy or Npart
 }
 
 superMCParameters = {
     'which_mc_model'                :   5,
     'sub_model'                     :   1,
-    'Npmin'                         :   0,
-    'Npmax'                         :   1000,
-    'bmin'                          :   13,
-    'bmax'                          :   20,
+    'Aproj'                         :   208,
+    'Atarg'                         :   208,
     'ecm'                           :   2760,
     'finalFactor'                   :   56.763,
     'alpha'                         :   0.118,
-    'lambda'                        :   0.288,
+    'lambda'                        :   0.218,
 }
 
 hydroParameters = {

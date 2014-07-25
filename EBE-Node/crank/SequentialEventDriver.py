@@ -232,65 +232,60 @@ def translate_centrality_cut():
                       centrality_cut_file_name))
     except IOError:
         print "Can not find the centrality cut table for the collision system"
+        print centrality_cut_file_name
         exit(1)
 
-    centrality_lower_idx = (
+    lower_idx = (
         centrality_cut_file[:, 0].searchsorted(centrality_lower_bound+1e-30))
-    centrality_upper_idx = (
+    upper_idx = (
         centrality_cut_file[:, 0].searchsorted(centrality_upper_bound))
 
     cut_value_upper = (
-        (centrality_cut_file[centrality_lower_idx-1, 1]
-         - centrality_cut_file[centrality_lower_idx, 1])
-        /(centrality_cut_file[centrality_lower_idx-1, 0]
-          - centrality_cut_file[centrality_lower_idx, 0])
-        *(centrality_lower_bound
-          - centrality_cut_file[centrality_lower_idx-1, 0])
-        + centrality_cut_file[centrality_lower_idx-1, 1]
+        (centrality_cut_file[lower_idx-1, 1]
+         - centrality_cut_file[lower_idx, 1])
+        /(centrality_cut_file[lower_idx-1, 0]
+          - centrality_cut_file[lower_idx, 0])
+        *(centrality_lower_bound - centrality_cut_file[lower_idx-1, 0])
+        + centrality_cut_file[lower_idx-1, 1]
     )
     cut_value_low = (
-        (centrality_cut_file[centrality_upper_idx-1, 1]
-         - centrality_cut_file[centrality_upper_idx, 1])
-        /(centrality_cut_file[centrality_upper_idx-1, 0]
-          - centrality_cut_file[centrality_upper_idx, 0])
-        *(centrality_upper_bound
-          - centrality_cut_file[centrality_upper_idx-1, 0])
-        + centrality_cut_file[centrality_upper_idx-1, 1]
+        (centrality_cut_file[upper_idx-1, 1]
+         - centrality_cut_file[upper_idx, 1])
+        /(centrality_cut_file[upper_idx-1, 0]
+          - centrality_cut_file[upper_idx, 0])
+        *(centrality_upper_bound - centrality_cut_file[upper_idx-1, 0])
+        + centrality_cut_file[upper_idx-1, 1]
     )
     if cut_type == 'total_entropy':
         superMCParameters['cutdSdy'] = 1
-        npart_min = min(
-            centrality_cut_file[centrality_lower_idx-1:centrality_upper_idx+1, 2]
-        )
-        npart_max = max(
-            centrality_cut_file[centrality_lower_idx-1:centrality_upper_idx+1, 3]
-        )
-        b_min = min(
-            centrality_cut_file[centrality_lower_idx-1:centrality_upper_idx+1, 4]
-        )
-        b_max = max(
-            centrality_cut_file[centrality_lower_idx-1:centrality_upper_idx+1, 5]
-        )
+        npart_min = min(centrality_cut_file[lower_idx-1:upper_idx+1, 2])
+        npart_max = max(centrality_cut_file[lower_idx-1:upper_idx+1, 3])
+        b_min = min(centrality_cut_file[lower_idx-1:upper_idx+1, 4])
+        b_max = max(centrality_cut_file[lower_idx-1:upper_idx+1, 5])
         superMCParameters['cutdSdy_lowerBound'] = cut_value_low
         superMCParameters['cutdSdy_upperBound'] = cut_value_upper
     elif cut_type == 'Npart':
         superMCParameters['cutdSdy'] = 0
-        b_min = min(
-            centrality_cut_file[centrality_lower_idx-1:centrality_upper_idx+1, 4]
-        )
-        b_max = max(
-            centrality_cut_file[centrality_lower_idx-1:centrality_upper_idx+1, 5]
-        )
+        b_min = min(centrality_cut_file[lower_idx-1:upper_idx+1, 4])
+        b_max = max(centrality_cut_file[lower_idx-1:upper_idx+1, 5])
     superMCParameters['Npmax'] = npart_max
     superMCParameters['Npmin'] = npart_min
     superMCParameters['bmax'] = b_max
     superMCParameters['bmin'] = b_min
 
-    print centrality_lower_bound, '-', centrality_upper_bound, '% :'
-    print cut_type, ':', cut_value_low, '-', cut_value_upper
+    #print out information
+    print '-'*80
+    print('%s collisions at sqrt{s} = %s A GeV with %s initial conditions'
+          % (nucleus_name , collision_energy, model_name))
+    print("Centrality : %g - %g"
+          % (centrality_lower_bound, centrality_upper_bound) + r"%")
+    print 'centrality cut on ', cut_type
+    if cut_type == 'total_entropy':
+        print 'dS/dy :', cut_value_low, '-', cut_value_upper
     print "Npart: ", npart_min, '-', npart_max
-    print "b: ", b_min, '-', b_max
-
+    print "b: ", b_min, '-', b_max, ' fm'
+    print '-'*80
+    return
 
 
 def generateSuperMCInitialConditions(numberOfEvents):
@@ -634,7 +629,6 @@ def sequentialEventDriverShell():
         # read parameters
         readInParameters()
         translate_centrality_cut()
-        exit(1)
 
         # create result folder
         resultDir = controlParameterList['resultDir']

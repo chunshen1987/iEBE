@@ -52,7 +52,7 @@ bmax = 4.4                 # Maximum sampled impact parameter
 Npmin = 357                 # Minimum participant nucleon cut
 Npmax = 1000              # Maximum participant nucleon cut
 
-cutdSdy = 1               # cut centrality with additional requirements on total entropy density (without normalization factor)
+cutdSdy = 0               # cut centrality with additional requirements on total entropy density (without normalization factor)
 cutdSdy_lowerBound =  551.864          # lower bound of the allowed total entropy density
 cutdSdy_upperBound =  10000000.0       # upper bound of the allowed total entropy density
 
