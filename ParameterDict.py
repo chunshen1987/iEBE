@@ -18,7 +18,7 @@ superMCParameters = {
     'finalFactor'                   :   56.763,
     'alpha'                         :   0.118,
     'lambda'                        :   0.218,
-    'operation'                     :   2,
+    'operation'                     :   1,
 }
 
 preEquilibriumParameters = {
@@ -48,7 +48,7 @@ photonEmissionParameters = {
     'dx'          :   0.5,
     'dy'          :   0.5,
     'dTau'        :   0.1,
-    'T_sw_high'   :   170,
-    'T_sw_low'    :   150,
+    'T_sw_high'   :   0.170,
+    'T_sw_low'    :   0.150,
     'calHGIdFlag' :   0,
 }

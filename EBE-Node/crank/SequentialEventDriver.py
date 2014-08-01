@@ -63,7 +63,7 @@ superMCControl = {
     'mainDir'                       :   'superMC',
     'dataDir'                       :   'data', # where initial conditions are stored, relative
     'saveICFile'                    :   True, # whether to save initial condition file
-    'dataFiles'                     :   '*event_%d*.dat', # data filenames
+    'dataFiles'                     :   '*event_%d_*.dat', # data filenames
     'initialFiles'                  :   '*event*_block*.dat',  #initial density profile filenames
     'numberOfEventsParameterName'   :   'nev',
     'executable'                    :   'superMC.e',
@@ -924,6 +924,7 @@ def sequentialEventDriverShell():
                 superMCDataDirectory = path.join(controlParameterList['rootDir'], superMCControl['mainDir'], superMCControl['dataDir'])
                 for aFile in glob(path.join(superMCDataDirectory, superMCControl['dataFiles'] % event_id)):
                     copy(aFile, controlParameterList['eventResultDir'])
+                exit(0)
             
             if simulationType == 'hydroEM_preEquilibrium':
                 # perform hydro calculations with pre-equilibrium evolution and get a list of all the result filenames
