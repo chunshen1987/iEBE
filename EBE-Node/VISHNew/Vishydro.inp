@@ -9,8 +9,8 @@
 *
 *
 0.08        !ViscousC              eta/s (const.) (0: no shear viscosity)
-0.5         !VisBeta               \tau_Pi=VisBeta*6.0\eta /(ST)
-0.08         !VisBulk               VisBulk=C;  Xi/s= C* (Xi/S)_min  (C=0, no bulk vis; or C>1 )
+0.866666    !VisBeta               \tau_Pi=VisBeta*6.0\eta /(ST)
+0.08        !VisBulk               VisBulk=C;  Xi/s= C* (Xi/S)_min  (C=0, no bulk vis; or C>1 )
 2           !IRelaxBulk            type of bulk relaxation time (0: critical slowing down; 1: constant relaxation time; 2: 1.5/(2 Pi T))
 5.0         !BulkTau               constant relaxation time (fm/c) (require input IRelaxBulk=1)
 *
