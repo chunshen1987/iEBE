@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python
 # This package performs a sequential calculations of a given number of events,
 # after reading parameters from ParameterDict.py. The most important control
 # parameters are set in controlParameterList, for other parameters see
@@ -911,6 +911,7 @@ def sequentialEventDriverShell():
         for aInitialConditionFile in generateSuperMCInitialConditions(controlParameterList['numberOfEvents']):
             # get the result folder name for storing results, then create it if necessary
             event_id += 1
+            initial_id = int(aInitialConditionFile.split('/')[-1].split('_')[2])
             eventResultDir = path.join(resultDir, controlParameterList['eventResultDirPattern'] % event_id)
             controlParameterList['eventResultDir'] = eventResultDir
             if path.exists(eventResultDir):
@@ -922,9 +923,8 @@ def sequentialEventDriverShell():
             
             if superMCControl['saveICFile']:
                 superMCDataDirectory = path.join(controlParameterList['rootDir'], superMCControl['mainDir'], superMCControl['dataDir'])
-                for aFile in glob(path.join(superMCDataDirectory, superMCControl['dataFiles'] % event_id)):
+                for aFile in glob(path.join(superMCDataDirectory, superMCControl['dataFiles'] % initial_id)):
                     copy(aFile, controlParameterList['eventResultDir'])
-                exit(0)
             
             if simulationType == 'hydroEM_preEquilibrium':
                 # perform hydro calculations with pre-equilibrium evolution and get a list of all the result filenames
