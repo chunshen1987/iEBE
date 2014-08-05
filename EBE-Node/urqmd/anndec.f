@@ -1,10 +1,7 @@
-c $Id: anndec.f,v 1.16 1997/08/25 08:17:11 weber Exp $    
+c $Id: anndec.f,v 1.20 2003/05/02 13:14:47 weber Exp $    
 C####C##1#########2#########3#########4#########5#########6#########7##
         subroutine anndec(io,mm1,ii1,iiz1,mm2,ii2,iiz2,sqrts,sig,gam)
 c
-c     Unit: Collison Term
-c     Author: L.A.Winckelmann, S. Soff,  S.A. Bass, C. Ernst 
-c     Date:   02/01/95
 c
 cinput io    : 0: annihilation; 1: decay
 cinput mm1   : mass of scattering/decaying particle 1
@@ -42,7 +39,7 @@ C
       integer strit
 C
 C    ************************************************************************
-Css  Case 1 :  Two ingoing Particles --> One outgoing Particle (Resonance,...)
+C  Case 1 :  Two ingoing Particles --> One outgoing Particle (Resonance,...)
 C
 C
       i1=ii1
@@ -57,41 +54,35 @@ C
       sig=0d0
       gam=0d0
 C
-Css     Check if (sqrt(s)-masses of ingoing particles) is significant different
-C       from zero
+C     Check if (sqrt(s)-masses of ingoing particles) is significant different
+C     from zero
 C
       if(sqrts-mm1-mm2.le.1d-3)return
 C       
-Css     Check if CTOption(15) is set different from zero-->then skip anndec.f
+C     Check if CTOption(15) is set different from zero-->then skip anndec.f
 C
       if(CTOption(15).ne.0)return
 C
 C
-Css     Check if itype of particle one is smaller than the one of particle two
-Css     if so --> interchange particle one and particle two
-Css      in case of particle one = B and particle two = M --> then
-Css      new particle one = M and new particle two = B
+C     Check if itype of particle one is smaller than the one of particle two
+C     if so --> interchange particle one and particle two
+C      in case of particle one = B and particle two = M --> then
+C      new particle one = M and new particle two = B
 C
       if(iabs(i1).lt.iabs(i2))call swpizm(i1,iz1,m1,i2,iz2,m2)
 C
-Css     Determination of the amount of the netstrangness
+C     Determination of the amount of the netstrangness
 C
       is=iabs(strit(i1)+strit(i2))
 C
 C       maxbar (Maximum Baryon ityp)
-Css     if second particle is antibaryon and first particle is strange
+C       if second particle is antibaryon and first particle is strange
 C       switch antibaryon to baryon
 C
-      if(iabs(i2).le.maxbar)then
-         if(i2.lt.0)then 
-cdebug,sab,vishnu
-c           if(strit(i1).ne.0)i2=-i2 ! get corresponding anti-branch
-corig           if(strit(i1).ne.0)i1=-i1 ! get corresponding anti-branch
-         end if
-      end if 
+
 C
 C
-Css     Check if both particles are mesons 
+C     Check if both particles are mesons 
 C
       if(iabs(i1).ge.minmes.and.iabs(i2).ge.minmes)then
 C
@@ -103,7 +94,7 @@ C     Check if amount of netstrangeness is greater than 1
 c     currently no resonant processes for |s|>1 are implemented
 
          if(is.gt.1)return 
-cspl changed 07-96:
+
          if(is.ne.0)then
            call anndex(0,m1,i1,iz1,m2,i2,iz2,sqrts,
      .        sig,gam,maxbrm,minmes+1,maxmes,bmtype,branmes)
@@ -113,7 +104,7 @@ cspl changed 07-96:
          endif
 
 C
-Css      Check if second particle is baryon
+C        Check if second particle is baryon
 C        (with zero amount of netstrangeness) ?
 C        e.g. pion-nucleon case
 C 
@@ -123,7 +114,7 @@ c... (anti-)N*,D*
      .        maxbra,minnuc+1,maxdel,brtype,branres)
 
 C
-Css     Check if second particle is baryon
+C       Check if second particle is baryon
 C        (with amount one of netstrangeness) ?
 C
       else if(is.eq.1.and.iabs(i2).le.maxbar)then
@@ -131,14 +122,14 @@ c... (anti-)Y*
          call anndex(0,m1,i1,iz1,m2,i2,iz2,sqrts,sig,gam,
      .        maxbrs1,minlam+1,maxsig,bs1type,branbs1)        
 C
-Css     Check if second particle is baryon
+C       Check if second particle is baryon
 C        (with amount two of netstrangeness) ?
 C
       else if(is.eq.2.and.iabs(i2).le.maxbar)then
 c... (anti-)X*
          call anndex(0,m1,i1,iz1,m2,i2,iz2,sqrts,sig,gam,
      .        maxbrs2,mincas+1,maxcas,bs2type,branbs2)
-Css
+C
 C
       else 
         sig=0d0
@@ -180,7 +171,7 @@ c
             stop
          end if
 C
-Css  End of Cases 1 and 2 : annihilation/decay
+C    End of Cases 1 and 2 : annihilation/decay
 C
       end if
 C    ************************************************************
@@ -193,10 +184,6 @@ C
 C####C##1#########2#########3#########4#########5#########6#########7##
        subroutine anndex(io,m1,i1,iiz1,m2,i2,iiz2,sqrts,sig,gam,
      &            maxbr,mini,maxi,btype,branch)
-c
-c  Unit   : Collision Term           
-c  Author : L.A.Winckelmann, S.A. Bass, S. Soff, C. Ernst 
-c  Date   : 02/01/95     	   
 c
 cinput io     : 0: annihilation; 1: decay
 cinput m1     : mass of scattering/decaying particle 1
@@ -237,7 +224,7 @@ Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       implicit none
 
       include 'comres.f'
-	include 'comwid.f'
+      include 'comwid.f'
       include 'newpart.f'
       include 'options.f'
 
@@ -248,31 +235,25 @@ Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       integer icnt,is
 
 
-      integer io,i,j,i1,i2,iz1,iz2,itag,ii1,ii2
-      integer itn1,itnz1,iiz1,iiz2
+      integer io,i,j,i1,i2,iz1,iz2,itag,ii1,ii2,iiz1,iiz2
+      integer itn1,itnz1
       real*8 m1,m2,prob(0:100),sum,sig,gam,cgk2
       real*8 sigi(minnuc:maxmes),mmax,mmin,br,mmi1,mmi2,ppcm,gt
-      real*8 m,g
+      real*8 m,g,mo
      	
 c      functions
       real*8 fbrwig,pcms,massit
       real*8 mminit,widit,fbrancx,ranf,fcgk,fwidth
       real*8 fprwdt
-      integer jit,isoit,strit
+      integer jit,isoit,strit,chrmit
 
-
-cdebug,sab,VISHNU
-         iz1=iiz1
-         iz2=iiz2
-
+      iz1=iiz1
+      iz2=iiz2
 
       if(io.eq.1)then
-
-
-
 C
 C
-Css   one ingoing particle --> two,three,four outgoing particles
+C   one ingoing particle --> two,three,four outgoing particles
 C
 c... decays
   
@@ -336,6 +317,14 @@ c  for anti-K* decays(mesons with one s-quark)
                   itypnew(j)=isign(itypnew(j),i1) 
                end if
  41         continue
+c charm mesons
+         elseif(iabs(i1).ge.minmes.and.chrmit(i1).ne.0) then
+            do 441 j=1,nexit
+               if(chrmit(itypnew(j)).ne.0)then
+c  for anti-D* decays(mesons with one c-quark)
+                  itypnew(j)=isign(itypnew(j),i1) 
+               end if
+ 441         continue
          elseif(iabs(i1).lt.minmes) then
 c     the (anti-)baryon MUST always be the first outgoing particle
 c     -> conserve baryon-charge
@@ -361,75 +350,82 @@ c...  get masses
 c...  i1 is a broad meson
             pnew(5,2)=massit(itypnew(2))
             mmin=mminit(itypnew(1))
-            mmax=sqrts
-            do 39 j=2,nexit
-               mmax=mmax-pnew(5,j)
- 39         continue
+            mo = pnew(5,2)
+            if(nexit.gt.2) then
+               do 39 j=3,nexit
+                  mo=mo+pnew(5,j)
+ 39            continue
+            endif
+
+            mmax=sqrts-mo
             call getmas(massit(itypnew(1)),widit(itypnew(1)),itypnew(1)
-     &                  ,isoit(itypnew(1)),mmin,mmax,pnew(5,1))
+     &                  ,isoit(itypnew(1)),mmin,mmax,mo,pnew(5,1))
            
          elseif(widit(itypnew(2)).ge.1.d-4
      &           .and.widit(itypnew(1)).le.1.d-4)then
 c...  i2 is a broad meson
             pnew(5,1)=massit(itypnew(1))
             mmin=mminit(itypnew(2))
-            mmax=sqrts-pnew(5,1)
+          
+            mo = pnew(5,1)
             if(nexit.gt.2) then
                do 49 j=3,nexit
-                  mmax=mmax-pnew(5,j)
+                  mo=mo+pnew(5,j)
  49            continue
             endif
-
+            mmax=sqrts-mo
             call getmas(massit(itypnew(2)),widit(itypnew(2)),itypnew(2)
-     &           ,isoit(itypnew(2)),mmin,mmax,pnew(5,2))
+     &           ,isoit(itypnew(2)),mmin,mmax,mo,pnew(5,2))
 
          elseif(widit(itypnew(1)).ge.1.d-4
      &           .and.widit(itypnew(2)).ge.1.d-4)then
 c...  i1&i2 are both broad 
             if(ranf(0).gt.0.5)then
                mmin=mminit(itypnew(1))
-               mmax=sqrts-mminit(itypnew(2))
+               mo=mminit(itypnew(2))
                if(nexit.gt.2) then
                   do 59 j=3,nexit
-                     mmax=mmax-pnew(5,j)
+                     mo=mo+pnew(5,j)
  59               continue
                endif
+               mmax=sqrts-mo
+
                call getmas(massit(itypnew(1)),widit(itypnew(1)),
-     &              itypnew(1),isoit(itypnew(1)),mmin,mmax,pnew(5,1))
+     &              itypnew(1),isoit(itypnew(1)),mmin,mmax,mo,pnew(5,1))
 
                mmin=mminit(itypnew(2))
-               mmax=sqrts-pnew(5,1)
+               mo=pnew(5,1)
                if(nexit.gt.2) then
                   do 69 j=3,nexit
-                     mmax=mmax-pnew(5,j)
+                     mo=mo+pnew(5,j)
  69               continue
                endif
-
+               mmax=sqrts-mo
                call getmas(massit(itypnew(2)),widit(itypnew(2)),
-     &              itypnew(2),isoit(itypnew(2)),mmin,mmax,pnew(5,2))
+     &              itypnew(2),isoit(itypnew(2)),mmin,mmax,mo,pnew(5,2))
 
             else ! of ranf.gt.0.5
                mmin=mminit(itypnew(2))
-               mmax=sqrts-mminit(itypnew(1))
+               mo=mminit(itypnew(1))
                if(nexit.gt.2) then
                   do 79 j=3,nexit
-                     mmax=mmax-pnew(5,j)
+                     mo=mo+pnew(5,j)
  79               continue
                endif
-
+               mmax=sqrts-mo
                call getmas(massit(itypnew(2)),widit(itypnew(2)),
-     &              itypnew(2),isoit(itypnew(2)),mmin,mmax,pnew(5,2))
+     &              itypnew(2),isoit(itypnew(2)),mmin,mmax,mo,pnew(5,2))
 
                mmin=mminit(itypnew(1))
-               mmax=sqrts-pnew(5,2)
+               mo=pnew(5,2)
                if(nexit.gt.2) then
                   do 89 j=3,nexit
-                     mmax=mmax-pnew(5,j)
+                     mo=mo+pnew(5,j)
  89               continue
                endif
-
+               mmax=sqrts-mo
                call getmas(massit(itypnew(1)),widit(itypnew(1)),
-     &              itypnew(1),isoit(itypnew(1)),mmin,mmax,pnew(5,1))
+     &              itypnew(1),isoit(itypnew(1)),mmin,mmax,mo,pnew(5,1))
  
             endif
 c     none are broad
@@ -449,29 +445,22 @@ c     none are broad
          end if 
 C     
 C     
-Css   two ingoing particles --> one outgoing particle (resonance)
+C   two ingoing particles --> one outgoing particle (resonance)
 C
 C     i.e. (i0=0)       
       else
 c.... collisions: find in-branch = j  
          sig=0.0
          gam=0.0         
-
-csab set up call to getobr:
+C
             ii1=i1
             ii2=i2
 
-cdebug,sab,vishnu
          if(iabs(i2).le.99.and.i2.lt.0) then
-c            write(6,*) 'old ',i1,iz1,i2,iz2
             iz2=-1*iz2
             iz1=-1*iz1
             if(strit(i1).ne.0) ii1=-1*i1
-c            write(6,*) 'new ',i1,iz1,i2,iz2
          endif
-
-C
-c
 
 c  for strange - nonstrange meson-meson scattering: strip sign
          is=iabs(strit(i1)+strit(i2))
@@ -479,11 +468,11 @@ c  for strange - nonstrange meson-meson scattering: strip sign
             ii1=iabs(i1)
             ii2=iabs(i2)
          endif
-
 c  for meson baryon, strip sign of baryon   
          if(iabs(i2).le.maxbar) then
             ii2=iabs(i2)
          endif
+
 c     
          call getobr(btype,0,maxbr,ii1,ii2,j)
 
@@ -497,52 +486,27 @@ C
 C   
          ppcm=pcms(sqrts,m1,m2)
 C   
-Css      Loop over different branches (resonances...)
+C      Loop over different branches (resonances...)
 C  
          do 88 i=mini,maxi
-
-ce hard cut: no resonant cross section at highest energies
-c		if(sqrts.gt.maxtab2)then
-c	  	  sigi(i)=0d0
-c	  	  goto 88
-c		endif
-ce
-
-C            m0=massit(i)
-C   this next line now again outside the loop (QM-version)!
-C            ppcm=pcms(m0,massit(i1),massit(i2))
             sigi(i)=0.d0
             br=branch(j,i)
             gt=widit(i)
-C    this value was 1d-9 (QM-version)
             if(br*gt.lt.1d-4)goto 88
             
             cgk2=fcgk(i1,i2,iz1,iz2,i)
-c           write(6,*)i1,i2,iz1,iz2,i,':',cgk2
-C  value 1d-2 new !!!!              
             if(br*cgk2.gt.0d0.and.sqrts.gt.mmi1+mmi2+1d-2.and.
      &          ppcm.gt.1d-2)then 
 C
 C
-Css            additional factor br removed in next line
-                 br=fprwdt(j,i,iz1+iz2,sqrts)/fwidth(i,iz1+iz2,sqrts)
-C
-C             next five lines to supplement subroutine fbrwig with an
-C             additional factor Gamma.
-C             earlier (QM-version) this factor was in fbrwig but 
-C             then it is not! normalized!
+               br=fprwdt(j,i,iz1+iz2,sqrts)/fwidth(i,iz1+iz2,sqrts)
                m=dabs(sqrts)
                g=fwidth(i,iz1+iz2,m)
                sigi(i)=dble(jit(i)+1)
      /                 /dble((jit(i1)+1)*(jit(i2)+1))
      *           *pi/ppcm**2*br
-ce     *           *2d0*pi*g*fbrwig(i,iz1+iz2,sqrts,1)*cgk2*cc
      *           *g*g/((m-massit(i))**2+g*g/4d0)*cgk2*cc
                end if
-Css************************************************************
-C             Output of single Breit-Wigners i to units 71,...
-C              write(69+i,*) m3,sigi(i)
-Css************************************************************
               if(sigi(i).gt.1e10)then
                 write(6,*)' ***error(anndec) cross section too high '
                 write(6,*)'anndex(ann):',i,
@@ -556,14 +520,9 @@ C
 C
  88      continue
 c...  find outgoing resonance      
-c         write(6,*)i1,iz1,'+',i2,iz2,'m:',m1,m2,m3
  108     call getbran(sigi,minnuc,maxmes,sig,mini,maxi,itn1)
-         
-c         write(6,*)'anndex(ann):j=',j,i1,i2,'->',i3,sig
-         
 
-cdebug,sab,vishnu
-            itnz1=iiz1+iiz2
+         itnz1=iiz1+iiz2
 
          if(sig.ge.1d-10)then
             gam=fwidth(itn1,itnz1,sqrts)
@@ -586,7 +545,7 @@ c     copy created resonance into newpart arrays
 
 
 C
-Css   End of two Cases (annihilation/decay)
+C   End of two Cases (annihilation/decay)
 C
 C
       end if                    !dec/ann
@@ -596,9 +555,6 @@ C
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function fbrwig(i,iz,mi,bit) 
-c
-c  Unit:   Collison Term
-c  Author: L.A.Winckelmann, Christoph Ernst
 c
 cinput  i  : resonance ID  
 cinput  iz : $2\cdot I_3$ of resonance 
@@ -634,13 +590,11 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
       return
       end
 
-
-
 C####C##1#########2#########3#########4#########5#########6#########7##
         subroutine getbran(x,dmin,dmax,sumx,nmin,nmax,i)
 c
 c Unit : Infrastructure
-c Author :     L.A. Winckelmann, S.A. Bass                 
+c Author :     L.A. Winckelmann, S.A. Bass
 c
 cinput   x : vector containing weights, dimension is {\tt x(dmin:dmax)}
 cinput  dmin : lower dimension of {\tt x}
@@ -649,11 +603,11 @@ coutput sumx : sum of elements of {\tt x} from {\tt nmin} to {\tt nmax}
 cinput  nmin : lower boundary for {\tt getbran} operation
 cinput  nmax : upper boundary for {\tt getbran} operation
 coutput i : index of element which has been choosen randomly
-c 
+c
 c     {\tt getbran} takes a vector of weights or probabilities
-c     {\tt x(dmin:dmax)} and sums up the elements from 
+c     {\tt x(dmin:dmax)} and sums up the elements from
 c     {\tt nmin} to {\tt nmax}. It then chooses randomly an element {\tt i}
-c     between {\tt nmin} and {\tt nmax}. The probability of 
+c     between {\tt nmin} and {\tt nmax}. The probability of
 c     choosing {\tt i} depends on the weights contained in {\tt x}.
 c
 c     \danger{ {\tt i} will be undefined if {\tt sum} is less or
@@ -673,7 +627,7 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
         if(sumx.lt.cut) then
            i=nmax+1
            return
-        endif        
+        endif
 
  28     continue
         itrial=itrial+1
@@ -686,7 +640,7 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
           end if
           rx=rx-x(j)
  108   continue
-        
+
        if(itrial.lt.10) goto 28
 
        do j=nmin,nmax
@@ -704,12 +658,11 @@ c        stop
  1008   format(5e10.4)
         end
 
+
+
 C####C##1#########2#########3#########4#########5#########6#########7##
         subroutine getobr(x,dmin,dmax,i1,i2,i)
 c
-c Unit : Collision Term
-c Author : L.A.Winckelmann, S.A. Bass, C.Ernst
-c Date : 08/01/95
 c
 cinput x : array, either {\tt brtype, bmtype, bs1type} or {\tt bs2type}
 cinput dmin : lower dimension of {\tt x(4,dmin:dmax)}
@@ -744,9 +697,6 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine normit (sigma,isigline)
 c
-c     Unit     : collision term
-c     Author   : Henning Weber
-c     Date     : 11/02/97
 c     Revision : 1.0
 c
 cinput sigma : vector with all (partial) cross sections
@@ -791,6 +741,7 @@ c copy array
          gsumpart=0
 c calculate the sum of all sigpart
          do 20 i=1,npsig
+
             sumpart=sumpart+sigma(i)
             gsumpart=gsumpart+sigma(i)*uncert(i)
  20      continue
@@ -803,12 +754,6 @@ c            stop
             return
         endif
          if (gsumpart.eq.0.0) then
-c           write (6,*) 'normit: Warning: no channel for rescaling!'
-c           write (6,*) '  isigline:',isigline
-c           do 40 i=1,npsig
-c              write (6,*) sigma(i),uncert(i)
-c 40        continue
-c           write (6,*) 'normit: fixing...'
             do 50 i=1,npsig
 c now all channels can be modified
                if (uncert(i).eq.0) then
@@ -835,10 +780,12 @@ c copy new values to sigma
             sigma(i)=newsig(i)
  70      continue
       endif
-      
-      if (CTOption(7).eq.1.and.sigma(2).gt.1d-10) then
-         sigma(1)=0d0
-      endif
+
+chp cto 7 is now handled in scatter      
+c      if (CTOption(7).eq.1.and.sigma(2).gt.1d-10) then
+c         sigma(1)=0d0
+c      endif
+chp 
       if (CTOption(7).eq.-1) then
          do 80 i=2,npsig
             sigma(i)=0d0
@@ -852,10 +799,6 @@ c copy new values to sigma
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function fwidth(ir,izr,m)
-c
-c Unit : Collision Term
-c Author : L.A.Winckelmann, H. Weber, C. Ernst
-c Date : 2/2/95
 c
 cinput  ir  : resonance ID  
 cinput  izr : $2\cdot I_3$ of resonance 
@@ -877,6 +820,10 @@ C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 gtot,m,widit,splint
       real*8 minwid, fprwdt
 
+      if (CTOption(1).ne.0) then
+         fwidth=widit(ir)
+         return
+      endif
       if (wtabflg.gt.0.and.CTOption(33).eq.0) then
          ires=iabs(ir)
          minwid=min(widit(ir),1D-8)
@@ -919,9 +866,6 @@ c widths are continued horicontally outside the spline region
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function fprwdt(i,ir,izr,mi)
 c
-c Author : L.A.Winckelmann 
-c Date : 2/2/95
-c
 cinput  i   : decay branch
 cinput  ir  : resonance ID  
 cinput  izr : $2\cdot I_3$ of resonance 
@@ -953,10 +897,6 @@ c     write(6,*)'   ',bi,gi,widit(ir)
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
        real*8 function fbrancx(i,ir,izr,em,bi,b1,b2,b3,b4)
 c 
-c Unit   : Collision Term
-c Author : L.A.Winckelmann, S.A. Bass, H. Weber, C. Ernst
-c Date   : 2/2/95
-c
 cinput i  : decay branch
 cinput ir : ID of resonance
 cinput em : actual mass of resonance
@@ -984,7 +924,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
        implicit none
        real*8 kdiv1,kdiv2,em,b,mmin,mn,m1m,m2m
        real*8 bi,minwid
-       real*8 fbran,splint,pmean
+       real*8 fbran,splint,splintth,pmean
        integer i,ires,ir,izr,b1,b2,b3,b4
        include 'comres.f'
        include 'comwid.f'
@@ -1005,39 +945,39 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
           return
        end if
 
+       m1m=mminit(b1)
+       m2m=mminit(b2)
+c in case of three or four particle decays put masses in m2m
+       if(b3.ne.0) m2m=m2m+mminit(b3)
+       if(b4.ne.0) m2m=m2m+mminit(b4)
+       mn=massit(ires)          ! nominal mass
+       mmin= m1m+m2m            ! minimal mass of resonance
 
        if (wtabflg.ge.2.and.CTOption(33).eq.0) then
-         minwid=min(fbran(i,ires),1D-8)
-         if (ires.ge.minbar.and.ires.le.maxbar) then        !baryons
+          minwid=min(fbran(i,ires),1D-8)
+          if (ires.ge.minbar.and.ires.le.maxbar) then !baryons
 c branching ratios are continued horicontally outside the spline region
-	      if(em.le.maxtab2)then
-           	  b=max(splint(tabx,pbtaby(1,1,ires,i),
-     .           pbtaby(1,2,ires,i),widnsp,em),minwid)
-		else
-           	  b=max(splint(tabx,pbtaby(1,1,ires,i),
-     .           pbtaby(1,2,ires,i),widnsp,maxtab2),minwid)
-     		endif
-         else if (ires.ge.minmes.and.ires.le.maxmes) then   !mesons
-	      if(em.le.maxtab2)then
+             if(em.le.maxtab2)then
+                b=max(splintth(tabx,pbtaby(1,1,ires,i),
+     .               pbtaby(1,2,ires,i),widnsp,em,mmin),minwid)
+             else
+                b=max(splintth(tabx,pbtaby(1,1,ires,i),
+     .               pbtaby(1,2,ires,i),widnsp,maxtab2,mmin),minwid)
+             endif
+          else if (ires.ge.minmes.and.ires.le.maxmes) then !mesons
+             if (em.le.maxtab2) then
 c branching ratios are continued horicontally outside the spline region
-              b=max(splint(tabx,pmtaby(1,1,ires,i),
-     .           pmtaby(1,2,ires,i),widnsp,em),minwid)
-     	 	else
-              b=max(splint(tabx,pmtaby(1,1,ires,i),
-     .           pmtaby(1,2,ires,i),widnsp,maxtab2),minwid)
-     		endif
-         else 
-           write (6,*) '*** error(fbrancx) wrong id:',ir
-           b=0
-         endif
+                b=max(splint(tabx,pmtaby(1,1,ires,i),
+     .               pmtaby(1,2,ires,i),widnsp,em),minwid)
+             else
+                b=max(splint(tabx,pmtaby(1,1,ires,i),
+     .               pmtaby(1,2,ires,i),widnsp,maxtab2),minwid)
+             endif
+          else 
+             write (6,*) '*** error(fbrancx) wrong id:',ir
+             b=0
+          endif
        else
-         m1m=mminit(b1)
-         m2m=mminit(b2)
-c in case of three or four particle decays put masses in m2m
-         if(b3.ne.0) m2m=m2m+mminit(b3)
-         if(b4.ne.0) m2m=m2m+mminit(b4)
-         mn=massit(ires) ! nominal mass
-         mmin= m1m+m2m  ! minimal mass of resonance
          b=0d0
          if (bi.gt.0.and.em.gt.mmin.and.mn.gt.mmin) then
 

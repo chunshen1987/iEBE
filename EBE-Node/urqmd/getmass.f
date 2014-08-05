@@ -1,9 +1,7 @@
-c $Id: getmass.f,v 1.8 1998/06/15 13:35:20 weber Exp $
+c $Id: getmass.f,v 1.9 1999/01/18 09:57:02 ernst Exp $
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 function getmass(ssqrt,type)
-c     Unit     : Collision Term
-c     Author   : Markus Hofmann, L. Winckelmann
-c     Date     : 09/22/94
+c
 c     Revision : 1.0 
 c
 cinput  ssqrt  :  maximum energy available
@@ -40,17 +38,13 @@ c for this probability choose mass mm
       endif
 
       getmass=mm
-c debug
-c	write(*,*)'getmass: ',mm,mdice,ssqrt
 
       return
       end
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine norm_init
-c     Unit     : Collision Term
-c     Author   : Markus Hofmann ??
-c     Date     : ???
+c
 coutput : via common-block comnorm
 c
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -60,7 +54,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 massdist
       real*8 x(n),y(n),y21(n),y22(n)
       integer i,j
-c JK linear weighting restored
+c    linear weighting restored
 c    in comnorm.f n is set to 400 again
       dx = (mresmax-mresmin)/dble(n-1) ! (n-1)**2 for quad. weight
       do 1 i=0,3
@@ -74,17 +68,7 @@ c    in comnorm.f n is set to 400 again
             y(j) = y(j-1) + (x(j)-x(j-1)) ! valid for both weights
      &                      *(massdist(x(j-1),i)+massdist(x(j),i)
      &                  + 4.0*massdist(0.5*(x(j)+x(j-1)),i))/6.0 
-c JK the quadratically weighted x_i's were not implemented correctly and
-c    e.g. lead to false normalization factors of the Breit-Wigners
-c    and false selection of resonance masses.
-c    This is a preliminary and quick bug-fix to maintain a physicswise
-c    senseful UrQMD. I hope that I found all places, where this kind of
-c    bug appeared. A more detailed update will follow up.
-c
-c            y(j) = y(j-1) + dx*(massdist(x(j-1),i)+massdist(x(j),i)
-c     &                  + 4.0*massdist(0.5*(x(j)+x(j-1)),i))/6.0 
             y_norm(i,j) = y(j)
-c            write(6,*)i, x(j),massdist(x(j),i),y(j)
 2        continue
          call spline(x,y,n,massdist(mresmin,i),
      &                    massdist(mresmax,i),y21)
@@ -100,7 +84,7 @@ c            write(6,*)i, x(j),massdist(x(j),i),y(j)
 
 c Numerical recipies:
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-c  modified by M. Hofmann
+c  (modified)
       SUBROUTINE n_splint(xa,ya,y2a,n,x,y,m)
       implicit none
       INTEGER n,m
@@ -119,7 +103,9 @@ c  modified by M. Hofmann
       goto 1
       endif
       h=xa(m,khi)-xa(m,klo)
-      if (h.eq.0.)pause 'bad xa input in splint'
+      if (h.eq.0.) then
+       write(6,*) 'bad xa input in splint'
+      end if
       a=(xa(m,khi)-x)/h
       b=(x-xa(m,klo))/h
       y=a*ya(m,klo)+b*ya(m,khi)+((a**3-a)*y2a(m,klo)+

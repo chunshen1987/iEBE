@@ -1,8 +1,6 @@
-c $Id: dwidth.f,v 1.8 1997/08/25 08:17:17 weber Exp $
+c $Id: dwidth.f,v 1.11 2007/01/30 14:50:24 bleicher Exp $
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function mmean (io,m0,g,mmin,mmax) 
-c  Unit:   collison-term
-c  Author: L.A.Winckelmann
 c
 cinput  io  : flag (see bleow)
 cinput  m0  : pole mass
@@ -12,10 +10,10 @@ cinput mmax : maximal mass
 c
 c   io=0 : Yields average mass between {\rm mmin} and {\rm mmax}
 c          according to a Breit-Wigner function with constant width {\rm g}
-c          andploe {\rm m0}.
-c     =1 : Chooses a mass randomly between {\rm mmin} and {\rm mmax} 
+c          and pole {\rm m0}.\\
+c   io=1 : Chooses a mass randomly between {\rm mmin} and {\rm mmax} 
 c	     according to a Breit-Wigner function with constant 
-c	     width {\rm g} and pole {\rm m0}.
+c	     width {\rm g} and pole {\rm m0}.\\
 c    else: Integral of a Breit-Wigner function from {\rm mmin} to {\rm mmax}.
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       implicit none
@@ -56,7 +54,6 @@ c... determin a mass in a given interval
           fmax=i0(mmax)
           f=fmin+(fmax-fmin)*ranf(0)
           mmean=inv(f)      
-c         write(6,*)mmean,mmin,mmax
         end if
       else
 	    mmean=i0(mmax)-i0(mmin) !this might not work for narrow part.
@@ -66,9 +63,7 @@ c         write(6,*)mmean,mmin,mmax
 
 
 C####C##1#########2#########3#########4#########5#########6#########7##
-      subroutine getmas(m0,g0,i,iz,mmin,mmax,m)
-c  Unit:   collison-term
-c  Author: L.A.Winckelmann, Christoph Ernst
+      subroutine getmas(m0,g0,i,iz,mmin,mmax,mrest,m)
 c
 cinput  m0   : pole mass of resonance
 cinput  g0   : nominal width of resonance 
@@ -89,12 +84,13 @@ C####C##1#########2#########3#########4#########5#########6#########7##
       implicit none
       include 'options.f'
       include 'comres.f'
-      integer i,iz,nrej
-      real*8 m,m0,g0,mmin,mmax,x,x0,gg,f,h,pi,al,alpha,ce,mmax2
+      integer i,iz,nrej, nrejmax
+      real*8 m,m0,g0,mmin,mmax,x,x0,gg,f,g,h,pi,al,alpha,ce,mmax2
+      real*8 phi,k,k0,mrest
 c...functions
-      real*8 ranf,mmean,fbrwig,bwnorm
-      parameter(pi=3.1415927)
-      parameter(alpha=3d0, ce=2d0)
+      real*8 ranf,mmean,fbrwig,bwnorm,pcms
+      parameter(pi=3.1415926535d0)
+      parameter(alpha=3d0, ce=2d0, nrejmax=1000000)
 
 c 'broadened' Breit-Wigner function with h(x0,al)=h(x0,1)
 c normalised to alpha
@@ -110,32 +106,44 @@ c cut-off for maximum resonance mass
       else
 	  nrej=0
 
-c This is a kind of Monte Carlo rejection method, where the invertable 
+c This is a Monte Carlo rejection method, where the invertable 
 c BW-distribution with constant widths is used to limit the BW-distribution
 c with mass-dep. widths whose inverse is not known analytically.
 
-108     m=mmean(1,m0,alpha*g0,mmin,mmax2)
-
-c	  if(m.gt.(mmax+1d-8).or.m.lt.(mmin-1d-8))then
-c	     write(*,*)'getmas (W): m outside (mmin,mmax)',m,mmin,mmax
-c	     write(*,*)'called as getmas(',m0,g0,i,mmin,mmax,')'
-c	  endif
-
-	  f=fbrwig(i,iz,m,1)/bwnorm(i)
-	  
-	  if(ce*h(m,m0,g0,alpha).lt.f)then
-	     write(*,*)'(W) getmas: C h(m) not limiting at m=',m
-	     write(*,*)'->mass distribution of ',i,'might be corrupt'
-	  endif
-
-        if (nrej.lt.50.and.
-     .      ranf(0)*ce*h(m,m0,g0,alpha).gt.f)then
-	    nrej=nrej+1
-          goto 108
+108     continue
+        m=mmean(1,m0,alpha*g0,mmin,mmax2)
+        if(m.gt.(mmax2+1d-8).or.m.lt.(mmin-1d-8))then
+           write(*,*)'getmas (W): m outside (mmin,mmax2)',m,mmin,mmax2
+           write(*,*)'called as getmas(',m0,g0,i,mmin,mmax,')'
+           write(*,*)'Program stopped'
+           stop
+        endif
+        if ((CTOption(25).eq.1).and.(mrest.gt.0.0)) then
+           k=pcms(mmax2+mrest,mrest,m)
+           k0=pcms(mmax2+mrest,mrest,mmin)
+           phi = m*k / (mmin*k0)
+        else
+           phi = 1.0
         endif
 
-c debug
-c        write(10,*)nrej
+c Breit-Wigner with mass dependent widths and phase space correction
+
+	    f=fbrwig(i,iz,m,1)*phi/bwnorm(i)
+	    g=ce*h(m,m0,g0,alpha)
+
+	    if(g.lt.f)then
+	      write(*,*)'(W) getmas: C h(m) not limiting at m=',m
+	      write(*,*)'->mass distribution of ',i,'might be corrupt'
+	    endif
+          nrej=nrej+1
+        if (nrej.le.nrejmax.and.(ranf(0)*g).gt.f) goto 108
+        if (nrej.gt.nrejmax) then
+c           write(*,*)'(W) getmas_space: too many rejections, m= ',m
+c           write(*,*)'called with (',m0,g0,i,mmin,mmax,mrest,')'
+c           write(*,*)'->mass distribution of ',i,' might be corrupt'
+           m=mmean(1,m0,alpha*g0,mmin,mmax2)
+        endif
+        
       endif
 
       return
@@ -143,8 +151,6 @@ c        write(10,*)nrej
 
 C####C##1#########2#########3#########4#########5#########6#########7##
 	real*8 function bwnorm(ires)
-c  Unit:   collison-term
-c  Author: Christoph Ernst
 c
 cinput  ires   : itype of resonance
 c
@@ -203,20 +209,17 @@ c     respectively are necessary
 	     bwnorm=1d0
 	   endif
 	endif
-c debug
-c	write(*,*)'bwnorm returns',it,':',norm1,' + ',norm2,'=',bwnorm
+
 	return
 	end
 
 
-	
 c no physics after these routines!
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c(c) numerical receipies, adapted for f(idum1,idum2,x)
       SUBROUTINE qsimp3(func,a,b,idum1,idum2,s,flag)
 c
 c     Simpson integration via Numerical Receipies.
-c     Modified by Christoph Ernst
 c
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       implicit none
@@ -226,7 +229,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       INTEGER JMAX,j,idum1,idum2,flag
       REAL*8 a,b,func,s,EPS
       REAL*8 os,ost,st
-c      real*8 func
       PARAMETER (JMAX=100)
       external func
       if(b-a.le.1.d-4) then
@@ -246,16 +248,14 @@ c      real*8 func
             call midsql3(func,a,b,idum1,idum2,st,j)
          endif
         s=(9.*st-ost)/8.
-cdebug
-c      write(6,*)'qsimp3',s,os
 
         if (abs(s-os).le.EPS*abs(os)) return
         os=s
         ost=st
 11    continue
-cdebug
+
       write(6,*)  'too many steps in qsimp3, increase JMAX!'
-c      s=1d100
+
       return      
       END
 

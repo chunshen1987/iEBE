@@ -1,12 +1,9 @@
-c $Id: detbal.f,v 1.11 1998/06/15 13:35:19 weber Exp $
+c $Id: detbal.f,v 1.12 1999/01/18 09:57:00 ernst Exp $
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
       subroutine detbal(sqrts,ityp1,ityp2,iso31,iso32,
      &                  em1,em2,itnew1,itnew2,dbfact)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass
-c     Date     : 10/06/94
 c     Revision : 1.0 
 c
 cinput sqrts   : sqrt(s)
@@ -135,7 +132,6 @@ c     now generate the correction factor
      &          pmean(sqrts,ityp1,iso31,ityp2,iso32,
      &                idum1,idum2,idum3,idum4,2)
 
-c         write(6,*)factor
 cccccccccccccccccccccccccc
       else
 c     modified det-bal for two resonances
@@ -162,8 +158,7 @@ c     now generate the correction factor
                dbfact=factor*oq/(max(1.d-12,q))
             endif
          endif
-cdebug
-c            write(6,*)ityp1,ityp2,dbfact
+
          return
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c original detailed balance
@@ -186,9 +181,6 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
       real*8 function ppiso(pid,ityp1,iso31,ityp2,iso32,itnew1,itnew2)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass
-c     Date     : 05/19/97
 c     Revision : 1.0 
 c
 cinput pid     : ID of process
@@ -243,20 +235,16 @@ c
          ppiso=dbweight(nucleon,itmp1,nucleon,itmp2,
      &           isoit(im),isoit(jm))/
      /           dbweight(1,1,1,1,isoit(im),isoit(jm))
-c     debug
-c         write(6,*)'ppiso',ppiso
-c            ppiso=1.d0
       endif
+
       return
+
       end
 
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
       real*8 function dgcgkfct(ityp1,ityp2,iso31,iso32,itnew1,itnew2)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass
-c     Date     : 10/06/94
 c     Revision : 1.0 
 c
 cinput ityp1   : ityp of incoming particle 1
@@ -305,8 +293,6 @@ c 1) reduction:
          return
       endif
 
-cdebug
-c      write(6,*)'clebweight', clebweight
 
 c     c) calculate degeneracy factors 
 c        reference: S. Bass, GSI-Report 93-13 p. 25 and references therein
@@ -317,9 +303,7 @@ c     get spins: in-channel stot(1 and 2), out-channel stot(3 and 4)
       stot(3)=jit(itnew1)
       stot(4)=jit(itnew2)
 c
-c     this is correct because stot=2*S_tot ...
-c!!!!! abfrage of explizit isospin ja oder nein einbauen
-c     without isospin :  gout1=(itot(1)+1)*(stot(3)+1)
+
       gout1=(stot(3)+1)
       gout2=(stot(4)+1)
       gin1=(stot(1)+1)
@@ -334,10 +318,6 @@ c
 c
       dgcgkfct=dgfact*clebweight
 c 
-c      write(8,*) dgfact,clebweight,dgcgkfct
-cdebug
-c      dgcgkfct=1.d0
-
       return
       end
 
@@ -345,9 +325,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 function pmean(sqrts,itp1,iz1,itp2,iz2,
      &                      itp3,iz3,itp4,iz4,ipwr)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass 
-c     Date     : 12/19/95
 c     Revision : 1.0
 c
 cinput sqrts  : $\sqrt{s}$
@@ -516,9 +493,6 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
       real*8 function detbalin(m1,ityp1,iz1,m2,sqrts,ipwr)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass 
-c     Date     : 10/12/94
 c     Revision : 1.0
 c
 cinput m1     : mass of resonance (integration variable)
@@ -544,11 +518,9 @@ c     arguments
       integer ityp1,iz1,ipwr
 c     called functions
       real*8 fbwnorm,pcms
-csab
-c      detbalin=pcms(sqrts,m1,m2)**ipwr*2*m1*fbwnorm(m1,ityp1,iz1)
-cdebug
-c      write(6,*)'detbalin',pcms(sqrts,m1,m2),ipwr,fbwnorm(m1,ityp1,iz1)
+
       detbalin=pcms(sqrts,m1,m2)**ipwr*fbwnorm(m1,ityp1,iz1)
+
       return
       end
 
@@ -557,9 +529,6 @@ c
       real*8 function detbalin2(m2,ityp2,iz2,min1,
      &                          ityp1,iz1,ipwr,sqrts)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass 
-c     Date     : 04/13/95
 c     Revision : 1.0
 c
 c     This function represents the integrand
@@ -621,8 +590,6 @@ c     0.1 MeV shift for integrator-maxvalue
      &           ityp1,iz1,m2,sqrts,ipwr,q2,1)
       endif
             
-csab
-c      detbalin2=2.*m2*fbwnorm(m2,ityp2,iz2)*(q1+q2)
       detbalin2=fbwnorm(m2,ityp2,iz2)*(q1+q2)
 
       return
@@ -630,9 +597,7 @@ c      detbalin2=2.*m2*fbwnorm(m2,ityp2,iz2)*(q1+q2)
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 function fbwnorm(m,ires,iz1)
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass
-c     Date     : 11/14/95
+c
 c     Revision : 1.0 
 c
 cinput m   : mass of resonance
@@ -650,7 +615,9 @@ c	since in case of mass dependent widths fbwnorm() is not very well
 c	defined for widths smaller than 1 MeV.
 c
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
       implicit none
+
       real*8 m,gam2,mres,fwidth,massit,widit,gam,minwid
       integer ires,ires1,iz1
       include 'comres.f'
@@ -664,10 +631,8 @@ c     minimal width for "unstable" particle
       mres = massit(ires1)
       if(iz1.eq.-99.or.wtabflg.eq.0)then
         gam = widit(ires1)
-ce        norm = 1d0
       else
         gam = fwidth(ires1,iz1,m)
-ce        norm = bwnorm(ires1)
       end if
 c     cutoff for small widths
       gam=max(gam,minwid)
@@ -708,28 +673,18 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       ost=-1.d30
       os= -1.d30
       do 11 j=1,JMAX
-cdebug
-c         write(6,*)'in qsimp j= ',j
          if(flag.eq.-1) then
-cdebug
-c            write(6,*)'vor midsqu1'
             call midsqu1(func,a,b,idum1,idum2,dum2,dum3,idum3,st,j)
-c            write(6,*)'nach midsqu1'
          elseif(flag.eq.1) then
             call midsql1(func,a,b,idum1,idum2,dum2,dum3,idum3,st,j)
          endif
-cc        s=(4.*st-ost)/3.
         s=(9.*st-ost)/8.
-cdebug
-c      write(6,*)'qsimp2',s,os,abs(s-os),EPS*abs(os)
-
         if (abs(s-os).le.EPS*abs(os)) return
         os=s
         ost=st
 11    continue
-cdebug
       write(6,*)  'too many steps in qsimp, increase JMAX!'
-c      s=1d100
+
       return      
       END
 
@@ -753,14 +708,10 @@ c     modified midpoint rule; allows singuarity at upper limit
       b=sqrt(bb-aa)
       a=0.d0
       if (n.eq.1) then
-c         write(6,*)'vor func2a',a,b
       xx=0.5d0*(a+b)
-c      write(6,*)'bb',xx,bb-xx**2
-c      write(6,*)'args von funk',bb-xx**2,idum1,idum2,dum2,dum3,idum3
-c      write(6,*)'funk',funk(bb-xx**2,idum1,idum2,dum2,dum3,idum3)
 
       s=(b-a)*func(0.5d0*(a+b))
-c        write(6,*)'nach func2a'
+
       else
         it=3**(n-2)
         tnm=it
@@ -851,16 +802,14 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &                  idum5,dum2,st,j)
          endif
         s=(9.*st-ost)/8.
-cdebug
-c      write(6,*)'qsimp2',s,os
 
         if (abs(s-os).le.EPS*abs(os)) return
         os=s
         ost=st
 11    continue
-cdebug
+
       write(6,*)  'too many steps in qsimp2, increase JMAX!'
-c      s=1d100
+
       return      
       END
 

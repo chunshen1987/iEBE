@@ -1,10 +1,7 @@
-c $Id: coms.f,v 1.8 1998/06/15 13:35:10 weber Exp $
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+c $Id: coms.f,v 1.22 2007/01/30 14:50:24 bleicher Exp $
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
 c standard common block for uQMD
-c     Unit     : all modules
-c     Author   : Jens Konopka; modified by Steffen A. Bass
-c     Date     : 05/04/94
 c
 cdes This file contains the standard commom blocks of UrQMD
 c
@@ -13,18 +10,21 @@ c
 
       integer nmax, nspl
       real*8 hit_sphere
-      parameter (nmax = 200000) ! maximum number of particles
+      parameter (nmax = 40000) ! maximum number of particles
       parameter (nspl = 500)  ! dimension of spline arrays
-      parameter (hit_sphere = 16.d0)  ! hard collision cutoff: 500 mbarn
-c     (hit_spere)*(10*pi) = cutoff in mbarn
+      parameter (hit_sphere = 8.d0)  ! hard collision cutoff: 251 mbarn
+
+c     debug and validity range
+      logical check, info, warn
+      parameter (check=.true., info=.true., warn=.false.)
 
       integer Ap, At, Zp, Zt, npart, nbar, nmes, ctag
-      integer nsteps,ranseed,event,eos,dectag
+      integer nsteps,ranseed,event,eos,dectag,uid_cnt
       integer NHardRes,NSoftRes,NDecRes,NElColl,NBlColl
       real*8  time,  acttime, bdist, ebeam, bimp,bmin,ecm
 c 7 integer
 
-      common /sys/ npart, nbar, nmes, ctag,nsteps,
+      common /sys/ npart, nbar, nmes, ctag,nsteps,uid_cnt,
      +             ranseed,event,Ap,At,Zp,Zt,eos,dectag,
      +             NHardRes,NSoftRes,NDecRes,NElColl,NBlColl
       common /rsys/ time,acttime,bdist,bimp,bmin,ebeam,ecm
@@ -38,6 +38,7 @@ c     nbar     : number of baryons AND antibaryons
 c     nmes     : number of mesons
 c     ctag     : counter of All interactions (coll. and dec.)
 c     nsteps   : number of timesteps
+c     uid_cnt  : counter for assigning unique particle ID-tags
 c     ranseed  : random number generator seed of event
 c     event    : event counter
 c     eos      : flag for the EoS chosen
@@ -63,7 +64,7 @@ c     ecm      : initial projectile-hadron target-hadron c.m. energy
 c 2*nmax*nmax logical
 
       integer spin(nmax),ncoll(nmax),charge(nmax),strid(nmax),
-     +        ityp(nmax),lstcoll(nmax),iso3(nmax),origin(nmax)
+     +        ityp(nmax),lstcoll(nmax),iso3(nmax),origin(nmax),uid(nmax)
 c 6*nmax integer
 
 
@@ -75,9 +76,11 @@ c 6*nmax integer
       parameter (rho0 = 0.16) ! nuclear matter ground state density
       parameter (hqc  = 0.197327) ! value of $\hbar c$
 
+c IMPORTANT: when you change the version number please change also
+c            the versiontag in blockres.f !
       integer version, laires
-      parameter ( version = 10010) ! version number
-      parameter ( laires  = 10001) ! additional tag
+      parameter ( version = 20030) ! version number
+      parameter ( laires  = 20030) ! additional tag
 
 c MD temporary arrays
        real*8 r0_t(nmax), rx_t(nmax), ry_t(nmax), rz_t(nmax)
@@ -112,14 +115,12 @@ c 19 real*8
      +     aorx(nmax,4), aory(nmax,4), aorz(nmax,4),
      +     aopx(nmax,4), aopy(nmax,4), aopz(nmax,4),
      +     fmass(nmax), rww(nmax), 
-     +     dectime(nmax), tform(nmax), xtotfac(nmax),thad(nmax)
+     +     dectime(nmax), tform(nmax), xtotfac(nmax)
 
-c 8*nmax*nmax + 40*nmax real*8        
-      
-      common/isys/spin,ncoll,charge,ityp,lstcoll,iso3,origin,strid
-c      common /rsys/ rjk, rxjk, ryjk, rzjk, pjk, pxjk, pyjk, pzjk
+      common/isys/spin,ncoll,charge,ityp,lstcoll,iso3,origin,strid,
+     +            uid
       common /coor/ r0, rx, ry, rz, p0, px, py, pz, fmass, rww, dectime
-      common /frag/ tform, xtotfac, thad
+      common /frag/ tform, xtotfac
 
 c     spin    : particle spin
 c     ncoll   : particle number of collisions
@@ -129,6 +130,7 @@ c     ityp    : particle ID
 c     lstcoll : tag of last interaction of particle
 c     iso3    : $2 \cdot I_3$ of particle
 c     origin  : ID of last interaction of particle
+c     uid     : unique particle ID tag
 c     r0      : particle time
 c     rx      : $x$ coordinate
 c     ry      : $y$ coordinate
@@ -151,7 +153,7 @@ c
      +              dt,da, db,dtimestep
 
 
-cernst spectator arrays
+c spectator arrays
 	integer smax
 	parameter(smax=500)  ! maximum number of spectators
 	real*8 r0s(smax), rxs(smax), rys(smax), rzs(smax),
@@ -159,15 +161,16 @@ cernst spectator arrays
      +	       sfmass(smax)
 	
 
-        integer sspin(smax), scharge(smax), sityp(smax), siso3(smax)
+        integer sspin(smax), scharge(smax), sityp(smax), siso3(smax),
+     +          suid(smax)
 
 	integer nspec
 
 	common /scoor/ r0s, rxs, rys, rzs, p0s, pxs ,pys, pzs, sfmass
 
-	common /sisys/ sspin, scharge, sityp, siso3
+	common /sisys/ sspin, scharge, sityp, siso3, suid
 
-	common /sys/ nspec
+	common /ssys/ nspec
 
 c     sspin    : spectator particle spin
 c     scharge  : spectator particle charge
@@ -184,13 +187,15 @@ c     pzs      : spectator $p_z$ momentum
 c     sfmass   : mass of spectator particle
 
 
-csab,td
+c
         real*8 p0td(2,nmax),pxtd(2,nmax),pytd(2,nmax),pztd(2,nmax),
      +         fmasstd(2,nmax)
         integer ityptd(2,nmax),iso3td(2,nmax)
+        integer itypt(2),uidt(2),origint(2),iso3t(2)
 
         common /rtdelay/p0td,pxtd,pytd,pztd,fmasstd
         common /itdelay/ityptd,iso3td
+        common /svinfo/itypt,uidt,origint,iso3t
 
 c     p0td    : energy of parent particles of resonace (DP formalism)
 c     pxtd    : $p_x$ of parent particles of resonace (DP formalism)
@@ -200,7 +205,6 @@ c     fmasstd : mass of parent particles of resonace (DP formalism)
 c     ityptd  : ID of parent particles of resonace (DP formalism)
 c     iso3td  : $2\cdot I_3$ of parent particles of resonace (DP formalism)
 
-chw frozen fermi
         real*8 ffermpx(nmax), ffermpy(nmax), ffermpz(nmax)
         real*8 peq1, peq2
         common /ffermi/ ffermpx, ffermpy, ffermpz

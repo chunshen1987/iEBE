@@ -1,4 +1,4 @@
-c $Id: newpart.f,v 1.5 1998/06/15 13:35:27 weber Exp $
+c $Id: newpart.f,v 1.8 2007/01/30 14:50:25 bleicher Exp $
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
 c     include-file newpart
@@ -11,7 +11,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       integer mprt,oprt
 c maximum number of new particles:
-      parameter(mprt=200) ! maximum number of produced particles
+      parameter(mprt=1000) ! maximum number of produced particles
       parameter(oprt=2)   ! maximum number of incoming particles
 c pslot : slots of incoming particles
 c itypnew: ityps of new particles

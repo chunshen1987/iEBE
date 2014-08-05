@@ -1,11 +1,8 @@
-c $Id: tabinit.f,v 1.11 1998/06/15 13:35:36 weber Exp $
+c $Id: tabinit.f,v 1.14 2003/05/02 13:14:46 weber Exp $
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine loadwtab (io)
 c
-c     Unit     : general infrastructure
-c     Author   : Henning Weber
-c     Date     : 25/11/96
-c     Revision : 1.3
+c     Revision : 1.0
 c
 coutput   : information in common-block comwid.f
 c
@@ -30,7 +27,7 @@ c set the defaultname of the file, containing the table
       b=io.eq.1
 
 c get the name of the table from the environment variable
-      call getenv('tabname',tabname)
+      call getenv('URQMD_TAB',tabname)
 c if it is empty, use the default name
       if (tabname(1:4).eq.'    ') then
          tabname=deftab
@@ -124,10 +121,7 @@ c calculate an new table
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine savewtab
 c
-c     Unit     : general infrastructure
-c     Author   : Henning Weber
-c     Date     : 25/11/96
-c     Revision : 1.2
+c     Revision : 1.0
 c
 c     save the tabulated branching ratios to disk
 c 
@@ -168,10 +162,7 @@ c close the file
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine mkwtab
 c
-c     Unit     : general infrastructure
-c     Author   : Henning Weber, Christoph Ernst
-c     Date     : 03/07/96
-c     Revision : 1.1
+c     Revision : 1.0
 c
 coutput   : information in common-block comwid.f
 c
@@ -341,16 +332,12 @@ c   with mass dependent widths
 c..baryons
 	do 60 i=minbar,maxbar
 	   bwbarnorm(i)=bwnorm(i)
-c debug
-c	  write(*,*)'tabinit:bwbarnorm',i,bwbarnorm(i)
 60	continue
       write (6,*) '(5/7) ready.'
 
 c.. mesons
 	do 61 i=minmes,maxmes
 	   bwmesnorm(i)=bwnorm(i)
-c debug
-c	  write(*,*)'tabinit:bwmesnorm',i,bwmesnorm(i)
 61	continue
       write (6,*) '(6/7) ready.'
 
@@ -390,8 +377,6 @@ c loop over all x-values
           do 83 i=1,widnsp
 c store the values ...
 	      frrtaby(i,1,ii1,i2)=fppfit(99,tabxnd(i),i1,i2)
-cdebug
-c	      write(*,*)i1,i2,tabxnd(i),frrtaby(i,1,ii1,i2)
 83	    continue
 c calculate the second derivate and store it in 'frrtaby(,,2)'
           call spline (tabxnd(1),frrtaby(1,1,ii1,i2),widnsp,abl0,abln,
@@ -417,7 +402,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 function splint (xa,ya,y2a,n,x)
 c
 c     Unit     : general infrastructure
-c     Author   : (C) Copr. 1986-92 Numerical Recipes Software, Henning Weber (modifications)
+c     Author   : (C) Copr. 1986-92 Numerical Recipes Software
 c     Date     : 03/07/96
 c     Revision : 1.1
 c
@@ -445,7 +430,9 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       goto 1
       endif
       h=xa(khi)-xa(klo)
-      if (h.eq.0.) pause 'bad xa input in splint'
+      if (h.eq.0.) then
+       write(6,*) 'bad xa input in splint'
+      end if
       a=(xa(khi)-x)/h
       b=(x-xa(klo))/h
       y=a*ya(klo)+b*ya(khi)+((a*a*a-a)*y2a(klo)+
@@ -454,5 +441,61 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       return
       end
+
+
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      real*8 function splintth (xa,ya,y2a,n,x,th)
+c
+c     Unit     : general infrastructure
+c     Author   : (C) Copr. 1986-92 Numerical Recipes Software
+c                modified my H. Weber
+c     Date     : 03/07/96
+c     Revision : 1.1
+c
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+c
+c     split routine with nice threshold behaviour for cross sections
+c
+
+      implicit none
+
+      include 'comres.f'
+      include 'comwid.f'
+
+      integer n
+      integer k,khi,klo
+      real*8 x,y,xa(n),y2a(n),ya(n)
+      real*8 a,b,h,th
+
+      klo=1
+      khi=n
+1     if (khi-klo.gt.1) then
+         k=(khi+klo)/2d0
+         if(xa(k).gt.x)then
+            khi=k
+         else
+            klo=k
+         endif
+         goto 1
+      endif
+      h=xa(khi)-xa(klo)
+      if (h.eq.0.) then
+       write(6,*) 'bad xa input in splint'
+      end if 
+      if (xa(khi).lt.(th+2*h)) then
+c linear approximation close to threshold (within 2h)
+         splintth=ya(khi)*(x-th)/(xa(khi)-th)
+      else
+         a=(xa(khi)-x)/h
+         b=(x-xa(klo))/h
+         y=a*ya(klo)+b*ya(khi)+((a*a*a-a)*y2a(klo)+
+     .        (b*b*b-b)*y2a(khi))*(h*h)/6d0
+         splintth=y
+      endif
+      
+      return
+      end
+
 
 

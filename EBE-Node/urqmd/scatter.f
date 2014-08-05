@@ -1,9 +1,7 @@
-c$Id: scatter.f,v 1.18 1998/06/15 13:35:32 weber Exp $
+c$Id: scatter.f,v 1.26 2007/01/30 14:50:27 bleicher Exp $
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       subroutine scatter(id1,id2,ssigtot,sqrts,ccolfac)
-c  Unit     : Collision Term
-c  Author   : Steffen A. Bass, L.Winckelmann
-c  Date     : 07/04/94
+c
 c  Revision : 1.0
 c
 cinput id1   : index of particle 1
@@ -34,44 +32,31 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       include 'comres.f'
       include 'newpart.f'
       include 'options.f'
-c MB box
-	include 'boxinc.f'
-
+      include 'boxinc.f'
 
 
 c local variables
       real*8 sqrts,ssigtot,sigpart,sigma(0:maxpsig),sigsum,sigfac
-      real*8 e1,e2,lambda,colldens,ccolfac,rap,rap1,rap2
+      real*8 e1,e2,lambda,colldens,ccolfac
       integer ind1,ind2,ityp1,ityp2,isigline,nCh,ii
       integer i,j,itot1,itot2,iso31,iso32
       integer id1,id2
+chp counter for new loop
+      integer ict
 c     functions and subroutines
       integer collclass,isoit
 
-cdebug
-      common /debb/ityp1,ityp2,rap,rap1,rap2
-
+c
 c     make local copies of particle indices
       ind1=id1
       ind2=id2
 c     increment collision-counter
       ctag=ctag+1
 
-cdebug
-c      if (ind2.ne.0) then
-c         write(6,*) 'scattering ',ityp(ind1),iso3(ind1),
-c     &                            ityp(ind2),iso3(ind2)
-c         
-c      else
-c         write(6,*) 'decaying   ',ityp(ind1),iso3(ind1)
-c      endif
-
-csabee      eold=etot()
 c     save total cross section in sigma(0)
       sigma(0)=ssigtot
 
 c     initialize some arrays (definitions are listed in newpart.f)
-      isigline=0
       do 13 j=1,mprt
          do 12 i=1,5
             pnew(i,j)=0.0
@@ -81,17 +66,11 @@ c     initialize some arrays (definitions are listed in newpart.f)
          sidnew(j)=0
  13   continue
 
-c MB
-c if ind2 is less then 0 a collision with the wall is to
-c calculate 
+c if ind2 is less than 0, a collision with a wall takes place 
       if (ind2.lt.0) then
 
          call file15out(ind1,ind2,sqrts,ssigtot,sigpart)
 
-cdebug
-c	Write(*,*) ind1,ind2,rx(ind1),ry(ind1),rz(ind1)
-c	Write(*,*) px(ind1),py(ind1),pz(ind1)	
-cc
 c solid < 1 then periodic boundary conditions
 	    if (solid.lt.1) then	
 		if (ind2.eq.-1) then
@@ -122,19 +101,15 @@ c solid walls
 		else
 			pz(ind1)=-pz(ind1)
 		endif		
-             Endif	
-            
-c debug
-c	Write(*,*) ind1,ind2,rx(ind1),ry(ind1),rz(ind1)
-c	Write(*,*) px(ind1),py(ind1),pz(ind1)		
-cc		
+	    Endif	
+
 		nexit=1		
 		inew(1)=ind1
 
 	call f15outch(0.d0)
 
 	return
-      endif
+	endif
 cc	
 
 c add fermi motion
@@ -147,29 +122,6 @@ c     clear array of partial cross sections
       do 14 i=1,maxpsig
          sigma(i)=0.d0
  14   continue
-
-cSAB,JK 9.10.96
-cc define "projectile" as particle with the larger momentum 
-cc in comp. frame
-cc and set it to ind1
-c      if(ind2.ne.0) then
-c         pl1=px(ind1)**2+py(ind1)**2+pz(ind1)**2
-c         pl2=px(ind2)**2+py(ind2)**2+pz(ind2)**2
-ccspl 1/96
-cc         if(ranf(0).lt.5d-1.and.abs(pl2-pl1)/(pl1+pl2).lt.1d-2)then
-cc            indtmp=ind2
-cc            ind2=ind1
-cc            ind1=indtmp
-cc         elseif(pl2.gt.pl1) then
-c
-ccsab,debug
-c         if(pl2.gt.pl1) then
-c            indtmp=ind2
-c            ind2=ind1
-c            ind1=indtmp
-c         endif
-cSAB,JK 9.10.96 end
-c      endif
 
 c     save particle indices into pslot for later use (Danielewicz-Pratt delays)
       pslot(1)=ind1
@@ -194,7 +146,6 @@ c some abbreviations
 
 c     transform in to NN system for proper kinematics
 
-c      e1=sqrt(fmass(ind1)**2+px(ind1)**2+py(ind1)**2+pz(ind1)**2)
       e1 = p0(ind1)
 
       if(ind2.eq.0) then 
@@ -221,10 +172,6 @@ c     set tag for decay:
          
       else   
 cccc SCATTERING/ANNIHILATION  cccc
-cdebug
-c         if(ityp1.eq.0) write(6,*) 'ityp1=0 ',ind1,npart,nbar,nmes
-c         if(ityp2.eq.0) write(6,*) 'ityp2=0 ',ind2,npart,nbar,nmes
-
          e2 = p0(ind2)
 c     transformation betas into two particle CMS system
          betax=(px(ind1)+px(ind2))/(e1+e2)
@@ -241,9 +188,7 @@ c     call to Lorentz transformation
      &        pxnn,pynn,pznn,p0nn)
          pnn=sqrt(pxnn*pxnn+pynn*pynn+pznn*pznn)
 
-
-csab added 9/1/96:
-cspl reduced cross section for leading hadrons of string fragmentation
+c     reduced cross section for leading hadrons of string fragmentation
 c     sigfac is scaling factor for cross section
          sigfac=1.d0
          if(tform(ind1).le.acttime
@@ -257,24 +202,14 @@ c     sigfac is scaling factor for cross section
             sigfac=xtotfac(ind1)*xtotfac(ind2)
          endif
 
-cblubb
 c modify sigfac due to color fluctuations
          sigfac = sigfac*ccolfac
-
-
-cdebug
-c         sigfac=1.d0
 
 c now get line-number for sigmaLN array in blockres
          isigline=collclass(ityp1,iso31,ityp2,iso32)
 
-
-
-
 c  number of exit-channels:
          nCh=SigmaLn(1,1,isigline)
-cdebug
-c            write(6,*)'sigtot',sigma(0)
 
          do 10 ii=3,nCh+2 ! loop over exit-channels
 c           get  process-id (iline) from sigmaLN array in blockres
@@ -293,7 +228,11 @@ c     ensure reduction of part. cross sections within formation time
 
 
  10      continue               ! end of exit channel loop
-
+   
+chp label if elastic scattering is disabled        
+         ict=0 
+ 101     continue
+chp
 c     unitarize partial cross sections (rescale sum to match the total cross section)
          call normit (sigma,isigline)
 
@@ -315,33 +254,24 @@ c     force elastic scattering
            sigpart=sigma(ii)    ! partial cross section
            iline=SigmaLN(ii+2,1,isigline) ! <- correct! ii has been redefined
         end if
+chp no elastic scattering of initial pp pn and nn
+       ict=ict+1 
+       if(CTOption(7).eq.1.and.(iline.eq.17.or.iline.eq.19))then
+        if(ict.le.10)then
+          goto 101
+        else 
+         write(6,*) 'in scatter.f: too many tries',
+     &    'elastic scattering happens despite cto 7 1'  
+        end if
+       end if   
+chp      
+ 
       endif     
+c.. take care sigpart in case of decay (no sigpart defined)
+      if (iline.eq.20) sigpart=0d0
+
 cccc end of scatter/decay if
-
-csab sqrts output around mid-rap. ccccccccccc
-c      if(ind2.ne.0) then
-c         rap=0.5*log((e1+e2+pz(ind1)+pz(ind2))/
-c     &               (e1+e2-(pz(ind1)+pz(ind2))))
-c         rap1=0.5*log((e1+pz(ind1))/
-c     &               (e1-pz(ind1)))
-c         rap2=0.5*log((e2+pz(ind2))/
-c     &               (e2-pz(ind2)))
-c      else
-c         rap1=0.5*log((e1+pz(ind1))/
-c     &               (e1-pz(ind1)))
-c         rap=rap1
-c         rap2=0d0
-c      endif
-c      if(iline.eq.23) write(22,888) rap,rap1,rap2,ityp(ind1),ityp(ind2)
-c      if(iline.eq.23) write(23,889) acttime,rap,ityp(ind1),ityp(ind2)
-c      if(iline.eq.23) write(24,888) acttime,sqrts,
-c     &     rap,ityp(ind1),ityp(ind2)
-c
-c 888  format(3f10.4,2i4)
-c 889  format(2f10.4,2i4)
-cccccccccccccccccccccccccccc
       call file15out(ind1,ind2,sqrts,ssigtot,sigpart)
-
 
 c     save old particle information in case of pauli blocking
 c     or rejection due to energy non-conservation
@@ -351,18 +281,14 @@ c     or rejection due to energy non-conservation
 c... prepare exit channel
       call scatprep(ind1,ind2,sqrts,sigpart)
 
-csabee      if(eos.eq.0) then !   CASCADE mode and non-mdi modes here
-         lambda=1.0d0
-         call prescale(lambda)
-c      else              !  mdi-modes must be rescaled
-c         lambda=1.3d0
-c         call prescale(lambda)
-c         call erescale(eold)
-csabee      endif
+      lambda=1.0d0
+      call prescale(lambda)
+
       call scatfinal(colldens)
 
 c     output to collision file
       call f15outch(colldens)
+      call osc99_coll
 
 c     write output to decay file
       if(ind2.eq.0) call file16write
@@ -374,9 +300,7 @@ c     in case of ctoption(13).ne.0 more output is written with the next call
 
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       subroutine scatprep(in1,in2,sqrts,sigpart)
-c     Unit     : Collision Term
-c     Authors  : Steffen A. Bass, Luke .A.Winckelmann
-c     Date     : 07/23/95
+c
 c     Revision : 1.0
 c
 cinput ind1   : index of ingoing particle 1 
@@ -409,8 +333,6 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       integer barlist1(mprt),barlist2(mprt),meslist1(mprt)
       logical dnscall
 
-ce debug
-c	real*8 massit,widit
 c     functions:
 
       real*8 pcms
@@ -421,9 +343,6 @@ c     functions:
       common /scatcomi/itmp,ipmp,ind1,ind2,nb1,nb2,strid1,strid2,
      &                 bar,nm1,nm2
       common /scatcoml/dnscall
-
-      
-c      save
 
 c     call to paulibl for baryon-density
       dnscall=CTOption(39).ne.0
@@ -463,7 +382,6 @@ c
      &               0,0,0d0,1d0)
       endif
 
-
 c set here the true nexit (number of particles in the exit channel): 
       nexit=nstring1+nstring2
 
@@ -471,14 +389,12 @@ c set here the true nexit (number of particles in the exit channel):
 c
 c     2a). annihilation/soft resonance production: store properties
 c
-      if(nstring2.eq.0.or.iline.eq.23) then
+      if(nstring2.eq.0) then
 c     store average  time and position of particles (only one part/string coming out...)
-         tstring(1)=(r0(ind1)+r0(ind2))/2. !ernst
+         tstring(1)=(r0(ind1)+r0(ind2))/2. 
          rstringx(1)=(rx(ind1)+rx(ind2))/2.
          rstringy(1)=(ry(ind1)+ry(ind2))/2.
          rstringz(1)=(rz(ind1)+rz(ind2))/2.
-
-cpot
 c     do the same for the MD trajectories
          rpott(1)=(r0_t(ind1)+r0_t(ind2))/2.
          rpotx(1)=(rx_t(ind1)+rx_t(ind2))/2.
@@ -497,12 +413,11 @@ c     by outgoing particles
          pzi1=pz(ind1)
          pzi2=pz(ind2)
 
-csabtf
 c     store old formation times
          tformold(1)=max(tform(ind1),tform(ind2))
          tformold(2)=max(tform(ind1),tform(ind2))
-cspl two leading hadrons form s-channel -> the larger reduction factor
-c    of the incoming hadrons is maintained:
+c two leading hadrons form s-channel -> the larger reduction factor
+c of the incoming hadrons is maintained:
          xtotfacold(1)=max(xtotfac(ind1),xtotfac(ind2))
          xtotfacold(2)=max(xtotfac(ind1),xtotfac(ind2))
       else
@@ -513,14 +428,12 @@ c        store time and position of both incoming particles
          rstringx(1)=rx(ind1)
          rstringy(1)=ry(ind1)
          rstringz(1)=rz(ind1)
-cpot
 c        likewise for the MD trajectory arrays
          rpott(1)=r0_t(ind1)
          rpotx(1)=rx_t(ind1)
          rpoty(1)=ry_t(ind1)
          rpotz(1)=rz_t(ind1)
 
-csabtf
 c        store old formation time and reduction factor
          tformold(1)=tform(ind1)
          xtotfacold(1)=xtotfac(ind1)
@@ -531,13 +444,11 @@ c           likewise for particles 2,3,4...
             rstringx(2)=rx(ind1)
             rstringy(2)=ry(ind1)
             rstringz(2)=rz(ind1)
-cpot
             rpott(2)=r0_t(ind1)
             rpotx(2)=rx_t(ind1)
             rpoty(2)=ry_t(ind1)
             rpotz(2)=rz_t(ind1)
 
-csabtf
             tformold(2)=tform(ind1)
             xtotfacold(2)=xtotfac(ind1)
 
@@ -546,13 +457,12 @@ csabtf
             rstringx(2)=rx(ind2)
             rstringy(2)=ry(ind2)
             rstringz(2)=rz(ind2)
-cpot
+
             rpott(2)=r0_t(ind2)
             rpotx(2)=rx_t(ind2)
             rpoty(2)=ry_t(ind2)
             rpotz(2)=rz_t(ind2)
 
-csabtf
             tformold(2)=tform(ind2)
             xtotfacold(2)=xtotfac(ind2)
 
@@ -569,17 +479,12 @@ c
 c     2b) 3.  get angular distribution
 c
 
-cJK210897 angdis replaced by angdisnew
       if (ind2.ne.0) then
        call angdisnew(sqrts,fmass(ind1),fmass(ind2),iline,ctheta1,phi1)
       else 
        call angdisnew(sqrts,fmass(ind1),0.0d0,iline,ctheta1,phi1)
       end if  
 
-cJK210897 ctheta1 check not needed for angdis_new
-c      if(ctheta1.lt.-1d0.or.ctheta1.gt.1d0) then
-c        write(6,*)'scatter: angdis returns imaginary angles!'
-c      endif   
 
 c   for CTOption(2)<>0 phi1=0 and 2-part. scattering is in the scattering plane
       if(ind2.ne.0.and.CTOption(2).ne.0) then
@@ -621,8 +526,6 @@ c
       else
 cccc decay: must create a second slot
          inew(1)=ind1
-c!!!!!! ab hier vielleicht ueberfluessige sequenz
-c!!!! this works only for decays into meson-baryon or meson-meson
 c     increment meson counter
          nmes=nmes+1
 c     set new slot number
@@ -640,7 +543,6 @@ c     three or four body decays
                ityp(inew(i))=999
  91         continue
          endif
-c!!!!!!! bis hier
       endif
 
 cccc soft resonance production (second slot must be deleted)
@@ -738,33 +640,30 @@ c
      &  ) then
 
 c     store average  time and position of particles 
-	 tstring(1)=(r0(ind1)+r0(ind2))/2d0!ernst
-         rstringx(1)=(rx(ind1)+rx(ind2))/2d0
-         rstringy(1)=(ry(ind1)+ry(ind2))/2d0
-         rstringz(1)=(rz(ind1)+rz(ind2))/2d0
+	 tstring(1)=(r0(ind1)+r0(ind2))/2.
+         rstringx(1)=(rx(ind1)+rx(ind2))/2.
+         rstringy(1)=(ry(ind1)+ry(ind2))/2.
+         rstringz(1)=(rz(ind1)+rz(ind2))/2.
 
-	 tstring(2)=tstring(1) !ernst
+	 tstring(2)=tstring(1) 
          rstringx(2)=rstringx(1)
          rstringy(2)=rstringy(1)
          rstringz(2)=rstringz(1)
 
-cpot
 c     do likewise for MD trajectories
-         rpott(1)=(r0_t(ind1)+r0_t(ind2))/2d0
-         rpotx(1)=(rx_t(ind1)+rx_t(ind2))/2d0
-         rpoty(1)=(ry_t(ind1)+ry_t(ind2))/2d0
-         rpotz(1)=(rz_t(ind1)+rz_t(ind2))/2d0
+         rpott(1)=(r0_t(ind1)+r0_t(ind2))/2.
+         rpotx(1)=(rx_t(ind1)+rx_t(ind2))/2.
+         rpoty(1)=(ry_t(ind1)+ry_t(ind2))/2.
+         rpotz(1)=(rz_t(ind1)+rz_t(ind2))/2.
          rpott(2)=rpott(1)
          rpotx(2)=rpotx(1)
          rpoty(2)=rpoty(1)
          rpotz(2)=rpotz(1)
 
-
          call delpart(inew(1))
          call delpart(inew(2))
          inew(1)=0
          inew(2)=0
-
 
 c in case of a meson-string with baryon-antibaryon creation
 c the meson-slot must be deleted
@@ -802,9 +701,7 @@ c     create the slot
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine prescale(lambda)
-c     Unit     : Collision Term
-c     Authors  : Steffen A. Bass
-c     Date     : 07/23/95
+c
 c     Revision : 1.0
 c
 cinput lambda : scaling factor for momenta of outgoing particles
@@ -831,7 +728,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 pzi1,pzi2,pxi1,pxi2,pyi1,pyi2
       real*8 rstringx(2),rstringy(2),rstringz(2),tstring(2)
       real*8 rpott(2),rpotx(2),rpoty(2),rpotz(2)
-      real*8 tauf(mprt),tformold(2),rapn
+      real*8 tauf(mprt),tformold(2)
       integer getspin,strid1,strid2,bar,nm1,nm2
 
       common /scatcomr/rstringx,rstringy,rstringz,tstring,
@@ -840,14 +737,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &                 ctheta1,phi1,th,phi2,tformold
       common /scatcomi/itmp,ipmp,ind1,ind2,nb1,nb2,strid1,strid2,
      &                 bar,nm1,nm2
-
-
-cdebug
-      integer ityp1,ityp2
-      real*8 rap,rap1,rap2
-      common /debb/ityp1,ityp2,rap,rap1,rap2
-
-
 
 
       if(nexit.eq.1) then ! soft resonance production
@@ -863,7 +752,7 @@ c formation time
          tauf(1)=0.d0         
       else                      ! scattering/decay
          do 205 j=1,nexit
-cspl compute formation time (as a eigentime)
+c compute formation time (as a eigentime)
             tauf(j)=xnew(4,j)*pnew(5,j)/pnew(4,j)
 
 c     rescale momenta of particles
@@ -872,8 +761,8 @@ c     rescale momenta of particles
             call putang(pnew(1,j),pnew(2,j),pnew(3,j),theta3,phi3,pabs)
 
 
-ctd check for forward time-delay
-ctd in case of delay the momenta are already in the comp. frame
+c check for forward time-delay
+c in case of delay the momenta are already in the comp. frame
             if(.not.(CTOption(34).eq.2.and.iline.eq.20.and.
      &         ityptd(1,pslot(1)).ne.0)) then
 
@@ -890,27 +779,11 @@ c     decays should not be rotated
                   phi2 = 0.d0
                end if
 
-
                call rotbos(th,phi2,betax,betay,betaz,
      &                     pnew(1,j),pnew(2,j),pnew(3,j),pnew(4,j))
 
-cdebug
-c               rapn=0.5*log((pnew(4,j)+pnew(3,j))/
-
-c     &               (pnew(4,j)-pnew(3,j)))
-c               if(iline.eq.23) write(25,789) rapn,rap,itypnew(j),ityp1,
-c     &              ityp2
-c 789           format(2f10.4,3i4)
-c               if(dabs(rapn).lt.0.75d0.and.
-c     &             dabs(rap).gt.2d0 ) then
-c                  write(6,*) 'after rotbos ',
-c     &                 ctag,iline,itypnew(j),rapn,rap,ityp1,ityp2
-c               endif
-c
-c            else
-c               write(6,*)'use untransformed momenta'
             endif
-ctd end of delay-if
+c end of delay-if
 
 
  205     continue
@@ -926,7 +799,6 @@ c     the ipmp values determine wether the new particle belongs to incoming slot
          rx(inew(i))=rstringx(ipmp(i))
          ry(inew(i))=rstringy(ipmp(i))
          rz(inew(i))=rstringz(ipmp(i))
-
 cpot
 c     likewise for MD trajectories
          r0_t(inew(i))=rpott(ipmp(i))
@@ -941,7 +813,7 @@ c     write momenta to global arrays
          pz(inew(i))=pnew(3,itmp(i))
 
 
-cspl 11-95 store formation time and leading hadron 
+c store formation time and leading hadron 
          if(pnew(5,itmp(i)).gt.0d0)then
             tform(inew(i))=tstring(1)+tauf(itmp(i))*
      &                  pnew(4,itmp(i))/pnew(5,itmp(i))
@@ -953,8 +825,9 @@ c     cross section reduction factor and string ID
          xtotfac(inew(i))=leadfac(itmp(i))
          strid(inew(i))=sidnew(itmp(i))
 
-csabtf+cspl additional reduction of the leading hadrons' cross section
-c           in case the incoming hadron x-sec was already reduced
+c additional reduction of the leading hadrons' cross section
+c in case the incoming hadron x-sec was already reduced
+c otherwise an elastic scattering would erase formation time...
          if(xtotfacold(ipmp(i)).lt.1d0) then
             xtotfac(inew(i))=xtotfacold(ipmp(i))*xtotfac(inew(i))
          endif
@@ -963,7 +836,8 @@ c           in case the incoming hadron x-sec was already reduced
             tform(inew(i))=tformold(ipmp(i))
          endif
 
-csab store the respective string-ids in strid1 and strid2
+
+c store the respective string-ids in strid1 and strid2
          if(ipmp(i).eq.1.and.strid(inew(i)).ne.0) then
             strid1=strid(inew(i))
          elseif(ipmp(i).eq.2.and.strid(inew(i)).ne.0) then
@@ -978,7 +852,7 @@ c     write mass, ID, I3 and spin to global arrays
 
  215  continue
 
-csab: set lstcoll:
+c set lstcoll:
 c     lstcoll relates the outgoing particles of this scattering/decay interaction
 c     to each other - it is used to prevent them from directly interacting again
 c     with each other because this would be unphysical.
@@ -1031,9 +905,7 @@ c case 4: one (mesonic) string
       end
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine scatFinal(colldens)
-c     Unit     : Collision Term
-c     Authors  : Steffen A. Bass
-c     Date     : 07/23/95
+c
 c     Revision : 1.0
 c
 coutput colldens : baryon density at point of interaction
@@ -1055,6 +927,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       integer i,ind1,ind2,itmp(mprt),ipmp(mprt),nb1,nb2,j
       integer ikill1,ikill2,strid1,strid2,bar,nm1,nm2
+      integer iloffset
       real*8 colldens
       logical dnscall,dnsdum
 
@@ -1163,26 +1036,83 @@ c     charge
 c     time of decay
          dectime(inew(i))=dectim(inew(i),iline)+tform(inew(i))
 c     last process the particle was involved in
-         origin(inew(i))=iline
-csab ueber diese codierung sollte nochmal nachgedacht werden;
-csab die Vorzeicheninfo geht verloren, die koennte man vielleicht retten
-c     &        +1000*(iabs(itypold(1))+1000*iabs(itypold(2)))
-
+         if ( (iline.ne.13).and.(iline.ne.17).and.(iline.ne.19).and.
+     $        (iline.ne.22).and.(iline.ne.26).and.(iline.ne.38)) then
+            if (ind2.gt.0) then
+               iloffset=0
+               if ( (iline.eq.27).or.(iline.eq.28) ) then
+                  if ( (CTOption(41).gt.1) ) then
+                     if ( (abs(itypt(1)).gt.100).and.
+     $                    (abs(itypt(2)).gt.100) ) then
+                        iloffset=20
+                     endif
+                     if ( (itypt(1).eq.ityp(inew(i))).and.
+     $                    (iso3t(1).eq.iso3(inew(i))) ) then
+                        origin(inew(i))=origint(1)+100
+                        uid(inew(i))=uidt(1)
+                     elseif ( (itypt(2).eq.ityp(inew(i))).and.
+     $                       (iso3t(2).eq.iso3(inew(i))) ) then
+                        origin(inew(i))=origint(2)+100
+                        uid(inew(i))=uidt(2)
+                     else
+                        origin(inew(i))=iline+iloffset
+     $                       +1000*(iabs(itypt(1))+1000*iabs(itypt(2)))
+                     endif
+                  else
+                     origin(inew(i))=iline+iloffset
+     $                    +1000*(iabs(itypt(1))+1000*iabs(itypt(2)))
+                  endif
+               else
+                  origin(inew(i))=iline
+     $                 +1000*(iabs(itypt(1))+1000*iabs(itypt(2)))
+               endif
+            else
+               origin(inew(i))=iline
+     $              +1000*(iabs(itypt(1)))
+            endif
+c     unique ID tag
+            uid_cnt=uid_cnt+1
+            uid(inew(i))=uid_cnt
+         else
+            origin(inew(i))=origint(i)+100
+            uid(inew(i))=uidt(i)
+            if (ityp(inew(1)).ne.itypt(1)) then
+               if (nexit.ne.2) then
+                  write(6,*) "fatal error in scatter: nexit.ne.2!"
+                  stop
+               endif
+               origin(inew(i))=origint(3-i)+100
+               uid(inew(i))=uidt(3-i)
+            endif
+         endif
 c     freeze-out coordinates
+c     freeze-out coordinates
+chp modify freeze-out coordinates
+chp particles should not freeze out before they are formed
+chp add tform and propagate accordingly
+        if(tform(inew(i)).gt.r0(inew(i)))then
+         frr0(inew(i))=r0(inew(i))+tform(inew(i))
+         frrx(inew(i))=rx(inew(i))
+     & +px(inew(i))/p0(inew(i))*(tform(inew(i))-r0(inew(i)))
+         frry(inew(i))=ry(inew(i))+py(inew(i))/p0(inew(i))
+     & +py(inew(i))/p0(inew(i))*(tform(inew(i))-r0(inew(i)))
+         frrz(inew(i))=rz(inew(i))+pz(inew(i))/p0(inew(i))
+     & +pz(inew(i))/p0(inew(i))*(tform(inew(i))-r0(inew(i)))
+chp otherwise just proceed normally
+        else
          frr0(inew(i))=r0(inew(i))
          frrx(inew(i))=rx(inew(i))
          frry(inew(i))=ry(inew(i))
          frrz(inew(i))=rz(inew(i))
+        end if
          frp0(inew(i))=p0(inew(i))
          frpx(inew(i))=px(inew(i))
          frpy(inew(i))=py(inew(i))
          frpz(inew(i))=pz(inew(i))
 
-cc forward time-delay
+c forward time-delay
       if(CTOption(34).eq.2.and.(iline.eq.36.or.iline.eq.37)) then
          do 307 j=1,2
-ccdebug
-cc            write(6,*)'load momenta into p*td'
             p0td(j,inew(i))=pold(4,j)
             pxtd(j,inew(i))=pold(1,j)
             pytd(j,inew(i))=pold(2,j)
@@ -1216,7 +1146,7 @@ c     B B -> ? ?
             endif
          endif
  312  continue
-c perhaps some counters for B-strings/M-strings should be added here...
+c other counters for B-strings/M-strings could be added here...
       if(iline.eq.13.or.iline.eq.17
      &     .or.iline.eq.19.or.iline.eq.26) then
          NElColl=NElColl+1
@@ -1226,92 +1156,8 @@ c perhaps some counters for B-strings/M-strings should be added here...
       end
 
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-      subroutine erescale(eold)
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass 
-c     Date     : 06/13/95
-c     Revision : 0.9 (untested)
-c
-c     This subroutine rescales the outgoing momenta in case of
-c     momentum dependent interaction in order to ensure 
-c     conservation of total energy.
-c
-cinput eold:  total energy of the system
-c
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-      implicit none
-      INTEGER MAXIT,j
-      REAL*8 xacc,lambda1,lambda,loffs,eold,enew,enew1
-      REAL*8 dx,f,fl,swap,xl,lambda0,etot
-c      EXTERNAL func
-
-c     maximum number of iterations
-      PARAMETER (MAXIT=20)
-c     accuracy (1 keV)
-      parameter (xacc=1.d-6)
-c     variational parameter for rescaling
-      parameter (loffs=0.3)
-c     first bracket the root of etot(lambda)
-
-      lambda1=1.d0
-      enew1=Etot()
-
-cdebug
-c      write(6,*) 'erescale old,new1,delta',eold,enew1,eold-enew1
-      if(abs(enew1-eold).lt.xacc) return
-      lambda=1.d0+loffs
-      call prescale(lambda)
-      enew=Etot()
-      if(((eold-enew)*(eold-enew1)).lt.0.d0) goto 222
- 111  continue
-      lambda1=lambda1-loffs
-      lambda=lambda+loffs
-      call prescale(lambda1)
-      enew1=Etot()
-      call prescale(lambda)
-      enew=Etot()
-      if(((eold-enew)*(eold-enew1)).lt.0.d0) goto 222
-      goto 111
-c     now find root 
-c     use FUNCTION rtsec(func,x1,x2,xacc) 
-c     (C) Copr. 1986-92 Numerical Recipes Software 5&40.
- 222  continue
-c     fl=func(x1)
-      fl=eold-enew
-c      f=func(lambda1)
-      f=eold-enew1
-      if(abs(fl).lt.abs(f))then
-        lambda0=lambda
-        xl=lambda1
-        swap=fl
-        fl=f
-        f=swap
-      else
-        xl=lambda
-        lambda0=lambda1
-      endif
-      do 11 j=1,MAXIT
-        dx=(xl-lambda0)*f/(f-fl)
-        xl=lambda0
-        fl=f
-        lambda0=lambda0+dx
-
-c        f=func(lambda0)
-        call prescale(lambda0)
-        enew=Etot()
-        f=eold-enew
-        if(abs(dx).lt.xacc.or.f.eq.0.) then
-c           write(6,*)'erescale-new',enew
-           return
-        endif
-11    continue
-      pause 'lambda0 exceed maximum iterations in erescale'
-      END
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       integer function collclass(ityp1,iso31,ityp2,iso32)
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass, Luke A. Winckelmann
-c     Date     : 05/27/95
+c
 c     Revision : 1.0
 c
 c     This function links the ingoing collision channel to the 
@@ -1339,44 +1185,23 @@ c     (otherwise scatter will crash due to swapped particle properties)
       d1=0.d0
       d2=0.d0
 
+
+c... blank out PYHTIA pdg-id's
+c... define collclasses for specific reactions if needed
+      if(i1.gt.1000 .or. i2.gt.1000) then
+         collclass=0
+         return
+      endif
+
+              
       if(i1.lt.i2)call swpizm(i1,iz1,d1,i2,iz2,d2)
 
 c baryon-antibaryon
       if(i1.le.maxbar.and.i2.le.maxbar.and.ityp1*ityp2.lt.0) then
-c      if(i1.le.maxbar.and.i2.eq.i1.and.ityp1*ityp2.lt.0) then
          collclass=11
          if(CTOption(19).ne.0)collclass=0
-c         goto 987
          return
       end if 
-
-c      if(i1.le.maxbar.and.i1.ne.1.and.i1.ne.27.and.i1.ne.40.and.i1.ne.49
-c     &     .and.i1.ne.55.and.i2.eq.i1.and.ityp1*ityp2.lt.0) then
-
-c      if(i1.le.maxbar.and.i2.le.maxbar
-c     &  .and.i1.ne.1.and.i1.ne.27.and.i1.ne.40.and.i1.ne.49.and.i1.ne.55
-c     &  .and.i2.ne.1.and.i2.ne.27.and.i2.ne.40.and.i2.ne.49.and.i2.ne.55
-c     &     .and.ityp1*ityp2.lt.0) then
-c         collclass=11
-c         if(CTOption(19).ne.0)collclass=0
-c         goto 987
-c         return
-c      end if 
-
-c      if(i1.le.maxbar.and.i2.le.maxbar
-c     &  .and.(i1.eq.1.or.i1.eq.27.or.i1.eq.40.or.i1.eq.49.or.i1.eq.55)
-c     &  .and.(i2.eq.1.or.i2.eq.27.or.i2.eq.40.or.i2.eq.49.or.i2.eq.55)
-c     &     .and.ityp1*ityp2.lt.0) then
-
-c        collclass=11
-c        if(CTOption(19).ne.0)collclass=0
-c        goto 987
-c        return
-c     end if 
-
-cdebug:
-c 987  continue
-c      if(collclass.eq.11) return
 
 c nucleon nucleon
       if(i1.eq.nucleon.and.i2.eq.nucleon) then
@@ -1420,11 +1245,12 @@ c Delta(1232)-N*
 c Delta(1232)-D*
          collclass=8
          return
-      elseif(i1.ge.minmes.and.i2.le.maxbar) then
+      elseif(i1.ge.minmes.and.i1.lt.133.and.i2.le.maxbar) then
 c Boson-Baryon
          collclass=9
          return
-      elseif(i1.ge.minmes.and.i2.ge.minmes) then
+      elseif(i1.ge.minmes.and.i1.lt.133
+     &        .and.i2.ge.minmes.and.i2.lt.133) then
 c Boson-Boson
          collclass=10
          return
@@ -1439,9 +1265,15 @@ c D*-D* or D*-N* or N*-N*
 c all remaining BB-collisions
          collclass=13
          return
+      elseif(i1.ge.133.and.i2.ge.minmes.and.i2.lt.133) then
+c M_c - meson
+         collclass=14
+c no charm-baryon collisions
+      elseif(i1.ge.133.and.i2.le.maxbar) then
+         collclass=0
       else
 c class not defined (sets sigtot to zero)
-c      write(*,*)'scatter: collclass of ',i1,i2,' not yet defined!'
+      write(*,*)'scatter: collclass of ',i1,i2,' not yet defined!'
          collclass=0
       endif
       return
@@ -1450,10 +1282,6 @@ c      write(*,*)'scatter: collclass of ',i1,i2,' not yet defined!'
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       subroutine getang(x,y,z,th,ph,r)
-c
-c Author: L.A.Winckelmann, modified by S.A. Bass  
-c Unit:   collison-term  
-c Date:   02/06/95
 c
 c gives spherical coordinates of cartesian 3-vector $(x,y,z)$
 c
@@ -1477,10 +1305,6 @@ C####C##1#########2#########3#########4#########5#########6#########7##
 C####C##1#########2#########3#########4#########5#########6#########7##
       subroutine putang(x,y,z,th,ph,r)
 c
-c Author: Steffen A. Bass  
-c Unit:   collison-term  
-c Date:   02/06/95
-c
 c  creates 3-vector $(x,y,z)$ out of  spherical coordinates 
 c  input: angles {\tt th}($\vartheta$), {\tt ph}($\varphi$) and radius {\tt r}
 c  output: 3-vector x,y,z 
@@ -1495,9 +1319,7 @@ C####C##1#########2#########3#########4#########5#########6#########7##
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       SUBROUTINE rotbos(THE,PHI,BEX,BEY,BEZ,p1,p2,p3,p4)
-c  Unit:   collison-term
-c  Author: L.A.Winckelmann
-c  Date:   02/06/95
+c
 c INPUT: the,phi,bex,bey,bez,p  
 c OUTPUT: p
 c 1)rotate 4-vector p according to the and phi 2/ boost 4-vector p
@@ -1506,9 +1328,6 @@ C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 P(4),BEX,BEY,BEZ,GA,BEP,GABEP,rot(3,3),the,phi
       real*8 p1,p2,p3,p4,bb2
       integer j
-
-cdebug
-c      if(bex**2+bey**2+bez**2.gt.1d0) write(6,*) 'ouch rotbos'
 
 
       IF(THE**2+PHI**2.GT.1E-20) THEN
@@ -1554,9 +1373,6 @@ C...LORENTZ BOOST (TYPICALLY FROM REST TO MOMENTUM/ENERGY=BETA)
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine instring(low,high,nb,nm,barlist,meslist)
 c
-c     author : Steffen A. Bass
-c     unit   : collision term
-c     date   : 09/14/95
 c     version: 1.0
 c
 c     this subroutine returns arrays with the indices of the baryons/mesons
@@ -1595,8 +1411,6 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       subroutine leadhad(n1l,n2l,nbl)
-c Author : C. Spieles
-c Date   : 11/09/95
 c
 cinput n1l : First index of this string in the newpart-arrays
 cinput n2l : Last index of this string in the newpart-arrays

@@ -1,9 +1,6 @@
-c$Id: make22.f,v 1.28 1998/06/15 13:35:25 weber Exp $
+c$Id: make22.f,v 1.42 2007/01/30 14:50:25 bleicher Exp $
 C####C##1#########2#########3#########4#########5#########6#########7##
       subroutine make22(iio,e,ii1,iiz1,mm1,xfac1,ii2,iiz2,mm2,xfac2)
-c  Unit:   collision-term
-c  Author: L.A.Winckelmann,  S. A. Bass,  M. Bleicher 
-c  Date:   02/06/95
 c
 cinput iio   : label for exit-channel
 cinput e     : $\sqrt{s}$ of process
@@ -32,11 +29,8 @@ C####C##1#########2#########3#########4#########5#########6#########7##
       include 'newpart.f'
       include 'comres.f'
 
-
-
       integer io,iio,i1,i2,i3,i4,i,k,i1p,i1m,i2p,i2m
       integer ifqrk1,ifqrk2,ifdiq1,ifdiq2,ifqrk3,ifqrk4,ifdiq3,ifdiq4
-c      integer ii1,ii2,iiz1,iiz2
       integer iq1(2),iq2(3),kq1,kq2,kqq1,kqq2,iii,iff(3)
       real*8 sig,e,m1,m2,m3,m4,gam,mm1,mm2,m1m,m2m,xfac1,xfac2
 
@@ -44,9 +38,8 @@ c      integer ii1,ii2,iiz1,iiz2
 
       logical bit
 
-
 c...functions
-      integer isoit,whichres
+      integer isoit,whichres,strit
       real*8 getmass,fmsr,ranf,pcms,massit,widit,mminit
 
 c...vacuum quantumnumber(s) for special string decay (don't touch)
@@ -58,11 +51,20 @@ c...string
       integer j,l,ii1,ii2,iiz1,iiz2,iexopt,iddum,ibar,jbar
       logical fboost,switips
 
-      
+c... modified string decay/high mass resonance
+      integer idcode,idpars
+    
+c.. needed for pythia
+      integer pytlist(7),itag0,itag1,itag2,pythflag  
+      real*8 minsrt,p,ppythia 
+
+      common /pythflag/ pythflag
 
       integer ident(2,mprt)
       real*8 part(9,mprt),ms1,ms2,msmin1,msmin2,tau,esum
 
+c.. pythia particle list
+      data pytlist/1,-1,27,40,49,55,101/
 
       bit=.true.
       switips=.false.
@@ -76,13 +78,13 @@ c...string
       icnt=0
       ntry=0
       ibar=0
-
+chp flag for Pythia call because of angular ditribution      
+      pythflag=0
+    
       if(iabs(i1).lt.minmes)ibar=ibar+isign(1,i1)
       if(iabs(i2).lt.minmes)ibar=ibar+isign(1,i2)
 
-cdebug,sab
-c      write(6,*)'make22',i1,iz1,i2,iz2,io
-cspl in case of a MB-reaction, sort particles (but keep track of
+c in case of a MB-reaction, sort particles (but keep track of
 c any id-switch with the 'switips'-flag)
       if(iabs(i1).ge.minmes.and.iabs(i1).le.maxmes.and.
      &   iabs(i2).ge.minbar.and.iabs(i2).le.maxbar)then
@@ -97,36 +99,23 @@ c any id-switch with the 'switips'-flag)
  
 c      if(i1+i2.gt.2)write(6,*)'make22:',i1,i2
  1007 continue
-
-
-
       goto(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,9,17,9,17,20,
-     ,9,13,23,14,12,26,27,15,14,100,29,100,14,15,14,36,36,13)io
+     , 9,13,23,15,12,26,27,15,14,100,29,100,14,15,14,36,36,13,14,
+     & 13,41,42,43,44,45,46)io
       
       write(6,*)'make22: unknown channel requested io:',io 
       write(6,*)'  ',e,i1,iz1,m1,i2,iz2,m2
       stop
 
-      pnew(5,1)=getmass(e-mresmin,3)
-      pnew(5,2)=getmass(e-m3,3)
-      mstring(1)=pnew(5,1)
-      mstring(2)=pnew(5,2)
-      itypnew(1)=whichres(m3,3)
-      itypnew(2)=whichres(m4,3)
-      nstring1=1
-      nstring2=1
-
-      return
- 
  1    continue
 c...pp->ND
       i3=minnuc
       i4=mindel
       m3=massit(i3)
 
-      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),e-m3,m4)
+      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),
+     .     e-m3,m3,m4)
       
-c      write(6,*)'make22: nn->nd ',i3,m3,i4,m4
       if(ranf(0).gt.0.5d0)call swpizm(i3,iz3,m3,i4,iz4,m4)
       goto 1008
  
@@ -135,11 +124,9 @@ c...pp->pp*
       i3=minnuc
       m3=massit(i3)
       if(bit)call getres(io,e,minnuc+1,maxnuc,i4)
-      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),e-m3,m4)
+      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),
+     .     e-m3,m3,m4)
 
-c      m4=getmass(e-m3,1)
-c      i4=whichres(m4,1)      
-c      write(6,*)'make22: nn->nn*',i3,m3,i4,m4
       if(ranf(0).gt.0.5d0)call swpizm(i3,iz3,m3,i4,iz4,m4)
       goto 1008
 
@@ -148,10 +135,9 @@ c...pp->ND*
       i3=minnuc
       m3=massit(i3)
       if(bit)call getres(io,e,mindel+1,maxdel,i4)
-      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),e-m3,m4)
+      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),
+     .     e-m3,m3,m4)
 
-c      m4=getmass(e-m3,2)
-c      i4=whichres(m4,2)      
       if(ranf(0).gt.0.5d0)call swpizm(i3,iz3,m3,i4,iz4,m4)
       goto 1008
 	  
@@ -159,26 +145,23 @@ c      i4=whichres(m4,2)
 c...pp->DD
       i3=mindel
       i4=mindel
-      call getmas(massit(i3),widit(i3),i3,isoit(i3)
-     ,,mminit(i4),e-mminit(i4),m3)
-      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),e-m3,m4)
+      call getmas(massit(i3),widit(i3),i3,isoit(i3),
+     .     mminit(i4),e-mminit(i4),mminit(i4),m3)
+      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),
+     .     e-m3,m3,m4)
 
-c      m3=getmass(e-mresmin,0)
-c      m4=getmass(e-m3,0)
       if(ranf(0).gt.0.5d0)call swpizm(i3,iz3,m3,i4,iz4,m4)
       goto 1008
 
  5    continue
 c...pp->DN*, DN* with factor 4/3
       i3=mindel
-c      m3=getmass(e-mresmin,0)
       if(bit)call getres(io,e,minnuc+1,maxnuc,i4)
-      call getmas(massit(i3),widit(i3),i3,isoit(i3)
-     ,,mminit(i3),e-mminit(i4),m3)
-      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),e-m3,m4)
+      call getmas(massit(i3),widit(i3),i3,isoit(i3),
+     .     mminit(i3),e-mminit(i4),mminit(i4),m3)
+      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),
+     .     e-m3,m3,m4)
 
-c      m4=getmass(e-m3,1)
-c      i4=whichres(m4,1)
       if(ranf(0).gt.0.5d0)call swpizm(i3,iz3,m3,i4,iz4,m4)
       goto 1008
 
@@ -186,13 +169,11 @@ c      i4=whichres(m4,1)
 c...pp->DD*, DN* with factor 4/3
       i3=mindel
       if(bit)call getres(io,e,mindel+1,maxdel,i4)
-      call getmas(massit(i3),widit(i3),i3,isoit(i3)
-     ,,mminit(i3),e-mminit(i4),m3)
-      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),e-m3,m4)
+      call getmas(massit(i3),widit(i3),i3,isoit(i3),
+     .     mminit(i3),e-mminit(i4),mminit(i4),m3)
+      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),
+     .     e-m3,m3,m4)
 
-c      m3=getmass(e-mresmin,0)
-c      m4=getmass(e-m3,2)
-c      i4=whichres(m4,2)
       if(ranf(0).gt.0.5d0)call swpizm(i3,iz3,m3,i4,iz4,m4)
       goto 1008
 
@@ -209,13 +190,11 @@ c...pp -> generate N*N*,N*D*,D*D*
 c...ND->DD
       i3=mindel
       i4=mindel
-      call getmas(massit(i3),widit(i3),i3,isoit(i3)
-     ,,mminit(i4),e-mminit(i4),m3)
-      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),e-m3,m4)
+      call getmas(massit(i3),widit(i3),i3,isoit(i3),
+     .     mminit(i4),e-mminit(i4),mminit(i4),m3)
+      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),
+     .     e-m3,m3,m4)
 
-c      m3=getmass(e-mresmin,0)
-c      m4=getmass(e-m3,0)
-c     write(6,*)'make22: nd->dd ',i3,m3,i4,m4
       if(ranf(0).gt.0.5d0)call swpizm(i3,iz3,m3,i4,iz4,m4)
       goto 1008
 
@@ -245,7 +224,7 @@ c      return
 
  13   continue
 c...elastic scattering
-cspl 04-96
+c
       if(switips)then
          call swpizm(i1,iz1,m1,i2,iz2,m2)
          switips=.false.
@@ -258,16 +237,13 @@ cspl 04-96
          write(6,*)'m3:',m3,mminit(i3)
          write(6,*)'m4:',m4,mminit(i4)
       else
-cspl this should not be necessary:
-csab it is, due to N being off-shell
+c
+c
         if(m3.lt.mminit(i3))m3=mminit(i3)
         if(m4.lt.mminit(i4))m4=mminit(i4)
       end if
-c      write(6,*)'make22(el):',i1,iz1,m1,i2,iz2,m2,i3,iz3,m3,i4,iz4,m4
 
       goto 2001
-c      return
-
 
  14   continue
 c...inelastic scattering (aqm for nonstrange resonances)
@@ -275,11 +251,12 @@ c   for arbitrary resonances getinw should be modified
 c   arbitrary particles are excited (whithout charge exchange) 
 
 c...get minimal masses
+c...allow also for delta excitation in nucleon-nucleon reactions
       call getirg(i1,i1m,i1p)
-c      m1m=massit(i1m)-0.5*widit(i1m)
+      if (i1p.eq.maxnuc) i1p=maxdel
       m1m=mminit(i1m)
       call getirg(i2,i2m,i2p)
-c      m2m=massit(i2m)-0.5*widit(i2m)
+      if (i2p.eq.maxnuc) i2p=maxdel
       m2m=mminit(i2m)
 
       if(e-m1m-m2m.le.0d0)then
@@ -344,25 +321,23 @@ c...XX -> 2 strings
       if(CTOption(12).ne.0)then
         write(6,*)' *** error(make22): string section is called ',
      .            'while strings are switched off:CTOption(12).ne.0'  
-cdebug,sab
-c        goto 14
         stop
       end if 
 
-cspl 04-96
+c
       if(switips)then
          call swpizm(i1,iz1,m1,i2,iz2,m2)
          switips=.false.
       endif
 
 
-csab store old itypes
+c store old itypes
       i1old=i1
       i2old=i2
 
  155  continue
       
-cspl allow for deexcitation: 'excitation' starts from groundstate
+c allow for deexcitation: 'excitation' starts from groundstate
 
       if(iabs(i1).ge.minmes)then
 c.. meson resonances may also be deexcitated: assign the particle
@@ -393,7 +368,7 @@ c same for second particle
          call getirg(i2,i2m,i2p) 
       endif
 
-c sab,blubb 08/11/97
+c 
 c BEWARE: now i1 and i2 do not contain anymore the ityps of the ingoing
 c particles, but the ityps of the lowest possible states (groundstates).
 c This is needed in order for the string-excitation to be able to 
@@ -402,6 +377,42 @@ c particle.
 c If you need the old ityps (i.e. for elastic scattering) then reset them
 c via i1old and i2old
 
+c start if/then structure for pythia call here
+      minsrt=10.
+      itag0=0
+      itag1=0
+      itag2=0
+
+c.. call pythia only for hard collision (Q>1.5 GeV)
+c.. ppythia parametrizes the appropriate probability
+      p=ranf(0)
+      ppythia=1d0-1.03293d0*exp((-e)/246.771d0)
+      if (p.lt.ppythia) itag0=1      
+
+c check whether particle type can be handled by PYTHIA
+      do 123 i=1,7
+         if(i1.eq.pytlist(i)) itag1=1
+         if(i2.eq.pytlist(i)) itag2=1
+ 123  continue
+
+c pythia for high energies 
+      
+      if(e.gt.minsrt.and.itag0.eq.1.and.itag1.eq.1.and.itag2.eq.1
+c... PYTHIA switch
+     &  .and.CTOption(44).eq.1) then
+
+         call upyth(i1,iz1,i2,iz2,e)
+chp flag is necessary to fix angular distribution         
+         pythflag=1
+
+      else
+
+c no pythia call, use ordinary string routine
+c need to set nstring1 to particle number out of pythia
+c set nstring2=0
+c initialize inew, pnew, xnew ... arrays from pythia common blocks
+
+c--- end pythia block -----
 
 c if the incoming masses are changed due to excitation, then the
 c new masses should not be lower than:
@@ -442,7 +453,7 @@ c convert to quark-IDs
  81      continue
 c 100 tries for excitation, otherwise elastic scattering
          ntry=ntry+1
-         if(ntry.gt.100)then
+         if(ntry.gt.1000)then
           write(*,*)'make22: too many tries for string exc. ->elastic/
      &           deexcitation'
           write(*,*)' i1, i2, m1, m2, e: ',i1,i2,m1,m2,e
@@ -494,17 +505,17 @@ c quark-quark scattering -> only elastic !
 
 c single diffractive if one particle is a quark state, 
 c mass excitation according 1/m
-      if(xfac1.lt..999d0.and.ranf(0).lt..5)then
+      if(xfac1.lt..999d0.and.ranf(0).lt.0.5)then
         ms1=massit(i1)
         ms2=fmsr(msmin2,e-ms1)
         fboost=.false.
-      elseif(xfac2.lt..999d0.and.ranf(0).lt..5)then
+      elseif(xfac2.lt..999d0.and.ranf(0).lt.0.5)then
         ms2=massit(i2)
         ms1=fmsr(msmin1,e-ms2)
         fboost=.false.
       endif
   
-cspl take care that the particles will be able to decay lateron:
+c take care that the particles will be able to decay lateron:
       if(ms1.lt.m1m)then  
         ms1=m1m
         fboost=.false.
@@ -625,6 +636,9 @@ c error check
          write(6,'(5i4)')(itypnew(l),l=1,nstring1+nstring2)
          end if
 
+cmb,sab
+c end of bracket for urqmd vs. pythia string routine
+      endif
 
       return
 
@@ -645,7 +659,7 @@ c error check
       m4=m2
 
 c the following lines MUST be there in order to set nucleons on-shell
-c after their first collision!!! Steffen.
+c after their first collision
       if(m3.lt.mminit(i3))m3=mminit(i3)
       if(m4.lt.mminit(i4))m4=mminit(i4)
 
@@ -658,7 +672,6 @@ c...decays
 c normal decay
 c note: m4,i4 and iz4 are dummies in this call
          call anndec(1,m1,i1,iz1,m4,i4,iz4,e,sig,gam)
-c      write(6,*)'              >',m3,i3,iz3,m4,i4,iz4
       else
 c forward time-delay
          pnew(5,1)=fmasstd(1,pslot(1))
@@ -688,13 +701,12 @@ c three or four body decay
             end do
          end do
          mstring(1)=pnew(5,1)
-cJK210897 mstring(2) was not initialized properly in previous version
-cJK210897 I don't know whether or not this affected some results
+c
          mstring(2)=pnew(5,2)
          do 91 j=3,nexit
             mstring(2)=mstring(2)+pnew(5,j)
  91      continue
-c!!!!
+c
 c now call routine for momentum phase space...
          call nbodydec(e)
          return
@@ -705,8 +717,6 @@ c...annihilation -> string
       if(CTOption(12).ne.0)then
         write(6,*)' *** error(make22): string section is called ',
      .            'while strings are switched off:CTOption(12).ne.0'  
-cdebug,sab
-c         goto 13
         stop
       end if 
 
@@ -715,7 +725,7 @@ c         goto 13
       mstring(1)=ms1
       mstring(2)=ms2
             
-cspl...determine flavour content of b-bbar-system
+c determine flavour content of b-bbar-system
       call ityp2id(i1,iz1,ifdiq1,ifqrk1)
       call ityp2id(i2,iz2,ifdiq2,ifqrk2)
 c...create string 1 out of quark-antiquark pair
@@ -733,11 +743,9 @@ c...create string 1 out of quark-antiquark pair
         itypnew(l)=ident(1,l)
         i3new(l)=ident(2,l)
         tau=part(9,l)/ (part(4,l)/part(5,l))
-c        write(*,718)l,(ident(j,l),j=1,2),(part(j,l),j=1,9),tau
       enddo
       call leadhad(1,nstring1,0)
 
-c       write(6,*)'makestr:esum',esum,ms1
 c...create string 2 out of diquark-antidiquark-pair
 c   use one quark and one antiquark for the string-ends:
        ifqrk1=int(ifdiq1/1000)
@@ -765,14 +773,13 @@ c   be passed to the 'clustr'-routine:
         tau=part(9,nstring1+l)/ (part(4,l)/part(5,l))
       enddo
       call leadhad(nstring1+1,nstring1+nstring2,0)
-c      write(6,*)'makestr:esum',esum,ms1,ms2  
 
       return
 
  26   continue
 c...elastic MB scattering (the outgoing particle id's must not be
 c   assigned randomly like at label 2001)
-cspl 04-96
+c
       if(switips)then
          call swpizm(i1,iz1,m1,i2,iz2,m2)
          switips=.false.
@@ -785,8 +792,6 @@ cspl 04-96
          write(6,*)'m3:',m3,mminit(i3)
          write(6,*)'m4:',m4,mminit(i4)
       else
-cspl this should not be necessary:
-csab it is, due to N being off-shell
         if(m3.lt.mminit(i3))m3=mminit(i3)
         if(m4.lt.mminit(i4))m4=mminit(i4)
       end if
@@ -828,20 +833,14 @@ c XX-> 1 string : e+e- , MB
       if(CTOption(12).ne.0)then
         write(6,*)' *** error(make22): string section is called ',
      .            'while strings are switched off:CTOption(12).ne.0'  
-cdebug,sab
-c        goto 14
         stop
       end if 
-
-c quark-quark scattering -> only elastic !
-      if(xfac1.lt..999d0.and.xfac2.lt..999d0
-     &   .and.ranf(0).lt.0.25) goto 26
 
       ms1=e
       mstring(1)=ms1
       mstring(2)=0d0
             
-cspl...determine flavour content of string
+c determine flavour content of string
       if(CTOption(20).eq.1)then
 c..e+e- annihilation
       if(ranf(0).lt.CTParam(6))then
@@ -895,11 +894,54 @@ c.. the 'iff'-quarks constitute the produced (anti-)baron
 
       endif
 
+c define energy cut
+      if (ms1.gt.CTParam(60)) then
 c...create string 1 out of quark-antiquark pair
-      call qstring(ifqrk1,ifqrk2,ms1,part,ident,nstring1)
+       call qstring(ifqrk1,ifqrk2,ms1,part,ident,nstring1)
+      else
+        if(ms1.lt.1.67)then
+c         normal resonance
+          call anndec(0,m1,i1,iz1,m2,i2,iz2,e,sig,gam)
+
+c         some exceptions
+          if(pnew(5,1).eq.0.or.
+     $        strit(ii1)+strit(ii2).ne.strit(itypnew(1))) then
+c          get the quark code first
+           idcode=idpars(ifqrk1,ifqrk2,.true.,1)
+c          search the meson or baryon lists to find the correct one
+           call id2itypnew(idcode,ms1,i1,iz1)
+          else
+           i1=itypnew(1)
+           iz1=i3new(1)
+          end if  
+
+        else
+c          continuous spectra
+c          get the quark code first
+           idcode=idpars(ifqrk1,ifqrk2,.true.,1)
+c          search the meson or baryon lists to find the correct one
+           call id2itypnew(idcode,ms1,i1,iz1)
+           
+        endif
+        
+        nstring1=1
+        l=1
+        do j=1,3
+          part(j,l)=0d0
+          part(j+5,l)=0d0
+        enddo
+        part(4,l)=ms1
+        part(4+5,l)=0d0
+        part(5,l)=ms1
+        ident(1,l)=i1
+        ident(2,l)=iz1
+c        write(*,*)'mb: ',ms1
+      end if
+
+
       esum=0d0
 
-cspl primitive bug-fix:
+c primitive bug-fix:
       if(nstring1.eq.0)then
         write(6,*)'make22: iline 27 not completed. ->elastic'
         goto 26
@@ -907,7 +949,7 @@ cspl primitive bug-fix:
 
       do 101 k=1,nstring1
         l=k
-cspl no leading hadron in e+e-
+c no leading hadron in e+e-
         if(CTOption(20).eq.1)then
           leadfac(l)=0.0d0
         endif
@@ -928,6 +970,9 @@ cspl no leading hadron in e+e-
       endif
 
       nstring2=0
+      nexit=nstring1
+
+
       return
 
 
@@ -937,7 +982,6 @@ c...DD->ND detailed balance
       i4=mindel
       m3=massit(i3)
       m4=getmass(e-m3,0)
-c      write(6,*)'make22: dd->nd ',i3,m3
       if(iabs(iz1+iz2).gt.isoit(i3)+isoit(i4))then
        iz3=-9
        iz4=-9
@@ -966,6 +1010,7 @@ c iso3 are assigned in detbal
       m4=massit(minnuc)
       itot(1)=isoit(i3)
       itot(2)=isoit(i4)
+
       call isocgk4(isoit(i1),iz1,isoit(i2),iz2,itot,i3new,errflg)
       i3=isign(i3,ii1)
       i4=isign(i4,ii2)
@@ -981,15 +1026,109 @@ c...MB->B',MM->M* annihilations (forward time delay)
       call anndec(0,m1,i1,iz1,m2,i2,iz2,e,sig,gam)     
       goto 2003
 
+ 41   continue
+c rho J/psi -> D Dbar
+      i3=133
+      i4=-133
+      m3=massit(i3)
+      m4=massit(i4)
+
+      if(ranf(0).gt.0.5d0)call swpizm(i3,iz3,m3,i4,iz4,m4)
+
+
+      goto 1008
+
+ 42   continue
+c rho J/psi -> D* D*bar
+
+      i3=134
+      i4=-134
+
+      call getmas(massit(i3),widit(i3),i3,isoit(i3),
+     .     mminit(i3),e-mminit(i3)-1d-2,mminit(i4),m3)
+      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),
+     .     e-m3,m3,m4)
+
+      if(ranf(0).gt.0.5d0)call swpizm(i3,iz3,m3,i4,iz4,m4)
+
+      goto 1008
+
+ 43   continue
+c pi D -> rho D*
+
+      i3=104
+      i4=134
+
+      call getmas(massit(i3),widit(i3),i3,isoit(i3),
+     .     mminit(i3),e-mminit(i4),mminit(i4),m3)
+      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),
+     .     e-m3,m3,m4)
+
+      if(ranf(0).gt.0.5d0)call swpizm(i3,iz3,m3,i4,iz4,m4)
+
+      goto 1008
+
+ 44   continue
+c pi D* -> rho D
+
+      i3=104
+      i4=133
+
+      m4=massit(i4)
+      call getmas(massit(i3),widit(i3),i3,isoit(i3),
+     .     mminit(i3),e-m4,m4,m3)
+
+
+
+
+      if(ranf(0).gt.0.5d0)call swpizm(i3,iz3,m3,i4,iz4,m4)
+
+      goto 1008
+
+ 45   continue
+c rho D -> pi D*
+
+      i3=101
+      i4=134
+
+      m3=massit(i3)
+      call getmas(massit(i4),widit(i4),i4,isoit(i4),mminit(i4),
+     .     e-m3,m3,m4)
+
+      if(ranf(0).gt.0.5d0)call swpizm(i3,iz3,m3,i4,iz4,m4)
+
+      goto 1008
+
+ 46   continue
+c rho D* -> pi D
+
+      i3=101
+      i4=133
+
+      m3=massit(i3)
+      m4=massit(i4)
+
+      if(ranf(0).gt.0.5d0)call swpizm(i3,iz3,m3,i4,iz4,m4)
+
+      goto 1008
+
+
+
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+
  1008 continue
 c...get isospin-3 components
 
       nexit=2
       itot(1)=isoit(i3)
       itot(2)=isoit(i4)
+
       call isocgk4(isoit(i1),iz1,isoit(i2),iz2,itot,i3new,errflg)
       iz3=i3new(1)
       iz4=i3new(2)
+
 
       if(errflg.ne.0)then 
         write(6,*)'make22: iso-spin conservation ',
@@ -998,8 +1137,11 @@ c...get isospin-3 components
      ,            isoit(i3),isoit(i4),iz3,iz4,
      ,            ' process:',e,i1,m1,i2,m2,'>',i3,m3,i4,m4,'io=',io
       end if
-      i3=isign(i3,ii1)
-      i4=isign(i4,ii2)
+
+      if(io.lt.40) then
+         i3=isign(i3,ii1)
+         i4=isign(i4,ii2)
+      endif
 
  2001 continue
 
@@ -1019,28 +1161,17 @@ c... get momenta & fill newpart, 2 particle exit-channel
 c...boost to 2-particle cms
 
 
-csabpot new symmetrization
-ctd
       if(.not.(ityptd(1,pslot(1)).ne.0.and.CTOption(34).eq.2.and.
      &     iline.eq.20)) then
 c normal decay
 
-cSAB,JK 9.10.96
-         if(pznn.gt.0.d0) then
-            pnew(3,1)=pcms(e,m3,m4)
-            pnew(3,2)=-pcms(e,m3,m4)
-         else
-            pnew(3,1)=-pcms(e,m3,m4)
-            pnew(3,2)=pcms(e,m3,m4)
-         endif   
-cSAB,JK 9.10.96
+         pnew(3,1)=pcms(e,m3,m4)
+         pnew(3,2)=-pcms(e,m3,m4)
 
          pnew(4,1)=sqrt(m3**2+pnew(3,1)**2) 
          pnew(4,2)=sqrt(m4**2+pnew(3,2)**2)
       else
 c forward time delay
-cdebug
-c         write(6,*)'recover momenta into pnew'
          pnew(1,1)=pxtd(1,pslot(1))
          pnew(1,2)=pxtd(2,pslot(1))
          pnew(2,1)=pytd(1,pslot(1))
@@ -1080,11 +1211,9 @@ c     filled into the newpart arrays by anndex
       return
 
  2003 continue
-ctd bookkeeping for forward time-delay
+c bookkeeping for forward time-delay
       do 204 j=1,2
          if(pslot(j).lt.1) goto 204
-cdebug
-c         write(6,*)'load momenta into pold'
          pold(1,j)=px(pslot(j))
          pold(2,j)=py(pslot(j))
          pold(3,j)=pz(pslot(j))
@@ -1111,9 +1240,6 @@ c...  fill newpart, one particle exit channel
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function rnfxf(b,xm,xp)
-c
-c author : L. A. Winckelmann
-c date   : 2/96
 c
 cinput b  : parameter
 cinput xm : lower interval boundary
@@ -1142,9 +1268,6 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
 C####C##1#########2#########3#########4#########5#########6#########7##
       subroutine setizm(i1,iz1,m1,i2,iz2,m2,i3,iz3,m3,i4,iz4,m4)
 c
-c author : L. A. Winckelmann
-c date   : 10/95
-c
 c input  : {\tt i1,iz1,m1,i2,iz2,m2}
 c output : {\tt i3,iz3,m3,i4,iz4,m4}
 c
@@ -1166,9 +1289,6 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
 C####C##1#########2#########3#########4#########5#########6#########7##
       subroutine swpizm(i1,iz1,m1,i2,iz2,m2)
 c 
-c
-c author : L. A. Winckelmann
-c date   : 10/95
 c
 c input   : {\tt i1,iz1,m1,i2,iz2,m2}
 c output  : {\tt i1,iz1,m1,i2,iz2,m2}
@@ -1194,9 +1314,6 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function rnfpow(n,mmin,mmax)
-c
-c author : L. A. Winckelmann
-c date   : 10/95
 c
 cinput n    : parameter
 cinput mmin : lower interval boundary
@@ -1232,9 +1349,6 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function fmsr(mmin,mmax)
 c
-c author : L. A. Winckelmann
-c date   : 10/95
-c
 cinput mmin : minimum mass
 cinput mmax : maximum mass
 c
@@ -1248,20 +1362,12 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
       i(x)=log(x)
       inv(x)=exp(x)
 
-c      fmin=i(mmin)
-c      fmax=i(mmax)
-c      f=fmin+(fmax-fmin)*ranf(0)
-c      fmsr=inv(f)
       fmsr=rnfpow(-1,mmin,mmax)
-c      write(6,*)'fsmr:',fmsr,mmin,mmax
       return
       end
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       subroutine getfmsr(io,mmin,mmax,ir,mr)  
-c
-c  Unit:   collison-term
-c  Author: L.A.Winckelmann
 c
 cinput io   : class of resonance
 cinput mmin : minimum mass
@@ -1290,10 +1396,6 @@ c...if strings come into play > modify whichres!
 C####C##1#########2#########3#########4#########5#########6#########7##
       SUBROUTINE STREXCT(IFL11,IFL12,IB1,AM1,IFL21,IFL22,IB2,AM2,ECM,
      *IOPT,ba1,ams1,ba2,ams2,ifl31,ifl32,ifl41,ifl42)
-c
-c  Unit:   collison-term
-c  Author: N.Amelin, L.A.Winckelmann
-c  Date:   02/06/95
 c
 cinput ifl11  : ID of (di)quark of projectile hadron
 cinput ifl12  : ID of remaining quark of projectile hadron
@@ -1327,15 +1429,7 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
       real*8 ba1(3),ba2(3),P(2,5),ranf     
       integer IFLS(2,2)
 
-c      COMMON /PARSTR/ IFLS,P
       PARAMETER(PI=3.14159)! value of Pi
-c      PARAMETER(SIGMA=1.4) ! value of width [GeV^2]
-C                            in transverse parton distribution
-c      PARAMETER(ALPHA=0.5)  ! parameter of valence quark distribution
-c      PARAMETER(BETAV=2.5) ! parameter of valence quark distribution
-c      PARAMETER(BETAS=0.5)  ! parameter of sea quark distribution
-c      PARAMETER(AMPIT=0.3) ! mean pion [GeV/c^2] transverse mass is
-C                            used to compute Xmin
       PARAMETER(XMAX=1.0)
       LOGICAL SPINT,bt
 
@@ -1567,10 +1661,10 @@ C  CHECK ENERGY-MOMENTUM CONSERVATION
       PSTRY=PTY1+PTY2
       PSTRZ=P(1,3)+P(2,3)
 C
-      if(abs(estr-ecm).gt.1d-12)then
-           WRITE(6,*) 'ECM=',ECM
-           WRITE(6,*) 'ESTR=',ESTR
-      end if
+c      if(abs(estr-ecm).gt.1d-12)then
+c           WRITE(6,*) 'ECM=',ECM
+c           WRITE(6,*) 'ESTR=',ESTR
+c      end if
       if(pstrx.gt.1d-12)WRITE(6,*) 'PSTRX=',PSTRX
       if(pstry.gt.1d-12)WRITE(6,*) 'PSTRY=',PSTRY
       if(pstrz.gt.1d-12)WRITE(6,*) 'PSTRZ=',PSTRZ
@@ -1580,9 +1674,6 @@ C
       END
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 FUNCTION ALAMB(X,Y,Z)
-c
-c author : N. Amelin
-c date   : 10/95
 c
 c input :  {\tt x,y,z}
 c
@@ -1598,9 +1689,6 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 FUNCTION XVDIS(XMIN,ALFA,BETA)
-c
-c author : N. Amelin
-c date   : 10/95
 c
 cinput xmin : lower boundary
 cinput alfa : parameter
@@ -1621,9 +1709,6 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       SUBROUTINE SBETA(X,ALFA,BETA)
-C
-c author : N. Amelin
-c date   : 10/95
 c
 coutput x   : Beta-distributed value 
 cinput alfa : parameter
@@ -1651,9 +1736,6 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       SUBROUTINE XSDIS(X,XMIN,XMAX,BETA)
-C
-c author : N. Amelin
-c date   : 10/95
 c
 cinput xmin : lower boundary
 cinput xmax : upper boundary
@@ -1689,8 +1771,6 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       subroutine getres(io,e,im,ip,ir)
-c  Unit:   collison-term
-c  Author: L.A.Winckelmann, S. A. Bass
 c
 cinput io : resonance class 
 cinput e  : $\sqrt{s}$ of excitation process
@@ -1715,7 +1795,6 @@ C####C##1#########2#########3#########4#########5#########6#########7##
       end do
       call getbran(x,minnuc,maxmes,xmax,im,ip,ir)
 
-cdebug,sab
       if(ir.gt.ip.or.ir.lt.im) then
          write(6,*)'***(E) getres: no final state selected...'
          write(6,*)io,e,xmax,im,ip,ir
@@ -1726,9 +1805,6 @@ cdebug,sab
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       subroutine aqm(i1,i2,xt,xel)
-c  Unit:   collison-term
-c  Author: L.A. Winckelmann 
-c  Date:   02/06/95
 c
 cinput :  {\tt i1,i2} : ID's of particle 1 and 2
 coutput : {\tt xt,xel}: total and elastic cross section 
@@ -1762,16 +1838,12 @@ c take care of hidden strangeness
      *  *( 1d0-0.4*s(1)/(3d0-mn(1)) )
      *  *( 1d0-0.4*s(2)/(3d0-mn(2)) ) )
       xel=0.039*xt**1.5d0
-c      write(6,*)'aqm:',i1,i2,xt,xel,'+++',i,s,mn
       return
       end
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       real* 8 function fppfit(iio,e,i3,i4)
 c
-c     Unit: Collison Term
-c     Author: S.A. Bass 
-c     Date:   05/20/97
 c     Version: 1.0
 c
 cinput iio    : tag for cross section class
@@ -1814,12 +1886,12 @@ c              nd    nn*    nd*   dd      dn*    dd*    B*B*
 c rr tells of which particle class the out particles are 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-ce hard cut: no resonant cross section at highest energies
+c hard cut: no resonant cross section at highest energies
 	if(e.gt.maxtab2)then
 	  fppfit=0d0
 	  return
 	endif
-ce
+c
 
       id1=0
       id2=0
@@ -1870,8 +1942,6 @@ c maybe we have an R*R* reaction?
 	  write(*,*)'(E) fppfit: no iline found for particles',im,jm
 	  stop
 106	  continue
-c debug
-c	  write(*,*)'fppfit with iio=99:',im,jm,io
 	else
 	  io=iio
 	endif
@@ -1971,9 +2041,6 @@ c sofar set to zero
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       subroutine crossx(iio,e,ii1,iiz1,mm1,ii2,iiz2,mm2,sig)
-c  Unit:   collison-term
-c  Author: L.A.Winckelmann, Steffen A. Bass
-c  Date:   02/06/95
 c
 cinput iio  : pointer to cross section
 cinput e    : $\sqrt{s}$ of collision
@@ -1997,22 +2064,23 @@ C####C##1#########2#########3#########4#########5#########6#########7##
       include 'newpart.f'
 
       integer io,iio,i1,i2,iz1,iz2
-      integer i,im,ip,j,jm,jp,ii1,iiz1,ii2,iiz2
+      integer i,im,ip,j,jm,jp,ii1,iiz1,ii2,iiz2,icharm,ilight
 c      integer itmp1,itmp2,itag
-      real*8 sig,e,e0,sum,m1,m2,m3,gam,dum,s1,s2,s3
+      real*8 sig,sig2,e,e0,sum,m1,m2,m3,gam,dum,s1,s2,s3
+      real*8 t,s,a,b,c,d,f2,g,a3,b3,c3,d3,g3
       real*8 c1,c2,mm1,mm2,aaqm,dbfact,cgkcor,qflg,factor,ggam
       real*8 sighelp,meltpoint2,pfrome,pmelt,pmelt2,plab
       logical kplflag
 c...functions
       real*8 clebsch,siglookup,bcms,massit,widit,mminit,xmelt
       real*8 fppfit,fwidth,fbwnorm,ppiso
-cspl...additional functions and variables for ppbar&pp scattering:
+c...additional functions and variables for ppbar&pp scattering:
       real*8 bbphi,nnphi,sighera,sapptot,
      &       sappela,sappann,sappdiff,dgcgkfct
       integer isoit,iq1(2),iq2(3),ifdiq2,kq1,kq2
 
-c..blubb
-      real*8 sigheramb,sigmb,meltpoint
+c
+      real*8 sigheramb,sigmb,meltpoint,sigma1,sigma2,sigma3,sigma4
 
       logical excl
 
@@ -2072,7 +2140,7 @@ c...some settings for all channels enter here
       call setizm(ii1,iiz1,mm1,ii2,iiz2,mm2,
      ,i1,iz1,m1,i2,iz2,m2)
 
-cspl in case of a MB-reaction, sort particles: meson must be second (i2)
+c in case of a MB-reaction, sort particles: meson must be second (i2)
       if(iabs(i1).ge.minmes.and.iabs(i1).le.maxmes.and.
      &   iabs(i2).ge.minbar.and.iabs(i2).le.maxbar)then
         call swpizm(i1,iz1,m1,i2,iz2,m2)
@@ -2081,7 +2149,8 @@ cspl in case of a MB-reaction, sort particles: meson must be second (i2)
 
       goto(1,1,1,1,1,1,1,8,9,10,
      ,       11,12,13,14,15,16,17,18,19,9,21,22,23,24,
-     ,       25,26,27,28,29,30,31,32,33,34,35,36,37,38)io
+     ,       25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,
+     ,       40,41,42,43,44,45,46)io
 
 
       write(6,*)'cross[x,z]: ',
@@ -2106,7 +2175,7 @@ cut down the loop to one resonance for inverse exclusive processes
         jp=jm
       else 
         call getrange(rr(2,io),jm,jp)
-c      write(6,*)rr(2,io),jm,jp,'#'
+
       end if
       sum=0.
 
@@ -2131,8 +2200,6 @@ c     detailed balance
             call detbal(e,i1,i2,iz1,iz2,max(mminit(i1),m1),
      &           max(mminit(i2),m2),1,1,dbfact)
             sig=sig*dbfact
-c/cgkcor
-c            write(6,*)'dbfact',dbfact
       endif
 
 c     check energy conservation (cut-off is one 1 MeV)
@@ -2148,24 +2215,17 @@ c...ND->DD  iso-spin summed value
 
       e0=2.*massit(mindel)-widit(mindel)
 
-c      write(6,*)'ND->DD:',i1,i2
- 
       c1=clebsch(isoit(i1),isoit(i2),iz1,iz2,1)
       c2=clebsch(isoit(i1),isoit(i2),iz1,iz2,2)
 
-c      write(6,*)'### o.k.! ###'
       if(io.lt.0)write(6,*)'crossz(DD->ND):c1,c2=',c1,c2,
      ,           isoit(i1),isoit(i2),iz1,iz2,'itypes:',i1,i2
-      sig=f(e,e0,12.0d0,0.02d0,2d0)*(0.66667*c1+4d0/dsqrt(20d0)*c2)   
-c      sig=f(e,e0,42.0d0,0.3d0,2d0)*(c1+c2)
       sig=f(e,e0,12.0d0,0.02d0,2d0)*(0.66667*c1+4d0/dsqrt(20d0)*c2)
 
       if(iio.lt.0.and.sig.gt.1.d-12) then
             call detbal(e,i1,i2,iz1,iz2,max(mminit(i1),m1),
      &           max(mminit(i2),m2),minnuc,mindel,dbfact)
             sig=sig*dbfact
-c/(0.66667*c1+4d0/dsqrt(20d0)*c2)   
-c            write(8,*)e,sig
       endif
       return
 
@@ -2186,24 +2246,18 @@ c...MM->M'
  12   continue
 c...??->X => additive quark model total cross section
       call aqm(i1,i2,sig,dum)
-c... some particles may have effective masses 
-cspl velocity dependence switched off:
-c      sig=sig*bcms(e,max(mminit(i1),m1),max(mminit(i2),m2))**aaqm
       if(sig.gt.1d3)then
         write(6,*)'sig=',sig
       end if
 
 c     check energy conservation (cut-off is one 1 MeV)
       if(max(m1,mminit(i1))+max(m2,mminit(i2))+1.d-3.gt.e) sig=0.d0 
-ce      if(m1+m2+1.d-3.lt.e) sig=0.d0
 
       return
 
  13   continue
 c...??->X => additive quark model elastic cross section
       call aqm(i1,i2,dum,sig)      
-cspl velocity dependence switched off:
-c      sig=sig*bcms(e,max(mminit(i1),m1),max(mminit(i2),m2))**aaqm
 
 c     check energy conservation (cut-off is one 1 MeV)
       if(max(m1,mminit(i1))+max(m2,mminit(i2))+1.d-3.gt.e) sig=0.d0 
@@ -2214,16 +2268,13 @@ c     check energy conservation (cut-off is one 1 MeV)
 c...??->X => additive quark model inelastic cross section
       call aqm(i1,i2,s1,s2)      
       s3=s1-s2 
-cspl velocity dependence switched off:
-c      s1=s3*bcms(e,max(mminit(i1),m1),max(mminit(i2),m2))**aaqm
       s1=s3
-cspl DD->DD is possible only for e<4gev, then DD->Strings (15) is used
+c DD->DD is possible only for e<4gev, then DD->Strings (15) is used
       e0=mminit(i1)+mminit(i2)+2d0*CTParam(4)
       bf=2d0*dabs(CTParam(4)-CTParam(2))
       s2=f(e,e0,s3,bf,1d0)
       sig=xmelt(e,s1,s2,max(mminit(i1),m1)+max(mminit(i2),m2),
      @     e0+2d0*CTparam(2))
-c       write(6,*)'x=',sig,bcms(e,m1,m2)**aaqm
 
 c     check energy conservation (cut-off is one 1 MeV)
       if(max(m1,mminit(i1))+max(m2,mminit(i2))+1.d-3.gt.e) sig=0.d0 
@@ -2237,13 +2288,12 @@ c...??->X => additive quark model string cross section
         call aqm(i1,i2,sig,dum)      
         sig=sig-dum
 c dum is the inelastic xsec
-       if(e.gt.2d0*(1.5d0+ctparam(2)))then
-          sig=sig*bcms(e,1.5d0+ctparam(2),1.5d0+ctparam(2))
-     &           **(aaqm*6)
-c          sig=xmelt(e,0d0,sig,2d0*(1.08d0+ctparam(2)),4.d0)
-       else
+c string threshold is at 3.2 GeV by default
+        if(e.gt.2d0*(1.08d0+ctparam(2)))then
+          sig=sig*bcms(e,1.08d0+ctparam(2),1.08d0+ctparam(2))**(aaqm)
+        else
           sig=0.d0
-       end if
+        end if
       end if        
 
 c     check energy conservation (cut-off is one 1 MeV)
@@ -2254,12 +2304,6 @@ c     check energy conservation (cut-off is one 1 MeV)
  16   continue 
 c...pn-total...low energy tables & high energy fit
       sig=xmelt(e,siglookup(1,e),sighera(.938d0,.938d0,e,3),3.d0,5.d0)
-cdebug,coll
-c      if(e.lt.2.08) then
-c         sig=0.d0
-c      else
-c         sig=20.d0
-c      endif
       return
 
  17   continue
@@ -2270,12 +2314,6 @@ c...pn-elastic...low energy tables & high energy fit (then pn=pp)
  18   continue
 c...pp-total...low energy tables & high energy fit
       sig=xmelt(e,siglookup(3,e),sighera(.938d0,.938d0,e,1),3.d0,5.d0)
-cdebug,coll
-c      if(e.lt.2.08) then
-c         sig=0.d0
-c      else
-c         sig=40.d0
-c      endif
       return
 
  19   continue
@@ -2307,15 +2345,21 @@ c...bbar elastic...from ppbar via AQM & phase-space
 c...bbar annihilation from ppbar via AQM & phase-space  
       call aqm(1,-1,nnphi,dum)
       call aqm(i1,i2,bbphi,dum)
-*     sig=sappann(e,m1,m2)*bbphi/nnphi
-      sig=ctparam(22)*sappann(e,m1,m2)*bbphi/nnphi
+      sig=sappann(e,m1,m2)*bbphi/nnphi
       return
 
  24   continue
-c...bbar diffractive...from ppbar via AQM & phase-space
+c...bbar string...from ppbar via AQM & phase-space
       call aqm(1,-1,nnphi,dum)
       call aqm(i1,i2,bbphi,dum)
-      sig=sappdiff(e,m1,m2)*bbphi/nnphi
+      sig=xmelt(e,0d0,sappdiff(e,m1,m2)*bbphi/nnphi,3d0,5d0)
+      return 
+
+ 39   continue
+c...bbar inelastic...from ppbar via AQM & phase-space
+      call aqm(1,-1,nnphi,dum)
+      call aqm(i1,i2,bbphi,dum)
+      sig=xmelt(e,sappdiff(e,m1,m2)*bbphi/nnphi,0d0,3d0,5d0)
       return 
 
  25   continue
@@ -2360,10 +2404,13 @@ c...gamma + p
          meltpoint=1.75d0
       else      
 c...MB total (->B*/->Strings/el.)
-corig        meltpoint=1.7d0
-cdebug,sab,vishnu
-         meltpoint=2.18d0
-ce        meltpoint=massit(i1)+massit(i2)+500d-3
+        call anndec(0,m1,i1,iz1,m2,i2,iz2,e,sigmb,gam)
+        if (sigmb.gt.1d-8) then
+c meltpoint for resonant meson absorption moved to higher energies
+          meltpoint=max(2.18d0, m1+m2+.2d0)
+        else
+          meltpoint=2.18d0
+        endif
         call aqm(pimeson,nucleon,dum,nnphi)
         call aqm(i1,i2,dum,bbphi)
         sigheramb=sighera(m2,m1,e,7)*bbphi/nnphi
@@ -2376,7 +2423,7 @@ c...breit-wigners...
 c now melt the low energy resonance x-sec and the high energy hera-fits:
       if (e.lt.meltpoint) then
 C
-csab: cross section for Danielewicz forward delay
+c cross section for Danielewicz forward delay
 c     here the DP-cross section has the same form as the normal one
 C
          if(CTOption(34).eq.2) then
@@ -2423,8 +2470,14 @@ C
 c.. is annihilation possible ? (quark content?)
       call ityp2id(i2,iz2,iq1(1),iq1(2))
       call ityp2id(i1,iz1,ifdiq2,iq2(3))
-      iq2(1)=mod(ifdiq2/100,10)
-      iq2(2)=int(ifdiq2/1000)
+      if(abs(i1).ge.minmes) then
+        iq2(1)=ifdiq2
+        iq2(2)=iq2(3)
+        iq2(3)=0
+      else
+        iq2(1)=mod(ifdiq2/100,10)
+        iq2(2)=int(ifdiq2/1000)
+      endif
       qflg=0.d0
       do 7312 kq1=1,2
        do 7412 kq2=1,3
@@ -2466,7 +2519,6 @@ c..no elastic gamma B scattering:
        return
       endif     
 c...MB->MB elastic (pi+ p scaled with aqm)
-csab
       if(mminit(i1)+mminit(i2).gt.e) then
 c     no collision if sqrts is insufficient to put particles on-shell 
          sig=0.d0
@@ -2490,8 +2542,14 @@ c-- minus elastic x-sect. (scaled with el. aqm)
 c.. is s-channel possible ? (quark content?)
       call ityp2id(i2,iz2,iq1(1),iq1(2))
       call ityp2id(i1,iz1,ifdiq2,iq2(3))
-      iq2(1)=mod(ifdiq2/100,10)
-      iq2(2)=int(ifdiq2/1000)
+      if(abs(i1).ge.minmes) then
+        iq2(1)=ifdiq2
+        iq2(2)=iq2(3)
+        iq2(3)=0
+      else
+        iq2(1)=mod(ifdiq2/100,10)
+        iq2(2)=int(ifdiq2/1000)
+      endif
       qflg=0.d0
       do 312 kq1=1,2
        do 412 kq2=1,3
@@ -2521,19 +2579,18 @@ c-- melting
 
  29   continue
 c...??->X => additive quark model inelastic cross section
-csab specially reduced to avoid double-counting in case of DN and DD
+c specially reduced to avoid double-counting in case of DN and DD
 c    cross sections
       call aqm(i1,i2,sig,dum)      
       sig=sig-dum
       sig=sig*bcms(e,max(mminit(i1),m1),max(mminit(i2),m2))**aaqm
       sig=xmelt(e,sig,0d0,2d0*(1.08d0+ctparam(2)),5.0d0)
-csab here comes the reduction
+c here comes the reduction
       sig=xmelt(e,0d0,sig,2.75d0,3.4d0)
-c       write(6,*)'x=',sig,bcms(e,m1,m2)**aaqm
       return
 
  30   continue
-csab parameterized detailed balance cross sections for ND->NN
+c parameterized detailed balance cross sections for ND->NN
       factor=dgcgkfct(i1,i2,iz1,iz2,nucleon,nucleon)
       if(factor.le.1.d-8) then
          sig=0.d0
@@ -2548,8 +2605,7 @@ c         write(6,*)factor,cgkcor,sig
       return
 
  31   continue
-csab parameterized detailed balance cross sections for DD->DN
-claw threshold 
+c parameterized detailed balance cross sections for DD->DN
       e0=massit(i1)-0.5*widit(i1)+massit(i2)-0.5*widit(i2)
 
       factor=dgcgkfct(i1,i2,iz1,iz2,nucleon,mindel)
@@ -2559,27 +2615,27 @@ claw threshold
          c1=clebsch(isoit(i1),isoit(i2),iz1,iz2,1)
          c2=clebsch(isoit(i1),isoit(i2),iz1,iz2,2)
 
-csab param 
+c param 
          sig=
      &        (2.5d56*exp(-(50.0d0*e))
      &        +4.9d14*exp(-(12.d0*e))
      &        +1.1d6*exp(-(4.50d0*e)))
      &        *factor
-csab the following factors are from Heinz Sorge's Habilitation
+c the following factors are from Heinz Sorge's Habilitation
      &        *(0.66667*c1+4d0/dsqrt(20d0)*c2)   
 
       endif
       return
 
  32   continue
-Csab parameterized detailed balance cross sections for DD->NN
+C parameterized detailed balance cross sections for DD->NN
       factor=dgcgkfct(i1,i2,iz1,iz2,nucleon,nucleon)
       if(factor.le.1.d-8.or.e.lt.2.15d0) then
          sig=0.d0
          return
       endif
       cgkcor=ppiso(-4,i1,iz1,i2,iz2,nucleon,nucleon)
-csab param 
+c param 
       sig=(7.27d0*(e-2.14d0)**(-1.2176d0)+0.05d0*(e-2.14d0)**(-3.257d0))
      &     *factor*cgkcor
 
@@ -2621,7 +2677,7 @@ c get x_resonances
       return
 
  36   continue
-csab: cross section for Danielewicz forward delay
+c cross section for Danielewicz forward delay
 c...MB->B'
       if(CTOption(34).eq.2) then
          call anndec(0,m1,i1,iz1,m2,i2,iz2,e,sig,gam)
@@ -2645,7 +2701,7 @@ c...MB->B'
       return
 
  37   continue
-csab: cross section for Danielewicz forward delay
+c cross section for Danielewicz forward delay
 c...MM->M'
       if(CTOption(34).eq.2) then
          call anndec(0,m1,i1,iz1,m2,i2,iz2,e,sig,gam)
@@ -2668,13 +2724,257 @@ c...MM->M'
       endif
       return
  38   continue
-csab: elastic meson-meson cross section
+c elastic meson-meson cross section
       sig=5.d0
 
 c     check energy conservation (cut-off is one 1 MeV)
       if(max(m1,mminit(i1))+max(m2,mminit(i2))+1.d-3.gt.e) sig=0.d0 
       
       return
+
+ 40   continue
+c M_c meson elastic
+c need if/then/else structure to distinguish different elastic channels
+
+      sig=0d0
+      icharm=max(iabs(i1),iabs(i2))
+      ilight=min(iabs(i1),iabs(i2))
+
+      if(icharm.eq.133.and.ilight.eq.101) then
+c     pi - D elastic
+          
+        a=6.0400 
+        b=31.5357 
+        c=43.4237 
+        d=25.3998 
+        g=5.3828 
+   
+       sigma2=0  
+       sigma1=exp(-a+b*log(e)-c*log(e)**2+d*log(e)**3-g*log(e)**4)  
+       sig=xmelt(e,sigma2,sigma1,0.16d1,0.19d1)  
+
+
+
+
+      elseif(icharm.eq.133.and.ilight.eq.104) then
+c     rho - D elastic
+          
+  
+        a=919.9874 
+        b=3386.9428 
+        c=4989.7035  
+        d=3667.7892 
+        f2=1344.7971 
+        g=196.6571
+        
+c  this if then part was added september 24th
+    
+       if(e.gt.1.1) then 
+
+        a=919.9874  
+        b=3386.9428  
+        c=4989.7035   
+        d=3667.7892  
+        f2=1344.7971  
+        g=196.6571 
+
+
+       t=0    
+      s=exp(a-b*log(e)+c*log(e)**2-d*log(e)**3+f2*log(e)**4-g*log(e)**5)  
+
+              sig=xmelt(e,t,s,0.23d1,0.275d1)  
+
+       elseif (e.lt.1.1) then
+
+          sig=0
+          
+       endif
+       
+
+        return   
+
+
+      elseif(icharm.eq.134.and.ilight.eq.101) then
+c     pi - D* elastic
+        a=5123.2767 
+        b=18890.3759 
+        c=23203.3147 
+        d=9498.0748 
+        
+       sigma2=exp(-a+b*log(e)-c*log(e)**2+d*log(e)**3)  
+       sigma1=6.302+0.098*e 
+ 
+        sig=xmelt(e,sigma2,sigma1,0.23d1,0.25d1)  
+
+      elseif(icharm.eq.134.and.ilight.eq.104) then
+c     rho - D* elastic
+
+            
+    
+            
+        a=919.9874  
+        b=3386.9428  
+        c=4989.7035   
+        d=3667.7892  
+        f2=1344.7971  
+        g=196.6571 
+         
+c  this if then part was added september 24th 
+     
+       if(e.gt.1.1) then  
+ 
+        a=919.9874   
+        b=3386.9428   
+        c=4989.7035    
+        d=3667.7892   
+        f2=1344.7971   
+        g=196.6571  
+ 
+ 
+       t=0     
+      s=exp(a-b*log(e)+c*log(e)**2-d*log(e)**3+f2*log(e)**4-g*log(e)**5)   
+ 
+              sig=xmelt(e,t,s,0.23d1,0.275d1)   
+ 
+       elseif (e.lt.1.1) then 
+ 
+          sig=0 
+           
+       endif 
+
+     
+        return   
+      
+  
+
+      elseif(icharm.eq.135.and.ilight.eq.101) then
+c     pi - J/Psi elastic
+         sig=0
+      endif
+
+      return
+
+ 41   continue
+c rho J/psi -> D Dbar
+
+      sig=0d0
+      icharm=max(iabs(i1),iabs(i2))
+      ilight=min(iabs(i1),iabs(i2))
+      if(icharm.ne.135) return
+      if(ilight.ne.104) return
+
+      sigma2=0
+      sigma1= 0.1393+5.4355/(1+exp(-34.4360+9.0966*e))   
+
+      sig=xmelt(e,sigma2,sigma1,.365d1, .370d1)
+
+      return
+
+ 42   continue
+c rho J/psi -> D* D*bar
+
+      sig=0d0
+      icharm=max(iabs(i1),iabs(i2))
+      ilight=min(iabs(i1),iabs(i2)) 
+
+      if(icharm.ne.135) return
+      if(ilight.ne.104) return
+
+      if(e.lt.2d0*mminit(134)) return
+
+        sigma2=12.9723*exp(-exp(-4.34934*(e-4.02243)))  
+        sigma1=62.3707-21.8165*e+2.1348*e**2  
+  
+        sig2=xmelt(e,sigma2,sigma1,.41d1,.42d1)
+
+        sigma4=sig2 
+        sigma3=0  
+  
+        sig=xmelt(e,sigma4,sigma3,.78d1 ,.9d1) 
+
+
+      return
+
+ 43   continue
+c pi D -> rho D* 
+
+      sig=0d0
+      icharm=max(iabs(i1),iabs(i2))
+      ilight=min(iabs(i1),iabs(i2)) 
+      if(icharm.ne.133) return
+      if(ilight.ne.101) return
+
+
+c  this is sigma2  
+       sigma2=0 
+c  this is sigma1 
+       sigma1=21.8647-257.7494*1/e+1011.2032*1/(e**2)-1278.8428*1/(e**3) 
+ 
+  
+        sig=xmelt(e,sigma2,sigma1,0.265d1,0.266d1)  
+
+
+ 
+      return
+
+ 44   continue
+c  pi D* -> rho D
+
+      sig=0d0
+      ilight=min(iabs(i1),iabs(i2)) 
+      icharm=max(iabs(i1),iabs(i2))
+      if(icharm.ne.134) return
+      if(ilight.ne.101) return
+
+
+        a3=438.6642 
+        b3=1346.3770  
+        c3=1530.6979  
+        d3=764.9583  
+        g3=142.0647  
+            
+       sigma2=0  
+       sigma1=exp(-a3+b3*log(e)-c3*log(e)**2+d3*log(e)**3-g3*log(e)**4) 
+       sig=xmelt(e,sigma2,sigma1,0.24d1,0.25d1)  
+
+       return
+
+ 45   continue
+c rho D -> pi D*
+
+
+      sig=0d0
+      icharm=max(iabs(i1),iabs(i2))
+      ilight=min(iabs(i1),iabs(i2)) 
+      if(icharm.ne.133) return
+      if(ilight.ne.104) return
+
+        sigma2=10*e  
+        sigma1=exp(49.7995-48.1259*log(e)) 
+
+        sig=xmelt(e,sigma2,sigma1,0.26d1,0.265d1)  
+      return
+
+ 46   continue
+c rho D* -> pi D
+
+
+      sig=0d0
+      icharm=max(iabs(i1),iabs(i2))
+      ilight=min(iabs(i1),iabs(i2)) 
+      if(icharm.ne.134) return
+      if(ilight.ne.104) return
+
+
+        sigma2=10*e  
+        sigma1=exp(49.7995-48.1259*log(e))  
+  
+        sig=xmelt(e,sigma2,sigma1,0.26d1,0.265d1)  
+
+      return
+
+
+
 
  99   continue
 c...single diffr. pp
@@ -2685,9 +2985,6 @@ c...single diffr. pp
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       subroutine nonres(e,ii1,iiz1,ii2,iiz2,sig)
-c  Unit: collision-term
-c  Author: L.A.Winckelmann, C. Spieles, S.Soff  
-c  Date: 20/09/95
 c
 cinput e    : $\sqrt{s}$ of collision
 cinput ii1  : ID of particle 1
@@ -2749,9 +3046,6 @@ C
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function sappann(sroot,m1,m2)
-c  Unit: collision-term
-c  Author: C. Spieles  
-c  Date: 20/09/95
 c
 cinput sroot : $\sqrt{s}$ of collision
 cinput m1    : mass of 1st (anti-)baryon
@@ -2762,27 +3056,29 @@ c
 c  Taken from: P. Koch, C.B. Dover, Phys. Rev. {\bf C40} (1989) 145 
 c
 C####C##1#########2#########3#########4#########5#########6#########7##
+
       implicit none
-      real*8 sroot,m1,m2,s0,a,b,sig0,s,snn,srootnn
+
+      include 'options.f'
+
+      real*8 sroot,m1,m2,s0,a,b,sig0,s,srootnn,snn
       parameter(a=0.05d0,b=0.6d0,sig0=120.d0,s0=3.52)
-c evaluate the parametrization at the same relative 
-c momentum as in nbar-n
-      srootnn=snn(sroot,m1,m2)
-      s=srootnn**2
 
-current:
-csab,blubb evaluate parametrization now at the same sqrts
-c      s=sroot**2
-
+      if (CTOption(38).eq.1) then 
+c evaluate the parametrization at the same relative momentum as in nbar-n
+         srootnn=snn(sroot,m1,m2)
+         s=srootnn**2
+      else 
+c evaluate parametrization now at the same sqrts
+         s=sroot**2
+      endif
       sappann=sig0*(s0/s)*(a**2*s0/((s-s0)**2+a**2*s0)+b)
+
       return
       end
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function sapptot(sroot,m1,m2)
-c  Unit: collision-term
-c  Author: C. Spieles  
-c  Date: 20/09/95
 c
 cinput sroot : $\sqrt{s}$ of collision
 cinput m1    : mass of 1st (anti-)baryon
@@ -2795,21 +3091,22 @@ c  0.3 GeV $< p_{lab} <$ 5 GeV: polynomial fit to the data (by C.S.)\\
 c  $p_{lab} <0.3$ GeV: another fit, only constrained by sigma annihilation 
 c
 C####C##1#########2#########3#########4#########5#########6#########7##
+
       implicit none 
+
+      include 'options.f'
+
       real*8 p,sroot,plab,sighera,m1,m2,srootnn,snn
 
-      sapptot=0d0
-
+      if (CTOption(38).eq.1) then
 c evaluate the parametrization at the same relative momentum as in nbar-n
-      p=plab(m1,m2,sroot)
-      srootnn=snn(sroot,m1,m2)  
+         srootnn=snn(sroot,m1,m2)  
+      else
+c evaluate parametrization now at the same sqrts
+         srootnn=sroot
+      endif
 
-c      if(p.lt.0.04d0) return
-
-current:
-csab,blubb evaluate parametrization now at the same sqrts
-c      srootnn=sroot
-c      p=plab(0.938d0,0.938d0,srootnn)
+      p=plab(0.938d0,0.938d0,srootnn)
 
       if(p.ge.5.d0)then
          sapptot=sighera(0.938d0,0.938d0,srootnn,4)
@@ -2821,14 +3118,12 @@ c      p=plab(0.938d0,0.938d0,srootnn)
         sapptot=271.6d0*exp(-(1.1d0*p**2))
         return
       endif
+  
       end
+
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function sappela(sroot,m1,m2)
-c
-c  Unit: collision-term
-c  Author: C. Spieles
-c  Date: 20/09/95
 c
 cinput sroot : $\sqrt{s}$ of collision
 cinput m1    : mass of 1st (anti-)baryon
@@ -2841,19 +3136,22 @@ c  0.3 GeV $< p_{lab} <$ 5 GeV: polynomial fit to the data (by C.S.)\\
 c  $p_{lab} <0.3$ GeV: no data, set constant
 c
 C####C##1#########2#########3#########4#########5#########6#########7##
+
       implicit none 
+
+      include 'options.f'
+
       real*8 p,sroot,plab,sighera,m1,m2,srootnn,snn
 
+      if (CTOption(38).eq.1) then
 c evaluate the parametrization at the same relative momentum as in nbar-n
-      p=plab(m1,m2,sroot)
-      srootnn=snn(sroot,m1,m2)
+         srootnn=snn(sroot,m1,m2)  
+      else
+c evaluate parametrization now at the same sqrts
+         srootnn=sroot
+      endif
 
-current:  
-csab,blubb evaluate parametrization now at the same sqrts
-c      srootnn=sroot
-c      p=plab(0.938d0,0.938d0,srootnn)
-
-
+      p=plab(0.938d0,0.938d0,srootnn)
       if(p.ge.5.d0)then
          sappela=sighera(0.938d0,0.938d0,srootnn,5)
         return
@@ -2864,13 +3162,11 @@ c      p=plab(0.938d0,0.938d0,srootnn)
         sappela=78.6d0
         return
       endif
+
       end
       
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function sappdiff(sroot,m1,m2)
-c  Unit: collision-term
-c  Author: C. Spieles
-c  Date: 20/09/95
 c
 cinput sroot : $\sqrt{s}$ of collision
 cinput m1    : mass of 1st (anti-)baryon
@@ -2885,13 +3181,7 @@ C####C##1#########2#########3#########4#########5#########6#########7##
       implicit none
       real*8 p,sroot,m1,m2,plab,sappann,sapptot,sappela
 
-c evaluate the parametrization at the same relative momentum as in nbar-n
-      p=plab(m1,m2,sroot)
-
-current:
-c      p=plab(0.938d0,0.938d0,sroot)
-
-
+      p=plab(0.938d0,0.938d0,sroot)
       if(p.le.0.1d0)then
         sappdiff=0.d0
         return
@@ -2904,9 +3194,6 @@ c      p=plab(0.938d0,0.938d0,sroot)
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       blockdata herafits
-c  Unit: collision-term
-c  Author: C. Spieles
-c  Date: 20/09/95
 c  cross section parameters for specific collsion type 
 c  CERN/HERA fits, taken from PRD 50 (1994)
 c  see: function 'sighera'
@@ -2944,10 +3231,9 @@ c p1 (p2) give the momentum range (lab momentum) of the fit
      @           0.,     0., -4.03,     0.,      -1.,    -1.3,
      @         -.89,   -5.6,  -2.4,   -2.9/
       data p1/   3.,     2.,    3.,     5.,       5.,      3.,
-ce     @           4.,     2.,   2.5,     2.,       2.,      2.,
      @           3.,     2.,   1.8,     1.8,       2.,      2.,
      @           2.,     1.75,    3.,    1.8/
-css   for (k- p) p1=1.75 GeV/c works reasonable
+c   for (k- p) p1=1.75 GeV/c works reasonable
       data p2/2100.,  2100.,  370.,  1.7d6,    1.7d6,    183.,
      @         340.,   200.,  370.,   360.,     310.,    175.,
      @         310.,   310.,  175.,   310./
@@ -2955,10 +3241,49 @@ css   for (k- p) p1=1.75 GeV/c works reasonable
       end
 
 C####C##1#########2#########3#########4#########5#########6#########7##
+      blockdata reggefits
+c  cross section parameters for specific collsion type 
+c  PDG/regge fits, taken from JPG 33 (2006) p.337
+c  see: function 'sighera'
+C####C##1#########2#########3#########4#########5#########6#########7##
+      implicit none
+      integer nfit
+c     integer io
+      parameter (nfit=16)
+      real*8 z(nfit),y1(nfit),y2(nfit),s0,s1,eta1,eta2,bb
+      
+      common /REGGE/ z,y1,y2,s0,s1,eta1,eta2,bb
+
+c io =          1       2       3       4        5        6
+c            pp(tot) pp(ela) pn(tot) app(tot) app(ela) gammap(tot)
+c               7       8       9      10       11       12
+c         pi+p(tot) pi+p(el) pi-p(tot) pi-p(el) k+p(tot) k+p(el) 
+c              13      14      15      16
+c          k+n(tot) k-p(tot) k-p(ela) k-n(tot)
+c
+c p1 (p2) give the momentum range (lab momentum) of the fit
+
+      data z/  35.45,    0.,  35.8,  35.45,       0.,      0.,
+     @         20.86,    0., 20.86,     0.,    17.91,      0.,
+     @         17.87, 17.91,    0.,  17.87/
+      data y1/ 42.53,    0., 40.15,  42.53,       0.,   0.032,
+     @         19.24,    0., 19.24,     0.,     7.14,      0.,
+     @          5.17,  7.14,    0.,   5.17/
+      data y2/ 33.34,    0.,   30., -33.34,       0.,      0.,
+     @          6.03,    0., -6.03,     0.,    13.45,      0.,
+     @          7.23,-13.45,    0.,  -7.23/
+      data s0/ 28.998/
+      data s1/ 1./
+      data eta1/ 0.458/
+      data eta2/ 0.545/
+      data bb/ 0.308/
+      
+      end
+
+                                         
+
+C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function sighera(m1,m2,sroot,io)
-c  Unit: collision-term
-c  Author: C. Spieles
-c  Date: 12/10/95
 c
 c
 cinput sroot : $\sqrt{s}$ of collision
@@ -2996,13 +3321,21 @@ c Phys. Rev. {\bf D50} (1994).
 c
 C####C##1#########2#########3#########4#########5#########6#########7##
       implicit none
+      include 'coms.f'
       include 'comres.f'
       integer nfit,io
       parameter (nfit=16)
       real*8 a(nfit),b(nfit),n(nfit),c(nfit),d(nfit),sroot,p,plab
      &       ,p1(nfit),p2(nfit),m1,m2,massit
+      real*8 z(nfit),y1(nfit),y2(nfit),s0,s1,eta1,eta2,bb,s
+      
+      common /REGGE/ z,y1,y2,s0,s1,eta1,eta2,bb
       common /HERA/ a,b,n,c,d,p1,p2
 
+      go to (2,1,2,2,1,2,2,1,2,1,2,1,2,2,1,2),io
+
+c cern/hera cross section parametrization 
+ 1    continue
 c      p=plab(m1,m2,sroot)
       if(io.ge.1.and.io.le.5)then
        p=plab(massit(minnuc),massit(minnuc),sroot)
@@ -3018,33 +3351,33 @@ c      p=plab(m1,m2,sroot)
       endif
 
          if(p.lt.1d-15) then
-csab if energy conservation is not possible (p.eq.0) then return zero
+c if energy conservation is not possible (p.eq.0) then return zero
             sighera=0.d0
             return
          endif
 C
       if(p.lt.p1(io))then
-c        write(6,*)'sighera: sroot=',sroot,' too low! minimum lab-',
-c     &            'momentum=',p1(io),' is used for the fit. io=',io
         p=p1(io)
 C
-      elseif(p.gt.p2(io))then
-c        p=p2(io)
-cc        write(6,*)'sighera: sroot=',sroot,' high!, io=',io
-cc        write(6,*)'         m1,m2,plab,p2(io)=',m1,m2,p,p2(io)
-cc        write(6,*)'sighera fit used above upper limit (extrapolation)'
-C         sighera=a(io)+b(io)*p**n(io)+c(io)*log(p)**2+d(io)*log(p)
+      elseif (p.gt.p2(io).and.(warn)) then
+        write(6,*)'sighera: sroot=',sroot,' high!, io=',io
+        write(6,*)'         m1,m2,plab,p2(io)=',m1,m2,p,p2(io)
+        write(6,*)'sighera fit used above upper limit (extrapolation)'         
       endif
         sighera=a(io)+b(io)*p**n(io)+c(io)*log(p)**2+d(io)*log(p)
       return
+      
+c regge cross sections when available (ref. see blockdata reggefit)      
+ 2    continue
+      s=sroot**2
+      sighera=z(io)+bb*(log(s/s0))**2+y1(io)*(s1/s)**eta1
+     &        -y2(io)*(s1/s)**eta2 
+      return    
       end
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function xmelt(e,x1,x2,em,ep)
 c
-c  Unit: collision-term
-c  Author: L.Winckelmann
-c  Date: 20/09/95
 cinput e  :  $\sqrt{s}$ of process
 cinput x1 : value at {\tt em}
 cinput x2 : value at {\tt ep}
@@ -3077,9 +3410,6 @@ C####C##1#########2#########3#########4#########5#########6#########7##
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function plab(m1,m2,sroot)
-c  Unit: collision-term
-c  Author: C. Spieles
-c  Date: 20/09/95
 c
 cinput sroot : $\sqrt{s}$ of collision
 cinput m1    : mass of 1st (anti-)baryon
@@ -3099,9 +3429,6 @@ C####C##1#########2#########3#########4#########5#########6#########7##
       end
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function snn(sbb,m1,m2)
-c  Unit: collision-term
-c  Author: C. Spieles
-c  Date: 13/10/95
 c
 cinput sbb   : $\sqrt{s}$ of a $BB$ collision
 cinput m1    : mass of 1st (anti-)baryon
@@ -3118,3 +3445,20 @@ C####C##1#########2#########3#########4#########5#########6#########7##
       return
       end
 
+c New function xsection1(e) used under 42 continue in crossx 
+ 
+        real*8 function xsection1(e)  
+        implicit none  
+        real*8 e,xmelt,sig1,sig2  
+        real*8 a,b,c  
+        a=12.9723  
+        b=4.34934  
+        c=4.02243   
+  
+        sig2=a*exp(-exp(-b*(e-c)))  
+        sig1=62.3707-21.8165*e+2.1348*e**2  
+  
+        xsection1=xmelt(e,sig2,sig1,.41d1,.42d1)  
+        return  
+        end  
+ 
