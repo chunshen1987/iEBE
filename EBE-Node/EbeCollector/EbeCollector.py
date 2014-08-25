@@ -1193,7 +1193,7 @@ class EbeDBReader(object):
         if where:
             whereClause += " and " + where
         RawdiffvnData = np.asarray(self.db.selectFromTable("diff_vn", ("pT", "vn_real", "vn_imag"), whereClause=whereClause, orderByClause=orderBy))
-        nevent = self.getNumberOfEvents()
+        nevent = self.getNumberOfEvents(particleName)
         npT = len(RawdiffvnData[:,0])/nevent
         diffvnData = RawdiffvnData.reshape(nevent, npT, 3)
         return diffvnData
@@ -1253,7 +1253,7 @@ class EbeDBReader(object):
         if where:
             whereClause += " and " + where
         RawdNdyData = np.asarray(self.db.selectFromTable("spectra", ("pT", "N"), whereClause=whereClause, orderByClause=orderBy))
-        nevent = self.getNumberOfEvents()
+        nevent = self.getNumberOfEvents(particleName)
         npT = len(RawdNdyData[:,0])/nevent
         dNdyData = RawdNdyData.reshape(nevent, npT, 2)
         return dNdyData
@@ -1293,14 +1293,14 @@ class EbeDBReader(object):
             probes.append((aParticle, numberOfEvents))
         return probes
 
-    def getNumberOfEvents(self):
+    def getNumberOfEvents(self, particleName):
         """
             Return total number of events by finding the difference between max
             and min of event_id.
         """
-        whereClause = "ecc_id = 1 and r_power = 0 and n = 2"
-        Nevent = self.db.selectFromTable("eccentricities", "count()", whereClause)
-        return Nevent[0][0]
+        pid = self._pid(particleName)
+        nevent = self.db.selectFromTable("multiplicities", "count()", "pid = %d" % pid)[0][0]
+        return nevent
 
     def evaluateExpression(self, expression):
         """
