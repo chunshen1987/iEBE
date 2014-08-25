@@ -1,9 +1,8 @@
-c $Id: ri6000ranf.f,v 1.2 1996/12/02 16:13:54 weber Exp $
+c $Id: ri6000ranf.f,v 1.3 1999/01/18 09:57:13 ernst Exp $
 C*****************   R A N F   *******************************
-c sab 05.03.1992
       real*8 FUNCTION RANF(ix)
       integer ix
-cdebug
+
       integer iran1,iran2
       common /rcnt/iran1,iran2
       if(iran1.eq.10000000) then
@@ -12,7 +11,7 @@ cdebug
       else
          iran1=iran1+1
       endif
-cdebug
+
       ranf=dble(rand())
       RETURN
       end
@@ -28,7 +27,7 @@ c
 
       if(ranseed.gt.0) then
          call srand(abs(ranseed))
-c         WRITE(6,*)'FIXED SEED = ',ranseed
+
          return
       endif
       call risctime(timerr)
@@ -43,7 +42,7 @@ c         WRITE(6,*)'FIXED SEED = ',ranseed
       else
          oldseed=ranseed
       endif
-c      write(6,*)'AUTO-SEED = ',ranseed
+
       call srand(ranseed)
       RETURN
       END

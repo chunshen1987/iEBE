@@ -1,9 +1,4 @@
-c $Id: comnorm.f,v 1.4 1997/06/26 11:36:38 konopka Exp $
-c JK the quadratically weighted x_i's were not implemented correctly and 
-c    e.g. lead to false normalization factors of the Breit-Wigners. 
-c    This is a preliminary and quick bug-fix to maintain a physicswise 
-c    senseful UrQMD. I hope that I found all places, where this kind of 
-c    bug appeared. A more detailed update will follow up.       
+c $Id: comnorm.f,v 1.5 1999/01/18 09:56:55 ernst Exp $
       integer n
       parameter (n = 400)
       real*8 x_norm(0:3,1:n),y_norm(0:3,1:n)

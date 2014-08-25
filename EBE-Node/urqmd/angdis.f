@@ -1,10 +1,8 @@
-c $Id: angdis.f,v 1.8 1997/08/25 13:37:46 konopka Exp $
+c $Id: angdis.f,v 1.22 2007/05/23 14:28:50 bleicher Exp $
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine angdisnew(sqrts,m1,m2,iline,costh,phi)
 c
-c     Unit     : Collision Term
-c     Author   : Jens Konopka, Stefan Hofmann
-c     Date     : 22/08/97
-c     Revision : 1.0
+c     Revision : 1.1
 c
 c input:  sqrts, m1, m2, iline : characteristics of the ingoing channel 
 coutput costh   : cos(theta) of theta-angle
@@ -19,31 +17,40 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       implicit none
 
       real*8 sqrts, m1, m2, costh, costhcoll, phi, ranf, pi, s
-cspl
       real*8 anginter
-      integer iline, j
-      logical symlog(38)
+      integer iline
+      logical symlog(39)
+
+      integer pythflag
+      common /pythflag/ pythflag
     
       parameter (pi = 3.14159265358979312d0)
 
 c symmetrize or not angular distribution (depending on iline)
 c this data statements may be changed ...
       data symlog /14*.true., 1*.false., 6*.true., 7*.false.,
-     &              7*.true., 1*.false., 2*.true./
+     &              7*.true., 1*.false., 2*.true., 1*.true./
+
 
       s = sqrts*sqrts
       phi = 2.0d0*pi*ranf(0)
+chp fix angular distribution, Pythia rotates strings already
+      if(pythflag.eq.1)go to 10
 
       goto (4, 4, 4, 4, 4, 4, 4, 4, 4, 9,
      &      9, 4, 4, 4, 4, 4, 4, 4, 4, 9,
-cspl: NOW ISO-FB interpolation for MB iline 26/27/28
-c     &      4, 4,10,10,10, 4,10,10, 4, 4,
-     &      4, 4, 10,10,10,11,11,11, 4, 4,
+c ISO-FB interpolation for MB iline 26/27/28
+     &      4, 4,10,10,10,11,11,11, 4, 4,
      &      4, 4, 4, 4, 4, 9, 9, 4) abs(iline)
 
 c cross-sections NN (Mao et al.)
    4  continue
-      costh = costhcoll(s,m1,m2,symlog(abs(iline)))
+c.. quick and dirty fix for very high energies
+c.. i.e. at high energies the (elastic) angular distribution is
+c.. forward-backward peaked
+      if (sqrts.gt.500d0) goto 10
+      costh = -costhcoll(s,m1,m2,symlog(abs(iline)))
+
       return
 
 c isotropic decay
@@ -56,8 +63,10 @@ c no deflection at all
       costh = 1.0d0
       return
 
-cspl smooth interpolation between iso and f-b:
+c smooth interpolation between iso and f-b:
   11  continue
+cbl only for intermediate masses, otherwise no deflection (zero degree scattering)
+      if(sqrts.gt.6d0) goto 10
       costh = anginter()
       return
 
@@ -87,12 +96,17 @@ c
       return
       end
 
-c dsigma(s_in,chosth) = int_-1^costh dsigma/dOmega(s_in,..) dOmega
-c it is normalized such that dsigma(s_in,-1) = 0 and
-c                            dsigma(s_in,1) = 1
       function dsigma(s_in,m1_in,m2_in,sym,costh)
-      implicit none 
-      real*8 dsigma, s_in, m1_in, m2_in, costh,
+c
+cc dsigma(s\_in,chosth) = int_-1^costh dsigma/dOmega(s_in,..) dOmega
+cc it is normalized such that dsigma(s\_in,-1) = 0 and
+cc                            dsigma(s\_in,1) = 1
+      implicit none
+
+      include 'coms.f'
+
+      real*8 dsigma
+      real*8 s_in, m1_in, m2_in, costh,
      &       msi, cmsi, gsi, mom, cmom, gom, mpi, cmpi, gpi, m
       real*8 m42, mpi2, cmpi2, d_pi1, d_pi2, cm6gp,
      &       cpi_3, cpi_2, cpi_1, cpi_m, cpi_l, cpi_0,
@@ -157,7 +171,8 @@ c mix
 
 c calculate constants only once!
       if(firstlog) goto 1000
-      write(6,*) 'Calculating constants for angular distribution'
+      if (info) write(6,*) 
+     $     '(info) dsigma: calculating constants for ang. dist.'
 
 c define constants for pion-Term (no s-dependence)
       m42   = 4.0d0*m*m
@@ -167,11 +182,11 @@ c define constants for pion-Term (no s-dependence)
       d_pi2 = d_pi1*d_pi1
       cm6gp = 1.5d0*cmpi2**3*gpi**4*m42*m42/d_pi2
 
-      cpi_3 = -cm6gp/3.0d0
-      cpi_2 = -cm6gp*mpi2/d_pi1
-      cpi_1 = -cm6gp*mpi2*(2.0d0*cmpi2 + mpi2)/d_pi2
-      cpi_m = -cm6gp*cmpi2*mpi2/d_pi2
-      cpi_l = -cm6gp*2.0d0*cmpi2*mpi2*(cmpi2 + mpi2)/d_pi2/d_pi1
+      cpi_3 = -(cm6gp/3.0d0)
+      cpi_2 = -(cm6gp*mpi2/d_pi1)
+      cpi_1 = -(cm6gp*mpi2*(2.0d0*cmpi2 + mpi2)/d_pi2)
+      cpi_m = -(cm6gp*cmpi2*mpi2/d_pi2)
+      cpi_l = -(cm6gp*2.0d0*cmpi2*mpi2*(cmpi2 + mpi2)/d_pi2/d_pi1)
       cpi_0 = -(cpi_3 + cpi_2 + cpi_1 + cpi_m)
 
 c define constants for sigma-Term (no s-dependence)
@@ -184,11 +199,11 @@ c define constants for sigma-Term (no s-dependence)
       d_si3 = cmsi2-msi2
       cm2gs = 0.5d0*cmsi2*gsi**4/d_si3**2      
 
-      csi_3 = -cm2gs*d_si1**2/3.0d0
-      csi_2 = -cm2gs*cmsi2*d_si1*d_si2/d_si3
-      csi_1 = -cm2gs*cmsi4*(2.0d0*d_si1 + d_si2)*d_si2/d_si3**2
-      csi_m = -cm2gs*cmsi6*d_si2**2/msi2/d_si3**2
-      csi_l = -cm2gs*cmsi6*d_si2*(d_si1 + d_si2)*2.0d0/d_si3**3
+      csi_3 = -(cm2gs*d_si1**2/3.0d0)
+      csi_2 = -(cm2gs*cmsi2*d_si1*d_si2/d_si3)
+      csi_1 = -(cm2gs*cmsi4*(2.0d0*d_si1 + d_si2)*d_si2/d_si3**2)
+      csi_m = -(cm2gs*cmsi6*d_si2**2/msi2/d_si3**2)
+      csi_l = -(cm2gs*cmsi6*d_si2*(d_si1 + d_si2)*2.0d0/d_si3**3)
       csi_0 = -(csi_3 + csi_2 + csi_1 + csi_m)
 
 c define constants for omega-Term
@@ -203,13 +218,13 @@ c define constants for omega-Term
       cm2go = 0.5d0*cmom2*gom**4/d_om3**2
 
       com_3 =  cm2go/3.0d0 
-      com_2 = -cm2go*cmom2/d_om3
+      com_2 = -(cm2go*cmom2/d_om3)
       com_1 =  cm2go*cmom4/d_om3**2
       com_m =  cm2go*cmom6/(d_om3**2*mom2)
-      com_l = -cm2go*cmom6*4.0d0/d_om3**3
+      com_l = -(cm2go*cmom6*4.0d0/d_om3**3)
 
 c define constants for mix-Term
-      fac1 = -(gsi*gom*cmsi2*cmom2)**2*m42  
+      fac1 = -((gsi*gom*cmsi2*cmom2)**2*m42)  
       d_mx1 = cmom2 - cmsi2
       d_mx2 = cmom2 - msi2
       d_mx3 = cmsi2 - mom2
@@ -218,8 +233,8 @@ c define constants for mix-Term
       cmx_s1 = fac1/(cmsi2*d_mx1**2*d_mx3*d_si3)
       cmx_om = fac1/(d_om3**2*d_mx3**2*(mom2 - msi2))
       cmx_sm = fac1/(d_si3**2*d_mx2**2*(msi2 - mom2)) 
-      fac2 = -fac1/(d_mx1**3*d_om3**2*d_mx2**2)
-      fac3 = -fac1/(d_mx1**3*d_mx3**2*d_si3**2) 
+      fac2 = (-fac1)/(d_mx1**3*d_om3**2*d_mx2**2)
+      fac3 = (-fac1)/(d_mx1**3*d_mx3**2*d_si3**2) 
       
       cmx_olc =
      &  fac2*(3.0d0*cmom2**3        - cmom2**2*cmsi2 
@@ -252,7 +267,7 @@ c define constants for mix-Term
      &      - 4.0d0*mom2*msi2)
 
       firstlog = .true.
-      write(6,*) '. . . Finished'
+      if (info) write(6,*) '(info) dsigma: calculation finished'
 
 c s-dependence beyond this point
 
@@ -264,11 +279,11 @@ c s-dependence beyond this point
 
 c define s-dependent stuff for omega-Term
       brak1 = (twos-m42)**2
-      bom_3 = com_3*(-2.0d0*cmom2**2 - 2.0d0*cmom2*twos - brak1)
+      bom_3 = com_3*(-(2.0d0*cmom2**2) - 2.0d0*cmom2*twos - brak1)
       bom_2 = com_2*(2.0d0*cmom2*mom2 + s_om1*twos + brak1)
-      bom_1 = com_1*(-4.0d0*cmom2*mom2 - 2.0d0*mom2**2 - 
+      bom_1 = com_1*(-(4.0d0*cmom2*mom2) - 2.0d0*mom2**2 - 
      &               2.0d0*(cmom2+2*mom2)*twos - 3.0d0*brak1)
-      bom_m = com_m*(-2.0d0*mom2**2- 2.0d0*mom2*twos - brak1)
+      bom_m = com_m*(-(2.0d0*mom2**2)- 2.0d0*mom2*twos - brak1)
       bom_l = com_l*(s_om1*mom2 + (cmom2 + 3.0d0*mom2)*s + brak1)
       bom_0 = -(bom_3 + bom_2 + bom_1 + bom_m)
 
@@ -314,7 +329,6 @@ c define s-dependent stuff for mix-Term
       return
       end
 
-cspl 
       function anginter()
       implicit none
       real*8 ranf, anginter, a
@@ -335,5 +349,4 @@ c inverse transform method is used:
 
       return
       end
-
 

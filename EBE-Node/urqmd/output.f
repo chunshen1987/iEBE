@@ -1,16 +1,13 @@
-c $Id: output.f,v 1.12 1998/06/15 13:35:30 weber Exp $
+c $Id: output.f,v 1.24 2007/05/23 14:28:50 bleicher Exp $
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
       subroutine output(iunit)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass, Luke A. Winckelmann
-c     Date     : 01/09/95
 c     Revision : 1.0
 c
 c     This subroutine writes the event-header to file(iunit)
 C
-c                    
+c
 cinput iunit  : output-unit
 c
 c
@@ -27,18 +24,16 @@ c
       include 'boxinc.f'
 
 c
-      integer iunit,i,ttime,iu,app,att,zpp,ztt
+      integer iunit,i,ttime,iu,app,att,zpp,ztt,l
       integer iiunit,isunit, id, pdgid
       integer timestep,itotcoll,iinelcoll
       real*8 sigmatot,ptsigtot,stot,otime
       common /outco2/sigmatot
 
-cdebug,sab
-      integer gs_in,gs_out,ns_in,ns_out,e1,e2,rap1,rap2   
 
-
+      character*3 abox3, abox4, abox5
       character*4 reffram
-      character*20 aa,ah,ai,ak
+      character*20 aa,ah,ai,ak,abox1,abox2
       character*36 ae,abt
       character*31 aee
       character*15 ab,aj,al,am
@@ -49,6 +44,7 @@ cdebug,sab
       character*1 add
       character*171 apa14,apa15,apav
       character*2 apa,aop
+      character*35 aboxhead
 
 c file15out
       integer ind,ind1,ind2,nin
@@ -57,24 +53,20 @@ c file15out
       real*8 sqrts, sigpart, colldens, cdens,cdens_
       logical bdum,paulibl
 
-c temporary storage for in-channel
       include 'outcom.f'
-c      real*8 tsqrts,tstot,tsigpart
-c      real*8 tr0(3),trx(3),try(3),trz(3),ttform(3),txtotfac(3),
-c     @     tp0(3),tpx(3),tpy(3),tpz(3),tm(3),torigin(3)
-c      integer tind(3),tityp(3),tiso3(3),tcoll(3),tstrange(3)
-c      integer tlcoll(3),tcharge(3),torigin(3),tstrid(3)   
-
-
      
       integer fchg,strit
       character*1 echar
       
-      integer iou(13:19)
+      integer iou(13:20)
 
-      save ! important, do not erase 
+chp variables necessary for hydro evolution output in f15
+      real*8 thydro_start,thydro
 
-      data iou/13,14,15,16,17,18,19/
+
+      save 
+
+      data iou/13,14,15,16,17,18,19,20/
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c              output formats
@@ -85,7 +77,7 @@ c fileheader
  301  format(a13,a13,i4,i4,a12,a13,i4,i4,a1)
 c 305  format(a36,3f10.7)
  304  format(a36,3f6.2,a31,1f9.2)
- 302  format (a7,i9,a13,i12,a9,a20,i5,a20,f8.2)
+ 302  format (a7,i9,a13,i12,a9,a20,i7,a20,f11.3)
 c 303  format(a20,i3,a15,e10.4,a15,e10.4,a15,e10.4)
  102  format(a2,15(i3,a2))
 c 103  format(a2,12(e10.4,a2))
@@ -96,17 +88,28 @@ c 103  format(a2,12(e10.4,a2))
  103  format(a2,12(e11.4,a2))
 
 c standard particle information vector
- 201  format(9D24.16,i5,2i3,i6,i5,i4)
-c special *thad modified* output for cto40 (restart of old event)
- 210  format(9D24.16,i5,2i3,i6,i5,i4,11D24.16)
+ 201  format(9e16.8,i11,2i3,i9,i5,i4)
+cLHC 201  format(9e24.16,i11,2i3,i9,i5,i4)
+
+c special output for cto40 (restart of old event)
+ 210  format(9e16.8,i11,2i3,i9,i5,i10,3e16.8,i8)
+cLHC 210  format(9e24.16,i11,2i3,i9,i5,i10,3e24.16,i8)
+
 c special output for mmaker
- 203  format(9D24.16,i5,2i3,i6,i5,i4,i5,2D24.16)
+ 203  format(9e16.8,i5,2i3,i6,i5,i4,i5,2e16.8)
+cLHC 203  format(9e24.16,i5,2i3,i6,i5,i4,i5,2e24.16)
+
 c same with index for file15
- 501  format(i5,9D24.16,i5,2i3,i6,i5,i3,i15)
+ 501  format(i5,9e16.8,i11,2i3,i9,i5,i3,i15)
+cLHC 501  format(i5,9e24.16,i11,2i3,i9,i5,i3,i15)
+
 c enhanced file16
- 503  format(9e15.7,i5,2i3,i6,i5,i4,2i4)
+ 503  format(9e15.7,i11,2i3,i9,i5,i4,2i4)
+cLHC 503  format(9e24.16,i11,2i3,i9,i5,i4,2i4)
+
 c same including freeze-out coordinates
- 213  format(9D24.16,i5,2i3,i6,i5,i4,8D24.16)
+ 213  format(9e16.8,i11,2i3,i9,i5,i4,8e16.8)
+cLHC 213  format(9e24.16,i11,2i3,i9,i5,i4,8e24.16)
 
 c collsision stats for file14
  202  format(8i8)
@@ -114,16 +117,20 @@ c same with EndOfEvent tag for file16
  602  format(a1,8i8)
 
 c header-line for each collision in file15
- 502  format(i1,i8,i4,i7,f8.3,4e12.4)
+ 502  format(i8,i8,i4,i7,f8.3,4e12.4)
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+c header-line for box-mode
+ 504  format(a20,e14.6,a20,e14.6,a3,i1,a3,i1,a3,i3)
+ 505  format(a35)
+ 506  format(a5,2i4,i8,e14.6)
+
 c
       if(iunit.eq.17)return
       if(bf13.and.(iunit.eq.13)) return
       if(bf14.and.(iunit.eq.14)) return
       if(bf15.and.(iunit.eq.15)) return
       if(bf16.and.(iunit.eq.16)) return
-      if(bf19.and.(iunit.eq.19)) return
 
 c     copy projectile/target info to local vars
       app=ap
@@ -152,6 +159,12 @@ c
       apa='pa'
       aop='op'
 
+      abox1='boxmode length(fm): '
+      abox2=' tot. energy (GeV): '
+      abox3=' s:'
+      abox4=' p:'
+      abox5=' #:'
+      aboxhead='boxh ityp 2i3       N     pmax(GeV)'
       apa14='pvec: '//
      & 'r0              rx              ry              rz          '//
      & '    p0              px              py              pz      '//
@@ -193,14 +206,12 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccc
       otime=outsteps*dtimestep
       ttime=int(nsteps*dtimestep+0.01)
 
-c... dont change the output of files you dont need without contacting
-c	those who need the files !!!! 
       if(iunit.eq.15)then
-       write(iou(15),502)0,event,Ap,At,bimp,ecm
-     ,     ,sigmatot,ebeam,pbeam       
+       write(iou(15),502)-1,event,Ap,At,bimp,ecm
+     ,     ,sigmatot,ebeam,pbeam
       else
       write(iou(iunit),101) aa,version, sigver, laires, ab,iunit
-      write(iou(iunit),301) ac,pds, App, Zpp, ad,tds, Att, Ztt,add       
+      write(iou(iunit),301) ac,pds, App, Zpp, ad,tds, Att, Ztt,add
       write(iou(iunit),305) abt,betann,betatar,betapro
       write(iou(iunit),304) ae,bimp,bmin,bdist,aee,sigmatot
       write(iou(iunit),303) ah,eos,aj,ebeam,al,ecm,am,pbeam
@@ -212,6 +223,15 @@ c	those who need the files !!!!
       write(iou(iunit),103) apa,(CTParam(i),CTPdc(i),i=13,24)
       write(iou(iunit),103) apa,(CTParam(i),CTPdc(i),i=25,36)
       write(iou(iunit),103) apa,(CTParam(i),CTPdc(i),i=37,48)
+      if(boxflag.eq.1) then
+         write(iou(iunit),504) abox1, lbox, abox2, edens, abox3, solid,
+     1                         abox4, para, abox5, mbox
+         write(iou(iunit),505) aboxhead
+         do 507 l=1,mbox
+            write(iou(iunit),506) 'box: ', bptityp(l), bptiso3(l),
+     1                            bptpart(l), bptpmax(l)
+ 507     continue
+      end if
       write(iou(iunit),306) apav
       end if
 
@@ -225,9 +245,6 @@ c.....
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       entry file14out(timestep)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass (new source)
-c     Date     : 01/09/95
 c     Revision : 1.0
 c
 c     This subroutine writes the standard output-file (unit 14)
@@ -248,7 +265,7 @@ c
 
 c now write particle-output
 
-cernst write spectators
+c write spectators
       if(CTOption(28).eq.2)then
          if(CTOption(41).eq.0) then
             do 141 i=1,nspec
@@ -262,43 +279,27 @@ cernst write spectators
                write(iou(14),210) r0s(i),rxs(i),rys(i),rzs(i),p0s(i),
      @              pxs(i),pys(i),pzs(i),sfmass(i),
      @              sityp(i),siso3(i),scharge(i),
-     @              -1,-1,0,1d34,0d0,1d0
+     @              -1,-1,0,1d34,0d0,1d0,0
  142        continue
          endif
       endif
-chw special output for mmaker
-      if (CTOption(25).eq.1) then
-	 write (6,*) 'Timestep:',timestep
-         do 10 i=1,npart
-            write(iou(14),203) r0(i),rx(i),ry(i),rz(i),p0(i),
+      if(CTOption(41).eq.0) then
+         do 13 i=1,npart
+            write(iou(14),201) r0(i),rx(i),ry(i),rz(i),p0(i),
      @           px(i)+ffermpx(i),py(i)+ffermpy(i),
      @           pz(i)+ffermpz(i),fmass(i),
-     @           ityp(i),iso3(i),charge(i),lstcoll(i),
-     @           ncoll(i),mod(origin(i),100),strid(i),tform(i),
-     &           xtotfac(i)
- 10      continue
+     @           ityp(i),iso3(i),charge(i),
+     @           lstcoll(i),ncoll(i),mod(origin(i),100)
+ 13      continue
       else
-         if(CTOption(41).eq.0) then
-chw normal output
-            do 13 i=1,npart
-               write(iou(14),201) r0(i),rx(i),ry(i),rz(i),p0(i),
-     @              px(i)+ffermpx(i),py(i)+ffermpy(i),
-     @              pz(i)+ffermpz(i),fmass(i),
-     @              ityp(i),iso3(i),charge(i),
-     @              lstcoll(i),ncoll(i),mod(origin(i),100)
- 13         continue
-         else
-            do 31 i=1,npart
-               write(iou(14),210) r0(i),rx(i),ry(i),rz(i),p0(i),
-     @              px(i)+ffermpx(i),py(i)+ffermpy(i),
-     @              pz(i)+ffermpz(i),fmass(i),
-     @              ityp(i),iso3(i),charge(i),
-     @              lstcoll(i),ncoll(i),mod(origin(i),100),
-     @              dectime(i),tform(i),xtotfac(i),thad(i)
- 31         continue
-
-         endif
-
+         do 31 i=1,npart
+            write(iou(14),210) r0(i),rx(i),ry(i),rz(i),p0(i),
+     @           px(i)+ffermpx(i),py(i)+ffermpy(i),
+     @           pz(i)+ffermpz(i),fmass(i),
+     @           ityp(i),iso3(i),charge(i),
+     @           lstcoll(i),ncoll(i),origin(i),
+     @           dectime(i),tform(i),xtotfac(i),uid(i)
+ 31      continue
       endif
 c 
       return
@@ -306,9 +307,6 @@ c
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       entry file13out(timestep)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass (new source)
-c     Date     : 01/09/95
 c     Revision : 1.0
 c
 c     This subroutine writes the standard output-file (unit 13),
@@ -330,7 +328,7 @@ c
 
 c now write particle-output
 
-cernst write spectators
+c write spectators
         if(CTOption(28).eq.2)then
           do 191 i=1,nspec
             write(iou(13),213) r0s(i),rxs(i),rys(i),rzs(i),p0s(i),
@@ -343,7 +341,7 @@ cernst write spectators
 
 
       do 90 i=1,npart
-         if((ncoll(i).eq.0).and.(CTOption(40).eq.0)) then
+         if(ncoll(i).eq.0) then
             write(iou(13),213) r0(i),rx(i),ry(i),rz(i),p0(i),
      @           px(i)+ffermpx(i),py(i)+ffermpy(i),
      @           pz(i)+ffermpz(i),fmass(i),
@@ -366,10 +364,9 @@ c
 
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       entry file15out(ind1,ind2,sqrts,stot,sigpart)
-c     Unit     : Collision Term
-c     Author   : L. A. Winckelmann, S. A. Bass
-c     Date     : 01/09/95
+c
 c     Revision : 1.0
+c
 c     This subroutine writes information about the in-channel to file15
 c     (the collision statistics file)
 c
@@ -380,9 +377,6 @@ cinput        stot	: total cross section
 cinput        sigpart	: partial cross section
 c
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-
-c we need some of these quantities even if bf15.eq.false
-c      if(bf15.and.(CTOption(13).eq.0))return
 
 c determine tag for scatter-input or decay-input
 c and store entry channel in temporary observables
@@ -403,19 +397,15 @@ c and store entry channel in temporary observables
       tm(1)=fmass(ind1)
       tityp(1)=ityp(ind1)
       tiso3(1)=iso3(ind1)
-      tstrange(1) = strit(tityp(1))    !  insert strangeness here
+      tstrange(1) = strit(tityp(1))  
       tcoll(1) = ncoll(ind1)
       tlcoll(1)=lstcoll(ind1)
-chw
       torigin(1)=origin(ind1)
-c      ttform(1)=tform(ind1)
-c      txtotfac(1)=xtotfac(ind1)
-c      tstrid(1)=strid(ind1)
-c mbbox
+      tuid(1)=uid(ind1)
       if(ind2.le.0) then
          nin=1
       elseif(ind2.gt.0) then
-         bdum=paulibl(ind1,cdens_)
+         bdum=paulibl(ind2,cdens_)
          cdens=5d-1*(cdens+cdens_)
          nin=2
          tind(2)=ind2
@@ -430,57 +420,17 @@ c mbbox
          tm(2)=fmass(ind2)
          tityp(2)=ityp(ind2)
          tiso3(2)=iso3(ind2)
-         tstrange(2)=strit(tityp(2))    ! insert strangeness here
+         tstrange(2)=strit(tityp(2))  
          tcoll(2) = ncoll(ind2)
          tlcoll(2)=lstcoll(ind2)
-chw
          torigin(2)=origin(ind2)
-c         ttform(2)=tform(ind2)
-c         txtotfac(2)=xtotfac(ind2)
-c         tstrid(2)=strid(ind2)
+         tuid(2)=uid(ind2)
       endif
 
       return
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       entry f15outch(colldens)
-
-c      call dnscnt(nin,nexit,iline,acttime,colldens)
-
-c      write(6,502) nin,nexit,iline,ctag,acttime,sqrts
-c     ,     ,stot,sigpart,colldens
-
-
-csab,debug:
-c have collisions involving strangeness written out in special format
-c ns: net strangeness, gs: gross strangeness
-c for determination of strangeness changing reactions
-      ns_in=0
-      gs_in=0
-      ns_in=tstrange(1)
-      if(nin.eq.2) ns_in=ns_in+tstrange(2)
-      gs_in=abs(tstrange(1))
-      if(nin.eq.2) gs_in=gs_in+abs(tstrange(2))
-
-      ns_out=0
-      gs_out=0
-      do 112 i=1,nexit
-         ns_out=ns_out+strit(tityp(i))
-         gs_out=gs_out+abs(strit(tityp(i)))
- 112   continue                                               
-      if(nin.eq.2.and.((gs_in+gs_out).gt.0)) then
-         e1=tp0(1)
-         e2=tp0(2)
-         rap1=0.5*log((e1+tpz(1))/(e1-(tpz(1))))
-         rap2=0.5*log((e2+tpz(2))/(e2-(tpz(2))))
-c         if(abs(rap1).le.0.5d0.and.abs(rap2).le.0.5d0)
-c     &        write(22,888) acttime,tsqrts,iline,
-c     &        gs_in,ns_in,gs_out,ns_out
-      endif
- 888  format(2f10.4,5i4)                       
-csab,end  
-
-
 
       if (bf15) return
 c     This entry writes information about the collision to file15
@@ -489,7 +439,6 @@ c     format: x y z px py pz ityp iso3...
 
       write(iou(15),502) nin,nexit,iline,ctag,acttime,tsqrts
      ,     ,tstot,tsigpart,cdens
-c      write(6,*)torigin(1)
       do 11 i=1,nin
          istr=strit(tityp(i))
          ich = fchg(tiso3(i),tityp(i))
@@ -502,7 +451,6 @@ c      write(6,*)torigin(1)
       do 20 ii=1,nexit
          i=inew(ii)
          istr=strit(ityp(i))
-c         ich = fchg(iso3(i),ityp(i))
          write(iou(15),501) i,r0(i),rx(i),ry(i),rz(i),
      @                   p0(i),px(i),py(i),pz(i),fmass(i),
      @                   ityp(i),iso3(i),charge(i),lstcoll(i),
@@ -511,11 +459,97 @@ c         ich = fchg(iso3(i),ityp(i))
 
       return
 
+
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      entry f15hyin(thydro_start)
+
+      if (bf15) return
+c     This entry writes information about the collision to file15
+c     one line for each particle:
+c     format: x y z px py pz ityp iso3...
+      nin=npart
+      nexit=0
+
+      write(iou(15),502) nin,nexit,0,0,thydro_start,0.d0
+     ,     ,0.d0,0.d0,0.d0
+      do 250 i=1,nin
+         write(iou(15),501) i,r0(i),rx(i),ry(i),rz(i),
+     @                   p0(i),px(i),py(i),pz(i),fmass(i),
+     @                   ityp(i),iso3(i),charge(i),lstcoll(i),
+     @                   ncoll(i),istr,origin(i) 
+ 250  continue
+
+      return
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      entry f15hyout(thydro_start)
+
+      if (bf15) return
+c     This entry writes information about the collision to file15
+c     one line for each particle:
+c     format: x y z px py pz ityp iso3...
+      nin=0
+      nexit=npart
+
+      write(iou(15),502) nin,nexit,0,0,thydro_start,0.d0
+     ,     ,0.d0,0.d0,0.d0
+      do 251 i=1,nexit
+       if(tform(i).lt.1.d-8)then 
+         write(iou(15),501) i,r0(i),rx(i),ry(i),rz(i),
+     @                   p0(i),px(i),py(i),pz(i),fmass(i),
+     @                   ityp(i),iso3(i),charge(i),lstcoll(i),
+     @                   ncoll(i),istr,origin(i)
+       else   
+         write(iou(15),501) i,tform(i),rx(i),ry(i),rz(i),
+     @                   p0(i),px(i),py(i),pz(i),fmass(i),
+     @                   ityp(i),iso3(i),charge(i),lstcoll(i),
+     @                   ncoll(i),istr,origin(i)
+       end if 
+ 251  continue
+
+      return
+
+
+
+
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      entry f15outhy(thydro_start,thydro)
+
+      if (bf15) return
+c     This entry writes information about the start and end of 
+c     hydro evolution to file15
+c     one header and one particle line with just zeroes except 
+c     of the time information and nin=9 
+c     
+c     format: as usual in f15
+
+      write(iou(15),502) 9,0,0,0,thydro_start,0.d0
+     ,     ,0.d0,0.d0,0.d0
+
+      do i=1,9         
+         write(iou(15),501) 0,0.d0,0.d0,0.d0,0.d0,
+     @                   0.d0,0.d0,0.d0,0.d0,0.d0,
+     @                   0,0,0,0,
+     @                   0,0,0
+      end do
+      
+      write(iou(15),502) 9,0,0,0,thydro_start+thydro,0.d0
+     ,     ,0.d0,0.d0,0.d0
+
+      do i=1,9   
+         write(iou(15),501) 0,0.d0,0.d0,0.d0,0.d0,
+     @                   0.d0,0.d0,0.d0,0.d0,0.d0,
+     @                   0,0,0,0,
+     @                   0,0,0
+      end do
+      return
+
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       entry f16outch
-c      write (6,*) 'bf16 cto',bf16,CTOption(13)
+
       if (bf16.or.(CTOption(13).eq.0)) return
-c      write (6,*) 'f16outch'
       if (nin.eq.1) then
          tityp(2)=0
       endif
@@ -543,7 +577,7 @@ c
 
 c now write particle-output
       if (CToption(13).eq.0) then
-c ernst write spectators
+c write spectators
          if (CTOption(28).eq.2)then
             do 151 i=1,nspec
                write(iou(16),201)r0s(i),rxs(i),rys(i),rzs(i),p0s(i),
@@ -571,10 +605,11 @@ c ernst write spectators
  14      continue
       endif
 c
-c write collision counters etc.	
+c write collision counters etc.
        write(iou(16),602) echar,itotcoll,NElColl,iinelcoll,NBlColl,
      @     dectag,NHardRes,NSoftRes,NDecRes
       return
+
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       entry file16entry(ind)
 c
@@ -597,11 +632,11 @@ c
 
 c     lstcoll is negative to identify decayed particles 
 
-cdebug
-c      tlcoll(3)=-(1*lstcoll(ind))
-      tlcoll(3)=lstcoll(ind)
+
+      tlcoll(3)=-(1*lstcoll(ind))
       tcoll(3)=ncoll(ind)
       torigin(3)=origin(ind)
+      tuid(3)=uid(ind)
 
       return
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -646,7 +681,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
          reffram='----'
       endif
 
-      write (19,902) 'UrQMD', '1.0', app, zpp, att, ztt,
+      write (19,902) 'UrQMD', '1.2', app, zpp, att, ztt,
      .     reffram, ebeam, 1
 
  902  format (2(a8,2x),'(',i3,',',i6,')+(',i3,',',i6,')',2x,a4,2x,
@@ -655,7 +690,46 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       return
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      entry osc99_header
+
+c header for OSCAR 99A output format
+
+      if (bf20) return
+      
+      write (20,991)
+      write (20,992)
+
+ 991  format ('# OSC1999A')
+ 992  format ('# full_event_history')
+
+      if (CTOption(27).eq.0) then
+         reffram='nncm'
+      elseif (CTOption(27).eq.1) then
+         reffram='tar'
+      elseif (CTOption(27).eq.2) then
+         reffram='pro'
+      else
+         call error ('osc_header','Unknown Ref-Frame',
+     .        dble(CTOption(27)),2)
+         reffram='----'
+      endif
+
+      write (20,993)
+ 993  format ('# UrQMD 1.2')
+
+      write (20,994) app, zpp, att, ztt,reffram, ebeam, 1
+
+ 994  format ('# (',i3,',',i6,')+(',i3,',',i6,')',2x,a4,2x,
+     &     e10.4,2x,i8)
+
+      return
+
+
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       entry osc_event
+
+c body for OSCAR 97A format
 
       if (bf19) return
 
@@ -668,7 +742,8 @@ c particles
       do 99 i=1,npart
          id = pdgid(ityp(i), iso3(i))
          write(19,904) i, id, 
-     .        px(i), py(i), pz(i), p0(i), fmass(i),     
+     .        px(i)+ffermpx(i), py(i)+ffermpy(i), pz(i)+ffermpz(i), 
+     .        p0(i), fmass(i),     
      .        frrx(i), frry(i), frrz(i), frr0(i)
  99   continue
 
@@ -678,14 +753,85 @@ c particles
 
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      entry osc99_event(ind)
+
+c full event info for OSCAR 99A format
+
+      if (bf20) return
+
+      if(ind.eq.-1) then
+         write (20,995) 0, npart, event, bimp, 0D0
+      elseif(ind.eq.1) then
+         write (20,996) npart, 0
+      else
+         write(6,*) 'fatal error in osc_99_event: wrong tag'
+         stop
+      endif
+
+ 995  format (3(i7,2x),2(f8.3,2x))
+ 996  format (2(i7,2x))
+
+c particles
+
+      do 88 i=1,npart
+         id = pdgid(ityp(i), iso3(i))
+         write(20,997) uid(i), id, 0,  
+     .        px(i)+ffermpx(i), py(i)+ffermpy(i), pz(i)+ffermpz(i), 
+     .        p0(i), fmass(i),     
+     .        frrx(i), frry(i), frrz(i), frr0(i)
+ 88   continue
+
+ 997  format (3(i10,2x),9(e12.6,2x))
+
+      return
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      entry osc99_coll
+
+      if (bf20) return
+c     This entry writes information about the collision to file20
+c     one line for each particle:
+c     format: x y z px py pz ityp iso3...
+
+      write(iou(20),999) nin,nexit,iline,ctag,acttime,tsqrts
+     ,     ,tstot,tsigpart,cdens
+
+      do 911 i=1,nin
+         id = pdgid(tityp(i), tiso3(i))
+         write(20,997) tuid(i), id, 0,  
+     .        tpx(i), tpy(i), tpz(i),tp0(i),tm(i), 
+     .        trx(i), try(i), trz(i), tr0(i)
+ 911   continue
+      do 912 ii=1,nexit
+         i=inew(ii)
+         id = pdgid(ityp(i), iso3(i))
+         write(20,997) uid(i), id, 0,  
+     .        px(i), py(i), pz(i),p0(i),fmass(i), 
+     .        rx(i), ry(i), rz(i), r0(i)
+ 912  continue
+
+
+ 999  format(3(i7,2x),i7,f8.3,4e12.4)
+      return
+
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      entry osc99_eoe
+
+c end of event tag for OSCAR 99A format
+      if (bf20) return
+
+      write(20,996) 0,0
+
+      return
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       entry getoldevent
 
-      write(6,*) 'reading event from ftn10'
 c     read event header
       read(10,*,end=666) 
      @ aa
 
-cklappt so nicht,version, sigver, laires, ab,iunit
       read(10,301) ac,pds, App, Zpp, ad,tds, Att, Ztt,add       
       read(10,305) abt,betann,betatar,betapro
       read(10,304) ae,bimp,bmin,bdist,aee,sigmatot
@@ -715,13 +861,19 @@ c now read particle-output
      @        px(i),py(i),pz(i),fmass(i),
      @        ityp(i),iso3(i),charge(i),
      @        lstcoll(i),ncoll(i),origin(i),
-     @        dectime(i),tform(i),xtotfac(i),
-     @           frr0(i),frrx(i),frry(i),frrz(i),frp0(i),frpx(i),
-     @           frpy(i),frpz(i)
-         if(abs(ityp(i)).le.maxbar)nbar=nbar+1
-cdebug
-         p0(i)=dsqrt(px(i)*px(i)+py(i)*py(i)+pz(i)*pz(i)
-     &               +fmass(i)*fmass(i))
+     @        dectime(i),tform(i),xtotfac(i)
+      if(abs(ityp(i)).le.maxbar)nbar=nbar+1
+
+c     initialize freeze-out slots
+         frr0(i)=r0(i)
+         frrx(i)=rx(i)
+         frry(i)=ry(i)
+         frrz(i)=rz(i)
+         frp0(i)=p0(i)
+         frpx(i)=px(i)
+         frpy(i)=py(i)
+         frpz(i)=pz(i)
+
  39   continue
       nmes=npart-nbar
       acttime=r0(1) 
@@ -757,8 +909,6 @@ c
 c  (when cto 28 is set to 2 this subroutine is called
 c  to propagate the spectators along straight lines)
 c  
-c  Author: C. Ernst 1/96 (modified source)
-c
 cinput tstep : timestep
 c
 ccccccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -780,107 +930,13 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccc
       return
       end
        
-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc       
-	real*8 function bardens (k)
-c
-c	Unit	  :	Output
-c	Author  :	Henning Weber, Christoph Ernst
-c
-cinput k  : index of particle 
-c
-c Calculates the baryon density at location of particle k.
-c ref. H. Weber,  diploma thesis
-c
-c   \danger{The loop extends only to nbar. You should put nmax instead
-c   if you are not sure wether the particles are properly ordered.
-c   A cut-off for very distant baryons is included to save 
-c   runtime, however this might underestimate the density.}
-c
-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-	implicit none
-	include 'coms.f'
-	
-	integer k,i,collk
-	real*8 rhob, qij(4), pij(4),q2,p2,qp
-	real*8 v1,v2,beta2,gamma2,dr,re,sr,cutoff
-ccut	real*8 rap,rapk
-      parameter (re = 8.66/4.0)
-      parameter (cutoff=20d0)
-
-cc	rap(k)=.5d0*log((p0(k)+pz(k))/(p0(k)-pz(k))
-ccut	rapk=rap(k)
-	collk=lstcoll(k)
-	
-	rhob = 0d0
-      do 37 i=1,nbar
-          if (abs(ityp(i)).lt.100.and.i.ne.collk
-ccut     &     .and.dabs(rap(i)-rapk).lt.1.5D0
-     &     )then    
-c calculate space q_{ij}=q_i-q_j
-            qij(4)=r0(i)-r0(k)
-            qij(1)=rx(i)-rx(k)
-            qij(2)=ry(i)-ry(k)
-            qij(3)=rz(i)-rz(k)
-            q2=qij(4)*qij(4)-qij(1)*qij(1)-qij(2)*qij(2)
-     6           -qij(3)*qij(3)
-     		sr=sqrt(-q2)
-ce!! cutoff for very distant particles to save runtime
-ce            if(sr.gt.cutoff)goto 37
-
-c calculate momentum p_{ij}=p_i+p_j
-            pij(4)=p0(i)+p0(k)
-            pij(1)=px(i)+ffermpx(i)+px(k)+ffermpx(k)
-            pij(2)=py(i)+ffermpy(i)+py(k)+ffermpy(k)
-            pij(3)=pz(i)+ffermpz(i)+pz(k)+ffermpz(k)  
-            
-            p2=pij(4)*pij(4)-pij(1)*pij(1)-pij(2)*pij(2)
-     6           -pij(3)*pij(3)
-            qp=qij(4)*pij(4)-qij(1)*pij(1)-qij(2)*pij(2)
-     .          -qij(3)*pij(3)
-            dr=qp*qp/p2 - q2
-ce!! cutoff for large dr 
-ce!! for gamma=1 dr=20 corresponds to rhob \approx 1e-5 \approx 0
-		if(dr.gt.cutoff)goto 37
-c calculate beta^2 and gamma^2 in r-direction
-	      if (i.eq.k.or.dr.lt.1E-10) then
-	        beta2=0.0
-	      else
-	        v1=(qij(1)*(px(i)+ffermpx(i))+qij(2)*(py(i)+ffermpy(i))
-     .	             +qij(3)*(pz(i)+ffermpz(i)))/p0(i)/sr
-	        v2=(qij(1)*(px(k)+ffermpx(k))+qij(2)*(py(k)+ffermpy(k))
-     .	             +qij(3)*(pz(k)+ffermpz(k)))/p0(k)/sr
-              beta2=((v1-v2)/(1-v1*v2))**2
-            endif
-            gamma2=1.0/(1.0-beta2)
-            if (beta2.gt.1.or.beta2.lt.0) then
-               write (6,*) '(W) bardens: Wrong Beta!',beta2
-            endif
-            rhob=rhob+sign(1,ityp(k))*
-     .         (pi*re)**(-1.5)*exp(-(dr/re*gamma2))/rho0
-          endif
- 37   continue
-	bardens = rhob
-	return
-	end
-
-ce	real*8 function rap(i)
-ce	implicit none
-ce	integer i
-ce	include 'coms.f'
-ce	rap=.5d0*dlog( (p0(i)+pz(i))/ (p0(i)-pz(i)))
-ce	return
-ce	end
-
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-	real*8 function ptsigtot()
+      real*8 function ptsigtot()
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass, Luke A. Winckelmann, Christoph Ernst
-c     Date     : 07/07/97
 c     Revision : 1.0
 c
 c     This function caculates the total cross section of the reaction.
-c	(Projectile - target total cross section)
+c     (Projectile - target total cross section)
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       implicit none
@@ -889,15 +945,15 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       include 'coms.f'
       include 'options.f'
 
-	integer indmn,indmx,itypmn,iso3mn,itypmx,iso3mx
-	integer isigline,iline,collclass
-	real*8 stot,sigel
-	real*8 sigtot
+      integer indmn,indmx,itypmn,iso3mn,itypmx,iso3mx
+      integer isigline,iline,collclass
+      real*8 stot,sigel
+      real*8 sigtot
 
 c determine total cross section for reaction:
-      if(Ap+At.gt.2) then
+      if(abs(Ap)+abs(At).gt.2) then
          stot=10.d0*pi*(bdist**2-bmin**2)
-      elseif(Ap+At.eq.2) then
+      elseif(abs(Ap)+abs(At).eq.2) then
          stot=sigtot(1,2,ecm)
 cccccccc for CTOption(7)=1 no elastic cross section:
          if(CTOption(7).eq.1) then
@@ -931,7 +987,72 @@ c
          stot=0.d0
       endif
 c
-	ptsigtot=stot
-	return
-	end
+      ptsigtot=stot
+      return
+      end
 
+cccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      subroutine urqmdlogo
+c
+c Displays the UrQMD Logo
+ccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      implicit none
+
+      include 'options.f'
+
+      integer firsttime
+      save firsttime
+      if (firsttime.eq.1)return
+      firsttime=1
+
+      write (*,*)
+     $   "#############################################################"
+      write (*,*) 
+     $   "##                                                         ##"
+      write (*,*)
+     $   "##     UrQMD 3.3    University of Frankfurt                ##"
+      write (*,*)
+     $   "##                  http://urqmd.org			     ##"
+      write (*,*)             
+     $   "##                  bleicher@th.physik.uni-frankfurt.de    ##"
+      write (*,*)
+     $   "#############################################################"
+      write (*,*)
+     $   "##                                                         ##"
+      write (*,*)
+     $   "##     Please cite when using this model:                  ##"
+      write (*,*)
+     $   "##     S.A.Bass et al., Prog.Part.Nucl.Phys. 41 (1998) 225 ##"
+      write (*,*)
+     $   "##     M.Bleicher et al., J.Phys. G25  (1999) 1859         ##"
+      write (*,*)
+     $   "##                                                         ##"
+      write (*,*)
+     $   "#############################################################"
+      write (*,*)
+     $   "##     UrQMD uses Pythia6.409 by T. Sjorstrand             ##"
+      write (*,*)
+     $   "#############################################################"
+      write (*,*)
+     $   "##							    ##"	
+      write (*,*)
+     $   "##     If hydrodynamic evolution is switched on (CTO 45 1) ##"
+      write (*,*)
+     $   "##     UrQMD uses the SHASTA algorithm by D. Rischke       ##"
+      write (*,*)
+     $   "##     Please cite when using the hybrid code:             ##"
+      write (*,*) 
+     $   "##     D. Rischke et al., Nucl.Phys. A 595 (1995) 346      ##"
+      write (*,*)
+     $   "##     D. Rischke et al., Nucl.Phys. A 595 (1995) 383      ##"
+      write (*,*)
+     $   "##     H. Petersen et al., Phys.Rev. C78 (2008) 044901     ##"
+      write (*,*)        
+     $   "## 							    ##"
+      write (*,*)	 
+     $   "#############################################################"
+
+
+      return
+      end

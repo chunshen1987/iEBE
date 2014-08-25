@@ -711,10 +711,17 @@ class EbeCollector(object):
                 if data_row_count>0:
                     # still have data to read
                     try:
-                        p0, px, py, pz = map(lambda x: float(x.replace("D","E")), aLine[98:193].split())
-                        t, x, y, z = map(lambda x: float(x.replace("D","E")), aLine[245:338].split())
-                        isospin2 = int(aLine[222:224])
-                        pid = int(aLine[216:222])
+                        # for UrQMD 2.3
+                        #p0, px, py, pz = map(lambda x: float(x.replace("D","E")), aLine[98:193].split())
+                        #t, x, y, z = map(lambda x: float(x.replace("D","E")), aLine[245:338].split())
+                        #isospin2 = int(aLine[222:224])
+                        #pid = int(aLine[216:222])
+                        # for UrQMD 3.3
+                        p0, px, py, pz = map(lambda x: float(x), aLine[65:128].split())
+                        t, x, y, z = map(lambda x: float(x), aLine[181:243].split())
+                        isospin2 = int(aLine[157:159])
+                        pid = int(aLine[151:157])
+
                         UrQMDpid = pid + isospin2*1000
                         try:
                             if pid == 100 and isospin2 != 0: 
@@ -725,7 +732,7 @@ class EbeCollector(object):
                         except ValueError as e:
                             print("Can not find particle id in the dictionary!")
                             exit(e)
-                        if UrQMDpid in pid_to_collect:
+                        if self.pidDict[self.UrQMDpidDict[UrQMDpid]] in pid_to_collect:
                             rap = 0.5*math.log((p0 + pz)/(p0 - pz))
                             if rap < rap_range[1] and rap > rap_range[0]:
                                 pT = math.sqrt(px*px + py*py)

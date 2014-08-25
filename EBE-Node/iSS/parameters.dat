@@ -2,7 +2,7 @@ calculate_vn = 0                       # 1/0: whether to calculate the dN/(pt dp
 
 MC_sampling = 2                        # 0/1/2/3: whether to perform Monte-Carlo sampling (not required for spectra calculation). 0: No sampling. 1: use dN_dxtdetady to sample. 2: use dN_dxtdy to sample. 3: use dN_pTdpTdphidy to sample (overwrites calculate_vn to be 1). Since this parameter controls whether to calculate certain arrays, it controls whether to perform other related calculations (see below).
 
-dN_dy_sampling_model = 1               # Controls how an non-integer dN_dy is sampled to produce an integer that can be used in actual sampling
+dN_dy_sampling_model = 30               # Controls how an non-integer dN_dy is sampled to produce an integer that can be used in actual sampling
                                        # -- all numbers below 100 are reserved for "conventional" sampling where actual particle yields are used to constrain the sampling. 101-200 are reserved for sampling using total energy flux from freeze-out surface.
                                        # -- 1: The fractional part of dN_dy is used as a probability to determine whether there is 1 more particle
                                        # -- 10: Use NBD to sample the fractional part of dN_dy. The probability is calculated so that p=nb/(nb+k) and k is assumed to be proportional to n, and the proportionality constant is given by the parameter dN_dy_sampling_para1.

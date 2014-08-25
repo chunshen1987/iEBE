@@ -1,11 +1,8 @@
-c $Id: addpart.f,v 1.2 1997/08/19 12:21:08 bass Exp $
+c $Id: addpart.f,v 1.4 2000/01/12 16:02:32 bass Exp $
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
       subroutine addpart(index)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass 
-c     Date     : 09/21/94
 c     Revision : 1.0
 c
 cinput index : index for slot to create in particle arrays
@@ -46,6 +43,7 @@ c     now shift vectors upwards
          xtotfac(i+1)=xtotfac(i)
          origin(i+1)=origin(i)
          strid(i+1)=strid(i)
+         uid(i+1)=uid(i)
          frr0(i+1)=frr0(i)
          frrx(i+1)=frrx(i)
          frry(i+1)=frry(i)
@@ -57,12 +55,12 @@ c     now shift vectors upwards
          ffermpx(i+1)=ffermpx(i)
          ffermpy(i+1)=ffermpy(i)
          ffermpz(i+1)=ffermpz(i)
-cpot
+
          r0_t(i+1)=r0_t(i)
          rx_t(i+1)=rx_t(i)
          ry_t(i+1)=ry_t(i)
          rz_t(i+1)=rz_t(i)
-ctd
+
          do 11 j=1,2
             p0td(j,i+1)=p0td(j,i)
             pxtd(j,i+1)=pxtd(j,i)
@@ -73,7 +71,7 @@ ctd
             iso3td(j,i+1)=iso3td(j,i)
  11      continue
 
-c            ...
+
  10      continue
 
 c     increment npart
@@ -108,6 +106,7 @@ c     initialize new slot
          xtotfac(ind)=1.0d0
          origin(ind)=0
          strid(ind)=0
+         uid(ind)=0
          frr0(ind)=0.d0
          frrx(ind)=0.d0
          frry(ind)=0.d0
@@ -134,9 +133,6 @@ ctd
             ityptd(j,ind)=0
             iso3td(j,ind)=0
  12      continue
-
-
-c            ...
 
 c     rescan collision table - all particle indices which have been
 c     shifted upwards must be modified in the collision tables, too. 

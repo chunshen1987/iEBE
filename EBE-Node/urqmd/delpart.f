@@ -1,10 +1,7 @@
-c $Id: delpart.f,v 1.3 1998/06/15 13:35:12 weber Exp $
+c $Id: delpart.f,v 1.5 2000/01/12 16:02:34 bass Exp $
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       subroutine delpart(index)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass
-c     Date     : 09/21/94
 c     Revision : 1.0 
 c
 cinput index : index of particle to delete
@@ -55,6 +52,7 @@ c     delete slot
          xtotfac(i-1)=xtotfac(i)
          origin(i-1)=origin(i)
          strid(i-1)=strid(i)
+         uid(i-1)=uid(i)
          frr0(i-1)=frr0(i)
          frrx(i-1)=frrx(i)
          frry(i-1)=frry(i)
@@ -116,9 +114,6 @@ c     update pointer array for new/scattered particles
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       subroutine adspec(index)
 c
-c     Unit     : Collision Term
-c     Author   : Luke A. Winckelmann, Christoph Ernst
-c     Date     : 09/21/94
 c     Revision : 1.0
 c
 cinput index : index of particle to delete
@@ -155,6 +150,7 @@ cernst fill spectator-arrays
       scharge(nspec)=charge(ind)
       sityp(nspec)=ityp(ind)
       siso3(nspec)=iso3(ind)
+      suid(nspec)=uid(ind)
 
 c     update nbar and nmes counters
       if(iabs(ityp(ind)).le.maxbar) then
@@ -186,7 +182,7 @@ c     update nbar and nmes counters
          dectime(i-1)=dectime(i)
          tform(i-1)=tform(i)
          xtotfac(i-1)=xtotfac(i)
-
+         uid(i-1)=uid(i)
 c            ...
  10      continue
 	npart=npart-1
@@ -217,7 +213,6 @@ c     update pointer array for new/scattered particles
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       subroutine rmspec(bpro,btar)
-c Author: L.A.Winckelmann
 cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
       implicit none
       include 'coms.f'
