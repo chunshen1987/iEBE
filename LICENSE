@@ -1,3 +1,9 @@
+The iEBE-VISHNU source package use the GNU general public license V3.0. 
+This license applies to all the individual component of the souce code 
+except UrQMD. The UrQMD component within the package has its own Copyright, 
+which is included its subdirectory folder. 
+
+===========================================================================
 GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
