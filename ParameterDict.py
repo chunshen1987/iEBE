@@ -45,8 +45,8 @@ iSSParameters = {
 }
 
 photonEmissionParameters = {
-    'dx'          :   0.5,
-    'dy'          :   0.5,
+    'dx'          :   0.3,
+    'dy'          :   0.3,
     'dTau'        :   0.1,
     'T_sw_high'   :   0.170,
     'T_sw_low'    :   0.150,

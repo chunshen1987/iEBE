@@ -113,7 +113,7 @@ hydroControl = {
     'resultDir'             :   'results', # hydro results folder, relative
     'resultFiles'           :   '*', # results files
     'saveICFile'            :   True, # whether to save initial condition file
-    'saveResultGlobs'       :   ['surface.dat', 'dec*.dat', 'ecc*.dat'], # files match these globs will be saved
+    'saveResultGlobs'       :   ['JetData.h5', 'surface.dat', 'dec*.dat', 'ecc*.dat'], # files match these globs will be saved
     'executable'            :   'VISHNew.e',
 }
 hydroParameters = {
