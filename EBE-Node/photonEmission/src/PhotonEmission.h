@@ -26,11 +26,13 @@ class PhotonEmission
       int norder;
 
       double gridDx, gridDy, gridDtau;
-      double gridX0, gridY0, gridTau0;
+      double gridX0, gridY0, gridTau0, gridTauf;
       int gridNx, gridNy;
 
       double T_dec, T_sw_high, T_sw_low;
-
+      double T_cuthigh, T_cutlow;
+      
+      int differential_flag;
       int calHGIdFlag;
 
       double** lambda; // Lorentz boost transverse only
@@ -51,6 +53,8 @@ class PhotonEmission
       //photon production processes
       ThermalPhoton* photon_QGP;
       ThermalPhoton* photon_HG;
+      ThermalPhoton* photon_HG_rho_spectralfun;
+      ThermalPhoton* photon_HG_pipiBremsstrahlung;
 
       ThermalPhoton* photon_pirho;
       ThermalPhoton* photon_KstarK;

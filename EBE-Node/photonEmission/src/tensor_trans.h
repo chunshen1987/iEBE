@@ -1,5 +1,5 @@
 #ifndef TENSOR_TRANS_H
-#define TNESOR_TRANS_H
+#define TENSOR_TRANS_H
 
 void boost_matrix(double** , double , double , double);
 void getTransverseflow_u_mu_low(double* flow_u_mu_low, double vx, double vy);

@@ -17,6 +17,16 @@ HydroinfoH5::HydroinfoH5()
    outputFlag = 0;
 }
 
+HydroinfoH5::HydroinfoH5(string filename_in, int bufferSize_in, int Visflag_in)
+{
+   readHydroinfoH5(filename_in, bufferSize_in, Visflag_in);
+}
+
+HydroinfoH5::HydroinfoH5(int XL_in, int XH_in, double DX_in, int LSX_in, int YL_in, int YH_in, double DY_in, int LSY_in, double Tau0_in, double dTau_in, double LST_in, int Visflag_in, string filename_in)
+{
+   setHydroFiles(XL_in, XH_in, DX_in, LSX_in, YL_in, YH_in, DY_in, LSY_in, Tau0_in, dTau_in, LST_in, Visflag_in, filename_in);
+}
+
 HydroinfoH5::~HydroinfoH5()
 {
    if(readinFlag == 1)
@@ -119,23 +129,23 @@ void HydroinfoH5::setHydroFiles(int XL_in, int XH_in, double DX_in, int LSX_in, 
     status = H5Fclose(H5file_id); 
 }
 
-void HydroinfoH5::writeGroupattribute(hid_t H5groupid)
+void HydroinfoH5::writeGroupattribute(hid_t H5groupEventid)
 {
     int XShift = abs(grid_XL%grid_LSX);
     int YShift = abs(grid_YL%grid_LSY);
 
-    addGroupattributeInt(H5groupid, "XL", (grid_XL + XShift)/grid_LSX);
-    addGroupattributeInt(H5groupid, "XH", (grid_XH - XShift)/grid_LSX);
-    addGroupattributeInt(H5groupid, "YL", (grid_YL + YShift)/grid_LSY);
-    addGroupattributeInt(H5groupid, "YH", (grid_YH - YShift)/grid_LSY);
-    addGroupattributeDouble(H5groupid, "DX", grid_dx*grid_LSX);
-    addGroupattributeDouble(H5groupid, "DY", grid_dy*grid_LSX);
-    addGroupattributeDouble(H5groupid, "Tau0", grid_Tau0);
-    addGroupattributeDouble(H5groupid, "dTau", grid_dTau*grid_LST);
-    addGroupattributeInt(H5groupid, "OutputViscousFlag", Visflag);
+    addGroupattributeInt(H5groupEventid, "XL", (grid_XL + XShift)/grid_LSX);
+    addGroupattributeInt(H5groupEventid, "XH", (grid_XH - XShift)/grid_LSX);
+    addGroupattributeInt(H5groupEventid, "YL", (grid_YL + YShift)/grid_LSY);
+    addGroupattributeInt(H5groupEventid, "YH", (grid_YH - YShift)/grid_LSY);
+    addGroupattributeDouble(H5groupEventid, "DX", grid_dx*grid_LSX);
+    addGroupattributeDouble(H5groupEventid, "DY", grid_dy*grid_LSY);
+    addGroupattributeDouble(H5groupEventid, "Tau0", grid_Tau0);
+    addGroupattributeDouble(H5groupEventid, "dTau", grid_dTau*grid_LST);
+    addGroupattributeInt(H5groupEventid, "OutputViscousFlag", Visflag);
 }
 
-void HydroinfoH5::addGroupattributeInt(hid_t H5groupid, string attName, int attValue)
+void HydroinfoH5::addGroupattributeInt(hid_t H5groupEventid, string attName, int attValue)
 {
    herr_t status;
    hsize_t dims;
@@ -145,7 +155,7 @@ void HydroinfoH5::addGroupattributeInt(hid_t H5groupid, string attName, int attV
    dims = 1;
    dataspace_id = H5Screate_simple(1, &dims, NULL);
    /* Create a dataset attribute. */
-   attribute_id = H5Acreate (H5groupid, attName.c_str(), H5T_STD_I32BE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
+   attribute_id = H5Acreate (H5groupEventid, attName.c_str(), H5T_STD_I32BE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
 
    /* Write the attribute data. */
    status = H5Awrite(attribute_id, H5T_NATIVE_INT, &attValue);
@@ -156,7 +166,7 @@ void HydroinfoH5::addGroupattributeInt(hid_t H5groupid, string attName, int attV
    status = H5Sclose(dataspace_id);
 }
 
-void HydroinfoH5::addGroupattributeDouble(hid_t H5groupid, string attName, double attValue)
+void HydroinfoH5::addGroupattributeDouble(hid_t H5groupEventid, string attName, double attValue)
 {
    herr_t status;
    hsize_t dims;
@@ -166,7 +176,7 @@ void HydroinfoH5::addGroupattributeDouble(hid_t H5groupid, string attName, doubl
    dims = 1;
    dataspace_id = H5Screate_simple(1, &dims, NULL);
    /* Create a dataset attribute. */
-   attribute_id = H5Acreate (H5groupid, attName.c_str(), H5T_NATIVE_DOUBLE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
+   attribute_id = H5Acreate (H5groupEventid, attName.c_str(), H5T_NATIVE_DOUBLE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
 
    /* Write the attribute data. */
    status = H5Awrite(attribute_id, H5T_NATIVE_DOUBLE, &attValue);
@@ -288,9 +298,6 @@ void HydroinfoH5::readHydroinfoH5(string filename_in, int bufferSize_in, int Vis
       cout << "Buffersize is too small, increase it to at lease to " << grid_Framenum << endl;
       exit(1);
    }
-   else
-      Buffersize = grid_Framenum;
-      
    //initialize all matrices
    ed = new double** [Buffersize];
    sd = new double** [Buffersize];
@@ -565,7 +572,8 @@ void HydroinfoH5::getHydroinfoOnlattice(int frameIdx, int xIdx, int yIdx, fluidC
 
 void HydroinfoH5::getHydroinfo(double tau, double x, double y, fluidCell* fluidCellptr)
 {
-   if(tau < grid_Tau0 || tau >= grid_Taumax || x < grid_X0 || x >= grid_Xmax || y < grid_Y0 || y >= grid_Ymax)
+   double eps = 1e-10;
+   if(tau < grid_Tau0 || tau > grid_Taumax-eps || x < grid_X0 || x > grid_Xmax-eps || y < grid_Y0 || y > grid_Ymax-eps)
    {
       setZero_fluidCell(fluidCellptr);
       return;

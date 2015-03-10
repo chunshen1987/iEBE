@@ -44,8 +44,12 @@ class HydroinfoH5
 
    public:
       HydroinfoH5();
+      HydroinfoH5(string filename_in, int bufferSize_in, int Visflag_in);
+      HydroinfoH5(int XL_in, int XH_in, double DX_in, int LSX_in, int YL_in, int YH_in, double DY_in, int LSY_in, double Tau0_in, double dTau_in, double LST_in, int Visflag_in, string filename_in);
+
       ~HydroinfoH5();
-      
+     
+      // functions to write into hdf5 file
       void setHydroFiles(int XL_in, int XH_in, double DX_in, int LSX_in, int YL_in, int YH_in, double DY_in, int LSY_in, double Tau0_in, double dTau_in, double LST_in, int Visflag_in, string filename_in);
       void writeGroupattribute(hid_t H5groupEventid);
       void addGroupattributeInt(hid_t H5groupEventid, string attName, int attValue);
@@ -53,6 +57,7 @@ class HydroinfoH5
       void writeHydroBlock(int Time_id, double **ed_in, double **sd_in, double **p_in, double **Temp_in, double **Vx_in, double **Vy_in, double **Pi00_in, double **Pi01_in, double **Pi02_in, double **Pi03_in, double **Pi11_in, double **Pi12_in, double **Pi13_in, double **Pi22_in, double **Pi23_in, double **Pi33_in, double ** BulkPi_in);
       void CSH5dumpBlockdata(hid_t group_id, const hsize_t * dims, string DatasetName, double** Dataset);
 
+      // functions to read hdf5 files
       void readHydroinfoH5(string filename, int bufferSize_in, int Visflag_in);
       void readHydrogridInfo();
       void printHydrogridInfo();

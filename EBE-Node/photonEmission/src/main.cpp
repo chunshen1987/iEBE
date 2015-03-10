@@ -38,8 +38,7 @@ int main(int argc, char** argv)
 
   int bufferSize = paraRdr->getVal("HydroinfoBuffersize");
   int hydroInfoVisflag = paraRdr->getVal("HydroinfoVisflag");
-  HydroinfoH5* hydroinfo_ptr = new HydroinfoH5();
-  hydroinfo_ptr->readHydroinfoH5("results/JetData.h5", bufferSize, hydroInfoVisflag); //hydro data file pointer
+  HydroinfoH5* hydroinfo_ptr = new HydroinfoH5("results/JetData.h5", bufferSize, hydroInfoVisflag);   //hydro data file pointer
   int neta = paraRdr->getVal("neta");
   double eta_i = paraRdr->getVal("eta_i");
   double eta_f = paraRdr->getVal("eta_f");
