@@ -4,7 +4,7 @@ controlParameterList = {
 }
 
 centralityParameters = {
-    'centrality': '20-30%',  # centrality bin
+    'centrality': '0-40%',  # centrality bin
     'cut_type': 'total_entropy',
     # centrality cut variable: total_entropy or Npart
 }
@@ -44,6 +44,7 @@ iSSParameters = {
     'number_of_repeated_sampling'   :   10,
     'y_LB'                          :   -2.5,
     'y_RB'                          :   2.5,
+    'sample_y_minus_eta_s_range'    :   2.0,
 }
 
 photonEmissionParameters = {

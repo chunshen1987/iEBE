@@ -4,7 +4,7 @@ controlParameterList = {
 }
 
 centralityParameters = {
-    'centrality': '20-30%',  # centrality bin
+    'centrality': '0-40%',  # centrality bin
     'cut_type': 'total_entropy',
     # centrality cut variable: total_entropy or Npart
 }
@@ -19,6 +19,7 @@ superMCParameters = {
     'alpha'                         :   0.118,
     'lambda'                        :   0.218,
     'operation'                     :   1,
+    'cc_fluctuation_model'          :   6,
 }
 
 # only effective when simulation_type == hydroEM_preEquilibrium
