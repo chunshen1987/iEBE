@@ -19,6 +19,7 @@ superMCParameters = {
     'alpha'                         :   0.118,
     'lambda'                        :   0.218,
     'operation'                     :   1,
+    'cc_fluctuation_model'          :   6,
 }
 
 # only effective when simulation_type == hydroEM_preEquilibrium
