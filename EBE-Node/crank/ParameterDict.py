@@ -1,5 +1,5 @@
 controlParameterList = {
-    'simulation_type'       :   'hydroEM_with_decaycocktail', # 'hybrid' or 'hydro'
+    'simulation_type'       :   'hydroEM_with_decaycocktail', # 'hybrid', 'hydro', 'hydroEM', 'hydroEM_with_decaycocktail', 'hydroEM_preEquilibrium'
     'niceness'              :   0,       # range from 0 to 19 for process priority, 0 for the highest priority
 }
 
@@ -21,6 +21,7 @@ superMCParameters = {
     'operation'                     :   1,
 }
 
+# only effective when simulation_type == hydroEM_preEquilibrium
 preEquilibriumParameters = {
     'event_mode'            :    1,  
     'taumin'                :    0.6,
@@ -30,10 +31,10 @@ preEquilibriumParameters = {
 
 hydroParameters = {
     'vis'       :   0.08,
-    'T0'        :   0.6, # tau_0
+    'T0'        :   0.6,      # tau_0
     'Edec'      :   0.18,
     'IhydroJetoutput' :   1,  # switch for output hydro evolution history into hdf5 file
-    'InitialURead'    :   0,
+    'InitialURead'    :   0,  # set it to be 1 when simulation_type == hydroEM_preEquilibrium
 }
 
 iSSParameters = {

@@ -16,7 +16,6 @@ FFLAGS= -O3 -cpp -lm -lz -fno-align-commons
 RM		=	rm -f
 O               =       .o
 LDFLAGS         =       $(FFLAGS) 
-LIBSHDF         =       -L/usr/local/hdf5/lib /usr/local/hdf5/lib/libhdf5hl_fortran.a /usr/local/hdf5/lib/libhdf5_hl.a /usr/local/hdf5/lib/libhdf5_fortran.a /usr/local/hdf5/lib/libhdf5.a 
 LIBSHDF         =  
 SYSTEMFILES     =       $(SRCGNU)
 
