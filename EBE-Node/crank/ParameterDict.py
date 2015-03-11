@@ -44,6 +44,7 @@ iSSParameters = {
     'number_of_repeated_sampling'   :   10,
     'y_LB'                          :   -2.5,
     'y_RB'                          :   2.5,
+    'sample_y_minus_eta_s_range'    :   2.0,
 }
 
 photonEmissionParameters = {
