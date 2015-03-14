@@ -4,7 +4,7 @@ controlParameterList = {
 }
 
 centralityParameters = {
-    'centrality': '0-40%',  # centrality bin
+    'centrality': '0-5%',  # centrality bin
     'cut_type': 'total_entropy',
     # centrality cut variable: total_entropy or Npart
 }
@@ -12,9 +12,9 @@ centralityParameters = {
 superMCParameters = {
     'which_mc_model'                :   5,
     'sub_model'                     :   1,
-    'Aproj'                         :   208,
+    'Aproj'                         :   1,
     'Atarg'                         :   208,
-    'ecm'                           :   2760,
+    'ecm'                           :   5020,
     'finalFactor'                   :   56.763,
     'alpha'                         :   0.118,
     'lambda'                        :   0.218,
