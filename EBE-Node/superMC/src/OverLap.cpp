@@ -1,17 +1,23 @@
 #include <cstdlib>
 #include <cmath>
 #include <algorithm>
+#include <sstream>
+#include <string>
+#include <cstdlib>
 
 #include "MathBasics.h"
 #include "OverLap.h"
+#include "ParameterReader.h"
 
 using namespace std;
 
 //CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 // --- initializes parameters for WS/Hulthen density distribution of a nucleus
 //     function getRandomWS(x,y,z) then returns sampled nucleon coordinate
-OverLap::OverLap(int a, double signnin, int deformed_in)
+OverLap::OverLap(ParameterReader* paraRdr_in, int a, double signnin, int deformed_in)
 {
+  paraRdr = paraRdr_in;
+
   // save atomic # of nucleus for later; can be recalled using: getAtomic()
   deformed = deformed_in;
   A = (double)a;
@@ -105,11 +111,27 @@ OverLap::OverLap(int a, double signnin, int deformed_in)
   {
     readin_triton_position();
   }
+
+  flag_NN_correlation = paraRdr->getVal("include_NN_correlation");
+  if(flag_NN_correlation == 1)
+  {
+     readin_nucleon_positions();
+  }
   
 }
 
 OverLap::~OverLap()
 {
+   if(flag_NN_correlation == 1)
+   {
+      for(int iconf = 0; iconf < n_configuration; iconf++)
+      {
+         for(int ia = 0; ia < atomic; ia++)
+            delete [] nucleon_pos_array[iconf][ia];
+         delete [] nucleon_pos_array[iconf];
+      }
+      delete [] nucleon_pos_array;
+   }
 }
 
 void OverLap::GetDeuteronPosition(double& x1,double& y1,double& z1,double& x2,double& y2,double& z2)
@@ -151,6 +173,50 @@ void OverLap::readin_triton_position()
        triton_pos.push_back(temp);
        triton_position >> x1 >> y1 >> z1 >> x2 >> y2 >> z2 >> x3 >> y3 >> z3;
    }
+}
+
+void OverLap::readin_nucleon_positions()
+{
+   cout << "read in nucleon positions with nucleon-nucleon correlation..." << flush;
+   ostringstream filename;
+   if(atomic == 197)
+   {
+      filename << "tables/au197-sw-full_3Bchains-conf1820.dat";
+      n_configuration = 1820;
+   }
+   else if(atomic == 208)
+   {
+      //int temp = rand() % 10 + 1;
+      //filename << "tables/pb208-" << temp << ".dat";
+      int temp = 1;
+      filename << "tables/pb208-1.dat";
+      n_configuration = 10000;
+   }
+
+   nucleon_pos_array = new double** [n_configuration];
+   for(int iconf = 0; iconf < n_configuration; iconf++)
+   {
+      nucleon_pos_array[iconf] = new double* [atomic];
+      for(int ia = 0; ia < atomic; ia++)
+         nucleon_pos_array[iconf][ia] = new double [3];
+   }
+
+   ifstream input(filename.str().c_str());
+   for(int iconf = 0; iconf < n_configuration; iconf++)
+   {
+      for(int ia = 0; ia < atomic; ia++)
+      {
+         double x_local, y_local, z_local;
+         int isospin;
+         input >> x_local >> y_local >> z_local >> isospin;
+         nucleon_pos_array[iconf][ia][0] = x_local;
+         nucleon_pos_array[iconf][ia][1] = y_local;
+         nucleon_pos_array[iconf][ia][2] = z_local;
+      }
+   }
+   input.close();
+   cout << " done." << endl;
+
 }
 
 void OverLap::GetTritonPosition(double& x1,double& y1,double& z1,double &x2,double& y2,double& z2, double &x3, double &y3, double &z3)
@@ -225,11 +291,51 @@ void OverLap::getDeformRandomWS(double& x, double& y, double& z)
     y = r*sx*sin(phi);
     z = r*cx;
   }
+}
 
+void OverLap::get_nucleon_position_with_NN_correlation(double **nucleon_ptr)
+{
+   int i_configuration = rand() % n_configuration;  // pick the configuration
+   double** temp_nucleus = new double* [atomic];
+   for(int ia = 0; ia < atomic; ia++)
+      temp_nucleus[ia] = new double [3];
 
+   // first recenter the nucleus
+   double xcm = 0.0, ycm = 0.0, zcm = 0.0;
+   for(int ia = 0; ia < atomic; ia++)
+   {
+      xcm += nucleon_pos_array[i_configuration][ia][0];
+      ycm += nucleon_pos_array[i_configuration][ia][1];
+      zcm += nucleon_pos_array[i_configuration][ia][2];
+   }
+   for(int ia = 0; ia < atomic; ia++)
+   {
+      temp_nucleus[ia][0] = nucleon_pos_array[i_configuration][ia][0] - xcm/atomic;
+      temp_nucleus[ia][1] = nucleon_pos_array[i_configuration][ia][1] - ycm/atomic;
+      temp_nucleus[ia][2] = nucleon_pos_array[i_configuration][ia][2] - zcm/atomic;
+   }
 
+   // then rotate a random angle
+   double cos_theta = 1.0-2.0*drand48();
+   double phi = 2*M_PI*drand48();
+   for(int ia = 0; ia < atomic; ia++)
+   {
+      Point3D p3d(temp_nucleus[ia][0], temp_nucleus[ia][1], temp_nucleus[ia][2]);
+      p3d.rotate(cos_theta, phi);
+      temp_nucleus[ia][0] = p3d.x; 
+      temp_nucleus[ia][1] = p3d.y; 
+      temp_nucleus[ia][2] = p3d.z;
+   }
 
+   // return back
+   for(int ia = 0; ia < atomic; ia++)
+      for(int ii = 0; ii < 3; ii++)
+         nucleon_ptr[ia][ii] = temp_nucleus[ia][ii];
 
+   // clean up
+   for(int ia = 0; ia < atomic; ia++)
+      delete [] temp_nucleus[ia];
+   delete [] temp_nucleus;
 }
 
 

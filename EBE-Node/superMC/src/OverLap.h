@@ -6,10 +6,14 @@
 #include <cmath>
 #include <vector>
 #include <fstream>
+#include "ParameterReader.h"
 #include "HulthenFunc.h"
 
 class OverLap
 {
+private:
+    ParameterReader* paraRdr;
+
 protected:
     int deformed;
     double rad,rmaxCut,rwMax;
@@ -30,9 +34,13 @@ protected:
     HulthenFunc sample_deuteron;
     vector< vector<double> > triton_pos;
 
+    int flag_NN_correlation;
+    int n_configuration;
+    double*** nucleon_pos_array;
+
 public:
     // a=atomic number, b=impact parameter [fm], sigin: [mb]
-    OverLap(int a, double signn, int deformed=0);
+    OverLap(ParameterReader* paraRdr_in, int a, double signn, int deformed=0);
     virtual ~OverLap();
     int    getAtomic() {return atomic;}
 
@@ -45,6 +53,8 @@ public:
     void getDeformRandomWS(double& x, double& y, double& z);
     void setRotation(double costheta, double phi) {ctr=costheta; phir=phi;}
     double SphericalHarmonics(int l, double theta);
+    void readin_nucleon_positions();
+    void get_nucleon_position_with_NN_correlation(double **nucleon_ptr);
 
     // nucleon positions for light nuclei
     void GetDeuteronPosition(double& x1,double& y1,double& z1,double& x2,double& y2,double& z2);

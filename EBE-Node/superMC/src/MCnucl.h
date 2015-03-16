@@ -72,6 +72,8 @@ protected:
     ParameterReader* paraRdr;
     int shape_of_nucleons;
 
+    int flag_NN_correlation;
+
     // add by Kelvin Welsh
     int shape_of_entropy;
     //quark_width^2 + quark_dist_width^2 = nucleon_width^2

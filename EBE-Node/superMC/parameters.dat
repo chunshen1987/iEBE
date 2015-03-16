@@ -33,6 +33,8 @@ Atarg = 208               # Target atomic number
 proj_deformed = 0         # (0) Spherical nucleus; (1) Deformed nucleus (see OverLap.cpp)
 targ_deformed = 0         # (0) Spherical nucleus; (1) Deformed nucleus (see OverLap.cpp) 
 
+include_NN_correlation = 1   # whether or not to include nucleon-nucleon correlation 
+                             # when sample the nucleon position inside the nucleus
 
 # Nucleon Optns
 shape_of_nucleons = 2     # (1) Disk-like nucleons with width given by sigmaNN 
@@ -51,11 +53,11 @@ gauss_nucl_width = 0.5    # 4-> User specified width for Gaussian nucleons
 
 
 # Collision Optns
-ecm = 2760                # Beam Energy sqrt(s) in GeV
+ecm = 2760                 # Beam Energy sqrt(s) in GeV
 bmin = 0.0                  # Minimum sampled impact parameter
-bmax = 20.0                  # Maximum sampled impact parameter
+bmax = 15.0                  # Maximum sampled impact parameter
 Npmin = 1                 # Minimum participant nucleon cut
-Npmax = 500              # Maximum participant nucleon cut
+Npmax = 500               # Maximum participant nucleon cut
 
 cutdSdy = 0               # cut centrality with additional requirements on total entropy density (without normalization factor)
 cutdSdy_lowerBound =  593.51          # lower bound of the allowed total entropy density
@@ -63,7 +65,7 @@ cutdSdy_upperBound =  889.53       # upper bound of the allowed total entropy de
 
 
 # Monte Carlo Optns
-nev = 1               # Number of collision events simulated
+nev = 1                   # Number of collision events simulated
 randomSeed = -1           # If randomSeed < 0 then CPU time is used to seed
 backup_number = 100000     # Backs up the averaged profile every "n" events. 0 means 
                           # every step. Use a neg number to turn it off
@@ -118,14 +120,14 @@ ny = 1                    # Number of rapidity bins (do not set to zero)
 ymax = 0                  # Maximum rapidity value (symmetric -ymax to ymax)
 
 # CC fluctions
-cc_fluctuation_model = 0  # 0: no fluctuations; 1: NBD constant k; 2: NBD use TA TB to determine n; 6: MCGlb: Gamma distribution for each collision and wounded nucleon
+cc_fluctuation_model = 6  # 0: no fluctuations; 1: NBD constant k; 2: NBD use TA TB to determine n; 6: MCGlb: Gamma distribution for each collision and wounded nucleon
 cc_fluctuation_k = 0.75   # constant k; used when cc_fluctuation_model is set to 1.
 cc_fluctuation_Gamma_theta = 0.9175    # the scale parameter for Gamma distribution theta = 0.9175 (from KNO scaling)
 
 # For jet calculations
-output_TATB = 0           # 1: output; 0: no output; only effective when generating averaged profiles
-output_rho_binary = 0     # 1: output binary collision density
-output_TA = 0             # 1: output nuclear thickness function
+output_TATB = 1           # 1: output; 0: no output; only effective when generating averaged profiles
+output_rho_binary = 1     # 1: output binary collision density
+output_TA = 1             # 1: output nuclear thickness function
 
 generate_reaction_plane_avg_profile = 0    # switch to generate smooth event-averaged 
                                            # profile with respect to reaction plane defined 

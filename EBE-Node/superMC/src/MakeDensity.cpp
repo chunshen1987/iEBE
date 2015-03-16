@@ -77,8 +77,8 @@ MakeDensity::MakeDensity(ParameterReader *paraRdr_in)
   Operation = paraRdr->getVal("operation");
 
   // generate proj+targ MC thickness functions
-  proj = new OverLap(Anucl1,siginNN,paraRdr->getVal("proj_deformed"));
-  targ = new OverLap(Anucl2,siginNN,paraRdr->getVal("targ_deformed"));
+  proj = new OverLap(paraRdr, Anucl1, siginNN, paraRdr->getVal("proj_deformed"));
+  targ = new OverLap(paraRdr, Anucl2, siginNN, paraRdr->getVal("targ_deformed"));
 
   // overlap proj+targ on transverse grid
   mc = new MCnucl(paraRdr);

@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
   gettimeofday(&a, 0);
   int randomSeed=paraRdr.getVal("randomSeed");
   if (randomSeed<0) randomSeed=a.tv_usec; // randomSeed<0 means to use CPU clock
+  srand(randomSeed);  
   srand48(randomSeed);
 
   MakeDensity *dens = new MakeDensity(&paraRdr);

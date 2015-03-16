@@ -134,6 +134,9 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in)
 
   Xcm=0.0, Ycm=0.0, angPart=0.0;
 
+  // flag to include nucleon-nucleon correlation when sampled the nucleon positions
+  flag_NN_correlation = paraRdr->getVal("include_NN_correlation");
+
 }
 
 
@@ -212,39 +215,80 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
     }
     else 
     {
-      // for large nuclei
-      for(int ia=0;ia<nn;ia++) {
-        double x,y,z;
-        int icon=0;
-        do {
-          proj->getDeformRandomWS(x,y,z);
-          icon=0;
-          for(int i=ie*nn; i<(int)nucl1.size();i++) {
-            double x1=nucl1[i]->getX();
-            double y1=nucl1[i]->getY();
-            double z1=nucl1[i]->getZ();
-            double r2 = (x-x1)*(x-x1) + (y-y1)*(y-y1) + (z-z1)*(z-z1);
-            if(r2 < rmin) {
-              icon=1;
-              break;
-            }
+       if(flag_NN_correlation == 0)
+       {
+          // for large nuclei
+          for(int ia=0;ia<nn;ia++) {
+            double x,y,z;
+            int icon=0;
+            do {
+              proj->getDeformRandomWS(x,y,z);
+              icon=0;
+              for(int i=ie*nn; i<(int)nucl1.size();i++) {
+                double x1=nucl1[i]->getX();
+                double y1=nucl1[i]->getY();
+                double z1=nucl1[i]->getZ();
+                double r2 = (x-x1)*(x-x1) + (y-y1)*(y-y1) + (z-z1)*(z-z1);
+                if(r2 < rmin) {
+                  icon=1;
+                  break;
+                }
+              }
+            } while(icon==1);
+
+            xcm +=x;
+            ycm +=y;
+            zcm +=z;
+            nucl1.push_back(new Particle(x,y,z));
           }
-        } while(icon==1);
 
-        xcm +=x;
-        ycm +=y;
-        zcm +=z;
-        nucl1.push_back(new Particle(x,y,z));
-      }
+          for(int ia=0;ia<nn;ia++) { // shift center of nucleus
+            double x = nucl1[ia]->getX() - xcm/nn + b/2.0;
+            double y = nucl1[ia]->getY() - ycm/nn;
+            double z = nucl1[ia]->getZ() - zcm/nn;
+            nucl1[ia]->setX(x);
+            nucl1[ia]->setY(y);
+            nucl1[ia]->setZ(z);
+          }
+       }
+       else  // load nucleon positions from file
+       {
+          double **nucleon_positions = new double* [nn];
+          for(int inucleon = 0; inucleon < nn; inucleon++)
+          {
+             nucleon_positions[inucleon] = new double [3];
+          }
+          proj->get_nucleon_position_with_NN_correlation(nucleon_positions);
 
-      for(int ia=0;ia<nn;ia++) { // shift center of nucleus
-        double x = nucl1[ia]->getX() - xcm/nn + b/2.0;
-        double y = nucl1[ia]->getY() - ycm/nn;
-        double z = nucl1[ia]->getZ() - zcm/nn;
-        nucl1[ia]->setX(x);
-        nucl1[ia]->setY(y);
-        nucl1[ia]->setZ(z);
-      }
+          double xcm = 0.0, ycm = 0.0, zcm = 0.0;
+          for(int ia = 0; ia < nn; ia++)
+          {
+             double x_local = nucleon_positions[ia][0];
+             double y_local = nucleon_positions[ia][1];
+             double z_local = nucleon_positions[ia][2];
+             xcm += x_local;
+             ycm += y_local;
+             zcm += z_local;
+             nucl1.push_back(new Particle(x_local, y_local, z_local));
+          }
+          
+          for(int ia = 0; ia < nn; ia++)
+          {
+             double x_local = nucl1[ia]->getX() - xcm/nn + b/2.0;
+             double y_local = nucl1[ia]->getY() - ycm/nn;
+             double z_local = nucl1[ia]->getZ() - zcm/nn;
+             nucl1[ia]->setX(x_local);
+             nucl1[ia]->setY(y_local);
+             nucl1[ia]->setZ(z_local);
+          }
+
+          // clean up
+          for(int inucleon = 0; inucleon < nn; inucleon++)
+          {
+             delete [] nucleon_positions[inucleon];
+          }
+          delete [] nucleon_positions;
+       }
     }
 
 
@@ -275,38 +319,79 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
     }
     else 
     {
-      for(int ia=0;ia<nn;ia++) {
-        double x,y,z;
-        int icon=0;
-        do {
-          targ->getDeformRandomWS(x,y,z);
-          icon=0;
-          for(int i=ie*nn; i<(int)nucl2.size();i++) {
-            double x1=nucl2[i]->getX();
-            double y1=nucl2[i]->getY();
-            double z1=nucl2[i]->getZ();
-            double r2 = (x-x1)*(x-x1) + (y-y1)*(y-y1) + (z-z1)*(z-z1);
-            if(r2 < rmin) {
-              icon=1;
-              break;
-            }
+       if(flag_NN_correlation == 0)
+       {
+          for(int ia=0;ia<nn;ia++) {
+            double x,y,z;
+            int icon=0;
+            do {
+              targ->getDeformRandomWS(x,y,z);
+              icon=0;
+              for(int i=ie*nn; i<(int)nucl2.size();i++) {
+                double x1=nucl2[i]->getX();
+                double y1=nucl2[i]->getY();
+                double z1=nucl2[i]->getZ();
+                double r2 = (x-x1)*(x-x1) + (y-y1)*(y-y1) + (z-z1)*(z-z1);
+                if(r2 < rmin) {
+                  icon=1;
+                  break;
+                }
+              }
+            } while(icon==1);
+
+            xcm +=x;
+            ycm +=y;
+            zcm +=z;
+            nucl2.push_back(new Particle(x,y,z));
           }
-        } while(icon==1);
 
-        xcm +=x;
-        ycm +=y;
-        zcm +=z;
-        nucl2.push_back(new Particle(x,y,z));
-      }
+          for(int ia=0;ia<nn;ia++) {
+            double x = nucl2[ia]->getX() - xcm/nn - b/2.0;
+            double y = nucl2[ia]->getY() - ycm/nn;
+            double z = nucl2[ia]->getZ() - zcm/nn;
+            nucl2[ia]->setX(x);
+            nucl2[ia]->setY(y);
+            nucl2[ia]->setZ(z);
+          }
+       }
+       else  // load nucleon positions from file
+       {
+          double **nucleon_positions = new double* [nn];
+          for(int inucleon = 0; inucleon < nn; inucleon++)
+          {
+             nucleon_positions[inucleon] = new double [3];
+          }
+          targ->get_nucleon_position_with_NN_correlation(nucleon_positions);
 
-      for(int ia=0;ia<nn;ia++) {
-        double x = nucl2[ia]->getX() - xcm/nn - b/2.0;
-        double y = nucl2[ia]->getY() - ycm/nn;
-        double z = nucl2[ia]->getZ() - zcm/nn;
-        nucl2[ia]->setX(x);
-        nucl2[ia]->setY(y);
-        nucl2[ia]->setZ(z);
-      }
+          double xcm = 0.0, ycm = 0.0, zcm = 0.0;
+          for(int ia = 0; ia < nn; ia++)
+          {
+             double x_local = nucleon_positions[ia][0];
+             double y_local = nucleon_positions[ia][1];
+             double z_local = nucleon_positions[ia][2];
+             xcm += x_local;
+             ycm += y_local;
+             zcm += z_local;
+             nucl2.push_back(new Particle(x_local, y_local, z_local));
+          }
+
+          for(int ia = 0; ia < nn; ia++)
+          {
+             double x_local = nucl2[ia]->getX() - xcm/nn - b/2.0;
+             double y_local = nucl2[ia]->getY() - ycm/nn;
+             double z_local = nucl2[ia]->getZ() - zcm/nn;
+             nucl2[ia]->setX(x_local);
+             nucl2[ia]->setY(y_local);
+             nucl2[ia]->setZ(z_local);
+          }
+
+          // clean up
+          for(int inucleon = 0; inucleon < nn; inucleon++)
+          {
+             delete [] nucleon_positions[inucleon];
+          }
+          delete [] nucleon_positions;
+       }
     }
   }
 
