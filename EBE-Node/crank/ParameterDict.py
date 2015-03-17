@@ -12,14 +12,14 @@ centralityParameters = {
 superMCParameters = {
     'which_mc_model'                :   5,
     'sub_model'                     :   1,
-    'Aproj'                         :   208,
+    'Aproj'                         :   1,
     'Atarg'                         :   208,
-    'ecm'                           :   2760,
+    'ecm'                           :   5020,
     'finalFactor'                   :   56.763,
     'alpha'                         :   0.118,
     'lambda'                        :   0.218,
     'operation'                     :   1,
-    'include_NN_correlation'        :   1,
+    'include_NN_correlation'        :   0,
     'cc_fluctuation_model'          :   6,
 }
 
@@ -52,7 +52,7 @@ photonEmissionParameters = {
     'dx'          :   0.5,
     'dy'          :   0.5,
     'dTau'        :   0.1,
-    'T_sw_high'   :   0.170,
-    'T_sw_low'    :   0.150,
+    'T_sw_high'   :   0.180,
+    'T_sw_low'    :   0.1795,
     'calHGIdFlag' :   0,
 }

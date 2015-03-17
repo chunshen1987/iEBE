@@ -197,7 +197,11 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
     lastCx1=cx;
     lastPh1=phi;
     proj ->setRotation(cx, phi);
-    if (nn==2) // in the case of a deuteron (added by Brian Baker)
+    if (nn == 1)
+    {
+      nucl1.push_back(new Particle(b/2.0, 0.0, 0.0)); // shift along x-axis
+    }
+    else if (nn==2) // in the case of a deuteron (added by Brian Baker)
     {
       double x1, y1, z1, x2, y2, z2;
          
@@ -301,6 +305,10 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
     targ->setRotation(cx, phi);
     lastCx2=cx;
     lastPh2=phi;
+    if (nn == 1)
+    {
+      nucl2.push_back(new Particle(-b/2.0, 0.0, 0.0)); // shift along x-axis
+    }
     if (nn==2) // in the case of a deuteron (added by Brian Baker)
     {
       double x1, y1, z1, x2, y2, z2;
