@@ -20,6 +20,6 @@ use_historic_format = 0           # output results in old AZspectra format
                                   # grouping particle option is only enable when it is set to 0
 
 grouping_particles = 1            # group particles with the same mass and chemical potentials to speed up calculations
-particle_diff_tolerance = 0.01    # grouping particle tolerance
+particle_diff_tolerance = 0.001   # grouping particle tolerance
 
 calculate_dEd3p = 0               # calculate dE/d3p matrix for particles
