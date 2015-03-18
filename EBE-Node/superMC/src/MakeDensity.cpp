@@ -154,8 +154,8 @@ MakeDensity::~MakeDensity()
 void MakeDensity::generate_profile_ebe_Jet(int nevent)
 {
   // binary profile:
-  char file_binary[] = "data/BinaryCollisionTable_event_%d.dat";
-  char file_participant[] = "data/ParticipantTable_event_%d.dat";
+  char file_binary[] = "data/BinaryCollisionTable_event_%d_list.dat";
+  char file_participant[] = "data/ParticipantTable_event_%d_list.dat";
 
   // entropy profile:
   char file1_ecc[] = "data/sn_ecc_eccp_%%d_event_%d.dat";
@@ -196,7 +196,7 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
 
   // binary density profile (rotated using entropy density):
   char file_rho_binary_4col[] = "data/rho_binary_event_%d_4col.dat";
-  char file_rho_binary_block[] = "data/rho_binary_event_%d_block.dat";
+  char file_rho_binary_block[] = "data/rho_binary_event_%d_blk.dat";
   double ***rho_binary_sd = new double** [binRapidity];
   for(int iy=0;iy<binRapidity;iy++)
   {
@@ -210,7 +210,7 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
   }
   // nuclear thickness function profile
   char file_TA_4col[] = "data/nuclear_thickness_TA_event_%d_4col.dat";
-  char file_TA_block[] = "data/nuclear_thickness_TA_event_%d_block.dat";
+  char file_TA_block[] = "data/nuclear_thickness_TA_event_%d_blk.dat";
   double ***nuclear_TA_sd = new double** [binRapidity];
   for(int iy=0;iy<binRapidity;iy++)
   {
@@ -223,7 +223,7 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
     }
   }
   char file_TB_4col[] = "data/nuclear_thickness_TB_event_%d_4col.dat";
-  char file_TB_block[] = "data/nuclear_thickness_TB_event_%d_block.dat";
+  char file_TB_block[] = "data/nuclear_thickness_TB_event_%d_blk.dat";
   double ***nuclear_TB_sd = new double** [binRapidity];
   for(int iy=0;iy<binRapidity;iy++)
   {

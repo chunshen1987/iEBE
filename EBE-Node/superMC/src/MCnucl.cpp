@@ -1376,7 +1376,7 @@ void MCnucl::dumpSpectatorsTable(int event)
   double x, y, rap;
   ostringstream of_stream; 
   ofstream of;
-  of_stream << "data/Spectators_event_" << event << ".dat";
+  of_stream << "data/Spectators_event_" << event << "_list.dat";
   
   of.open(of_stream.str().c_str());
   for (int idx=0; idx<spectators.size(); idx++)

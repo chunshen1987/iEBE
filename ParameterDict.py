@@ -18,7 +18,7 @@ superMCParameters = {
     'finalFactor'                   :   56.763,
     'alpha'                         :   0.118,
     'lambda'                        :   0.218,
-    'operation'                     :   1,
+    'operation'                     :   2,
     'include_NN_correlation'        :   0,
     'cc_fluctuation_model'          :   6,
 }
