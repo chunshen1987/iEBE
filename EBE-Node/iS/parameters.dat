@@ -1,0 +1,25 @@
+hydro_mode = 0                    # mode for reading in freeze out information 
+                                  # 0: reads outputs from VISH2+1
+                                  # 1: reads outputs from MUSIC assuming boost-invariant
+                                  # 2: reads outputs from MUSIC full (3+1)-d
+
+turn_on_muB = 0                   # include net baryon chemical potential
+turn_on_bulk = 0                  # include bulk viscous corrections in delta f
+bulk_deltaf_kind = 1              # type of bulk delta f
+                                  # 0: 14 moment method (old)
+                                  # 1: relaxation method
+                                  # 2: 14 moment method (alpha = 0)
+                                  # 3: 14 moment method (alpha = 1/2)
+                                  # 4: 14 moment method (alpha = 1)
+
+turn_on_shear = 1                 # include shear viscous corrections in delta f
+f0_is_not_small = 1               # include (1 \pm f_0) factor in delta f
+
+
+use_historic_format = 0           # output results in old AZspectra format
+                                  # grouping particle option is only enable when it is set to 0
+
+grouping_particles = 1            # group particles with the same mass and chemical potentials to speed up calculations
+particle_diff_tolerance = 0.001   # grouping particle tolerance
+
+calculate_dEd3p = 0               # calculate dE/d3p matrix for particles

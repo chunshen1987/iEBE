@@ -88,6 +88,7 @@ superMCParameters = {
     'alpha'                         :   0.118,
     'lambda'                        :   0.288,
     'operation'                     :   1,
+    'include_NN_correlation'        :   1,
     'cc_fluctuation_model'          :   6,
 }
 
@@ -242,7 +243,7 @@ def translate_centrality_cut():
         multiplicity_fluctuation = 'withMultFluct'
     else:
         multiplicity_fluctuation = 'noMultFluct'
-
+    
     collision_energy = str(superMCParameters['ecm'])
 
     Aproj = superMCParameters['Aproj']
@@ -262,11 +263,18 @@ def translate_centrality_cut():
         nucleus_name = (nucleus_name_dict[min(Aproj, Atrag)]
                         + nucleus_name_dict[max(Aproj, Atrag)])
 
-    centrality_cut_file_name = (
-        'iebe_centralityCut_%s_%s_sigmaNN_gauss_d0.9_%s.dat'
-        % (cut_type, model_name + nucleus_name + collision_energy,
-           multiplicity_fluctuation)
-    )
+    if superMCParameters['include_NN_correlation'] != 0:
+        centrality_cut_file_name = (
+            'iebe_centralityCut_%s_%s_sigmaNN_gauss_d0.9_%s_withNNcorrelation.dat'
+            % (cut_type, model_name + nucleus_name + collision_energy,
+               multiplicity_fluctuation)
+        )
+    else:
+        centrality_cut_file_name = (
+            'iebe_centralityCut_%s_%s_sigmaNN_gauss_d0.9_%s.dat'
+            % (cut_type, model_name + nucleus_name + collision_energy,
+               multiplicity_fluctuation)
+        )
 
     try:
         centrality_cut_file = np.loadtxt(

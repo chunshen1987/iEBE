@@ -2,9 +2,9 @@ Xmin = -13.0                  # minimum points along x direction
 dx = 0.5                      # lattice spacing along x direction
 Ymin = -13.0                  # minimum points along y direction
 dy = 0.5                      # lattice spacing along y direction
-dTau = 0.02                   # lattice spacing along tau direction
+dTau = 0.04                   # lattice spacing along tau direction
 
-neta = 20                     # number of points in eta direction
+neta = 10                     # number of points in eta direction
 eta_i = 0.0                   # beginning value of eta slice
 eta_f = 3.0                   # end value of eta slice
 
@@ -21,11 +21,9 @@ photon_y_f = 0.0              # the largest photon rapidity
 
 norder = 10                   # calculate photon vn to norder
 
-deltaf_alpha = 2.0            # p-dependence of the delta f corrections to external particles
-
 T_dec = 0.120                 # freeze out temperature
-T_sw_high = 0.220             # high end of the switching temperature
-T_sw_low = 0.184              # low end of the switching temperature
+T_sw_high = 0.170             # high end of the switching temperature
+T_sw_low = 0.169              # low end of the switching temperature
 
 calHGIdFlag = 0               # Flag to decide whether to calculate individual HG channels
 
@@ -34,8 +32,13 @@ PhotonemRatetableInfo_Tmin = 0.10   # minimum temperature in the photon rate tab
 PhotonemRatetableInfo_dE = 0.05     # lattice space of energy in the photon rate tables
 PhotonemRatetableInfo_dT = 0.002    # lattice space of temperature in the photon rate tables
 
-tau_start = 0.6              # emission start time
-
 HydroinfoVisflag = 1         # determine whether to read in the viscous evolution information
-HydroinfoBuffersize = 600    # set the buffer size for hydro evolution profile
+HydroinfoBuffersize = 500    # set the buffer size for hydro evolution profile
 
+differential_flag = 0        # determine whether to output photon yield and vn differential in T and tau
+nTcut = 50                   # number of points in T
+T_cuthigh = 0.5              # maximum allowed emission T (GeV)
+T_cutlow = 0.12              # minimum allowed emission T (GeV)
+nTaucut = 50                 # number of points in tau
+tau_start = 0.6              # emission start time (fm)
+tau_end = 15.0               # emission end time (fm)

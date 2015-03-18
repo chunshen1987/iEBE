@@ -690,6 +690,7 @@ CSHEN===EOS from tables end====================================================
           CPi12 = Pi12(I,J,1)    
           CPi22 = Pi22(I,J,1)     
           CPi33 = Pi33(I,J,1)    
+          CPPI = PPI(I,J,1)
 
           WRITE(99,'(99E20.8E3)') Time,DA0,DA1,DA2,VZCM,VRCM,
      &                  Ed(I,J,1)*HbarC,BN,
@@ -697,6 +698,7 @@ CSHEN===EOS from tables end====================================================
      &                  CPi33*HbarC,
      &                  CPi00*HbarC,CPi01*HbarC,CPi02*HbarC,
      &                  CPi11*HbarC,CPi12*HbarC,CPi22*HbarC
+     &                  CPPI*HbarC
           
           TM = Time
           XM = XX
