@@ -16,9 +16,11 @@ try:
     # set parameters
     numberOfJobs = int(argv[1])
     numberOfEventsPerJob = int(argv[2])
+    # cluster name
+    cluster_name = str(argv[3])
 
     # set optional parameters
-    argId = 2
+    argId = 3
 
     argId += 1
     if len(argv)>=argId+1: # set working folder
@@ -38,8 +40,6 @@ try:
     else:
         walltime = "%d:00:00" % (2*numberOfEventsPerJob) # 3 hours per job
     
-    # cluster name
-    cluster_name = "jack"
 
     argId += 1
     if len(argv)>=argId+1: # whether to compress final results folder
@@ -47,7 +47,7 @@ try:
     else:
         compressResultsFolderAnswer = "yes"
 except:
-    print('Usage: generateJobs.py number_of_jobs number_of_events_per_job [working_folder="./PlayGround"] [results_folder="./RESULTS"] [walltime="03:00:00" (per event)] [compress_results_folder="yes"]')
+    print('Usage: generateJobs.py number_of_jobs number_of_events_per_job cluster_name [working_folder="./PlayGround"] [results_folder="./RESULTS"] [walltime="03:00:00" (per event)] [compress_results_folder="yes"]')
     exit()
 
 # save config files

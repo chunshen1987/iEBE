@@ -10,16 +10,15 @@ centralityParameters = {
 }
 
 superMCParameters = {
-    'which_mc_model'                :   5,
-    'sub_model'                     :   1,
-    'Aproj'                         :   208,
-    'Atarg'                         :   208,
-    'ecm'                           :   2760,
+    'model_name'                    :   'MCGlb',    # MCGlb or MCKLN
+    'Aproj'                         :   2,
+    'Atarg'                         :   197,
+    'ecm'                           :   200,
     'finalFactor'                   :   56.763,
-    'alpha'                         :   0.118,
-    'lambda'                        :   0.218,
+    'alpha'                         :   0.118,      # WN/BC mixing ratio in MCGlb
+    'lambda'                        :   0.218,      # saturation scale parameter in MCKLN
     'operation'                     :   1,
-    'include_NN_correlation'        :   0,
+    'include_NN_correlation'        :   1,
     'cc_fluctuation_model'          :   6,
 }
 

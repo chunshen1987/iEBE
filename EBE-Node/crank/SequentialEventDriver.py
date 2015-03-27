@@ -69,6 +69,7 @@ superMCControl = {
     'executable'                    :   'superMC.e',
 }
 superMCParameters = {
+    'model_name'                    :   'MCGlb',
     'which_mc_model'                :   5,
     'sub_model'                     :   1,
     'Npmin'                         :   0,
@@ -234,15 +235,24 @@ def translate_centrality_cut():
     centrality_upper_bound = float(
         centrality_string.split('-')[1].split('%')[0])
 
-    if superMCParameters['which_mc_model'] == 5:
+    if superMCParameters['model_name'] == 'MCGlb':
+        superMCParameters['which_mc_model'] == 5
+        superMCParameters['sub_model'] == 1
         model_name = 'MCGlb'
-    elif superMCParameters['which_mc_model'] == 1:
+    elif superMCParameters['model_name'] == 'MCKLN':
+        superMCParameters['which_mc_model'] == 1
+        superMCParameters['sub_model'] == 7
         model_name = 'MCKLN'
 
     if superMCParameters['cc_fluctuation_model'] != 0:
         multiplicity_fluctuation = 'withMultFluct'
     else:
         multiplicity_fluctuation = 'noMultFluct'
+    
+    if superMCParameters['include_NN_correlation'] != 0:
+        NNcorrelation = 'withNNcorrelation'
+    else:
+        NNcorrelation = 'd0.9'
     
     collision_energy = str(superMCParameters['ecm'])
 
@@ -263,18 +273,11 @@ def translate_centrality_cut():
         nucleus_name = (nucleus_name_dict[min(Aproj, Atrag)]
                         + nucleus_name_dict[max(Aproj, Atrag)])
 
-    if superMCParameters['include_NN_correlation'] != 0:
-        centrality_cut_file_name = (
-            'iebe_centralityCut_%s_%s_sigmaNN_gauss_d0.9_%s_withNNcorrelation.dat'
-            % (cut_type, model_name + nucleus_name + collision_energy,
-               multiplicity_fluctuation)
-        )
-    else:
-        centrality_cut_file_name = (
-            'iebe_centralityCut_%s_%s_sigmaNN_gauss_d0.9_%s.dat'
-            % (cut_type, model_name + nucleus_name + collision_energy,
-               multiplicity_fluctuation)
-        )
+    centrality_cut_file_name = (
+        'iebe_centralityCut_%s_%s_sigmaNN_gauss_%s_%s.dat'
+        % (cut_type, model_name + nucleus_name + collision_energy,
+           NNcorrelation, multiplicity_fluctuation)
+    )
 
     try:
         centrality_cut_file = np.loadtxt(
