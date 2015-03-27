@@ -28,8 +28,8 @@ glb_entropy_width = 0.5   # User specified gaussian width for the deposition of 
                           # in the Glauber model 
 
 # Nucleus Optns
-Aproj = 208               # Projectile atomic number
-Atarg = 208               # Target atomic number
+Aproj = 197               # Projectile atomic number
+Atarg = 197               # Target atomic number
 proj_deformed = 0         # (0) Spherical nucleus; (1) Deformed nucleus (see OverLap.cpp)
 targ_deformed = 0         # (0) Spherical nucleus; (1) Deformed nucleus (see OverLap.cpp) 
 
@@ -53,7 +53,7 @@ gauss_nucl_width = 0.5    # 4-> User specified width for Gaussian nucleons
 
 
 # Collision Optns
-ecm = 2760                 # Beam Energy sqrt(s) in GeV
+ecm = 200                 # Beam Energy sqrt(s) in GeV
 bmin = 0.0                  # Minimum sampled impact parameter
 bmax = 15.0                  # Maximum sampled impact parameter
 Npmin = 1                 # Minimum participant nucleon cut
