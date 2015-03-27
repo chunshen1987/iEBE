@@ -263,6 +263,7 @@ def translate_centrality_cut():
         197: 'Au',
         238: 'U',
         63: 'Cu',
+        27: 'Al',
         1: 'p',
         2: 'd',
         3: 'He',
