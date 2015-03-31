@@ -139,7 +139,7 @@ mv ./finalResults %s/job-%d
     tar -jcf job-%d.tar.bz2 job-%d
     rm -fr job-%d
 )
-""" % (resultsFolder, i, i)
+""" % (resultsFolder, i, i, i)
         )
 
 # add a data collector watcher
