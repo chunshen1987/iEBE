@@ -320,8 +320,10 @@ def translate_centrality_cut():
         superMCParameters['cutdSdy_upperBound'] = cut_value_upper
     elif cut_type == 'Npart':
         superMCParameters['cutdSdy'] = 0
-        b_min = min(centrality_cut_file[lower_idx-1:upper_idx+1, 4])
-        b_max = max(centrality_cut_file[lower_idx-1:upper_idx+1, 5])
+        b_min = min(centrality_cut_file[lower_idx-1:upper_idx+1, 2])
+        b_max = max(centrality_cut_file[lower_idx-1:upper_idx+1, 3])
+        npart_min = cut_value_low
+        npart_max = cut_value_upper
     superMCParameters['Npmax'] = npart_max
     superMCParameters['Npmin'] = npart_min
     superMCParameters['bmax'] = b_max
