@@ -2541,10 +2541,13 @@ C====eta/s dependent on local temperature==================================
       Common /ViscousC / ViscousC,VisBeta, IVisflag ! Related to Shear Viscosity
 
       TT_GeV = TT*HbarC
-      if(TT_GeV .gt. 0.165) then
+      Ttr = 0.18
+
+      if(TT_GeV .gt. Ttr) then
           ViscousCTemp = 0.08
       else
-          ViscousCTemp = 0.5 + (0.5 - 0.08)/(0.1 - 0.165)*(TT_GeV - 0.1)
+          ViscousCTemp = 0.681 - 0.0594*TT_GeV/Ttr 
+     &                   - 0.544*(TT_GeV/Ttr)**2.;
       endif
 
       return

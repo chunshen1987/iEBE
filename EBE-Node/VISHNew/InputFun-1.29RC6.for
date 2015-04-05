@@ -631,7 +631,7 @@
         If (varName=="ihydrojetoutput") IhydroJetoutput=IResult ! output hydro evolution
 
         If (varName=="visflag") IVisflag=IResult ! Flag for temperature dependent eta/s(T)
-        If (varName=="iniitalpitensor") Initialpitensor=IResult ! initialization of pi tensor
+        If (varName=="initialpitensor") Initialpitensor=IResult ! initialization of pi tensor
 
       End Do ! ArgIndex
 

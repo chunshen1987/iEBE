@@ -32,10 +32,12 @@ preEquilibriumParameters = {
 
 hydroParameters = {
     'vis'       :   0.08,
+    'visflag'   :   1,        # flag to use temperature dependent eta/s(T)
     'T0'        :   0.6,      # tau_0
     'Edec'      :   0.10,
     'IhydroJetoutput' :   1,  # switch for output hydro evolution history into hdf5 file
     'InitialURead'    :   0,  # set it to be 1 when simulation_type == hydroEM_preEquilibrium
+    'Initialpitensor' :   0,  # initialization of pi tensor
 }
 
 iSSParameters = {
