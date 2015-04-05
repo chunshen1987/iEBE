@@ -10,7 +10,7 @@
 *
 0.08        !ViscousC              eta/s (const.) (0: no shear viscosity)
 0.833333    !VisBeta               \tau_Pi=VisBeta*6.0\eta /(ST)
-0           !Flag for temperature dependent eta/s(T)
+1           !Flag for temperature dependent eta/s(T)
 0.0         !VisBulk               VisBulk=C;  Xi/s= C* (Xi/S)_min  (C=0, no bulk vis; or C>1 )
 2           !IRelaxBulk            type of bulk relaxation time (0: critical slowing down; 1: constant relaxation time; 2: 1.5/(2 Pi T))
 5.0         !BulkTau               constant relaxation time (fm/c) (require input IRelaxBulk=1)
@@ -33,7 +33,7 @@
 1           !IhydroJetoutput       switch for output hydro evolution history into hdf5 file
 *
 *
-1           !InitialURead
+0           !InitialURead
 *
 *
-0           !Initialization of pi^\mu\nu tensor 0: initialize by 0; 1: initialize by its NS value
+1           !Initialization of pi^\mu\nu tensor 0: initialize by 0; 1: initialize by its NS value

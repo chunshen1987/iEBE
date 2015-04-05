@@ -248,8 +248,9 @@ C===========================================================================
      &    "LS=", LS, "R0Bdry", R0Bdry, "VisBeta=", VisBeta,
      &    "DX=", DX, "DY=", DY, "DT_1=", DT_1,
      &    "NDX=", NDX, "NDY=", NDY, "NDT=", NDT,
-     &    "IhydroJetoutput=", IhydroJetoutput
-
+     &    "IhydroJetoutput=", IhydroJetoutput,
+     &    "IVisflag=", IVisflag,
+     &    "Initialpitensor=", Initialpitensor
 
       ddx=dx
       ddy=dy
