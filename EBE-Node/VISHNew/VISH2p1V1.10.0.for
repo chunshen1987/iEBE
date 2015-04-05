@@ -70,7 +70,7 @@ C===============================================================================
 
 CSHEN===========================================================================
        Logical :: IOSCAR=.false.            ! trigger for output OSCAR format hydro results, False: not output, True: output
-       Integer :: IVisflag=0          ! Flag for temperature dependent eta/s, 0: constant, 1: temperature dependent, which is defined in function ViscousCTemp(T)
+       Integer :: IVisflag=1          ! Flag for temperature dependent eta/s, 0: constant, 1: temperature dependent, which is defined in function ViscousCTemp(T)
        Integer :: IOSCARWrite       ! output OCCAR file path number
 CSHEN===========================================================================
 
@@ -339,7 +339,7 @@ CSHEN======output OSCAR file Header end=====================================
 
 CSHEN======set up output file for hydro evolution history===================
       if(IhydroJetoutput .eq. 1) then
-         Call setHydroFiles(NX0, NX, DX, 5, NY0, NY, DY, 5, T0, DT, 5)
+         Call setHydroFiles(NX0, NX, DX, 2, NY0, NY, DY, 2, T0, DT, 5)
       endif
 
       CALL CPU_TIME(cpu_start) !Tic
@@ -2533,7 +2533,13 @@ C====eta/s dependent on local temperature==================================
 
       Common /ViscousC / ViscousC,VisBeta, IVisflag ! Related to Shear Viscosity
 
-      ViscousCTemp = ViscousC
+      TT_GeV = TT*HbarC
+      if(TT_GeV .gt. 0.165) then
+          ViscousCTemp = 0.08
+      else
+          ViscousCTemp = 0.5 + (0.5 - 0.08)/(0.1 - 0.165)*(TT_GeV - 0.1)
+      endif
+
       return
       end
 

@@ -15,7 +15,7 @@
 5.0         !BulkTau               constant relaxation time (fm/c) (require input IRelaxBulk=1)
 *
 *
-5,5         !NXD,NYD               freeze-out step in x and y direction
+2,2         !NXD,NYD               freeze-out step in x and y direction
 5           !NTD                   freeze-out step in \tau direction
 *
 *
