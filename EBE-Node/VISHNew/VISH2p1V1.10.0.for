@@ -70,7 +70,7 @@ C===============================================================================
 
 CSHEN===========================================================================
        Logical :: IOSCAR=.false.            ! trigger for output OSCAR format hydro results, False: not output, True: output
-       Integer :: IVisflag=1          ! Flag for temperature dependent eta/s, 0: constant, 1: temperature dependent, which is defined in function ViscousCTemp(T)
+       Integer :: IVisflag=0          ! Flag for temperature dependent eta/s, 0: constant, 1: temperature dependent, which is defined in function ViscousCTemp(T)
        Integer :: IOSCARWrite       ! output OCCAR file path number
 CSHEN===========================================================================
 
@@ -136,8 +136,6 @@ CSHEN===EOS from tables end====================================================
 
       Double Precision :: cpu_start, cpu_end ! timing the application
 
-
-
 ***********************************************************************************
 ! ---Zhi-Changes---
       Common /RxyBlock/ Rx2,Ry2
@@ -151,10 +149,12 @@ CSHEN===EOS from tables end====================================================
       Common /T0/ T0
 
 C *******************************J.Liu changes*******************************
-
       Integer InitialURead
       Common/LDInitial/ InitialURead  ! IintURead =1 read initial velocity profile
 C *******************************J.Liu changes end***************************
+      
+      Integer Initialpitensor
+      Common/Initialpi/ Initialpitensor
 
       call prepareInputFun() ! this is the initialization function in InputFun.for
 
@@ -181,6 +181,8 @@ C------- Parameter for viscous coeficients  ------------------------
 
       READ(1,*) ViscousC    ! eta/s  (constant)    (0: no shear vis )
       READ(1,*) VisBeta     !\tau_Pi=VisBeta*6.0\eta /(ST)
+      READ(1,*) IVisflag     !Flag for temperature dependent eta/s(T)
+
       READ(1,*) VisBulk     !VisBulk=C;  Xi/s= C* (Xi/S)_min  (C=0, no bulk vis; or C>1 )
       READ(1,*) IRelaxBulk  !type of bulk relaxation time (0: critical slowing down; 1: contant Relax Time
                             !2: \tau_PI=1.5/(2\piT))
@@ -222,8 +224,12 @@ C------- Parameters for initial profile from Laudan matching--------------------
       Read(1,*) Cha
       Read(1,*) Cha
       Read(1,*) InitialURead  
-      CLOSE(1)
 C ***************************J.Liu changes end***************************
+
+      Read(1,*) Cha
+      Read(1,*) Cha
+      Read(1,*) Initialpitensor
+      CLOSE(1)
 C===========================================================================
 
       DX=0.1d0
@@ -694,7 +700,7 @@ CSHEN===EOS from tables end====================================================
 
           WRITE(99,'(99E20.8E3)') Time,DA0,DA1,DA2,VZCM,VRCM,
      &                  Ed(I,J,1)*HbarC,BN,
-     &                  Temp(I,J,1)*HbarC,BAMU,SMU, PDec2, 
+     &                  Temp(I,J,1)*HbarC,BAMU,SMU, PDec2*HbarC, 
      &                  CPi33*HbarC,
      &                  CPi00*HbarC,CPi01*HbarC,CPi02*HbarC,
      &                  CPi11*HbarC,CPi12*HbarC,CPi22*HbarC
