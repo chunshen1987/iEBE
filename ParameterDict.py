@@ -51,7 +51,9 @@ photonEmissionParameters = {
     'dx'          :   0.1,
     'dy'          :   0.1,
     'dTau'        :   0.05,
+    'T_dec'       :   0.12,
     'T_sw_high'   :   0.180,
     'T_sw_low'    :   0.1795,
     'calHGIdFlag' :   0,
+    'differential_flag'   :  0,
 }

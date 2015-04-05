@@ -158,7 +158,7 @@ iSParameters = {}
 photonEmissionControl = {
     'mainDir'           :   'photonEmission',
     'operationDir'      :   'results',
-    'saveResultGlobs'   :   ['*Sp*.dat'], # files in the operation directory matching these globs will be saved
+    'saveResultGlobs'   :   ['*Sp*.dat', '*dTdtau*.dat'], # files in the operation directory matching these globs will be saved
     'executable'       :   'hydro_photonEmission.e',
 }
 photonEmissionParameters = {
