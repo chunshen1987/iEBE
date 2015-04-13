@@ -210,7 +210,11 @@ void OverLap::readin_nucleon_positions()
       {
          double x_local, y_local, z_local;
          int isospin;
-         input >> x_local >> y_local >> z_local >> isospin;
+         int dummy;
+         if(atomic == 208)
+            input >> x_local >> y_local >> z_local >> isospin;
+         else
+            input >> x_local >> y_local >> z_local >> isospin >> dummy;
          nucleon_pos_array[iconf][ia][0] = x_local;
          nucleon_pos_array[iconf][ia][1] = y_local;
          nucleon_pos_array[iconf][ia][2] = z_local;
