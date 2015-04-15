@@ -40,6 +40,17 @@ hydroParameters = {
     'Initialpitensor' :   0,  # initialization of pi tensor
 }
 
+iSParameters = {
+    'hydro_mode'        :    0,
+
+    'f0_is_not_small'   :    1,
+    'turn_on_shear'     :    1,
+
+    'flag_particle_dependent_delta_f'  :   1,
+    'delta_f_energy_exponent_alpha'    :   0.0,
+    'particle_dep_delta_f_Tdec'        :   0.12,
+}
+
 iSSParameters = {
     'calculate_vn'                  :   1,
     'MC_sampling'                   :   0,
