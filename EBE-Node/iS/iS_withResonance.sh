@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-./iS.e
+./iS.e $@
 
 ./resonance.e
 

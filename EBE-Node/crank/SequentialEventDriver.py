@@ -153,7 +153,25 @@ iSControl = {
     'executables'       :   ('iS.e', 'resonance.e', 'iInteSp.e'),
     'entryShell'        :   'iS_withResonance.sh',
 }
-iSParameters = {}
+iSParameters = {
+    'hydro_mode'        :    0,
+
+    'f0_is_not_small'   :    1,
+    'turn_on_shear'     :    1,
+    'turn_on_bulk'      :    0,
+    'bulk_deltaf_kind'  :    1,
+    'turn_on_muB'       :    0,
+
+    'use_historic_format' :  0,
+    'grouping_particles'  :  1,
+    'particle_diff_tolerance'  :  0.001,
+
+    'flag_particle_dependent_delta_f'  :   1,
+    'delta_f_energy_exponent_alpha'    :   0.0,
+    'particle_dep_delta_f_Tdec'        :   0.12,
+    
+    'calculate_dEd3p'   :    0,
+}
 
 photonEmissionControl = {
     'mainDir'           :   'photonEmission',
@@ -580,8 +598,11 @@ def iSWithResonancesWithHydroResultFiles(fileList):
             move(aFile, iSOperationDirectory)
     copy(path.join(iSDirectory, 'EOS', 'chosen_particles_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
 
+    # form assignment string
+    assignments = formAssignmentStringFromDict(iSParameters)
+
     # execute!
-    run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, cwd=iSDirectory)
+    run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry + assignments, cwd=iSDirectory)
 
     # save some of the important result files
     worthStoring = []
@@ -665,8 +686,10 @@ def iSWithResonancesWithdecayPhotonWithHydroResultFiles(fileList):
     # make sure to use the pdg table with tagged decay photons
     copy(path.join(iSDirectory, 'EOS', 'pdg_decayPhotonCocktail.dat'), path.join(iSDirectory, 'EOS', 'pdg.dat'))
 
+    # form assignment string
+    assignments = formAssignmentStringFromDict(iSSParameters)
     # execute!
-    run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, cwd=iSDirectory)
+    run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry + assignments, cwd=iSDirectory)
 
     # save some of the important result files
     worthStoring = []
