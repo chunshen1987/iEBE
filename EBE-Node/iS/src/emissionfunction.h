@@ -22,6 +22,9 @@ private:
   int USE_HISTORIC_FORMAT;
   int F0_IS_NOT_SMALL;
 
+  int flag_particle_dependent_delta_f;
+  double delta_f_energy_exponent_alpha, particle_dep_delta_f_Tdec;
+
   double particle_y;
   Table *pT_tab, *phi_tab, *eta_tab;
   int pT_tab_length, phi_tab_length, eta_tab_length;
@@ -58,6 +61,8 @@ public:
 
   void calculate_dN_ptdptdphidy_and_flows_4all(int to_order=9);
   void getbulkvisCoefficients(double Tdec, double* bulkvisCoefficients);
+
+  double get_particle_dep_delta_f_coeff_C(double mass);
 
 };
 

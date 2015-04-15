@@ -23,3 +23,11 @@ grouping_particles = 1            # group particles with the same mass and chemi
 particle_diff_tolerance = 0.001   # grouping particle tolerance
 
 calculate_dEd3p = 0               # calculate dE/d3p matrix for particles
+
+# parameters for particle species dependent shear delta f
+flag_particle_dependent_delta_f = 1     # flag to include particle species dependence in delta f
+delta_f_energy_exponent_alpha = 0       # the extra energy dependence E^{-alpha} in shear delta f
+                                        # alpha = 0, 0.5, 1.0
+particle_dep_delta_f_Tdec = 0.12        # the decoupling temperature for choosing the parameterization
+                                        # of the coefficients for the particle species dependent delta f
+

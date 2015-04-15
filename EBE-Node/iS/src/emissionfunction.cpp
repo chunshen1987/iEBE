@@ -42,6 +42,12 @@ EmissionFunctionArray::EmissionFunctionArray(ParameterReader* paraRdr_in, double
   F0_IS_NOT_SMALL = paraRdr->getVal("f0_is_not_small");
   bulk_deltaf_kind = paraRdr->getVal("bulk_deltaf_kind");
 
+  flag_particle_dependent_delta_f = paraRdr->getVal("flag_particle_dependent_delta_f");
+  delta_f_energy_exponent_alpha = paraRdr->getVal("delta_f_energy_exponent_alpha");
+  particle_dep_delta_f_Tdec = paraRdr->getVal("particle_dep_delta_f_Tdec");
+  if(flag_particle_dependent_delta_f == 0)
+      delta_f_energy_exponent_alpha = 0;
+
   if(CALCULATEDED3P == 1)
   {
      dE_ptdptdphidy = new Table(pT_tab_length, phi_tab_length);
@@ -230,7 +236,14 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
               double bulkPi = 0.0;
               double deltaf_prefactor = 0.0;
               if(INCLUDE_DELTAF)
+              {
                   deltaf_prefactor = 1.0/(2.0*Tdec*Tdec*(Edec+Pdec));
+                  if(flag_particle_dependent_delta_f == 1)
+                  {
+                     double partricle_dep_delta_f_coeff_C = get_particle_dep_delta_f_coeff_C(mass);
+                     deltaf_prefactor = deltaf_prefactor*partricle_dep_delta_f_coeff_C;
+                  }
+              }
               if(INCLUDE_BULKDELTAF == 1)
               {
                   if(bulk_deltaf_kind == 0)
@@ -260,7 +273,10 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
                   if(INCLUDE_DELTAF)
                   {
                       double Wfactor = pt*pt*pi00 - 2.0*pt*px*pi01 - 2.0*pt*py*pi02 + px*px*pi11 + 2.0*px*py*pi12 + py*py*pi22 + pz*pz*pi33;
-                      delta_f_shear = (1 - F0_IS_NOT_SMALL*sign*f0)*Wfactor*deltaf_prefactor;
+                      double delta_f_energy_exponent = 1.0;
+                      if(flag_particle_dependent_delta_f == 1)
+                         delta_f_energy_exponent = pow(pdotu, delta_f_energy_exponent_alpha);
+                      delta_f_shear = (1 - F0_IS_NOT_SMALL*sign*f0)*Wfactor/delta_f_energy_exponent*deltaf_prefactor;
                   }
                   double delta_f_bulk = 0.0;
                   if (INCLUDE_BULKDELTAF == 1)
@@ -902,4 +918,15 @@ void EmissionFunctionArray::getbulkvisCoefficients(double Tdec, double* bulkvisC
              + 127305171097.249*Tdec_fm_power[10]);
    }
    return;
+}
+
+double EmissionFunctionArray::get_particle_dep_delta_f_coeff_C(double mass)
+{
+   double eps = 1e-6;
+   double coeff_C = 1.0;
+   if(fabs(particle_dep_delta_f_Tdec - 0.12) < eps)
+   {
+       coeff_C = 1.0;
+   }
+   return(coeff_C);
 }
