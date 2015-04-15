@@ -16,9 +16,11 @@ try:
     # set parameters
     numberOfJobs = int(argv[1])
     numberOfEventsPerJob = int(argv[2])
+    # cluster name
+    cluster_name = str(argv[3])
 
     # set optional parameters
-    argId = 2
+    argId = 3
 
     argId += 1
     if len(argv)>=argId+1: # set working folder
@@ -38,8 +40,6 @@ try:
     else:
         walltime = "%d:00:00" % (2*numberOfEventsPerJob) # 3 hours per job
     
-    # cluster name
-    cluster_name = "jack"
 
     argId += 1
     if len(argv)>=argId+1: # whether to compress final results folder
@@ -47,7 +47,7 @@ try:
     else:
         compressResultsFolderAnswer = "yes"
 except:
-    print('Usage: generateJobs.py number_of_jobs number_of_events_per_job [working_folder="./PlayGround"] [results_folder="./RESULTS"] [walltime="03:00:00" (per event)] [compress_results_folder="yes"]')
+    print('Usage: generateJobs.py number_of_jobs number_of_events_per_job cluster_name [working_folder="./PlayGround"] [results_folder="./RESULTS"] [walltime="03:00:00" (per event)] [compress_results_folder="yes"]')
     exit()
 
 # save config files
@@ -136,9 +136,10 @@ mv ./finalResults %s/job-%d
         open(path.join(targetWorkingFolder, "job-%d.pbs" % i), "a").write(
 """
 (cd %s
-    zip -r -m -q job-%d.zip job-%d
+    tar -jcf job-%d.tar.bz2 job-%d
+    rm -fr job-%d
 )
-""" % (resultsFolder, i, i)
+""" % (resultsFolder, i, i, i)
         )
 
 # add a data collector watcher
@@ -159,7 +160,7 @@ if compressResultsFolderAnswer == "yes":
 #PBS -S /bin/bash
 cd %s
 (cd %s
-    python autoZippedResultsCombiner.py %s %d "job-(\d*).zip" 60 1> WatcherReport.txt
+    python autoZippedResultsCombiner.py %s %d "job-(\d*).tar.bz2" 60 1> WatcherReport.txt
     mv WatcherReport.txt %s
 )
 """ % (walltime, cluster_name, watcherDirectory, utilitiesFolder, resultsFolder, numberOfJobs, resultsFolder)

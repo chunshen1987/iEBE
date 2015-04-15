@@ -219,7 +219,7 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
     }
     else 
     {
-       if(flag_NN_correlation == 0)
+       if(flag_NN_correlation == 0 || nn != 197 || nn != 208)
        {
           // for large nuclei
           for(int ia=0;ia<nn;ia++) {

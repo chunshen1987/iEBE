@@ -113,7 +113,7 @@ OverLap::OverLap(ParameterReader* paraRdr_in, int a, double signnin, int deforme
   }
 
   flag_NN_correlation = paraRdr->getVal("include_NN_correlation");
-  if(flag_NN_correlation == 1)
+  if(flag_NN_correlation == 1 && (atomic == 197 || atomic == 208))
   {
      readin_nucleon_positions();
   }
@@ -122,7 +122,7 @@ OverLap::OverLap(ParameterReader* paraRdr_in, int a, double signnin, int deforme
 
 OverLap::~OverLap()
 {
-   if(flag_NN_correlation == 1)
+   if(flag_NN_correlation == 1 && (atomic == 197 || atomic == 208))
    {
       for(int iconf = 0; iconf < n_configuration; iconf++)
       {
@@ -192,6 +192,8 @@ void OverLap::readin_nucleon_positions()
       filename << "tables/pb208-1.dat";
       n_configuration = 10000;
    }
+   else
+      return;
 
    nucleon_pos_array = new double** [n_configuration];
    for(int iconf = 0; iconf < n_configuration; iconf++)
@@ -208,7 +210,11 @@ void OverLap::readin_nucleon_positions()
       {
          double x_local, y_local, z_local;
          int isospin;
-         input >> x_local >> y_local >> z_local >> isospin;
+         int dummy;
+         if(atomic == 208)
+            input >> x_local >> y_local >> z_local >> isospin;
+         else
+            input >> x_local >> y_local >> z_local >> isospin >> dummy;
          nucleon_pos_array[iconf][ia][0] = x_local;
          nucleon_pos_array[iconf][ia][1] = y_local;
          nucleon_pos_array[iconf][ia][2] = z_local;

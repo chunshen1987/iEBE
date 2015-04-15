@@ -136,8 +136,6 @@ CSHEN===EOS from tables end====================================================
 
       Double Precision :: cpu_start, cpu_end ! timing the application
 
-
-
 ***********************************************************************************
 ! ---Zhi-Changes---
       Common /RxyBlock/ Rx2,Ry2
@@ -151,10 +149,12 @@ CSHEN===EOS from tables end====================================================
       Common /T0/ T0
 
 C *******************************J.Liu changes*******************************
-
       Integer InitialURead
       Common/LDInitial/ InitialURead  ! IintURead =1 read initial velocity profile
 C *******************************J.Liu changes end***************************
+      
+      Integer Initialpitensor
+      Common/Initialpi/ Initialpitensor
 
       call prepareInputFun() ! this is the initialization function in InputFun.for
 
@@ -181,6 +181,8 @@ C------- Parameter for viscous coeficients  ------------------------
 
       READ(1,*) ViscousC    ! eta/s  (constant)    (0: no shear vis )
       READ(1,*) VisBeta     !\tau_Pi=VisBeta*6.0\eta /(ST)
+      READ(1,*) IVisflag     !Flag for temperature dependent eta/s(T)
+
       READ(1,*) VisBulk     !VisBulk=C;  Xi/s= C* (Xi/S)_min  (C=0, no bulk vis; or C>1 )
       READ(1,*) IRelaxBulk  !type of bulk relaxation time (0: critical slowing down; 1: contant Relax Time
                             !2: \tau_PI=1.5/(2\piT))
@@ -222,8 +224,12 @@ C------- Parameters for initial profile from Laudan matching--------------------
       Read(1,*) Cha
       Read(1,*) Cha
       Read(1,*) InitialURead  
-      CLOSE(1)
 C ***************************J.Liu changes end***************************
+
+      Read(1,*) Cha
+      Read(1,*) Cha
+      Read(1,*) Initialpitensor
+      CLOSE(1)
 C===========================================================================
 
       DX=0.1d0
@@ -242,8 +248,9 @@ C===========================================================================
      &    "LS=", LS, "R0Bdry", R0Bdry, "VisBeta=", VisBeta,
      &    "DX=", DX, "DY=", DY, "DT_1=", DT_1,
      &    "NDX=", NDX, "NDY=", NDY, "NDT=", NDT,
-     &    "IhydroJetoutput=", IhydroJetoutput
-
+     &    "IhydroJetoutput=", IhydroJetoutput,
+     &    "IVisflag=", IVisflag,
+     &    "Initialpitensor=", Initialpitensor
 
       ddx=dx
       ddy=dy
@@ -339,7 +346,7 @@ CSHEN======output OSCAR file Header end=====================================
 
 CSHEN======set up output file for hydro evolution history===================
       if(IhydroJetoutput .eq. 1) then
-         Call setHydroFiles(NX0, NX, DX, 5, NY0, NY, DY, 5, T0, DT, 5)
+         Call setHydroFiles(NX0, NX, DX, 2, NY0, NY, DY, 2, T0, DT, 5)
       endif
 
       CALL CPU_TIME(cpu_start) !Tic
@@ -694,7 +701,7 @@ CSHEN===EOS from tables end====================================================
 
           WRITE(99,'(99E20.8E3)') Time,DA0,DA1,DA2,VZCM,VRCM,
      &                  Ed(I,J,1)*HbarC,BN,
-     &                  Temp(I,J,1)*HbarC,BAMU,SMU, PDec2, 
+     &                  Temp(I,J,1)*HbarC,BAMU,SMU, PDec2*HbarC, 
      &                  CPi33*HbarC,
      &                  CPi00*HbarC,CPi01*HbarC,CPi02*HbarC,
      &                  CPi11*HbarC,CPi12*HbarC,CPi22*HbarC
@@ -2533,7 +2540,16 @@ C====eta/s dependent on local temperature==================================
 
       Common /ViscousC / ViscousC,VisBeta, IVisflag ! Related to Shear Viscosity
 
-      ViscousCTemp = ViscousC
+      TT_GeV = TT*HbarC
+      Ttr = 0.18
+
+      if(TT_GeV .gt. Ttr) then
+          ViscousCTemp = 0.08
+      else
+          ViscousCTemp = 0.681 - 0.0594*TT_GeV/Ttr 
+     &                   - 0.544*(TT_GeV/Ttr)**2.;
+      endif
+
       return
       end
 

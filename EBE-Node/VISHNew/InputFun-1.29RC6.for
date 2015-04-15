@@ -167,8 +167,9 @@
       Common /EK/ EK, HWN  !EK(T0) constant related to energy density,HWN percent of Wounded Nucleon
       Common /thick/ TRo0, TEta, TRA  !Para in Nuclear Thickness Function
 
+      Integer IVisflag
       Double Precision ViscousC, VisBeta, Visbulk, BulkTau, IRelaxBulk
-      Common /ViscousC/ ViscousC, VIsBeta ! Related to Shear Viscosity
+      Common /ViscousC/ ViscousC, VIsBeta, IVisflag ! Related to Shear Viscosity
       Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk  ! Related to bulk Visousity
 
       Double Precision ITeta, b, ddx, ddy, TT0
@@ -493,8 +494,12 @@
       Common /thick/ TRo0, TEta, TRA  !Para in Nuclear Thickness Function
 
       Double Precision ViscousC, VisBeta, Visbulk, BulkTau, IRelaxBulk
-      Common /ViscousC/ ViscousC, VisBeta
+      Integer IVisflag
+      Common /ViscousC/ ViscousC, VisBeta, IVisflag
       Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk  ! Related to bulk Visousity
+      
+      Integer Initialpitensor
+      Common/Initialpi/ Initialpitensor
 
       Double Precision ITeta, b, ddx, ddy, TT0
       Common /ITeta/ ITeta
@@ -625,6 +630,9 @@
         If (varName=="initialuread") InitialURead=IResult ! read in initial flow velocity profiles
         If (varName=="ihydrojetoutput") IhydroJetoutput=IResult ! output hydro evolution
 
+        If (varName=="visflag") IVisflag=IResult ! Flag for temperature dependent eta/s(T)
+        If (varName=="initialpitensor") Initialpitensor=IResult ! initialization of pi tensor
+
       End Do ! ArgIndex
 
       If (debug>=3) Print *, "* readInputFromCML finished"
@@ -746,8 +754,9 @@
       Double Precision VCoefi(NX0:NX, NY0:NY, NZ0:NZ) !viscous coeficient shear viscosity eta
       Double Precision RMin, PiEPRatio, SigmaLargeness, EAndP
 
+      Integer IVisflag
       Double Precision ViscousC, VisBeta
-      Common /ViscousC / ViscousC, VisBeta
+      Common /ViscousC/ ViscousC, VisBeta, IVisflag
 
       Double Precision PiRatio ! used to determine R0; within r<R0, Pi/(e+p) < PiRatio
       Common /PiRatio/ PiRatio ! should already be setuped in prepareInputFun function

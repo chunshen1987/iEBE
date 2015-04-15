@@ -548,6 +548,7 @@ void ThermalPhoton::calPhoton_SpvnpT()
 //calculate the photon spectra and differential vn at mid-rapidity
 {
    int k = 0;  //calculate at y = 0
+   double eps = 1e-15;
    for(int i=0;i<np;i++)
    {
        for(int j=0;j<nphi;j++)
@@ -601,14 +602,14 @@ void ThermalPhoton::calPhoton_SpvnpT()
    for(int order = 1; order < norder ; order++)
    {
        //vn
-       vn_cos_eq[order] = vn_cos_eq[order]/dNdy_eq;
-       vn_sin_eq[order] = vn_sin_eq[order]/dNdy_eq;
-       vn_cos_vis[order] = vn_cos_vis[order]/dNdy_vis;
-       vn_sin_vis[order] = vn_sin_vis[order]/dNdy_vis;
-       vn_cos_bulkvis[order] = vn_cos_bulkvis[order]/dNdy_vis;
-       vn_sin_bulkvis[order] = vn_sin_bulkvis[order]/dNdy_vis;
-       vn_cos_tot[order] = vn_cos_tot[order]/dNdy_tot;
-       vn_sin_tot[order] = vn_sin_tot[order]/dNdy_tot;
+       vn_cos_eq[order] = vn_cos_eq[order]/(dNdy_eq + eps);
+       vn_sin_eq[order] = vn_sin_eq[order]/(dNdy_eq + eps);
+       vn_cos_vis[order] = vn_cos_vis[order]/(dNdy_vis + eps);
+       vn_sin_vis[order] = vn_sin_vis[order]/(dNdy_vis + eps);
+       vn_cos_bulkvis[order] = vn_cos_bulkvis[order]/(dNdy_vis + eps);
+       vn_sin_bulkvis[order] = vn_sin_bulkvis[order]/(dNdy_vis + eps);
+       vn_cos_tot[order] = vn_cos_tot[order]/(dNdy_tot + eps);
+       vn_sin_tot[order] = vn_sin_tot[order]/(dNdy_tot + eps);
    }
    return;
 }

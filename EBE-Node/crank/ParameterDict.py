@@ -4,21 +4,20 @@ controlParameterList = {
 }
 
 centralityParameters = {
-    'centrality': '0-5%',  # centrality bin
+    'centrality': '0-1%',  # centrality bin
     'cut_type': 'total_entropy',
     # centrality cut variable: total_entropy or Npart
 }
 
 superMCParameters = {
-    'which_mc_model'                :   5,
-    'sub_model'                     :   1,
-    'Aproj'                         :   208,
+    'model_name'                    :   'MCGlb',    # MCGlb or MCKLN
+    'Aproj'                         :   1,
     'Atarg'                         :   208,
-    'ecm'                           :   2760,
-    'finalFactor'                   :   56.763,
-    'alpha'                         :   0.118,
-    'lambda'                        :   0.218,
-    'operation'                     :   2,
+    'ecm'                           :   5020,
+    'finalFactor'                   :   50.0,
+    'alpha'                         :   0.000,      # WN/BC mixing ratio in MCGlb
+    'lambda'                        :   0.218,      # saturation scale parameter in MCKLN
+    'operation'                     :   1,
     'include_NN_correlation'        :   0,
     'cc_fluctuation_model'          :   6,
 }
@@ -33,10 +32,12 @@ preEquilibriumParameters = {
 
 hydroParameters = {
     'vis'       :   0.08,
+    'visflag'   :   1,        # flag to use temperature dependent eta/s(T)
     'T0'        :   0.6,      # tau_0
-    'Edec'      :   0.18,
+    'Edec'      :   0.10,
     'IhydroJetoutput' :   1,  # switch for output hydro evolution history into hdf5 file
     'InitialURead'    :   0,  # set it to be 1 when simulation_type == hydroEM_preEquilibrium
+    'Initialpitensor' :   0,  # initialization of pi tensor
 }
 
 iSSParameters = {
@@ -49,10 +50,12 @@ iSSParameters = {
 }
 
 photonEmissionParameters = {
-    'dx'          :   0.3,
-    'dy'          :   0.3,
-    'dTau'        :   0.1,
+    'dx'          :   0.1,
+    'dy'          :   0.1,
+    'dTau'        :   0.05,
+    'T_dec'       :   0.12,
     'T_sw_high'   :   0.180,
     'T_sw_low'    :   0.1795,
     'calHGIdFlag' :   0,
+    'differential_flag'   :  0,
 }

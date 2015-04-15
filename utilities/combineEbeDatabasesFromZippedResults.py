@@ -29,14 +29,25 @@ else:
 toBeDeleted = [] # will remove these directories
 for aZipFile in listdir(parentFolder):
     zipFoldername, ext = path.splitext(aZipFile)
-    if not ext.lower() == ".zip": continue # not a zip file
-    zipFolder = path.join(parentFolder, zipFoldername)
-    if path.exists(zipFolder):
-        continue
-    else:
-        toBeDeleted.append(zipFolder) # will be removed afterwards
-        commandString = "unzip %s %s" % (aZipFile, path.join(zipFoldername, databaseFilename))
-        call(commandString, shell=True, cwd=parentFolder)
+    if ext.lower() == ".zip":
+        zipFolder = path.join(parentFolder, zipFoldername)
+        if path.exists(zipFolder):
+            continue
+        else:
+            toBeDeleted.append(zipFolder) # will be removed afterwards
+            commandString = ("unzip %s %s" 
+                % (aZipFile, path.join(zipFoldername, databaseFilename)))
+            call(commandString, shell=True, cwd=parentFolder)
+    elif ext.lower() == ".bz2":
+        zipFoldername = zipFoldername.split('.tar')[0]
+        zipFolder = path.join(parentFolder, zipFoldername)
+        if path.exists(zipFolder):
+            continue
+        else:
+            toBeDeleted.append(zipFolder) # will be removed afterwards
+            commandString = ("tar -xf %s %s" 
+                % (aZipFile, path.join(zipFoldername, databaseFilename)))
+            call(commandString, shell=True, cwd=parentFolder)
 # combine them
 print("Combining...")
 commandString = "python combineEbeDatabases.py %s" % parentFolder

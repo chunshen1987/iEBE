@@ -213,6 +213,9 @@ C==========OSCAR2008H related parameters===================================
 CSHEN=========end==========================================================
       common /EOSdata/PEOSdata, SEOSdata, TEOSdata !CSHEN: for EOS from tables
       common /EOSdatastructure/ EOSe0, EOSde, EOSne
+      
+      Integer Initialpitensor
+      Common/Initialpi/ Initialpitensor
 
 
       Accu=3.0                  ! 3pt formula for derivative
@@ -434,10 +437,20 @@ C *************************J.Liu changes end********************************
 
       If (ViscousC>1D-6) Then
 
-        call TransportPi6( Pi00,Pi01,Pi02,Pi33, Pi11,Pi12,Pi22,
-     &  PPI,Ed, Sd, PL, Temp, Temp0, U0,U1,U2,PU0,PU1,PU2, DX,DY,DZ,DT,
-     &  NX0,NY0,NZ0, NX,NY,NZ, Time, NXPhy0,NYPhy0, NXPhy,NYPhy,
-     &  VRelaxT,VRelaxT0)
+        if(Initialpitensor .eq. 1) then
+          call TransportPi6(Pi00,Pi01,Pi02,Pi33, Pi11,Pi12,Pi22,
+     &    PPI,Ed,Sd,PL,Temp,Temp0,U0,U1,U2,PU0,PU1,PU2, DX,DY,DZ,DT,
+     &    NX0,NY0,NZ0, NX,NY,NZ, Time, NXPhy0,NYPhy0, NXPhy,NYPhy,
+     &    VRelaxT,VRelaxT0)
+        else
+          Pi00 = 0.0d0
+          Pi01 = 0.0d0
+          Pi02 = 0.0d0
+          Pi11 = 0.0d0
+          Pi12 = 0.0d0
+          Pi22 = 0.0d0
+          Pi33 = 0.0d0
+        endif
 
 !-------------- Jia changes--------------------------------------------
 C Read in pi_mu nu and overwrite what TransportPi6() gives. Then scale this tensor
