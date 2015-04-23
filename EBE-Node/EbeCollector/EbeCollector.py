@@ -116,6 +116,7 @@ class EbeCollector(object):
             "decay_gamma_phi_hydro" : 9022,
             "decay_gamma_etap_hydro" : 9023,
             "decay_gamma_Sigma0_hydro" : 9024,
+            "decay_gamma_rho0_hydro" : 9025,
         })
         
         #UrQMD pid Dictionary, name conversion defined as in binUtility
@@ -554,6 +555,7 @@ class EbeCollector(object):
             "decay_gamma_etaprime" : "decay_gamma_etap_hydro",
             "decay_gamma_phi" : "decay_gamma_phi_hydro",
             "decay_gamma_Sigma0" : "decay_gamma_Sigma0_hydro",
+            "decay_gamma_rho0" : "decay_gamma_rho0_hydro",
         }
         filename_inte = "%s_integrated_vndata.dat" # filename for integrated flow files, %s is the "string in filename" defined in toCollect
         filename_diff = "%s_vndata.dat" # filename for differential flow files
