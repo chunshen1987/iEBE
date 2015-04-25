@@ -42,3 +42,5 @@ T_cutlow = 0.12              # minimum allowed emission T (GeV)
 nTaucut = 50                 # number of points in tau
 tau_start = 0.6              # emission start time (fm)
 tau_end = 15.0               # emission end time (fm)
+
+enable_polyakov_suppression = 0   # apply the polyakov suppression to QGP photon rates
