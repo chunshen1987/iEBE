@@ -37,10 +37,10 @@ HydroinfoBuffersize = 500    # set the buffer size for hydro evolution profile
 
 differential_flag = 0        # determine whether to output photon yield and vn differential in T and tau
 nTcut = 50                   # number of points in T
-T_cuthigh = 0.5              # maximum allowed emission T (GeV)
-T_cutlow = 0.12              # minimum allowed emission T (GeV)
+T_cuthigh = 0.8              # maximum allowed emission T (GeV)
+T_cutlow = 0.10              # minimum allowed emission T (GeV)
 nTaucut = 50                 # number of points in tau
 tau_start = 0.6              # emission start time (fm)
-tau_end = 15.0               # emission end time (fm)
+tau_end = 25.0               # emission end time (fm)
 
 enable_polyakov_suppression = 0   # apply the polyakov suppression to QGP photon rates
