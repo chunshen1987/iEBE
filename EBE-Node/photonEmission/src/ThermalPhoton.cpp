@@ -969,18 +969,15 @@ void ThermalPhoton::update_rates_with_polyakov_suppression()
      for(int i=0; i<EmissionrateTb_sizeX; i++)
      {
          double T_local = EmissionrateTb_Xmin + i*EmissionrateTb_dX;
+         double suppression_factor = get_polyakov_suppression_factor(T_local);
          for(int j=0; j<EmissionrateTb_sizeY; j++)
          {
-             double k_local = EmissionrateTb_Ymin + j*EmissionrateTb_dY;
-             double suppression_factor = get_polyakov_suppression_factor(k_local/T_local, T_local);
-             Emission_eqrateTb_ptr[i][j] *= suppression_factor;
-             Emission_viscous_rateTb_ptr[i][j] *= suppression_factor;
-             Emission_bulkvis_rateTb_ptr[i][j] *= suppression_factor;
+             Emission_eqrateTb_ptr[i][j] += log(suppression_factor);
          }
     }
 }
 
-double ThermalPhoton::get_polyakov_suppression_factor(double k_over_T, double T_in_GeV)
+double ThermalPhoton::get_polyakov_suppression_factor(double T_in_GeV)
 {
     double T_in_MeV=T_in_GeV*1e3;
     const double a = 1.49201e-9;
