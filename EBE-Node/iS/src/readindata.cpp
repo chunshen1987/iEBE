@@ -48,7 +48,6 @@ int read_FOdata::get_number_of_freezeout_cells()
 
       // determine number of the eta slides that are output
       double eta_target = block_file.get(4, 1);
-      int i_eta = 1;
       int num_temp = 0;
       for(int i = 0; i < block_file.getNumberOfRows(); i++)
       {
@@ -269,13 +268,11 @@ void read_FOdata::read_FOsurfdat_MUSIC_boost_invariant(int length, FO_surf* surf
   cout<<" -- Read spatial positions of freeze out surface from MUSIC (boost-invariant) ...";
   ostringstream surfdat_stream;
   double dummy;
-  double temp;
   string input;
   double temp_tau, temp_xpt, temp_ypt, temp_eta;
   double eta_target;
   double deta = 100.0;
   int idx = 0;
-  char rest_dummy[512];
   surfdat_stream << path << "/surface.dat";
   ifstream surfdat(surfdat_stream.str().c_str());
   for(int i = 0; i < length*n_eta_skip; i++)
@@ -379,7 +376,7 @@ void read_FOdata::read_FOsurfdat_MUSIC_boost_invariant(int length, FO_surf* surf
        ostringstream config_file;
        config_file << path << "/input";
        double eta_size;
-       int n_eta;
+       int n_eta = 1;
        ifstream configuration(config_file.str().c_str());
        string temp1;
        string temp_name;
@@ -426,7 +423,6 @@ void read_FOdata::read_FOsurfdat_MUSIC(int length, FO_surf* surf_ptr)
   cout<<" -- Read spatial positions of freeze out surface from MUSIC...";
   ostringstream surfdat_stream;
   double dummy;
-  char rest_dummy[512];
   surfdat_stream << path << "/surface.dat";
   ifstream surfdat(surfdat_stream.str().c_str());
   for(int i=0; i<length; i++)
