@@ -1,0 +1,16 @@
+<div class="error">
+    <h2>
+        Error: Invalid syntax.
+    </h2>
+    <h3>
+    Supported syntax is:<br>
+    <em>
+        /query?{{ database_param }}=database_name&{{ expr_param }}=expression&fmt=({{ fmt_plain }}|{{ fmt_table }})
+    </em>
+    </h3>
+    Please also make sure your query expression {{ query_content }} is correct.
+    The query expression can contain spaces, but it cannot contain single or
+    double quotes. The quantity included in the query must exist in the database.
+    Please also note that query expression is case-sensitive.
+</div>
+
