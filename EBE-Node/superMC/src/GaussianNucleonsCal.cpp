@@ -54,7 +54,7 @@ bool GaussianNucleonsCal::testCollision(double b)
 // Simulate if there is a collision at impact parameter b. The size of
 // nucleons are read from those public variables.
 {
-  if (drand48() < 1.-exp( -sigma_gg*exp(-b*b/(2.*width*width))/(2*M_PI*width*width) ))
+  if (drand48() < 1.-exp( -sigma_gg*exp(-b*b/(4.*width*width))/(4.*M_PI*width*width) ))
     return true;
   else
     return false;
@@ -93,7 +93,7 @@ double GaussianNucleonsCal::getSigEff(double siginNN, double width)
     for(ib=0; ib<N2; ib++) {  // integral d^2b from 0 to Bmax
       b = *(xg+ib)*Bmax;
       db = *(wg+ib)*Bmax;
-      Tpp = exp(-b*b/(2*width*width))/(M_PI*(2*width*width));
+      Tpp = exp(-b*b/(4.*width*width))/(M_PI*(4.*width*width));
       sum += 2*M_PI*b*db*(1.0 - exp(-sigeff*Tpp));
       dN += 2*M_PI*b*db*Tpp*exp(-sigeff*Tpp);
     }
