@@ -34,7 +34,7 @@ hydroParameters = {
     'vis'       :   0.08,
     'visflag'   :   1,        # flag to use temperature dependent eta/s(T)
     'T0'        :   0.6,      # tau_0
-    'Edec'      :   0.10,
+    'Edec'      :   0.508,
     'IhydroJetoutput' :   1,  # switch for output hydro evolution history into hdf5 file
     'InitialURead'    :   0,  # set it to be 1 when simulation_type == hydroEM_preEquilibrium
     'Initialpitensor' :   0,  # initialization of pi tensor
@@ -53,9 +53,10 @@ photonEmissionParameters = {
     'dx'          :   0.1,
     'dy'          :   0.1,
     'dTau'        :   0.05,
-    'T_dec'       :   0.12,
+    'T_dec'       :   0.165,
     'T_sw_high'   :   0.180,
     'T_sw_low'    :   0.1795,
     'calHGIdFlag' :   0,
     'differential_flag'   :  0,
+    'enable_polyakov_suppression'   :    0,
 }

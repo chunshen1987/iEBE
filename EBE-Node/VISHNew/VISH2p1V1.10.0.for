@@ -1254,7 +1254,7 @@ CSHEN===end=====================================================================
       Hc = HbarC
 
       Do J=0,NXPhy,NXPhy+1
-      Do I=NYPhy0,NYPhy,10
+      Do I=NYPhy0,NYPhy,2
         write(93, '(5e15.5)')Time, I*DX, J*DY, Temp(I,J,NZ0)*HBarC,
      &                       Ed(I,J,NZ0)*Hc
       enddo

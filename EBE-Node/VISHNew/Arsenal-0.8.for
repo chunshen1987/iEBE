@@ -206,9 +206,81 @@
 !-----------------------------------------------------------------------
 
 
+************************************************************************
+      Subroutine invertFunction_binary(
+     &           func,varL,varR,absacc,relacc,varY,varResult)
+!     Purpose:
+!       Return the varResult=func^-1(varY) using binary search when either
+!       absolute error or relative error is reached
+!       -- func: double precision 1-argument function to be inverted
+!       -- varL: left boundary
+!       -- varR: right boundary
+!       -- absacc: absolute error
+!       -- relacc: relative error
+!       -- varY: the value of the variable to be inverted
+!       -- varResult: the return inverted value
+!
+!   Solve: f(x)=0 with f(x)=table(x)-varY => f'(x)=table'(x)
+!
+      Implicit None
+
+!     declare input parameters
+      Double Precision func
+      Double Precision varL, varR, varM, absacc, relacc
+      Double Precision xL, xR
+      Double Precision yL, yR, yM
+      double precision varY, varResult
+
+!     pre-fixed parameters
+      Integer tolerance, itol
+
+!     initialize parameters
+      varM = (varR + varL)/2.
+      xL = varL
+      xR = varR
+      tolerance = 60
+      
+      yL = func(xL)
+      yR = func(xR)
+      if(abs(yL - varY) < 1d-15) then
+         varResult = varL
+         return
+      endif
+      if(abs(yR - varY) < 1d-15) then
+         varResult = varR
+         return
+      endif
+
+      if((yL - varY)*(yR - varY) .gt. 0) then
+          Print*, "Error: Invertfunction_binary: no unique solution!"
+          Print*, "yL = ", yL, ", yR = ", yR
+          Print*, "varL = ", varL, ", varR = ", varR, ", varY = ", varY
+          stop
+      endif
+
+      itol = 0
+      Do While ((abs(xR - xL) > absacc .and.
+     &           abs(xR - xL)/((xR + xL)/2.) > relacc)
+     &          .and. itol < tolerance)
+        yM = func(varM)
+        if((yL - varY)*(yM - varY) .lt. 0) then
+           xR = varM
+           yR = yM
+        else
+           xL = varM
+           yL = yM
+        endif
+        varM = (xL + xR)/2.
+        itol = itol + 1
+      enddo
+
+      varResult = varM
+      End Subroutine
+!-----------------------------------------------------------------------
 
 ************************************************************************
-      Subroutine invertFunctionD(func,varL,varR,acc,varI,varX,varResult)
+      Subroutine invertFunctionD(
+     &           func,varL,varR,acc,varI,varX,varResult)
 !     Purpose:
 !       Return the varResult=func^-1(varX) using Newton method.
 !       -- func: double precision 1-argument function to be inverted

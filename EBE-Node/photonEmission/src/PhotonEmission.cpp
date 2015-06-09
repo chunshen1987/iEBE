@@ -244,6 +244,10 @@ void PhotonEmission::InitializePhotonEmissionRateTables()
    
    photon_QGP = new ThermalPhoton(paraRdr);
    photon_QGP->setupEmissionrate("QGP_2to2_total", photonrate_tb_Tmin, photonrate_tb_dT, photonrate_tb_Emin, photonrate_tb_dE);
+   if(paraRdr->getVal("enable_polyakov_suppression") == 1)
+   {
+       photon_QGP->update_rates_with_polyakov_suppression();
+   }
    photon_HG = new ThermalPhoton(paraRdr);
    photon_HG->setupEmissionrate("HG_2to2_meson_total", photonrate_tb_Tmin, photonrate_tb_dT, photonrate_tb_Emin, photonrate_tb_dE);
    photon_HG_rho_spectralfun = new ThermalPhoton(paraRdr);

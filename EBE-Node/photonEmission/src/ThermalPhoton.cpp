@@ -964,3 +964,27 @@ void ThermalPhoton::interpolation2D_bilinear(double varX, double* varY, int Y_le
      return;
 }
 
+void ThermalPhoton::update_rates_with_polyakov_suppression()
+{
+     for(int i=0; i<EmissionrateTb_sizeX; i++)
+     {
+         double T_local = EmissionrateTb_Xmin + i*EmissionrateTb_dX;
+         double suppression_factor = get_polyakov_suppression_factor(T_local);
+         for(int j=0; j<EmissionrateTb_sizeY; j++)
+         {
+             Emission_eqrateTb_ptr[i][j] += log(suppression_factor);
+         }
+    }
+}
+
+double ThermalPhoton::get_polyakov_suppression_factor(double T_in_GeV)
+{
+    double T_in_MeV=T_in_GeV*1e3;
+    const double a = 1.49201e-9;
+    const double b = -7.48088e-7;
+    const double c = -0.000480142;
+    const double d = 0.420208;
+    double Qratio=a*pow(T_in_MeV,3) + b*T_in_MeV*T_in_MeV + c*T_in_MeV + d;
+    double f_suppression=10./3.*Qratio*Qratio-4*Qratio+1;
+    return(f_suppression);
+}
