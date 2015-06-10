@@ -97,6 +97,7 @@ class ThermalPhoton
       void calPhoton_SpvnpT_dTdtau();
       void outputPhoton_SpvnpT(string path);
       void outputPhoton_SpvnpTdTdtau(string path);
+      void output_photon_spectra_dTdtau(string path);
       void interpolation2D_bilinear(double varX, double* varY, int Y_length, double** Table2D_ptr, double* results);
 
       void update_rates_with_polyakov_suppression();

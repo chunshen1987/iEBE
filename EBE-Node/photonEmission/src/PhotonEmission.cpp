@@ -463,8 +463,16 @@ void PhotonEmission::calPhoton_total_SpMatrix()
        { 
          for(int m=0;m<nphi;m++)
          {
-           dNd2pTdphidy_eq[l][m][k] =  photon_QGP->getPhotonSpMatrix_eq(l, m, k) + photon_HG->getPhotonSpMatrix_eq(l, m, k) + photon_HG_rho_spectralfun->getPhotonSpMatrix_eq(l, m, k) + photon_HG_pipiBremsstrahlung->getPhotonSpMatrix_eq(l, m, k);
-           dNd2pTdphidy[l][m][k] =  photon_QGP->getPhotonSpMatrix_tot(l, m, k) + photon_HG->getPhotonSpMatrix_tot(l, m, k) + photon_HG_rho_spectralfun->getPhotonSpMatrix_tot(l, m, k) + photon_HG_pipiBremsstrahlung->getPhotonSpMatrix_tot(l, m, k);
+           dNd2pTdphidy_eq[l][m][k] =  (
+                 photon_QGP->getPhotonSpMatrix_eq(l, m, k) 
+               + photon_HG->getPhotonSpMatrix_eq(l, m, k) 
+               + photon_HG_rho_spectralfun->getPhotonSpMatrix_eq(l, m, k) 
+               + photon_HG_pipiBremsstrahlung->getPhotonSpMatrix_eq(l, m, k));
+           dNd2pTdphidy[l][m][k] =  (
+                 photon_QGP->getPhotonSpMatrix_tot(l, m, k) 
+               + photon_HG->getPhotonSpMatrix_tot(l, m, k) 
+               + photon_HG_rho_spectralfun->getPhotonSpMatrix_tot(l, m, k) 
+               + photon_HG_pipiBremsstrahlung->getPhotonSpMatrix_tot(l, m, k));
          }
        }
      }
@@ -481,6 +489,8 @@ void PhotonEmission::calPhoton_SpvnpT_individualchannel()
     {
        photon_QGP->calPhoton_SpvnpT_dTdtau();
        photon_HG->calPhoton_SpvnpT_dTdtau();
+       photon_HG_rho_spectralfun->calPhoton_SpvnpT_dTdtau();
+       photon_HG_pipiBremsstrahlung->calPhoton_SpvnpT_dTdtau();
     }
     if(calHGIdFlag == 1)
     {
@@ -506,7 +516,13 @@ void PhotonEmission::outputPhotonSpvn()
     if(differential_flag == 1)
     {
        photon_QGP->outputPhoton_SpvnpTdTdtau(output_path);
+       photon_QGP->output_photon_spectra_dTdtau(output_path);
        photon_HG->outputPhoton_SpvnpTdTdtau(output_path);
+       photon_HG->output_photon_spectra_dTdtau(output_path);
+       photon_HG_rho_spectralfun->outputPhoton_SpvnpTdTdtau(output_path);
+       photon_HG_rho_spectralfun->output_photon_spectra_dTdtau(output_path);
+       photon_HG_pipiBremsstrahlung->outputPhoton_SpvnpTdTdtau(output_path);
+       photon_HG_pipiBremsstrahlung->output_photon_spectra_dTdtau(output_path);
     }
     if(calHGIdFlag == 1)
     {
