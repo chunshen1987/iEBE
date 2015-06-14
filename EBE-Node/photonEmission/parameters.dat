@@ -2,6 +2,8 @@ Xmin = -13.0                  # minimum points along x direction
 dx = 0.5                      # lattice spacing along x direction
 Ymin = -13.0                  # minimum points along y direction
 dy = 0.5                      # lattice spacing along y direction
+tau_start = 0.6               # emission start time (fm)
+tau_end = 25.0                # emission end time (fm)
 dTau = 0.04                   # lattice spacing along tau direction
 
 neta = 10                     # number of points in eta direction
@@ -24,6 +26,8 @@ norder = 10                   # calculate photon vn to norder
 T_dec = 0.120                 # freeze out temperature
 T_sw_high = 0.170             # high end of the switching temperature
 T_sw_low = 0.169              # low end of the switching temperature
+T_cuthigh = 0.8               # maximum allowed emission T (GeV)
+T_cutlow = 0.10               # minimum allowed emission T (GeV)
 
 calHGIdFlag = 0               # Flag to decide whether to calculate individual HG channels
 
@@ -35,12 +39,15 @@ PhotonemRatetableInfo_dT = 0.002    # lattice space of temperature in the photon
 HydroinfoVisflag = 1         # determine whether to read in the viscous evolution information
 HydroinfoBuffersize = 500    # set the buffer size for hydro evolution profile
 
-differential_flag = 0        # determine whether to output photon yield and vn differential in T and tau
-nTcut = 50                   # number of points in T
-T_cuthigh = 0.8              # maximum allowed emission T (GeV)
-T_cutlow = 0.10              # minimum allowed emission T (GeV)
-nTaucut = 50                 # number of points in tau
-tau_start = 0.6              # emission start time (fm)
-tau_end = 25.0               # emission end time (fm)
-
+turn_off_transverse_flow = 0  # flag to turn off transverse flow in the photon calculation
 enable_polyakov_suppression = 0   # apply the polyakov suppression to QGP photon rates
+
+differential_flag = 1        # determine whether to output differential photon yield and vn
+                             # 1: differential in T and tau
+                             # 2: differential in x and tau
+                             # 10: differeitial in all options above
+nTaucut = 50                 # number of points in tau (range of tau is specified by tau_start and tau_end)
+nTcut = 50                   # number of points in T (range of T is specified by T_cuthigh and T_cutlow)
+n_xperp_cut = 101            # number of points in x
+xperp_cuthigh = 10.0         # maximum value in x (fm)
+xperp_cutlow = -10.0         # minimum value in x (fm)

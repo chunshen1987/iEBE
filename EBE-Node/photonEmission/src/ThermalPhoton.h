@@ -70,6 +70,19 @@ class ThermalPhoton
       double ***vndTdtau_cos_vis, ***vndTdtau_sin_vis;
       double ***vndTdtau_cos_bulkvis, ***vndTdtau_sin_bulkvis;
       double ***vndTdtau_cos_tot, ***vndTdtau_sin_tot;
+      
+      //matrix for cuts on x and proper time
+      int n_xperp_cut, n_tau_cut_xtau;
+      double xperp_high, xperp_low;
+      double tau_cut_high, tau_cut_low;
+      double *****dNd2pTdphidydxperpdtau_eq, *****dNd2pTdphidydxperpdtau_tot;
+      double *****dNd2pTdphidydxperpdtau_vis, *****dNd2pTdphidydxperpdtau_bulkvis;
+      double **dNdydxperpdtau_eq, **dNdydxperpdtau_tot;
+      double **dNdydxperpdtau_vis, **dNdydxperpdtau_bulkvis;
+      double ***vndxperpdtau_cos_eq, ***vndxperpdtau_sin_eq;
+      double ***vndxperpdtau_cos_vis, ***vndxperpdtau_sin_vis;
+      double ***vndxperpdtau_cos_bulkvis, ***vndxperpdtau_sin_bulkvis;
+      double ***vndxperpdtau_cos_tot, ***vndxperpdtau_sin_tot;
 
    public:
       ThermalPhoton(ParameterReader* paraRdr_in);
@@ -93,10 +106,13 @@ class ThermalPhoton
 
       void calThermalPhotonemission(double* Eq, double* pi_zz, double* bulkPi, int Tb_length, double T, double* volume, double fraction);
       void calThermalPhotonemissiondTdtau(double* Eq, double* pi_zz, double* bulkPi, int Tb_length, double T, double tau, double* volume, double fraction);
+      void calThermalPhotonemissiondxperpdtau(double* Eq, double* pi_zz, double* bulkPi, int Tb_length, double T, double x_local, double tau, double* volume, double fraction);
       void calPhoton_SpvnpT();
       void calPhoton_SpvnpT_dTdtau();
+      void calPhoton_SpvnpT_dxperpdtau();
       void outputPhoton_SpvnpT(string path);
       void outputPhoton_SpvnpTdTdtau(string path);
+      void outputPhoton_SpvnpTdxperpdtau(string path);
       void output_photon_spectra_dTdtau(string path);
       void interpolation2D_bilinear(double varX, double* varY, int Y_length, double** Table2D_ptr, double* results);
 
