@@ -4,18 +4,18 @@ controlParameterList = {
 }
 
 centralityParameters = {
-    'centrality': '0-1%',  # centrality bin
+    'centrality': '0-10%',  # centrality bin
     'cut_type': 'total_entropy',
     # centrality cut variable: total_entropy or Npart
 }
 
 superMCParameters = {
     'model_name'                    :   'MCGlb',    # MCGlb or MCKLN
-    'Aproj'                         :   1,
+    'Aproj'                         :   208,
     'Atarg'                         :   208,
-    'ecm'                           :   5020,
-    'finalFactor'                   :   50.0,
-    'alpha'                         :   0.000,      # WN/BC mixing ratio in MCGlb
+    'ecm'                           :   2760,
+    'finalFactor'                   :   56.763,
+    'alpha'                         :   0.118,      # WN/BC mixing ratio in MCGlb
     'lambda'                        :   0.218,      # saturation scale parameter in MCKLN
     'operation'                     :   1,
     'include_NN_correlation'        :   0,
@@ -32,9 +32,9 @@ preEquilibriumParameters = {
 
 hydroParameters = {
     'vis'       :   0.08,
-    'visflag'   :   1,        # flag to use temperature dependent eta/s(T)
+    'visflag'   :   0,        # flag to use temperature dependent eta/s(T)
     'T0'        :   0.6,      # tau_0
-    'Edec'      :   0.508,
+    'Edec'      :   0.18,
     'IhydroJetoutput' :   1,  # switch for output hydro evolution history into hdf5 file
     'InitialURead'    :   0,  # set it to be 1 when simulation_type == hydroEM_preEquilibrium
     'Initialpitensor' :   0,  # initialization of pi tensor
@@ -53,10 +53,14 @@ photonEmissionParameters = {
     'dx'          :   0.1,
     'dy'          :   0.1,
     'dTau'        :   0.05,
-    'T_dec'       :   0.165,
+    'tau_start'   :   0.6,
+    'tau_end'     :   20.0,
+    'T_dec'       :   0.12,
+    'T_cuthigh'   :   0.8,
+    'T_cutlow'    :   0.1,
     'T_sw_high'   :   0.180,
     'T_sw_low'    :   0.1795,
     'calHGIdFlag' :   0,
-    'differential_flag'   :  0,
+    'differential_flag'   :  2,
     'enable_polyakov_suppression'   :    0,
 }

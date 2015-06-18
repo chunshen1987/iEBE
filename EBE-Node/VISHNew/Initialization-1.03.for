@@ -375,7 +375,7 @@ C====Input the initial condition from file====
 !              Call invertFunctionD(SEOSL7, 0D0, 315D0, 1D-3, 0D0,
 !     &                        Sd(I,J,NZ0), resultingEd)
               Call invertFunction_binary(
-     &                 SEOSL7, 0D0, 315D0, 1d-16, 1D-6,
+     &                 SEOSL7, 0D0, 500D0, 1d-16, 1D-6,
      &                 Sd(I, J, NZ0), resultingEd)
               Ed(I,J,NZ0) = resultingEd/HbarC ! to fm^(-4)
             End Do
@@ -404,7 +404,7 @@ C====Input the initial condition from file====
 !          Call invertFunctionD(SEOSL7, 0D0, 315D0, 1D-3, 0D0,
 !     &                        Sd(I,J,NZ0), resultingEd)
            Call invertFunction_binary(
-     &              SEOSL7, 0D0, 315D0, 1d-16, 1D-6,
+     &              SEOSL7, 0D0, 500D0, 1d-16, 1D-6,
      &              Sd(I, J, NZ0), resultingEd)
           Ed(I,J,NZ0) = resultingEd/HbarC ! to fm^(-4)
         End Do
