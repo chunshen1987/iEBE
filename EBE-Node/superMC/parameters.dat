@@ -23,13 +23,13 @@ tmax_subdivision = 3      # Its reciprocal gives the step used to generate the T
 
 
 # Glauber Optns
-alpha = 0.118             # Alpha defining WN and BC mixture: (1-alpha)/2*WN + alpha*BC
+alpha = 0.0             # Alpha defining WN and BC mixture: (1-alpha)/2*WN + alpha*BC
 glb_entropy_width = 0.5   # User specified gaussian width for the deposition of entropy 
                           # in the Glauber model 
 
 # Nucleus Optns
-Aproj = 2               # Projectile atomic number
-Atarg = 197               # Target atomic number
+Aproj = 1               # Projectile atomic number
+Atarg = 1               # Target atomic number
 proj_deformed = 0         # (0) Spherical nucleus; (1) Deformed nucleus (see OverLap.cpp)
 targ_deformed = 0         # (0) Spherical nucleus; (1) Deformed nucleus (see OverLap.cpp) 
 
@@ -44,7 +44,7 @@ shape_of_nucleons = 2     # (1) Disk-like nucleons with width given by sigmaNN
                           # (4) Gaussian nucleons with user specified width 
                           # (5-9) Gaussian nucleons for other models (future use)
 
-shape_of_entropy = 2      # (2) Normal Gaussian nucleons
+shape_of_entropy = 3      # (2) Normal Gaussian nucleons
                           # (3) valence quark substructure 
 quark_width = 0.2         # valence quark entropy deposition width
 
@@ -55,8 +55,8 @@ gauss_nucl_width = 0.5    # 4-> User specified width for Gaussian nucleons
 # Collision Optns
 ecm = 200                 # Beam Energy sqrt(s) in GeV
 bmin = 0.0                  # Minimum sampled impact parameter
-bmax = 15.0                  # Maximum sampled impact parameter
-Npmin = 1                 # Minimum participant nucleon cut
+bmax = 2.0                  # Maximum sampled impact parameter
+Npmin = 2                 # Minimum participant nucleon cut
 Npmax = 500               # Maximum participant nucleon cut
 
 cutdSdy = 0               # cut centrality with additional requirements on total entropy density (without normalization factor)
@@ -112,10 +112,10 @@ PT_order = 2              # =1 output the usual entropy/energy density profile; 
 d_PT = 0.1                # Step size of PT in GeV
 
 # Grid Optns
-maxx = 13                 # Max grid value along x direction in fm
-maxy = 13                 # Max grid value along y direction in fm 
-dx = 0.1                  # Step size along x direction in fm
-dy = 0.1                  # Step size along y direction in fm
+maxx = 10                 # Max grid value along x direction in fm
+maxy = 10                 # Max grid value along y direction in fm 
+dx = 0.05                  # Step size along x direction in fm
+dy = 0.05                  # Step size along y direction in fm
 ny = 1                    # Number of rapidity bins (do not set to zero)
 ymax = 0                  # Maximum rapidity value (symmetric -ymax to ymax)
 
@@ -128,6 +128,7 @@ cc_fluctuation_Gamma_theta = 0.9175    # the scale parameter for Gamma distribut
 output_TATB = 1           # 1: output; 0: no output; only effective when generating averaged profiles
 output_rho_binary = 1     # 1: output binary collision density
 output_TA = 1             # 1: output nuclear thickness function
+output_rhob = 1           # 1: output net baryon density profile
 
 generate_reaction_plane_avg_profile = 0    # switch to generate smooth event-averaged 
                                            # profile with respect to reaction plane defined 

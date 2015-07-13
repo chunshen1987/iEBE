@@ -309,7 +309,7 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
     {
       nucl2.push_back(new Particle(-b/2.0, 0.0, 0.0)); // shift along x-axis
     }
-    if (nn==2) // in the case of a deuteron (added by Brian Baker)
+    else if (nn==2) // in the case of a deuteron (added by Brian Baker)
     {
       double x1, y1, z1, x2, y2, z2;
          
@@ -327,7 +327,7 @@ void MCnucl::generateNucleus(double b, OverLap* proj, OverLap* targ)
     }
     else 
     {
-       if(flag_NN_correlation == 0)
+       if(flag_NN_correlation == 0 || nn != 197 || nn != 208)
        {
           for(int ia=0;ia<nn;ia++) {
             double x,y,z;
@@ -585,7 +585,7 @@ int MCnucl::hit(double b)
 int MCnucl::CentralityCut()
 {
   int Nptot = Npart1 + Npart2;
-  if (Nptot<=NpartMax && Nptot>NpartMin) return 1;
+  if (Nptot<=NpartMax && Nptot>=NpartMin) return 1;
   return 0;
 }
 

@@ -187,9 +187,8 @@ void OverLap::readin_nucleon_positions()
    else if(atomic == 208)
    {
       //int temp = rand() % 10 + 1;
-      //filename << "tables/pb208-" << temp << ".dat";
       int temp = 1;
-      filename << "tables/pb208-1.dat";
+      filename << "tables/pb208-" << temp << ".dat";
       n_configuration = 10000;
    }
    else
@@ -222,7 +221,6 @@ void OverLap::readin_nucleon_positions()
    }
    input.close();
    cout << " done." << endl;
-
 }
 
 void OverLap::GetTritonPosition(double& x1,double& y1,double& z1,double &x2,double& y2,double& z2, double &x3, double &y3, double &z3)

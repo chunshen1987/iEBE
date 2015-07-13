@@ -193,6 +193,7 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
   
   int output_rho_binary = paraRdr->getVal("output_rho_binary");
   int output_TA = paraRdr->getVal("output_TA");
+  int output_rhob = paraRdr->getVal("output_rhob");
 
   // binary density profile (rotated using entropy density):
   char file_rho_binary_4col[] = "data/rho_binary_event_%d_4col.dat";
@@ -233,6 +234,20 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
         nuclear_TB_sd[iy][i] = new double[Maxy]();
         for (int j=0;j<Maxy;j++)
            nuclear_TB_sd[iy][i][j]=0;
+    }
+  }
+  // net baryon density profile = TA+TB
+  char file_rhob_4col[] = "data/rhob_event_%d_4col.dat";
+  char file_rhob_block[] = "data/rhob_event_%d_block.dat";
+  double ***rhob_sd = new double** [binRapidity];
+  for(int iy=0;iy<binRapidity;iy++)
+  {
+    rhob_sd[iy] =  new double* [Maxx]();
+    for(int i=0;i<Maxx;i++)
+    {
+        rhob_sd[iy][i] = new double[Maxy]();
+        for (int j=0;j<Maxy;j++)
+           rhob_sd[iy][i][j]=0;
     }
   }
 
@@ -362,6 +377,25 @@ void MakeDensity::generate_profile_ebe_Jet(int nevent)
            dumpDensityBlock(buffer, nuclear_TA_sd, iy);
            sprintf(buffer,file_TB_block,event);
            dumpDensityBlock(buffer, nuclear_TB_sd, iy);
+         }
+      }
+      // output nuclear thickness function
+      if (output_rhob)
+      {
+         for(int i=0;i<Maxx;i++)
+            for(int j=0;j<Maxy;j++)
+            {
+               rhob_sd[iy][i][j] = mc->getTA1(i,j) + mc->getTA2(i,j);
+            }
+         if (use_4col)
+         {
+             sprintf(buffer, file_rhob_4col, event);
+             dumpDensity4Col(buffer, rhob_sd, iy);
+         }
+         if (use_block)
+         {
+           sprintf(buffer, file_rhob_block, event);
+           dumpDensityBlock(buffer, rhob_sd, iy);
          }
       }
     } // <-> for(int iy=0;iy<binRapidity;iy++)
