@@ -42,7 +42,7 @@ HydroinfoBuffersize = 500    # set the buffer size for hydro evolution profile
 turn_off_transverse_flow = 0  # flag to turn off transverse flow in the photon calculation
 enable_polyakov_suppression = 0   # apply the polyakov suppression to QGP photon rates
 
-differential_flag = 2        # determine whether to output differential photon yield and vn
+differential_flag = 0        # determine whether to output differential photon yield and vn
                              # 1: differential in T and tau
                              # 2: differential in x and tau
                              # 10: differeitial in all options above

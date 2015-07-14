@@ -61,6 +61,6 @@ photonEmissionParameters = {
     'T_sw_high'   :   0.180,
     'T_sw_low'    :   0.1795,
     'calHGIdFlag' :   0,
-    'differential_flag'   :  2,
+    'differential_flag'   :  0,
     'enable_polyakov_suppression'   :    0,
 }
