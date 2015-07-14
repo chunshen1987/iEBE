@@ -202,6 +202,7 @@ C------ Lattice size and boundary R0 ----------------------------
 
       READ(1,*) DT_1      ! time step
       READ(1,*) LS        ! lattice size
+      READ(1,*) DX,DY     ! lattice spacing in the transverse plane
       READ(1,*) R0Bdry    ! <x^2> and <y^2> for Gaussian initial condition
 
 C------ Some uncommon parameters ----------------------------
@@ -232,9 +233,6 @@ C ***************************J.Liu changes end***************************
       CLOSE(1)
 C===========================================================================
 
-      DX=0.1d0
-      DY=0.1d0
-
 
 !-----------End of reading parameters from file-------------------------
 
@@ -259,8 +257,8 @@ C===========================================================================
 
 CSHEN======================================================================
 C====Change to a smaller time step for small \tau_0 case ==================
-      DT_2 = DT_1/10.0
-
+      !DT_2 = DT_1/10.0
+      DT_2 = DT_1
       dT  = DT_1
 CSHEN===END================================================================
 

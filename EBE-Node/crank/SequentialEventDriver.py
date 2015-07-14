@@ -91,6 +91,11 @@ superMCParameters = {
     'operation'                     :   1,
     'include_NN_correlation'        :   1,
     'cc_fluctuation_model'          :   6,
+    'cc_fluctuation_Gamma_theta'    :   0.75,
+    'maxx'                          :   13.0,       # grid size in x (fm)
+    'maxy'                          :   13.0,       # grid size in y (fm)
+    'dx'                            :   0.1,        # grid spacing in x (fm)
+    'dy'                            :   0.1,        # grid spacing in y (fm)
 }
 
 preEquilibriumControl = {
@@ -123,9 +128,11 @@ hydroParameters = {
     'IEOS'      :   7,
     'iEin'      :   1,
     'vis'       :   0.08,
-    'iLS'       :   130,
-    'T0'        :   0.6, # tau_0
-    'Edec'      :   0.3, # 0.3->160 MeV, 0.18->120 MeV
+    'iLS'       :   130,  # lattice points in the transverse plane
+    'dx'        :   0.1,  # lattice spacing in x
+    'dy'        :   0.1,  # lattice spacing in y
+    'T0'        :   0.6,  # tau_0
+    'Edec'      :   0.3,  # 0.3->160 MeV, 0.18->120 MeV
     'factor'    :   1.0,
     'IhydroJetoutput'   :   1,   # switch for output hydro evolution history into hdf5 file
     'InitialURead'      :   1,   # switch to read in initial flow velocity and shear tensor

@@ -22,6 +22,7 @@
 *
 0.02        !dT_1                  time step
 130         !lattice size (in positive direction)
+0.1, 0.1    !lattice spacing dx, dy
 12.5        !boundary R0
 *
 *
