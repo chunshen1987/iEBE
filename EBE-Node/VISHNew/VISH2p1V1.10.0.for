@@ -2457,7 +2457,7 @@ C#####################################################
       ff=1.0/(Dexp((rr-R0Bdry)/Aeps)+1.0)
 CSHEN==========================================================================
 C=======for temperature dependent \eta/s=======================================
-      if(IVisflag.eq.1) then
+      if(IVisflag.ne.0) then
         ViscousC = ViscousCTemp(Temp(i,j,k))      !CSHEN: for temperature dependent \eta/s
       endif
 CSHEN======end=================================================================
@@ -2544,10 +2544,14 @@ C====eta/s dependent on local temperature==================================
       Ttr = 0.18
 
       if(TT_GeV .gt. Ttr) then
+          if(IVisflag .eq. 2) then
+              ViscousCTemp = - 0.289 + 0.288*TT_GeV/Ttr
+     &                       + 0.0818*(TT_GeV/Ttr)**2.
+          endif
           ViscousCTemp = 0.08
       else
           ViscousCTemp = 0.681 - 0.0594*TT_GeV/Ttr 
-     &                   - 0.544*(TT_GeV/Ttr)**2.;
+     &                   - 0.544*(TT_GeV/Ttr)**2.
       endif
 
       return
