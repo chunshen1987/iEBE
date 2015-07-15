@@ -203,7 +203,6 @@ C------ Lattice size and boundary R0 ----------------------------
       READ(1,*) DT_1      ! time step
       READ(1,*) LS        ! lattice size
       READ(1,*) DX,DY     ! lattice spacing in the transverse plane
-      R0Bdry = (LS-5)*DX  ! the radius of edge suppression
 
 C------ Some uncommon parameters ----------------------------
       Read(1,*) Cha
@@ -239,6 +238,7 @@ C===========================================================================
       Print *, "Now read parameters specified from CML"
 
       Call readInputFromCML2() ! check CML to see if there are any modifications on parameters
+      R0Bdry = (LS-5)*DX  ! the radius of edge suppression
       Write (*,*) "Have:", "IEOS=", IEOS, "A=", A, ! write out parameter for a check
      &    "IInit=", IInit, "dT=", dT_1,
      &    "eta/s=",ViscousC,"b=",b,"Rx2=",Rx2,"Ry2=",Ry2,

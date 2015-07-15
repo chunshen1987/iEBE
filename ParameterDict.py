@@ -4,27 +4,27 @@ controlParameterList = {
 }
 
 centralityParameters = {
-    'centrality': '40-50%',  # centrality bin
+    'centrality': '0-10%',  # centrality bin
     'cut_type': 'total_entropy',
     # centrality cut variable: total_entropy or Npart
 }
 
 superMCParameters = {
     'model_name'                    :   'MCGlb',    # MCGlb or MCKLN
-    'Aproj'                         :   208,
+    'Aproj'                         :   1,
     'Atarg'                         :   208,
-    'ecm'                           :   2760,
-    'finalFactor'                   :   56.763,
-    'alpha'                         :   0.118,      # WN/BC mixing ratio in MCGlb
+    'ecm'                           :   5020,
+    'finalFactor'                   :   60.0,
+    'alpha'                         :   0.000,      # WN/BC mixing ratio in MCGlb
     'lambda'                        :   0.218,      # saturation scale parameter in MCKLN
     'operation'                     :   1,
-    'include_NN_correlation'        :   1,
+    'include_NN_correlation'        :   0,
     'cc_fluctuation_model'          :   6,
-    'cc_fluctuation_Gamma_theta'    :   0.73,       
-    'maxx'                          :   13.0,       # grid size in x (fm)
-    'maxy'                          :   13.0,       # grid size in y (fm)
-    'dx'                            :   0.1,        # grid spacing in x (fm)
-    'dy'                            :   0.1,        # grid spacing in y (fm)
+    'cc_fluctuation_Gamma_theta'    :   0.75,       
+    'maxx'                          :   10.0,       # grid size in x (fm)
+    'maxy'                          :   10.0,       # grid size in y (fm)
+    'dx'                            :   0.05,        # grid spacing in x (fm)
+    'dy'                            :   0.05,        # grid spacing in y (fm)
 }
 
 # only effective when simulation_type == hydroEM_preEquilibrium
@@ -39,11 +39,12 @@ hydroParameters = {
     'vis'       :   0.08,
     'visflag'   :   1,        # flag to use temperature dependent eta/s(T)
     'T0'        :   0.6,      # tau_0
+    'dt'        :   0.01,     # dtau
     'Edec'      :   0.508,
-    'iLS'       :   130,      # lattice size in transverse plane 2*iLS+1
-    'dx'        :   0.1,     # lattice spacing in x (fm) 
+    'iLS'       :   200,      # lattice size in transverse plane 2*iLS+1
+    'dx'        :   0.05,     # lattice spacing in x (fm) 
                               # need to be the same as dx in superMC
-    'dy'        :   0.1,     # lattice spacing in y (fm)
+    'dy'        :   0.05,     # lattice spacing in y (fm)
                               # need to be the same as dy in superMC
     'IhydroJetoutput' :   1,  # switch for output hydro evolution history into hdf5 file
     'InitialURead'    :   0,  # set it to be 1 when simulation_type == hydroEM_preEquilibrium

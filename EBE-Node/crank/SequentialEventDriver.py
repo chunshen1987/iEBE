@@ -132,6 +132,7 @@ hydroParameters = {
     'dx'        :   0.1,  # lattice spacing in x
     'dy'        :   0.1,  # lattice spacing in y
     'T0'        :   0.6,  # tau_0
+    'dt'        :   0.02, # dtau
     'Edec'      :   0.3,  # 0.3->160 MeV, 0.18->120 MeV
     'factor'    :   1.0,
     'IhydroJetoutput'   :   1,   # switch for output hydro evolution history into hdf5 file
