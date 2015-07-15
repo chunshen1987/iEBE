@@ -203,7 +203,7 @@ C------ Lattice size and boundary R0 ----------------------------
       READ(1,*) DT_1      ! time step
       READ(1,*) LS        ! lattice size
       READ(1,*) DX,DY     ! lattice spacing in the transverse plane
-      READ(1,*) R0Bdry    ! <x^2> and <y^2> for Gaussian initial condition
+      R0Bdry = (LS-5)*DX  ! the radius of edge suppression
 
 C------ Some uncommon parameters ----------------------------
       Read(1,*) Cha

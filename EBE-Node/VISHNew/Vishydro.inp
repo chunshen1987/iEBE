@@ -23,7 +23,6 @@
 0.02        !dT_1                  time step
 130         !lattice size (in positive direction)
 0.1, 0.1    !lattice spacing dx, dy
-12.5        !boundary R0
 *
 *
 4.0,6.0     !Rx2,Ry2               <x^2> and <y^2>, for Gaussian initialization only
@@ -37,4 +36,4 @@
 0           !InitialURead
 *
 *
-1           !Initialization of pi^\mu\nu tensor 0: initialize by 0; 1: initialize by its NS value
+0           !Initialization of pi^\mu\nu tensor 0: initialize by 0; 1: initialize by its NS value
