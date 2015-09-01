@@ -202,7 +202,7 @@ C------ Lattice size and boundary R0 ----------------------------
 
       READ(1,*) DT_1      ! time step
       READ(1,*) LS        ! lattice size
-      READ(1,*) R0Bdry    ! <x^2> and <y^2> for Gaussian initial condition
+      READ(1,*) DX,DY     ! lattice spacing in the transverse plane
 
 C------ Some uncommon parameters ----------------------------
       Read(1,*) Cha
@@ -232,15 +232,13 @@ C ***************************J.Liu changes end***************************
       CLOSE(1)
 C===========================================================================
 
-      DX=0.1d0
-      DY=0.1d0
-
 
 !-----------End of reading parameters from file-------------------------
 
       Print *, "Now read parameters specified from CML"
 
       Call readInputFromCML2() ! check CML to see if there are any modifications on parameters
+      R0Bdry = (LS-5)*DX  ! the radius of edge suppression
       Write (*,*) "Have:", "IEOS=", IEOS, "A=", A, ! write out parameter for a check
      &    "IInit=", IInit, "dT=", dT_1,
      &    "eta/s=",ViscousC,"b=",b,"Rx2=",Rx2,"Ry2=",Ry2,
@@ -259,8 +257,8 @@ C===========================================================================
 
 CSHEN======================================================================
 C====Change to a smaller time step for small \tau_0 case ==================
-      DT_2 = DT_1/10.0
-
+      !DT_2 = DT_1/10.0
+      DT_2 = DT_1
       dT  = DT_1
 CSHEN===END================================================================
 
@@ -2457,7 +2455,7 @@ C#####################################################
       ff=1.0/(Dexp((rr-R0Bdry)/Aeps)+1.0)
 CSHEN==========================================================================
 C=======for temperature dependent \eta/s=======================================
-      if(IVisflag.eq.1) then
+      if(IVisflag.ne.0) then
         ViscousC = ViscousCTemp(Temp(i,j,k))      !CSHEN: for temperature dependent \eta/s
       endif
 CSHEN======end=================================================================
@@ -2544,10 +2542,14 @@ C====eta/s dependent on local temperature==================================
       Ttr = 0.18
 
       if(TT_GeV .gt. Ttr) then
+          if(IVisflag .eq. 2) then
+              ViscousCTemp = - 0.289 + 0.288*TT_GeV/Ttr
+     &                       + 0.0818*(TT_GeV/Ttr)**2.
+          endif
           ViscousCTemp = 0.08
       else
           ViscousCTemp = 0.681 - 0.0594*TT_GeV/Ttr 
-     &                   - 0.544*(TT_GeV/Ttr)**2.;
+     &                   - 0.544*(TT_GeV/Ttr)**2.
       endif
 
       return

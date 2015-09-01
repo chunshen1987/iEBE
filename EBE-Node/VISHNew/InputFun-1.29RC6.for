@@ -72,7 +72,7 @@
 
 !----------GLOBALS-----------------------------------------------
       debug = 0
-      outPiTrace = 1
+      outPiTrace = 0
       outPiStrengthX = 0
       outPiComponents = 0
       outEOnXY = 0
