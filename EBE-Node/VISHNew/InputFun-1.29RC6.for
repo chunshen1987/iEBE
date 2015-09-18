@@ -630,7 +630,7 @@
         If (varName=="initialuread") InitialURead=IResult ! read in initial flow velocity profiles
         If (varName=="ihydrojetoutput") IhydroJetoutput=IResult ! output hydro evolution
 
-        If (varName=="visflag") IVisflag=IResult ! Flag for temperature dependent eta/s(T)
+        If (varName=="ivisflag") IVisflag=IResult ! Flag for temperature dependent eta/s(T)
         If (varName=="initialpitensor") Initialpitensor=IResult ! initialization of pi tensor
 
       End Do ! ArgIndex

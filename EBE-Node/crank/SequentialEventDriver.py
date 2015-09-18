@@ -128,6 +128,7 @@ hydroParameters = {
     'IEOS'      :   7,
     'iEin'      :   1,
     'vis'       :   0.08,
+    'Ivisflag'  :   0,
     'iLS'       :   130,  # lattice points in the transverse plane
     'dx'        :   0.1,  # lattice spacing in x
     'dy'        :   0.1,  # lattice spacing in y
