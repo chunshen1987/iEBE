@@ -7,7 +7,7 @@
 !   -- For changes, see ChangeLogsInputFun.txt
 !-----------------------------------------------------------------------
 !   ToDos:
-!   -- Add debug symbol (and if's)
+!   -- Add debug symbol (and if''s)
 !   -- Change many multiple-if's into single-line if'
 !   -- Allow reading parameters outPiMovieDt and regMethod from CML & file
 !   -- Add debug echo for parameters read from file
@@ -168,9 +168,12 @@
       Common /thick/ TRo0, TEta, TRA  !Para in Nuclear Thickness Function
 
       Integer IVisflag
+      Integer IVisBulkFlag
       Double Precision ViscousC, VisBeta, Visbulk, BulkTau, IRelaxBulk
       Common /ViscousC/ ViscousC, VIsBeta, IVisflag ! Related to Shear Viscosity
-      Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk  ! Related to bulk Visousity
+      double precision VisBulkNorm
+      Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk, IVisBulkFlag,
+     &                     VisBulkNorm        ! Related to bulk Visousity
 
       Double Precision ITeta, b, ddx, ddy, TT0
       Common /ITeta/ ITeta
@@ -496,10 +499,16 @@
       Double Precision ViscousC, VisBeta, Visbulk, BulkTau, IRelaxBulk
       Integer IVisflag
       Common /ViscousC/ ViscousC, VisBeta, IVisflag
-      Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk  ! Related to bulk Visousity
+      Integer IVisBulkFlag
+      double precision:: VisBulkNorm
+      Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk, IVisBulkFlag, 
+     &                     VisBulkNorm ! Related to bulk Visousity
       
       Integer Initialpitensor
       Common/Initialpi/ Initialpitensor
+
+      Integer :: ViscousEqsType
+      Common/ViscousEqsControl/ ViscousEqsType
 
       Double Precision ITeta, b, ddx, ddy, TT0
       Common /ITeta/ ITeta
@@ -631,8 +640,11 @@
         If (varName=="ihydrojetoutput") IhydroJetoutput=IResult ! output hydro evolution
 
         If (varName=="ivisflag") IVisflag=IResult ! Flag for temperature dependent eta/s(T)
+
         If (varName=="initialpitensor") Initialpitensor=IResult ! initialization of pi tensor
 
+        If (varName=="ivisbulkflag") IVisBulkFlag=IResult ! Flag for temperature dependent zeta/s(T)
+        If (varName=="visbulknorm") VisBulkNorm=DResult ! VisBulkNorm, use for temperature dependent zeta/s(T)
       End Do ! ArgIndex
 
       If (debug>=3) Print *, "* readInputFromCML finished"

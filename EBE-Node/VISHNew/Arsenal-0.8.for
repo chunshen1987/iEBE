@@ -279,8 +279,7 @@
 !-----------------------------------------------------------------------
 
 ************************************************************************
-      Subroutine invertFunctionD(
-     &           func,varL,varR,acc,varI,varX,varResult)
+      Subroutine invertFunctionD(func,varL,varR,acc,varI,varX,varResult)
 !     Purpose:
 !       Return the varResult=func^-1(varX) using Newton method.
 !       -- func: double precision 1-argument function to be inverted
