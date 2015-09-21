@@ -4,7 +4,7 @@ controlParameterList = {
 }
 
 centralityParameters = {
-    'centrality': '0-10%',  # centrality bin
+    'centrality': '0-1%',  # centrality bin
     'cut_type': 'total_entropy',
     # centrality cut variable: total_entropy or Npart
 }
@@ -37,7 +37,7 @@ preEquilibriumParameters = {
 
 hydroParameters = {
     'vis'       :   0.08,
-    'visflag'   :   1,        # flag to use temperature dependent eta/s(T)
+    'Ivisflag'  :   1,        # flag to use temperature dependent eta/s(T)
     'T0'        :   0.6,      # tau_0
     'dt'        :   0.01,     # dtau
     'Edec'      :   0.508,

@@ -129,6 +129,8 @@ hydroParameters = {
     'iEin'      :   1,
     'vis'       :   0.08,
     'Ivisflag'  :   0,
+    'IvisBulkFlag'  :   0,    # flag for temperature dependence of bulk viscosity
+    'visbulknorm'   :   0.0,  # the overall normalization of the bulk viscosity
     'iLS'       :   130,  # lattice points in the transverse plane
     'dx'        :   0.1,  # lattice spacing in x
     'dy'        :   0.1,  # lattice spacing in y
