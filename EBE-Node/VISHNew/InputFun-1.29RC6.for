@@ -168,12 +168,12 @@
       Common /thick/ TRo0, TEta, TRA  !Para in Nuclear Thickness Function
 
       Integer IVisflag
-      Integer IVisBulkFlag
       Double Precision ViscousC, VisBeta, Visbulk, BulkTau, IRelaxBulk
       Common /ViscousC/ ViscousC, VIsBeta, IVisflag ! Related to Shear Viscosity
+      Integer IVisBulkFlag
       double precision VisBulkNorm
-      Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk, IVisBulkFlag,
-     &                     VisBulkNorm        ! Related to bulk Visousity
+      Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk
+      Common /VisBulkopt/  IVisBulkFlag, VisBulkNorm        ! Related to bulk Visousity
 
       Double Precision ITeta, b, ddx, ddy, TT0
       Common /ITeta/ ITeta
@@ -500,9 +500,9 @@
       Integer IVisflag
       Common /ViscousC/ ViscousC, VisBeta, IVisflag
       Integer IVisBulkFlag
-      double precision:: VisBulkNorm
-      Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk, IVisBulkFlag, 
-     &                     VisBulkNorm ! Related to bulk Visousity
+      double precision VisBulkNorm
+      Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk
+      Common /VisBulkopt/  IVisBulkFlag, VisBulkNorm        ! Related to bulk Visousity
       
       Integer Initialpitensor
       Common/Initialpi/ Initialpitensor
