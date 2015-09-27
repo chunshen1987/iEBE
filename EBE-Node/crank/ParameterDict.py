@@ -14,7 +14,7 @@ superMCParameters = {
     'Aproj'                         :   1,
     'Atarg'                         :   208,
     'ecm'                           :   5020,
-    'finalFactor'                   :   60.0,
+    'finalFactor'                   :   54.0,
     'alpha'                         :   0.000,      # WN/BC mixing ratio in MCGlb
     'lambda'                        :   0.218,      # saturation scale parameter in MCKLN
     'operation'                     :   1,
@@ -38,6 +38,8 @@ preEquilibriumParameters = {
 hydroParameters = {
     'vis'       :   0.08,
     'Ivisflag'  :   1,        # flag to use temperature dependent eta/s(T)
+    'IvisBulkFlag'  :   1,    # flag for temperature dependence of bulk viscosity
+    'visbulknorm'   :   1.0,  # the overall normalization of the bulk viscosity
     'T0'        :   0.6,      # tau_0
     'dt'        :   0.01,     # dtau
     'Edec'      :   0.508,

@@ -108,10 +108,10 @@ C *******************************J.Liu changes*******************************
       Integer ViscousEqsType
       Common/ViscousEqsControl/ ViscousEqsType
 
-      Integer :: IVisBulkFlag
-      double precision :: VisBulkNorm
-      Common /ViscousBulk/ Visbulk, BulkTau,IRelaxBulk, IVisBulkFlag,
-     &                     VisBulkNorm! Related to bulk Visousity
+      Integer IVisBulkFlag
+      double precision VisBulkNorm
+      Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk
+      Common /VisBulkopt/  IVisBulkFlag, VisBulkNorm        ! Related to bulk Visousity
 C *******************************J.Liu changes end***************************
 
        Common /LS/ LS
@@ -564,9 +564,11 @@ C-------------------------------------------------------------------------------
       Double Precision XNP(0:9), YNP(0:9), WeightP ! XN' and YN', the one using r^n in the weight
 
       Common /ViscousC / ViscousC,VisBeta, IVisflag ! Related to Shear Viscosity
-      double precision:: VisBulkNorm
-      Common /ViscousBulk/ Visbulk,BulkTau,IRelaxBulk,IVisBulkFlag,
-     &                     VisBulkNorm    ! Related to bulk Viscosity
+      Integer IVisBulkFlag
+      double precision VisBulkNorm
+      Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk
+      Common /VisBulkopt/  IVisBulkFlag, VisBulkNorm        ! Related to bulk Visousity
+
       Common /sFactor/ sFactor
 
       Integer ViscousEqsType
@@ -2508,12 +2510,12 @@ C#####################################################
        Dimension AA(NX0:NX, NY0:NY, NZ0:NZ) !
 
        Integer :: IVisflag
-       Integer :: IVisBulkFlag
 
        Common /ViscousC / ViscousC,VisBeta, IVisflag ! Related to Viscous Coefficient eta and beta2
-       double precision :: VisBulkNorm 
-       Common /ViscousBulk/ Visbulk, BulkTau,IRelaxBulk, IVisBulkFlag,
-     &                      VisBulkNorm   ! Related to bulk Viscous Coefficient Xi and beta0
+       Integer IVisBulkFlag
+       double precision VisBulkNorm 
+       Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk
+       Common /VisBulkopt/  IVisBulkFlag, VisBulkNorm        ! Related to bulk Visousity
 
        Common /Tde/ Tde, Rdec1, Rdec2,TempIni !Decoupling Temperature !decoupling radius
        Common/R0Aeps/ R0,Aeps
@@ -3612,13 +3614,13 @@ C-------------------------------------------
         Dimension IAA(NX0:NX, NY0:NY, NZ0:NZ)
         Dimension CofAA(0:2,NX0:NX, NY0:NY, NZ0:NZ)
 
-       Integer :: IVisflag
-       Integer :: IVisBulkFlag
+       Integer IVisflag
+       Integer IVisBulkFlag
 
        Common /ViscousC / ViscousC,VisBeta, IVisflag
-       double precision :: VisBulkNorm 
-       Common /ViscousBulk/ Visbulk, BulkTau,IRelaxBulk, IVisBulkFlag,
-     &                      VisBulkNorm
+       double precision VisBulkNorm 
+       Common /ViscousBulk/ Visbulk, BulkTau, IRelaxBulk
+       Common /VisBulkopt/  IVisBulkFlag, VisBulkNorm        ! Related to bulk Visousity
 
         DIMENSION PNEW(NNEW)!something related to root finding
        Parameter(XC0=1.0d-15, AAC=1.0d-16) !root finding accuracy
