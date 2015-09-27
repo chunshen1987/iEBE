@@ -54,6 +54,7 @@ class PhotonEmission
       //photon production processes
       ThermalPhoton* photon_QGP;
       ThermalPhoton* photon_HG;
+      ThermalPhoton* photon_HG_omega;
       ThermalPhoton* photon_HG_rho_spectralfun;
       ThermalPhoton* photon_HG_pipiBremsstrahlung;
 
