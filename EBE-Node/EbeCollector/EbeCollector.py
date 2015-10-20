@@ -8,6 +8,7 @@
 import math
 from sys import exit
 from os import path, listdir
+from subprocess import call
 import re
 import numpy as np
 from numpy import * # used by EbeDBReader.evaluateExpression function to support all math operations
@@ -1075,113 +1076,88 @@ class EbeCollector(object):
             -- "fromPureHydro11P5N":
                collect data from old 11P5N format
         """
-        # get list of (matched subfolders, event id)
-        matchPattern = re.compile(subfolderPattern)
-        matchedSubfolders = []
-        for folder_index, aSubfolder in enumerate(listdir(folder)):
-            fullPath = path.join(folder, aSubfolder)
-            if not path.isdir(fullPath): continue # want only folders, not files
-            if collectMode == "fromPureHydro":
-                # no matching is needed; try all folders
-                matchedSubfolders.append((fullPath, len(matchedSubfolders)+1))
-            else:
-                # for new-style calculations, folder name must match
-                matchResult = matchPattern.match(aSubfolder)
-                if matchResult: # matched!
-                    if len(matchResult.groups()): # folder name contains id
-                        event_id = matchResult.groups()[0]
-                    else:
-                        event_id = folder_index
-                    matchedSubfolders.append((fullPath, event_id)) # matched!
-
         # the data collection loop
         db = SqliteDB(path.join(folder, databaseFilename))
-        if collectMode == "fromUrQMD":
-            print("-"*60)
-            print("Using fromUrQMD mode")
-            print("-"*60)
-            for aSubfolder, event_id in matchedSubfolders:
-                print("Collecting %s as with event-id: %s" % (aSubfolder, event_id))
-                self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db) # collect ecc
-                self.collectScalars(aSubfolder, event_id, db)  # collect scalars
-                self.collectFLowsAndMultiplicities_urqmdBinUtilityFormat(aSubfolder, event_id, db, multiplicityFactor) # collect flow
-        elif collectMode == "fromPureHydro":
-            print("-"*60)
-            print("Using fromPureHydro mode")
-            print("-"*60)
-            for aSubfolder, event_id in matchedSubfolders:
-                print("Collecting %s as with event-id: %s" % (aSubfolder, str(event_id)))
-                self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=True) # collect ecc
-                self.collectScalars(path.join(aSubfolder,"results"), event_id, db)  # collect scalars
-                self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db) # collect flow
-        elif collectMode == "fromPureHydroNewStoring":
-            print("-"*60)
-            print("Using fromPureHydroNewStoring mode")
-            print("-"*60)
-            for aSubfolder, event_id in matchedSubfolders:
-                print("Collecting %s as with event-id: %s" % (aSubfolder, event_id))
-                self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
-                self.collectScalars(aSubfolder, event_id, db)  # collect scalars
-                self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db, useSubfolder="") # collect flow
-        elif collectMode == "fromHydroEM":
-            print("-"*60)
-            print("Using fromHydroEM mode")
-            print("-"*60)
-            for aSubfolder, event_id in matchedSubfolders:
-                print("Collecting %s as with event-id: %s" % (aSubfolder, event_id))
-                self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
-                self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db, useSubfolder="") # collect hadron flow
-                self.collectFLowsAndMultiplicities_photon(aSubfolder, event_id, db, useSubfolder="") # collect photon flow
-        elif collectMode == "fromHydroEM_with_decaycocktail":
-            print("-"*60)
-            print("Using fromHydroEM_with_decaycocktail mode")
-            print("-"*60)
-            for aSubfolder, event_id in matchedSubfolders:
-                print("Collecting %s as with event-id: %s" % (aSubfolder, event_id))
-                self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
-                self.collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(aSubfolder, event_id, db, useSubfolder="") # collect hadron and decay photon flow
-                self.collectFLowsAndMultiplicities_photon(aSubfolder, event_id, db, useSubfolder="") # collect thermal photon flow
-        elif collectMode == "fromPureHydro11P5N":
-            print("-"*60)
-            print("Using fromPureHydro11P5N mode")
-            print("-"*60)
+
+        collect_flag = 0
+        print("-"*60)
+        print("Using %s mode" % collectMode)
+        print("-"*60)
+
+        for file_index, file_name in enumerate(listdir(folder)):
+            if "tar" not in file_name: 
+                continue  # want only tar files 
+
+            call("tar -xf %s" % file_name, shell=True, cwd=folder)
+            fullPath = path.join(folder, file_name.split('.tar')[0])
+            event_id = int(file_name.split('.tar')[0].split('-')[1])
+            print("Collecting %s as with event-id: %d" % (fullPath, event_id))
+
+            if collectMode == "fromUrQMD":
+                collect_flag = 1
+                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db) # collect ecc
+                self.collectScalars(fullPath, event_id, db)  # collect scalars
+                self.collectFLowsAndMultiplicities_urqmdBinUtilityFormat(fullPath, event_id, db, multiplicityFactor) # collect flow
+            elif collectMode == "fromPureHydro":
+                collect_flag = 1
+                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=True) # collect ecc
+                self.collectScalars(path.join(fullPath,"results"), event_id, db)  # collect scalars
+                self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, db) # collect flow
+            elif collectMode == "fromPureHydroNewStoring":
+                collect_flag = 1
+                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
+                self.collectScalars(fullPath, event_id, db)  # collect scalars
+                self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, db, useSubfolder="") # collect flow
+            elif collectMode == "fromHydroEM":
+                collect_flag = 1
+                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
+                self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, db, useSubfolder="") # collect hadron flow
+                self.collectFLowsAndMultiplicities_photon(fullPath, event_id, db, useSubfolder="") # collect photon flow
+            elif collectMode == "fromHydroEM_with_decaycocktail":
+                collect_flag = 1
+                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
+                self.collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(fullPath, event_id, db, useSubfolder="") # collect hadron and decay photon flow
+                self.collectFLowsAndMultiplicities_photon(fullPath, event_id, db, useSubfolder="") # collect thermal photon flow
+
+            call("rm -fr %s" % file_name.split('.tar')[0], shell=True, cwd=folder)
+
+        if collectMode == "fromPureHydro11P5N":
+            collect_flag = 1
             self.collectEccentricityfrom11P5N(folder, db)
             self.collectFLowsAndMultiplicities_11P5N(folder, db)
-        else:
+
+        if(collect_flag == 0):
             print("!"*60)
             print("Mode string not found")
             print("!"*60)
+            exit(1)
 
     def collectParticleinfo(self, folder, subfolderPattern="event-(\d*)", resultFilename="particle_list.dat", databaseFilename="particles.db", fileformat = 'UrQMD', particles_to_collect = ['charged'], rap_range = (-2.5, 2.5)):
         """
             This function collects particles momentum and space-time information from UrQMD
             outputs into a database
         """
-        # get list of (matched subfolders, event id)
-        matchPattern = re.compile(subfolderPattern)
-        matchedSubfolders = []
-        for folder_index, aSubfolder in enumerate(listdir(folder)):
-            fullPath = path.join(folder, aSubfolder)
-            if not path.isdir(fullPath): continue # want only folders, not files
-            matchResult = matchPattern.match(aSubfolder)
-            if matchResult: # matched!
-                if len(matchResult.groups()): # folder name contains id
-                    hydroEvent_id = matchResult.groups()[0]
-                else:
-                    hydroEvent_id = folder_index
-                matchedSubfolders.append((fullPath, hydroEvent_id)) # matched!
-        
         # the data collection loop
         db = SqliteDB(path.join(folder, databaseFilename))
         print("-"*60)
         print("Collecting particle information from UrQMD outputs...")
         print("-"*60)
-        for aSubfolder, hydroEvent_id in matchedSubfolders:
-            print("Collecting %s as with hydro event-id: %s" % (aSubfolder, hydroEvent_id))
+
+        for file_index, file_name in enumerate(listdir(folder)):
+            if "tar" not in file_name: 
+                continue  # want only tar files 
+
+            call("tar -xf %s" % file_name, shell=True, cwd=folder)
+            fullPath = path.join(folder, file_name.split('.tar')[0])
+            event_id = int(file_name.split('.tar')[0].split('-')[1])
+            print("Collecting %s as with hydro event-id: %s" % (fullPath, event_id))
+
             if fileformat == 'UrQMD':
-                self.collectParticlesUrQMD(aSubfolder, hydroEvent_id, resultFilename, db, particles_to_collect, rap_range) # collect particles from one hydro event
+                self.collectParticlesUrQMD(fullPath, event_id, resultFilename, db, particles_to_collect, rap_range) # collect particles from one hydro event
+                call("rm -fr %s" % file_name.split('.tar')[0], shell=True, cwd=folder)
             elif fileformat == 'OSCAR':
-                self.collectParticlesOSCAR(aSubfolder, hydroEvent_id, resultFilename, db, particles_to_collect, rap_range) # collect particles from one hydro event
+                self.collectParticlesOSCAR(fullPath, event_id, resultFilename, db, particles_to_collect, rap_range) # collect particles from one hydro event
+                call("rm -fr %s" % file_name.split('.tar')[0], shell=True, cwd=folder)
             else:
                 print("Error: can not recognize the input file format : %s", fileformat)
                 exit(-1)
