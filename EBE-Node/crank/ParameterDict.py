@@ -40,6 +40,7 @@ hydroParameters = {
     'Ivisflag'  :   1,        # flag to use temperature dependent eta/s(T)
     'IvisBulkFlag'  :   1,    # flag for temperature dependence of bulk viscosity
     'visbulknorm'   :   1.0,  # the overall normalization of the bulk viscosity
+    'IviscousEqsType'  :  1,  # type of evolution equation for viscous quantities
     'T0'        :   0.6,      # tau_0
     'dt'        :   0.01,     # dtau
     'Edec'      :   0.508,

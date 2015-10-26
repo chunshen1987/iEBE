@@ -38,6 +38,6 @@
 *
 *
 0           !Initialization of pi^\mu\nu tensor 0: initialize by 0; 1: initialize by its NS value
-2           !ViscousEqsType: Version of hydro viscous equations 1: I-S from Huichao's paper; 2: 14-moments results
+2           !IViscousEqsType: Version of hydro viscous equations 1: Israel-Stewart eq.; 2: DNMR eq.
 0.0         !VisBulkNorm: norm factor for temperature dependent zeta/s
 

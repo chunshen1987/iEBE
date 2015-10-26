@@ -507,8 +507,8 @@
       Integer Initialpitensor
       Common/Initialpi/ Initialpitensor
 
-      Integer :: ViscousEqsType
-      Common/ViscousEqsControl/ ViscousEqsType
+      Integer :: IViscousEqsType
+      Common/ViscousEqsControl/ IViscousEqsType
 
       Double Precision ITeta, b, ddx, ddy, TT0
       Common /ITeta/ ITeta
@@ -645,6 +645,7 @@
 
         If (varName=="ivisbulkflag") IVisBulkFlag=IResult ! Flag for temperature dependent zeta/s(T)
         If (varName=="visbulknorm") VisBulkNorm=DResult ! VisBulkNorm, use for temperature dependent zeta/s(T)
+        If (varName=="iviscouseqstype") IviscousEqsType=IResult  ! Flag for type of viscous evolution equation
       End Do ! ArgIndex
 
       If (debug>=3) Print *, "* readInputFromCML finished"

@@ -131,6 +131,7 @@ hydroParameters = {
     'Ivisflag'  :   0,
     'IvisBulkFlag'  :   0,    # flag for temperature dependence of bulk viscosity
     'visbulknorm'   :   0.0,  # the overall normalization of the bulk viscosity
+    'IviscousEqsType'  :   1, # type of evolution equations for viscous quantities
     'iLS'       :   130,  # lattice points in the transverse plane
     'dx'        :   0.1,  # lattice spacing in x
     'dy'        :   0.1,  # lattice spacing in y

@@ -105,8 +105,8 @@ C *******************************J.Liu changes*******************************
       Integer Initialpitensor
       Common/Initialpi/ Initialpitensor
 
-      Integer ViscousEqsType
-      Common/ViscousEqsControl/ ViscousEqsType
+      Integer IViscousEqsType
+      Common/ViscousEqsControl/ IViscousEqsType
 
       Integer IVisBulkFlag
       double precision VisBulkNorm
@@ -237,7 +237,7 @@ C ***************************J.Liu changes end***************************
       Read(1,*) Cha
       Read(1,*) Cha
       Read(1,*) Initialpitensor
-      Read(1,*) ViscousEqsType
+      Read(1,*) IViscousEqsType
       Read(1,*) VisBulkNorm
       CLOSE(1)
 C===========================================================================
@@ -266,7 +266,7 @@ C ***************************J.Liu changes end***************************
      &    "IVisflag=", IVisflag,
      &    "IVisBulkFlag=", IVisBulkFlag,
      &    "Initialpitensor=", Initialpitensor,
-     &    "ViscousEqsType=", ViscousEqsType,
+     &    "IViscousEqsType=", IViscousEqsType,
      &    "VisBulkNorm=", VisBulkNorm
 
       ddx=dx
@@ -571,8 +571,8 @@ C-------------------------------------------------------------------------------
 
       Common /sFactor/ sFactor
 
-      Integer ViscousEqsType
-      Common/ViscousEqsControl/ ViscousEqsType
+      Integer IViscousEqsType
+      Common/ViscousEqsControl/ IViscousEqsType
 
       Double Precision SEOSL7, PEOSL7, TEOSL7, SEOSL6
       Double Precision ss, ddt1, ddt2, ee1, ee2
@@ -2522,8 +2522,8 @@ C#####################################################
        Common/R0Bdry/ R0Bdry
        Parameter (HbarC=0.19733d0) !for changing between fm and GeV ! Hbarc=0.19733=GeV*fm
 
-       Integer ViscousEqsType
-       Common/ViscousEqsControl/ ViscousEqsType
+       Integer IViscousEqsType
+       Common/ViscousEqsControl/ IViscousEqsType
 
       do 10 k=1,1
       do 10 j=NYPhy0-2,NYPhy+2 ! -2,NYPhy+2
@@ -2544,7 +2544,7 @@ CSHEN======end=================================================================
         VCBeta(i,j,k)=1.D0/dmax1(Ed(i,j,k)+PL(i,j,k),1e-30)
         VRelaxT(i,j,k)=1.0/dmax1(5.0*VCoefi(i,j,k)*VCBeta(i,j,k),1e-30)
 
-        if(ViscousEqsType .eq. 2) then   ! 14-moments results
+        if(IViscousEqsType .eq. 2) then   ! 14-moments results
           VRelaxT(i,j,k)=(Ed(i,j,k)+PL(i,j,k))
      &      /dMax1(VCoefi(i,j,k)*5.D0,1e-30)
         EndIf
@@ -3643,8 +3643,8 @@ C-------------------------------------------
       ! ----- Use in root search -----
       Double Precision :: RSDM0, RSDM, RSPPI, RSee
       Common /findEdHookData/ RSDM0, RSDM, RSPPI ! M0, M, Pi (see 0510014)
-      Integer ViscousEqsType
-      Common/ViscousEqsControl/ ViscousEqsType
+      Integer IViscousEqsType
+      Common/ViscousEqsControl/ IViscousEqsType
 
       Double precision :: deltaBPiBPi, lambdaBPiSpi ! bulk transport coefficients
       Double precision :: deltaSpiSpi, lambdaSpiBPi, phi7, taupipi ! shear transport coefficients 
@@ -4106,7 +4106,7 @@ C-------------------------------------------------------------------------------
 
         if(ViscousC.ge.0.00001) then
 
-          if(ViscousEqsType .eq. 1) then 
+          if(IViscousEqsType .eq. 1) then 
           ! old version: shear tensor pressure terms from entropy generation
             D0Ln=(DLog(etaTtp0(I,J,K))-DLog(etaTtp(I,J,K)))/DT
             D1Ln=(DLog(etaTtp(I-1,J,K))-DLog(etaTtp(I+1,J,K)))/(2.0*DX)
@@ -4130,7 +4130,7 @@ C-------------------------------------------------------------------------------
             PScT12(i,j,K)=PScT12(i,j,K) +( Pi12(I,J,K)*ADLnT+
      &         PA*Pi12(I,J,K)-PT*(Pi12(I,J,K)-PS*DPc12(i,j,K)))*(-1.0)
 
-          else if(ViscousEqsType .eq. 2) then
+          else if(IViscousEqsType .eq. 2) then
           ! shear terms from 14-moments expansion 
             p00 = Pi00(I,J,K)    ! some short hand
             p01 = Pi01(I,J,K)
@@ -4252,7 +4252,7 @@ C-------------------------------------------------------------------------------
      &         +phi7*phi7Add - taupipi*taupipiAdd)
 
           else
-            write(*, *) "No such viscous equation type:",ViscousEqsType
+            write(*, *) "No such viscous equation type:",IViscousEqsType
             stop            
           end if
         else
@@ -4261,7 +4261,7 @@ C-------------------------------------------------------------------------------
 
         if(VisBulk.ge.0.000001) then
 
-          if(ViscousEqsType .eq. 1) then
+          if(IViscousEqsType .eq. 1) then
           ! old version: bulk pressure terms from entropy generation
             DB0Ln=(DLog(XiTtp0(I,J,K))-DLog(XiTtp(I,J,K)))/DT
             DB1Ln=(DLog(XiTtp(I-1,J,K))-DLog(XiTtp(I+1,J,K)))/(2.0*DX)
@@ -4270,7 +4270,7 @@ C-------------------------------------------------------------------------------
             Badd=-0.5*(SiLoc(I,J,K)/U0(I,J,K)    !high precision version to reduce round-off error
      &          +(DB0Ln +Vx(I,J,K)*DB1Ln +Vy(I,J,K)*DB2Ln)*ff)
 
-          elseif(ViscousEqsType .eq. 2) then   
+          elseif(IViscousEqsType .eq. 2) then   
           ! Bulk pressure terms from 14-moments expansion     
             call ViscousBulkTransCoefs(ED(i,j,k)*Hbarc, VRelaxT0(i,j,k), 
      &          deltaBPiBPi, lambdaBPiSpi) ! calculate transport coefficients
@@ -4286,7 +4286,7 @@ C-------------------------------------------------------------------------------
      &       lambdaBPiSpi/DMax1(abs(PPI(i,j,k)), 1e-30)*piSigma)
      &       /U0(i,j,k)*VRelaxT0(i,j,k)
           else
-            write(*, *) "No such viscous equation type:", ViscousEqsType
+            write(*, *) "No such viscous equation type:", IViscousEqsType
             stop
           endif
 
