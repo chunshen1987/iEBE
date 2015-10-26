@@ -110,10 +110,6 @@ class EbeCollector(object):
             "photon_HG_rhospectral_eq"    :  9015,
             "photon_HG_rhospectral_vis"   :  9016,
             "photon_HG_rhospectral_bulkvis"  :  9017,
-            "photon_HG_omega_tot"      :  9018,
-            "photon_HG_omega_eq"       :  9019,
-            "photon_HG_omega_vis"      :  9020,
-            "photon_HG_omega_bulkvis"  :  9021,
             "direct_gamma_shortdecay_hydro"   :  9018,
             "decay_gamma_pi0_hydro" : 9019,
             "decay_gamma_eta_hydro" : 9020,
@@ -122,6 +118,10 @@ class EbeCollector(object):
             "decay_gamma_etap_hydro" : 9023,
             "decay_gamma_Sigma0_hydro" : 9024,
             "decay_gamma_rho0_hydro" : 9025,
+            "photon_HG_omega_tot"      :  9026,
+            "photon_HG_omega_eq"       :  9027,
+            "photon_HG_omega_vis"      :  9028,
+            "photon_HG_omega_bulkvis"  :  9029,
         })
         
         #UrQMD pid Dictionary, name conversion defined as in binUtility
