@@ -9,6 +9,7 @@
 
 from sys import argv, exit
 from os import path, listdir
+import gc
 
 try:
     parentFolder = path.abspath(argv[1])
@@ -30,5 +31,6 @@ for aSubfolder in listdir(parentFolder):
                 collector.mergeparticleDatabases(SqliteDB(path.join(parentFolder, aFile)), SqliteDB(path.join(subfolder, aFile))) # merge a database to a database in parent folder with the same name.
             else:
                 collector.mergeDatabases(SqliteDB(path.join(parentFolder, aFile)), SqliteDB(path.join(subfolder, aFile))) # merge a database to a database in parent folder with the same name.
+            gc.collect()
 
 print("Done.")
