@@ -368,7 +368,7 @@ CSHEN======output OSCAR file Header end=====================================
 
 CSHEN======set up output file for hydro evolution history===================
       if(IhydroJetoutput .eq. 1) then
-         Call setHydroFiles(NX0, NX, DX, 2, NY0, NY, DY, 2, T0, DT, 5)
+         Call setHydroFiles(NX0, NX, DX, 4, NY0, NY, DY, 4, T0, DT, 5)
       endif
 
       CALL CPU_TIME(cpu_start) !Tic

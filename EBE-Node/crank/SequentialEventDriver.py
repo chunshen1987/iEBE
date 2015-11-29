@@ -64,7 +64,7 @@ superMCControl = {
     'dataDir'                       :   'data', # where initial conditions are stored, relative
     'saveICFile'                    :   True, # whether to save initial condition file
     'dataFiles'                     :   '*event_%d_*.dat', # data filenames
-    'initialFiles'                  :   '*event*_block*.dat',  #initial density profile filenames
+    'initialFiles'                  :   'sd_event_*_block.dat',  #initial density profile filenames
     'numberOfEventsParameterName'   :   'nev',
     'executable'                    :   'superMC.e',
 }
@@ -120,7 +120,8 @@ hydroControl = {
     'resultDir'             :   'results', # hydro results folder, relative
     'resultFiles'           :   '*', # results files
     'saveICFile'            :   True, # whether to save initial condition file
-    'saveResultGlobs'       :   ['surface.dat', 'dec*.dat', 'ecc*.dat'], # files match these globs will be saved
+    'saveResultGlobs'       :   ['*.h5','surface.dat', 'dec*.dat', 'ecc*.dat'], 
+                                # files match these globs will be saved
     'executable'            :   'VISHNew.e',
 }
 hydroParameters = {

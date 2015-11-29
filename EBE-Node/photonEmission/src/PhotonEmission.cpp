@@ -448,7 +448,7 @@ void PhotonEmission::calPhotonemission(HydroinfoH5* hydroinfo_ptr, double* eta_p
            {
              double HG_fraction = 1.0;
              photon_HG->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local, volume, HG_fraction);
-             photon_HG_omega->calThermalPhotonemissiondxperpdtau(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local, x_local, tau_local, volume, HG_fraction);
+             photon_HG_omega->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local, volume, HG_fraction);
              photon_HG_rho_spectralfun->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local, volume, HG_fraction);
              photon_HG_pipiBremsstrahlung->calThermalPhotonemission(Eq_localrest_Tb, pi_photon_Tb, bulkPi_Tb, idx_Tb, temp_local, volume, HG_fraction);
              if(differential_flag == 1 or differential_flag > 10)

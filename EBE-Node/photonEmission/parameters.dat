@@ -1,10 +1,10 @@
 Xmin = -13.0                  # minimum points along x direction
-dx = 0.5                      # lattice spacing along x direction
+dx = 0.3                      # lattice spacing along x direction
 Ymin = -13.0                  # minimum points along y direction
-dy = 0.5                      # lattice spacing along y direction
+dy = 0.3                      # lattice spacing along y direction
 tau_start = 0.6               # emission start time (fm)
 tau_end = 25.0                # emission end time (fm)
-dTau = 0.04                   # lattice spacing along tau direction
+dTau = 0.02                   # lattice spacing along tau direction
 
 neta = 10                     # number of points in eta direction
 eta_i = 0.0                   # beginning value of eta slice
@@ -24,8 +24,8 @@ photon_y_f = 0.0              # the largest photon rapidity
 norder = 10                   # calculate photon vn to norder
 
 T_dec = 0.120                 # freeze out temperature
-T_sw_high = 0.170             # high end of the switching temperature
-T_sw_low = 0.169              # low end of the switching temperature
+T_sw_high = 0.180             # high end of the switching temperature
+T_sw_low = 0.179              # low end of the switching temperature
 T_cuthigh = 0.8               # maximum allowed emission T (GeV)
 T_cutlow = 0.10               # minimum allowed emission T (GeV)
 
