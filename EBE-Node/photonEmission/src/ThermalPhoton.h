@@ -47,15 +47,24 @@ class ThermalPhoton
 
       double ***dNd2pTdphidy_eq, ***dNd2pTdphidy_vis, ***dNd2pTdphidy_tot;
       double ***dNd2pTdphidy_bulkvis;
+      double ***dNd2pTdphidy_vis_deltaf_restricted;
+      double ***dNd2pTdphidy_bulkvis_deltaf_restricted;
       double *dNd2pT_eq, **vnpT_cos_eq, **vnpT_sin_eq;
       double *dNd2pT_vis, **vnpT_cos_vis, **vnpT_sin_vis;
+      double *dNd2pT_vis_deltaf_restricted, **vnpT_cos_vis_deltaf_restricted;
+      double **vnpT_sin_vis_deltaf_restricted;
       double *dNd2pT_bulkvis, **vnpT_cos_bulkvis, **vnpT_sin_bulkvis;
+      double *dNd2pT_bulkvis_deltaf_restricted, **vnpT_cos_bulkvis_deltaf_restricted;
+      double **vnpT_sin_bulkvis_deltaf_restricted;
       double *dNd2pT_tot, **vnpT_cos_tot, **vnpT_sin_tot;
 
       double dNdy_eq, dNdy_vis, dNdy_tot, dNdy_bulkvis;
+      double dNdy_vis_deltaf_restricted, dNdy_bulkvis_deltaf_restricted;
       double *vn_cos_eq, *vn_sin_eq;
       double *vn_cos_vis, *vn_sin_vis;
+      double *vn_cos_vis_deltaf_restricted, *vn_sin_vis_deltaf_restricted;
       double *vn_cos_bulkvis, *vn_sin_bulkvis;
+      double *vn_cos_bulkvis_deltaf_restricted, *vn_sin_bulkvis_deltaf_restricted;
       double *vn_cos_tot, *vn_sin_tot;
       
       //matrix for cuts on temperature and proper time
