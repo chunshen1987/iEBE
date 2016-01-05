@@ -321,6 +321,23 @@ class EbeCollector(object):
 
         # close connection to commit changes
         db.closeConnection()
+    
+    def insert_ecc_id_table(self, db):
+        """
+            This function creates ecc_id_lookup table required by
+            the EbEReader class
+        """
+        # collection of file name patterns, ecc_id, and ecc_type_name
+        typeCollections = ( (1, "sd",), (2, "ed",) )
+
+        # write the ecc_id_lookup table, makes sure there is only one such table
+        if db.createTableIfNotExists(
+            "ecc_id_lookup", (("ecc_id","integer"), ("ecc_type_name","text"))):
+            for ecc_id, ecc_type_name in typeCollections:
+                db.insertIntoTable("ecc_id_lookup", (ecc_id, ecc_type_name))
+
+        # close connection to commit changes
+        db.closeConnection()
 
 
     def collectScalars(self, folder, event_id, db):
@@ -1105,41 +1122,53 @@ class EbeCollector(object):
         print("-"*60)
 
         for file_index, file_name in enumerate(listdir(folder)):
-            if "tar" not in file_name: 
-                continue  # want only tar files 
+            if collectMode == "fromHydro_with_IP-Glasma":
+                collect_flag = 1
+                if "event-" not in file_name: 
+                    continue  # want only event files 
 
-            call("tar -xf %s" % file_name, shell=True, cwd=folder)
-            fullPath = path.join(folder, file_name.split('.tar')[0])
-            event_id = int(file_name.split('.tar')[0].split('-')[1])
-            print("Collecting %s as with event-id: %d" % (fullPath, event_id))
+                fullPath = path.join(folder, file_name)
+                event_id = int(file_name.split('-')[1])
+                print("Collecting %s as with event-id: %d" % (fullPath, event_id))
+                self.insert_ecc_id_table(db)
+                self.collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(
+                                fullPath, event_id, db, useSubfolder="") 
+            else:
+                if "tar" not in file_name: 
+                    continue  # want only tar files 
 
-            if collectMode == "fromUrQMD":
-                collect_flag = 1
-                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db) # collect ecc
-                self.collectScalars(fullPath, event_id, db)  # collect scalars
-                self.collectFLowsAndMultiplicities_urqmdBinUtilityFormat(fullPath, event_id, db, multiplicityFactor) # collect flow
-            elif collectMode == "fromPureHydro":
-                collect_flag = 1
-                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=True) # collect ecc
-                self.collectScalars(path.join(fullPath,"results"), event_id, db)  # collect scalars
-                self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, db) # collect flow
-            elif collectMode == "fromPureHydroNewStoring":
-                collect_flag = 1
-                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
-                self.collectScalars(fullPath, event_id, db)  # collect scalars
-                self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, db, useSubfolder="") # collect flow
-            elif collectMode == "fromHydroEM":
-                collect_flag = 1
-                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
-                self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, db, useSubfolder="") # collect hadron flow
-                self.collectFLowsAndMultiplicities_photon(fullPath, event_id, db, useSubfolder="") # collect photon flow
-            elif collectMode == "fromHydroEM_with_decaycocktail":
-                collect_flag = 1
-                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
-                self.collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(fullPath, event_id, db, useSubfolder="") # collect hadron and decay photon flow
-                self.collectFLowsAndMultiplicities_photon(fullPath, event_id, db, useSubfolder="") # collect thermal photon flow
+                call("tar -xf %s" % file_name, shell=True, cwd=folder)
+                fullPath = path.join(folder, file_name.split('.tar')[0])
+                event_id = int(file_name.split('.tar')[0].split('-')[1])
+                print("Collecting %s as with event-id: %d" % (fullPath, event_id))
 
-            call("rm -fr %s" % file_name.split('.tar')[0], shell=True, cwd=folder)
+                if collectMode == "fromUrQMD":
+                    collect_flag = 1
+                    self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db) # collect ecc
+                    self.collectScalars(fullPath, event_id, db)  # collect scalars
+                    self.collectFLowsAndMultiplicities_urqmdBinUtilityFormat(fullPath, event_id, db, multiplicityFactor) # collect flow
+                elif collectMode == "fromPureHydro":
+                    collect_flag = 1
+                    self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=True) # collect ecc
+                    self.collectScalars(path.join(fullPath,"results"), event_id, db)  # collect scalars
+                    self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, db) # collect flow
+                elif collectMode == "fromPureHydroNewStoring":
+                    collect_flag = 1
+                    self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
+                    self.collectScalars(fullPath, event_id, db)  # collect scalars
+                    self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, db, useSubfolder="") # collect flow
+                elif collectMode == "fromHydroEM":
+                    collect_flag = 1
+                    self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
+                    self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, db, useSubfolder="") # collect hadron flow
+                    self.collectFLowsAndMultiplicities_photon(fullPath, event_id, db, useSubfolder="") # collect photon flow
+                elif collectMode == "fromHydroEM_with_decaycocktail":
+                    collect_flag = 1
+                    self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
+                    self.collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(fullPath, event_id, db, useSubfolder="") # collect hadron and decay photon flow
+                    self.collectFLowsAndMultiplicities_photon(fullPath, event_id, db, useSubfolder="") # collect thermal photon flow
+
+                call("rm -fr %s" % file_name.split('.tar')[0], shell=True, cwd=folder)
 
         if collectMode == "fromPureHydro11P5N":
             collect_flag = 1
@@ -1530,12 +1559,11 @@ class EbeDBReader(object):
 
     def getNumberOfEvents(self):
         """
-            Return total number of events by finding the difference between max
-            and min of event_id.
+            Return total number of events.
         """
-        whereClause = "ecc_id = 1 and r_power = 0 and n = 2"
-        Nevent = self.db.selectFromTable("eccentricities", "count()", whereClause)
-        return Nevent[0][0]
+        numberOfEvents = self.db.selectFromTable(
+                        "multiplicities", "count()", "pid = 1001")[0][0]
+        return numberOfEvents
 
     def evaluateExpression(self, expression):
         """
