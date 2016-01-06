@@ -971,11 +971,11 @@ class EbeCollector(object):
         UrQMDEvent_id = 1
         for aLine in open(UrQMDoutputFilePath):
             if read_mode=="header_first_part":
-                if header_count <= 14: # skip first 14 lines
+                if header_count <= 17: # skip first 14 lines
                     header_count += 1
                     continue
                 # now at 15th line
-                assert header_count==15, "No no no... Stop here."
+                assert header_count==18, "No no no... Stop here."
                 try:
                     data_row_count = int(aLine.split()[0])
                 except ValueError as e:
@@ -989,10 +989,10 @@ class EbeCollector(object):
                 if data_row_count>0:
                     # still have data to read
                     try:
-                        p0, px, py, pz = map(lambda x: float(x.replace("D","E")), aLine[98:193].split())
-                        t, x, y, z = map(lambda x: float(x.replace("D","E")), aLine[245:338].split())
-                        isospin2 = int(aLine[222:224])
-                        pid = int(aLine[216:222])
+                        p0, px, py, pz = map(lambda x: float(x), aLine[66:129].split())
+                        t, x, y, z = map(lambda x: float(x), aLine[182:245].split())
+                        isospin2 = int(aLine[156:159])
+                        pid = int(aLine[147:156])
                         UrQMDpid = pid + isospin2*1000
                         try:
                             if pid == 100 and isospin2 != 0: 
