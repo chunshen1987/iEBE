@@ -1,11 +1,8 @@
-c $Id: siglookup.f,v 1.3 1998/06/15 13:35:34 weber Exp $
+c $Id: siglookup.f,v 1.4 1999/01/18 09:57:15 ernst Exp $
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
       real*8 function SIGLOOKUP(iline,sqrts)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass (new source)
-c     Date     : 09/08/94
 c     Revision : 1.0
 c
 cinput iline : line\# for information in {\tt sigmainf} array
@@ -28,8 +25,6 @@ c
 c later, sigtab.f should only be included into main.f and all relevant tables
 c should be accessed via common blocks
       include 'comres.f'
-c      include 'sigtab.f'
-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
 c line for sigmas(line,*) array
       isigline=sigmainf(iline,1)

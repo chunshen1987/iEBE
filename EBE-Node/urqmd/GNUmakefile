@@ -1,5 +1,6 @@
 # ===========================================================================
 #  Makefile urQMD                                    Chun Shen Mar. 19, 2013
+#  Updated to compile UrQMD 3.4
 # ===========================================================================
 ##
 ##  Environments :	MAIN	= 	main sourcefile		[uqmd.f]
@@ -17,7 +18,6 @@
 
 FC := gfortran
 FFLAGS = -O3 -cpp
-
 RM		=	rm -f
 O               =       .o
 LDFLAGS         =       $(FFLAGS)
@@ -30,18 +30,11 @@ ifeq "$(MAIN)" ""
 MAIN		=	urqmd.e
 endif
 
-SRC 		= 	addpart.f angdis.f anndec.f blockres.f cascinit.f \
-	   		coload.f dectim.f delpart.f detbal.f dwidth.f \
-	   		getmass.f getspin.f init.f input.f ityp2pdg.f error.f\
-	   		make22.f numrec.f output.f paulibl.f jdecay2.f iso.f\
-	   		proppot.f saveinfo.f scatter.f siglookup.f string.f \
-	   		tabinit.f whichres.f boxprg.f shine.f urqmd.f pdummy.f
-INC		= 	colltab.f comnorm.f complot.f coms.f comres.f comwid.f \
-			freezeout.f inputs.f newpart.f options.f boxinc.f \
-			outcom.f 
-
-SRCGNU		=	genranf.f
-
+SRC =   addpart.f angdis.f anndec.f bessel.f blockres.f boxprg.f cascinit.f coload.f \
+  dectim.f delpart.f detbal.f dwidth.f error.f getmass.f getspin.f hepnam.f \
+  hepchg.f hepcmp.f init.f input.f iso.f ityp2pdg.f jdecay2.f make22.f \
+  numrec.f output.f paulibl.f proppot.f pythia6409.f quadri.f90 saveinfo.f \
+  scatter.f siglookup.f string.f tabinit.f upmerge.f whichres.f urqmd.f gnuranf.f
 
 # -------------------------------------------------
 
@@ -54,7 +47,7 @@ INSTPATH	=	$(HOME)/local/bin
 
 # --------------- Pattern rules -------------------
 
-$(OBJDIR)/%.o: %.f
+$(OBJDIR)/%.o: %.f*
 	$(FC) $(FFLAGS) -c $< -o $@
 
 %.f:
@@ -88,33 +81,36 @@ install:	$(TARGET)
 
 # --------------- Dependencies -------------------
 
-./addpart.f:	coms.f newpart.f
-./angdis.f:	options.f
-./anndec.f: 	comres.f comwid.f options.f
-./blockres.f: 	comres.f
-./boxprg.f:    boxinc.f coms.f comres.f options.f
-./cascinit.f: 	coms.f options.f 
-./coload.f: 	colltab.f coms.f comres.f newpart.f options.f
-./dectim.f: 	coms.f colltab.f options.f 
-./delpart.f:	coms.f comres.f newpart.f
-./detbal.f: 	coms.f comres.f comwid.f newpart.f options.f
-./dwidth.f:	coms.f comres.f comwid.f options.f
-./getmass.f:    comnorm.f comres.f
-./getspin.f:	comres.f 
-./init.f: 	boxinc.f colltab.f coms.f comres.f freezeout.f inputs.f options.f
-./input.f: 	boxinc.f coms.f comres.f inputs.f options.f
-./ityp2pdg.f:	comres.f
-./iso.f:	comres.f newpart.f
-./jdecay2.f:	newpart.f
-./make22.f:	comres.f comwid.f newpart.f options.f
-./output.f: 	boxinc.f coms.f comres.f freezeout.f inputs.f newpart.f options.f
-./paulibl.f: 	coms.f options.f
-./proppot.f: 	boxinc.f coms.f options.f
-./saveinfo.f: 	coms.f
-./scatter.f: 	coms.f comres.f freezeout.f newpart.f options.f
-./shine.f:	coms.f comres.f options.f
-./siglookup.f:	comres.f
-./string.f:	comres.f options.f
-./tabinit.f:	comres.f comwid.f
-./urqmd.f: 	boxinc.f colltab.f coms.f comres.f inputs.f newpart.f options.f
-./whichres.f: 	comres.f options.f
+#++ source file name and replace the ".f" by ".o".
+$(OBJDIR)/addpart.o:   coms.f freezeout.f newpart.f
+$(OBJDIR)/angdis.o:    coms.f
+$(OBJDIR)/anndec.o:    comres.f comwid.f options.f newpart.f
+$(OBJDIR)/blockres.o:  comres.f
+$(OBJDIR)/boxprg.o:    boxinc.f coms.f comres.f options.f
+$(OBJDIR)/cascinit.o:  coms.f inputs.f options.f
+$(OBJDIR)/coload.o:    boxinc.f colltab.f coms.f comres.f newpart.f options.f
+$(OBJDIR)/dectim.o:    coms.f colltab.f options.f
+$(OBJDIR)/delpart.o:   coms.f comres.f freezeout.f options.f newpart.f
+$(OBJDIR)/detbal.o:    coms.f comres.f comwid.f newpart.f options.f
+$(OBJDIR)/dwidth.o:    coms.f comres.f comwid.f options.f
+$(OBJDIR)/getmass.o:   comnorm.f comres.f
+$(OBJDIR)/getspin.o:   comres.f
+$(OBJDIR)/init.o:      boxinc.f colltab.f coms.f comres.f freezeout.f inputs.f \
+                       newpart.f options.f
+$(OBJDIR)/input.o:     boxinc.f coms.f comres.f inputs.f options.f
+$(OBJDIR)/ityp2pdg.o:  comres.f
+$(OBJDIR)/iso.o:       comres.f newpart.f
+$(OBJDIR)/jdecay2.o:   newpart.f
+$(OBJDIR)/make22.o:    comres.f coms.f comwid.f newpart.f options.f
+$(OBJDIR)/output.o:    boxinc.f coms.f comres.f freezeout.f inputs.f newpart.f \
+                       options.f
+$(OBJDIR)/paulibl.o:   coms.f comres.f options.f
+$(OBJDIR)/proppot.o:   boxinc.f coms.f options.f
+$(OBJDIR)/saveinfo.o:  coms.f
+$(OBJDIR)/scatter.o:   boxinc.f coms.f comres.f freezeout.f newpart.f options.f
+$(OBJDIR)/siglookup.o: comres.f
+$(OBJDIR)/string.o:    comres.f comstr.f options.f
+$(OBJDIR)/tabinit.o:   comres.f comwid.f
+$(OBJDIR)/$(MAIN).o:   boxinc.f colltab.f coms.f comres.f inputs.f newpart.f \
+                       options.f
+$(OBJDIR)/whichres.o:  comres.f options.f

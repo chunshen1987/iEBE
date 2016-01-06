@@ -1,11 +1,7 @@
-c $Id: iso.f,v 1.6 1998/06/15 13:35:24 weber Exp $
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-cernst!!!!!!!!!!!!! neue Parameterreihenfolge!!!!!!!!!!!!!!!!!!!!!!!!!!
+c $Id: iso.f,v 1.7 1999/01/18 09:57:06 ernst Exp $
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       SUBROUTINE ISOCGK4(J1,M1,J2,M2,Jnew,Mnew,ITAG)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass, Christoph Ernst
-c     Date     : 09/01/96
 c     Revision : 1.0
 c
 c     This subroutine determines according to probabilities given by
@@ -19,7 +15,7 @@ c              M1    : 2*I3 of ingoing particle 1
 c              J2    : 2*I  of ingoing particle 2
 c              M2    : 2*I3 of ingoing particle 2
 c              Jnew  : 2*I  of outgoing particles (array)
-c	       
+c              
 c
 c     (isonew: one part. in and two part. out) 
 c              J     : 2*I  of ingoing particle
@@ -29,7 +25,7 @@ c              ITAG=-50 << necessary for correct functioning of routine
 c
 c     input/output:
 c              Mnew  : 2*I3 of outgoing particles (array)
-c	               Mnew(i)=-9 to determine the I3 component of the
+c                      Mnew(i)=-9 to determine the I3 component of the
 c                          i-th particle randomly
 c              ITAG  : = -1 then no possible isospin combination has been found
 c
@@ -67,18 +63,18 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 
 c 1.) first treat  some special cases
-	if(nexit.gt.4)then
-	  write(6,*)'ISOCGK: only <=4 outgoing Isospins can be coupled'
-	  itag=-1
-	  stop
-	  return
-	endif
+        if(nexit.gt.4)then
+          write(6,*)'ISOCGK: only <=4 outgoing Isospins can be coupled'
+          itag=-1
+          stop 137
+          return
+        endif
 
-	if(nexit.eq.3)Jnew(4)=0
+        if(nexit.eq.3)Jnew(4)=0
 
       if(nexit.eq.2)then       !nexit.eq.2
-	Jnew(3)=0
-	Jnew(4)=0
+        Jnew(3)=0
+        Jnew(4)=0
 c check for zero in out-channel:
        if(Jnew(1).eq.0) then
           Mnew(1)=0
@@ -99,23 +95,23 @@ c determine number of possible in-states
 
 c determine number of possible out-states
 c JMINNW=  MAX0(IABS(J1NEW-J2NEW),IABS(M))
-	Jminnw=1000
-	do 1 i=-1,1,2
-	 do 2 j=-1,1,2
-	  do 3 k=-1,1,2
-	   do 4 l=-1,1,2
-	    jp=IABS(i*Jnew(1)+j*Jnew(2)+k*Jnew(3)+l*Jnew(4))
-	    if(jp.lt.Jminnw)Jminnw=jp
-4	   continue
-3	  continue
-2	 continue
-1	continue
-	Jminnw=MAX0(Jminnw,IABS(M))
+        Jminnw=1000
+        do 1 i=-1,1,2
+         do 2 j=-1,1,2
+          do 3 k=-1,1,2
+           do 4 l=-1,1,2
+            jp=IABS(i*Jnew(1)+j*Jnew(2)+k*Jnew(3)+l*Jnew(4))
+            if(jp.lt.Jminnw)Jminnw=jp
+4          continue
+3         continue
+2        continue
+1       continue
+        Jminnw=MAX0(Jminnw,IABS(M))
 
 c JMAXNW= J1NEW+J2NEW
-	Jmaxnw=0
-	 do 5 i=1,nexit
-	  Jmaxnw=Jmaxnw+Jnew(i)
+        Jmaxnw=0
+         do 5 i=1,nexit
+          Jmaxnw=Jmaxnw+Jnew(i)
 5       continue
 
 c  check which possible states match (are common for in AND out state)
@@ -140,7 +136,7 @@ c 3.) calculate number of possible isospins
           if(J1.eq.0.and.J2.eq.0) then
              write(6,*) "J1,J2=0 IN ISOCGK - can't couple this"
              itag=-1
-	       return
+               return
           endif
 c here only one total isospin is possible (probability is unity)
           pjin(1)=1.
@@ -149,7 +145,7 @@ c here only one total isospin is possible (probability is unity)
 c if no overlap between in and out state, return with itag=-1
        if(nj.le.0) then
           itag=-1
-	  write(6,*)'Isocgk: nj.le.0 - no combination possible'
+          write(6,*)'Isocgk: nj.le.0 - no combination possible'
           return
        endif
 
@@ -165,7 +161,7 @@ C
 c error message, if not all possible Jtot's have been found
 c       if(ifind.ne.nj) then
 c          write(6,*)'ERROR IN ISOCGK IFIND.NE.NJ'
-c          stop
+c          stop 137
 c       endif
 c sum CGKs over all possible Jtots (-> probabilities)
        prbsum=0.
@@ -176,7 +172,7 @@ c sum CGKs over all possible Jtots (-> probabilities)
 c check for nonsense
        IF(prbsum.le.0.) THEN
           write(6,*)'ERROR IN ISOCGK 30:PRBSUM.LE.0.'
-          stop
+          stop 137
        END IF
 c normalize PJIN(.) to 1 
 c now PJIN contains CGK-based probabilities for the different possible Jtots
@@ -190,12 +186,12 @@ c 5) now throw dice to determine one of the possible Jtots
           if(zrand.lt.pjin(il))then
 c this is now the "real Jtot"
              Jtot= Jmin +2*(il-1)
-	       goto 11
+               goto 11
           else
              zrand=zrand-pjin(il)
           endif
 9      Continue
-11	 Continue
+11       Continue
 
 
        goto 111
@@ -219,15 +215,15 @@ c now the in-channel is determined -> get out-channel
 
 c special cases
        if(nexit.gt.4)then
-	  write(6,*)'ISONEW: only <=4 outgoing Isospins can be coupled'
-	  itag=-1
-	  stop
-	  return
+          write(6,*)'ISONEW: only <=4 outgoing Isospins can be coupled'
+          itag=-1
+          stop 137
+          return
        endif
        
        if(nexit.eq.3)then
-	  Jnew(4)=0
-	  Mnew(4)=0
+          Jnew(4)=0
+          Mnew(4)=0
        endif
 
        if(nexit.eq.2)then
@@ -235,7 +231,6 @@ c special cases
           Jnew(4)=0
           Mnew(3)=0
           Mnew(4)=0
-c          write(*,*)'debug: isonew: nexit.eq.2'
 c check for zero in out-channel:
           if(Jnew(1).eq.0) then
              mnew(1)=0
@@ -250,77 +245,74 @@ c check for zero in out-channel:
 
 
 c reset counters
-	m1pos=2*Jnew(1)+1
-	m2pos=2*Jnew(2)+1
-	m3pos=2*Jnew(3)+1
-	m4pos=2*Jnew(4)+1
+        m1pos=2*Jnew(1)+1
+        m2pos=2*Jnew(2)+1
+        m3pos=2*Jnew(3)+1
+        m4pos=2*Jnew(4)+1
        Do 161 m1p=1,20
-	  m1out(m1p)=0
-	  m2out(m1p)=0
-	  m3out(m1p)=0
-	  m4out(m1p)=0
-	  Do 162 m2p=1,m2pos
-	   Do 163 m3p=1,m3pos
-	    Do 164 m4p=1,m4pos
+          m1out(m1p)=0
+          m2out(m1p)=0
+          m3out(m1p)=0
+          m4out(m1p)=0
+          Do 162 m2p=1,m2pos
+           Do 163 m3p=1,m3pos
+            Do 164 m4p=1,m4pos
            prbout(m1p,m2p,m3p,m4p)=0d0
-164	    Continue
+164         Continue
 163      Continue
 162     Continue
 161    Continue
 
 c get min/maximal M
-	Do 100 i=1,4
-	    Mmin(i)=-Jnew(i)
-	    Mmax(i)=Jnew(i)
-100	Continue
+        Do 100 i=1,4
+            Mmin(i)=-Jnew(i)
+            Mmax(i)=Jnew(i)
+100     Continue
 
 c calculate the possible |J_i M_i> combinations and their probability
-	do 112 j12=Iabs(Jnew(1)-Jnew(2)),(Jnew(1)+Jnew(2)),2
-	do 134 j34=Iabs(Jnew(3)-Jnew(4)),(Jnew(3)+Jnew(4)),2
+        do 112 j12=Iabs(Jnew(1)-Jnew(2)),(Jnew(1)+Jnew(2)),2
+        do 134 j34=Iabs(Jnew(3)-Jnew(4)),(Jnew(3)+Jnew(4)),2
         m1pos=0
         Do 41 m1pr=Mmin(1),Mmax(1),2
          m1pos=m1pos+1
          m1out(m1pos)=m1pr
-	   m2pos=0
+           m2pos=0
          Do 42 m2pr=Mmin(2),Mmax(2),2
           m2pos=m2pos+1
           m2out(m2pos)=m2pr
-	    m3pos=0
+            m3pos=0
           Do 43 m3pr=Mmin(3),Mmax(3),2
            m3pos=m3pos+1
            m3out(m3pos)=m3pr
-	     m4pos=0
-	     Do 44 m4pr=Mmin(4),Mmax(4),2
-	      m4pos=m4pos+1
-	      m4out(m4pos)=m4pr
+             m4pos=0
+             Do 44 m4pr=Mmin(4),Mmax(4),2
+              m4pos=m4pos+1
+              m4out(m4pos)=m4pr
 c            m4pr=m-m1pr-m2pr-m3pr
-	      If(m1pr+m2pr+m3pr+m4pr.ne.m)goto 44
-	      m12=m1pr+m2pr
-	      m34=m3pr+m4pr
+              If(m1pr+m2pr+m3pr+m4pr.ne.m)goto 44
+              m12=m1pr+m2pr
+              m34=m3pr+m4pr
 
-		c12=clebsch(Jnew(1),Jnew(2),m1pr,m2pr,J12)
-		c34=clebsch(Jnew(3),Jnew(4),m3pr,m4pr,J34)
-		c_tot= clebsch(J12,J34,m12,m34,Jtot)
+                c12=clebsch(Jnew(1),Jnew(2),m1pr,m2pr,J12)
+                c34=clebsch(Jnew(3),Jnew(4),m3pr,m4pr,J34)
+                c_tot= clebsch(J12,J34,m12,m34,Jtot)
 
-	    	prbout(m1pos,m2pos,m3pos,m4pos)=
+                prbout(m1pos,m2pos,m3pos,m4pos)=
      +         prbout(m1pos,m2pos,m3pos,m4pos)+c12*c34*c_tot
 
-c debug
-c	write(*,*)j12,j34,m1out(m1pos),m2out(m2pos),
-c     + m3out(m3pos),m4pr,c12,c34,c_tot,prbout(m1pos,m2pos,m3pos,m4pos)
-
-44	   	Continue
-43         Continue
-42        Continue
-41       Continue
-134	continue
-112	continue
+                
+ 44          Continue
+ 43       Continue
+ 42    Continue
+ 41   Continue
+ 134  continue
+ 112  continue
 
 c error check
        if(m1pos.eq.0.or.m2pos.eq.0.or.m3pos.eq.0.or.m4pos.eq.0)then
           write(6,*)'IN ISOCGK/ISONEW: MPOS=0 ERROR'
-	    write(6,*)"Can't couple Jin, Min=",Jtot,M
-	    write(6,*)'To J1,J2,J3,J4=',Jnew(1),Jnew(2),Jnew(3),Jnew(4)
+            write(6,*)"Can't couple Jin, Min=",Jtot,M
+            write(6,*)'To J1,J2,J3,J4=',Jnew(1),Jnew(2),Jnew(3),Jnew(4)
           itag=-1
           return
        endif
@@ -328,11 +320,11 @@ c error check
 c sum up all CGKs
        prbsum=0.
        Do 51 m1p=1,m1pos
-	  Do 52 m2p=1,m2pos
-	   Do 53 m3p=1,m3pos 
-	    Do 54 m4p=1,m4pos
+          Do 52 m2p=1,m2pos
+           Do 53 m3p=1,m3pos 
+            Do 54 m4p=1,m4pos
            prbsum=prbsum+prbout(m1p,m2p,m3p,m4p)
-54	    Continue
+54          Continue
 53       continue
 52      continue
 51     continue
@@ -340,57 +332,50 @@ c sum up all CGKs
 c error check
        IF(prbsum.le.0.) then
           write(6,*)'ERROR IN ISOCGK/ISONEW:PRBSUM.LE.0.'
-	    write(6,*)"Can't couple Jin, Min=",Jtot,M
-	    write(6,*)'To J1,J2,J3,J4=',Jnew(1),Jnew(2),Jnew(3),Jnew(4)
-          stop
+            write(6,*)"Can't couple Jin, Min=",Jtot,M
+            write(6,*)'To J1,J2,J3,J4=',Jnew(1),Jnew(2),Jnew(3),Jnew(4)
+          stop 137
        endif
 
 c normalize to 1 (now we have real probabilities for different Mout combis)
        Do 61 m1p=1,m1pos
-	  Do 62 m2p=1,m2pos
-	   Do 63 m3p=1,m3pos 
-	    Do 64 m4p=1,m4pos
+          Do 62 m2p=1,m2pos
+           Do 63 m3p=1,m3pos 
+            Do 64 m4p=1,m4pos
            prbout(m1p,m2p,m3p,m4p)=prbout(m1p,m2p,m3p,m4p)/prbsum
 c      write(*,*)'!p= ',m1out(m1p),m2out(m2p),m3out(m3p),
 c     & m4out(m4p),prbout(m1p,m2p,m3p,m4p)
-64	    Continue
+64          Continue
 63       Continue
 62      Continue
 61     Continue
 
 c now determine according to the PRBOUT values the outgoing M combination
        zrand=ranf(0)
-c       Mnew(1)=-1000
-c       Mnew(2)=-1000
-c       Mnew(3)=-1000
-c        Mnew(4)=-1000
        Do 71 m1p=1,m1pos
-	  Do 72 m2p=1,m2pos
-	   Do 73 m3p=1,m3pos 
-	    Do 74 m4p=1,m4pos
-c	write(*,*)'find',m1p,m2p,m3p,m1out(m1p),m2out(m2p),m3out(m3p),
-c     &        zrand,prbout(m1p,m2p,m3p)
+          Do 72 m2p=1,m2pos
+           Do 73 m3p=1,m3pos 
+            Do 74 m4p=1,m4pos
            if(zrand.lt.prbout(m1p,m2p,m3p,m4p)) then
              Mnew(1)= M1out(m1p)
              Mnew(2)= M2out(m2p)
              Mnew(3)= M3out(m3p)
-	       Mnew(4)= M4out(m4p)
-	       goto 70
+               Mnew(4)= M4out(m4p)
+               goto 70
            else
              zrand=zrand-prbout(m1p,m2p,m3p,m4p)
            endif
-74	    Continue
+74          Continue
 73       Continue
 72      Continue
 71     Continue
-70	 Continue
+70       Continue
        RETURN
        END
 
 
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function fcgk(i1,i2,iz1,iz2,i) !L.A.W. Tue Aug 15 1995
-C Author : L.A.Winckelmann 
 c returns the normalized clebsch gorden factor also for combinations 
 c involving strange mesons and antibaryons
 C####C##1#########2#########3#########4#########5#########6#########7##
@@ -404,7 +389,6 @@ C####C##1#########2#########3#########4#########5#########6#########7##
       icnt=0
       c=0d0
       iz=iz1+iz2
-c      if(isoit(i).lt.iabs(iz))write(6,*)'??'
       if(isoit(i).lt.iabs(iz))goto 1008
       if(isoit(i1)*isoit(i2).eq.0)then
          c=1d0
@@ -412,33 +396,25 @@ c      if(isoit(i).lt.iabs(iz))write(6,*)'??'
       end if
 
       call cgknrm(isoit(i),iz,isoit(i1),isoit(i2),iz1,iz2,ir,c) 
-c     write(6,*)'cgknrm=',c
-      if(i1.eq.i2.and.iz1.ne.iz2.and.iz1+iz2.eq.0)c=2d0*c
+      if(i1.eq.i2.and.iz1.ne.iz2)c=2d0*c
 c... particle exchange 
 
-      if(ir.ne.0! .and.(iabs(i).lt.minlam.or.iabs(i).gt.maxsig)
-     @   )then
+      if(ir.ne.0)then
          icnt=icnt+1
          if(icnt.le.1)then 
            write(6,*)'fcgk: no iso-spin decomposition found for:',
      @       i,iz,' to ',i1,iz1,'+',i2,iz2
            write(6,*)'      please check this channel'
         end if
-        return 	
+        return  
       end if
-
 
       if(strit(i).eq.0)then
 c... this is now for particle+antiparticle (except nonstrange mesons)
          i12=i1*i2
-cdebug,sab,vishnu: total bullshit!!!!
-co         i12a=iabs(i12)
-co         nombbb=i12a.lt.maxbar**2.or.i12a.gt.minmes**2
 c... the charge conjugated states have the same weight
-co         if(i12.lt.0.and.nombbb)then
-
+csab: new condition, the old one violated antibaryon-meson symmetry
          if(i12.lt.0.and.min(iabs(i1),iabs(i2)).gt.maxbar)then
-        
 c... for example anti-K* + K 
             if(i1.ne.-i2)c=c*5d-1
          end if
@@ -448,7 +424,6 @@ c... for example anti-K* + K
       end
 C####C##1#########2#########3#########4#########5#########6#########7##
        subroutine cgknrm(JIN,MIN,J1NEW,J2NEW,M1IN,M2IN,ierr,cf)
-C Author : L.A.Winckelmann 
 C gives the normalized cg-factor i.e. poosibility into a given
 C iso-spin decomposition of JIN,MIN into J1NEW,J2NEW,M1IN,M2IN
 C ierr equals 0 if there is any alowed J1,J2,M1,M2 (not necessaryly
@@ -511,8 +486,8 @@ c sum over all CGKs
 c error check
        IF(PRBSUM.LT.1d-3) then
           ierr = 1
-	  cf = 0d0 
-	  return
+          cf = 0d0 
+          return
        endif
 c normalize to 1 (now we have real probabilities for different Mout combis)
        cf=cf/PRBSUM
@@ -522,12 +497,8 @@ c normalize to 1 (now we have real probabilities for different Mout combis)
 
           
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-c      real*8 function dbweight(j1,m1,j2,m2,j1new,m1new,j2new,m2new)
       real*8 function dbweight(j1,m1,j2,m2,j1new,j2new)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass
-c     Date     : 02/24/95
 c     Revision : 1.0
 c
 c     This function delivers a weight, based on a Clebsch Gordan
@@ -568,26 +539,19 @@ c  which possible states match (are common for in AND out state)
       JMAX  =  MIN0(JMAXOL,JMAXNW)
       NJ = (JMAX-JMIN)/2 +1
       if(nj.lt.1) return
-cdebug
-c      write(6,*)'jmin,jmax,nj',jmin,jmax,nj
       ind=0
       do 18 jpr=jmin,jmax,2
          ind=ind+1
          weight(ind)=clebsch(j1,j2,m1,m2,jpr)
-c     &                *clebsch(j1new,j2new,m1new,m2new,jpr)
          dbweight=dbweight+weight(ind)
  18   continue
-cdebug
-c         write(6,*)'dbweight',dbweight
+
       return
       end
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 function clebsch(j1,j2,m1,m2,j3)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass
-c     Date     : 02/24/95
 c     Revision : 1.0 
 c
 c     This function delivers a Clebsch Gordan Coefficient, which has been
@@ -617,12 +581,9 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       common /FACTORIALS/LogFak
 
       integer jmax
-      parameter(jmax=7) ! must be identical to value in loginit!!!
+      parameter(jmax=7) 
       real*8 cgktab(0:jmax,0:jmax,-jmax:jmax,-jmax:jmax,0:jmax)
       common /cgks/cgktab
-
-c!!!! redundant, if called from uqmd
-c      call loginit
 
 c     each cgk for j's in the range up to jmax is calculated only once
 c     and then stored in the cgktab table for further use
@@ -642,8 +603,6 @@ c     and then stored in the cgktab table for further use
          clebsch=cgk**2
          if(jmm.le.jmax) then
             cgktab(j1,j2,m1,m2,j3)=clebsch
-cdebug
-c            write(6,*)'tabulated',j1,j2,m1,m2,j3,clebsch
          endif
       else
          clebsch=cgktab(j1,j2,m1,m2,j3)
@@ -660,8 +619,6 @@ c  representation of A. Lindner.
 c
 c  Reference:
 c  A. Lindner, Drehimpulse in der Quantenmechanik, Teubner 1984, P.39
-c
-c  Written by Ch. Hofmann, 16.7.92, last changes: 22.4.93
 c
 c====================================================================== 
       implicit none
@@ -746,8 +703,6 @@ c  Looking for the smallest N( i, j )
  30      continue
  40   continue
 
-c      write(6,*) minimal,'in  ',imin,'. Zeile und  ',jmin,'. Spalte'
-
       Signum = 1
 
       if ( imin .gt. 1 )   then 
@@ -767,10 +722,6 @@ c      write(6,*) minimal,'in  ',imin,'. Zeile und  ',jmin,'. Spalte'
  60      continue
          Signum = (-1)**nint( Sigma ) * Signum
       endif 
-
-c      do i=1, 3 
-c         write(6,'(3f14.5)') (N(i,j), j=1, 3 ) 
-c      enddo 
 
 
       R1 = N( 1, 1 ) 

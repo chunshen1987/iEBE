@@ -15,7 +15,7 @@
 # ----------------------------------------- 
 
 
-FC := $(shell ../crank/configure_compiler_fortran.sh)
+FC := gfortran
 FFLAGS= $(shell ../crank/configure_compiler_fortran_Flags.sh)
 
 RM		=	rm -f

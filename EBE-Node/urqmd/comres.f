@@ -1,4 +1,4 @@
-c $Id: comres.f,v 1.10 1998/06/15 13:35:10 weber Exp $
+c $Id: comres.f,v 1.15 2003/06/29 14:26:36 weber Exp $
 c
 cdes This file contains definitions for the collision term
 c
@@ -11,7 +11,9 @@ c
 
       parameter (minnuc=1) ! lowest baryon particle ID 
       parameter (minmes=100) ! lowest meson particle ID
-      parameter (maxmes=132) ! hightest meson particle ID
+corig      parameter (maxmes=132) ! hightest meson particle ID
+c add 5 charmed mesons to array
+      parameter (maxmes=139) ! hightest meson particle ID
 
 c number of resonances of a kind
       parameter (numnuc=16) ! number of nucleon resonances
@@ -24,7 +26,8 @@ c indices of minimal and maximal itype of a kind (redundant but nice)
 c minres & maxres define the range of nonstable & nonstrange baryons
       integer minres,maxres
       parameter (minres=minnuc+1) ! lowest baryon resonance ID
-      parameter (maxres=maxdel)   ! highest (nonstrange) baryon resonance ID
+      parameter (maxres=maxdel)   ! highest (nonstrange) baryon 
+                                  ! resonance ID
 
 c strangenes.ne.0 baryon resonances
       integer minlam,minsig,mincas,minome
@@ -47,10 +50,11 @@ c minbar & maxbar define the range of all baryons
       parameter (minbar=minnuc) ! ID of lowest baryon state
       parameter (maxbar=maxome) ! ID of highest baryon state
 
-      parameter (offmeson=minmes) ! offset between zero and lowest meson state
+      parameter (offmeson=minmes) ! offset between zero and lowest 
+                                  ! meson state
       parameter (maxmeson=maxmes) ! ID of highest meson state
-c... these variables are in principal obsolete and should be exchanged were 
-c referenced 
+c... these variables are in principal obsolete and should be exchanged 
+c were referenced 
 
 c... avoid hard coded itypes
       integer itrho,itome,iteta,itkaon,itphi,itetapr
@@ -66,11 +70,13 @@ c... avoid hard coded itypes
       integer itmin,itmax
       parameter (itmin=minnuc)  ! lowest defined ID
       parameter (itmax=maxmes)  ! highest defined ID
-c!!!!!
-      parameter (maxbra=8)   ! number of decay channels for $s=0$ baryon resonances
-      parameter (maxbrm=25)  ! number of decay channels for meson resonances
-      parameter (maxbrs1=10) ! number of decay channels for $s=1$ baryon resonances
-      parameter (maxbrs2=3)  ! number of decay channels for $s=2$ baryon resonances
+c
+      parameter (maxbra=11)  ! decay channels for $s=0$ baryon resonances
+corig      parameter (maxbrm=25) ! decay channels for meson resonances
+c add 2 decay channels for D*
+      parameter (maxbrm=27) ! decay channels for meson resonances
+      parameter (maxbrs1=10)! decay channels for $s=1$ baryon resonances
+      parameter (maxbrs2=3) ! decay channels for $s=2$ baryon resonances
 
 c 
        integer mlt2it(maxmes-minmes) ! meson IDs sorted by multipletts
@@ -79,8 +85,10 @@ c
       real*8 massoff,mresmin,mresmax
       parameter (massoff=1d-4)      ! offset for mass generation
       parameter (mresmin=1.0765d0)  ! minimum baryon resonance mass
-      parameter (mresmax=5d0)       ! maximum baryon resonance mass
+      parameter (mresmax=3.5d0)       ! maximum baryon resonance mass
 
+      character*45 versiontag
+      common /versioning/ versiontag
 
       real*8 massres(minbar:maxbar),widres(minbar:maxbar)
       real*8 branmes(0:maxbrm,minmes+1:maxmes)
@@ -97,22 +105,20 @@ c
       real*8 mmesmn(minmes:maxmes)
       real*8 widmes(minmes:maxmes)
       integer strres(minbar:maxbar),strmes(minmes:maxmes)
+      integer chrmres(minbar:maxbar),chrmmes(minmes:maxmes)
 
       integer lbr(0:maxbra,minnuc+1:maxdel)
       integer lbs1(0:maxbrs1,minlam+1:maxsig)
       integer lbs2(0:maxbrs2,mincas+1:maxcas)
       integer lbm(0:maxbrm,minmes+1:maxmes)
 
-claw itype classifications
-      integer ittocl(itmin:itmax)
-
-
       common /resonances/ massres,widres,massmes,widmes,mmesmn,
      ,                    branres,branmes,branbs1,branbs2,
      ,                    bs1type,bs2type,lbs1,lbs2,lbm,
      ,                    jres,jmes,lbr,brtype,pares,pames,
      ,                    bmtype,
-     ,                    Isores,Isomes,strres,strmes,ittocl,mlt2it
+     ,                    Isores,Isomes,strres,strmes,mlt2it,
+     ,                    chrmres,chrmmes
 
 c     massres   : baryon mass table
 c     widres    : baryon decay width table
@@ -145,12 +151,14 @@ ccccccccccccccccccccc sigtab-declarations cccccccccccccccccccccccccccccccccc
 
       integer itblsz,nsigs,maxreac,maxpsig,sigver
 c     VERSION NUMBER of SIGTAB
-      parameter (sigver = 1000) ! version number for collision term and tables
+      parameter (sigver = 1000) ! version number for collision 
+                                ! term and tables
 ccccccccccccccccccccccccccccccccccccccc
 c
 
-      parameter (maxreac = 13) ! maximum number of collision classes
-      parameter (maxpsig = 12) ! maximum number of cross sections per class
+      parameter (maxreac = 15) ! maximum number of collision classes
+      parameter (maxpsig = 21) ! maximum number of cross 
+                               ! sections per class
       parameter (nsigs = 10)   ! number of tabulated cross sections
 
       PARAMETER (ITBLSZ= 100)  ! table size of cross section tables

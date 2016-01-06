@@ -1,4 +1,4 @@
-     
+
 c Setting of global paramters
 c
       subroutine params
@@ -40,15 +40,9 @@ c      Sky30  = 303.0 !188.18
 c      gamSky = 7.0/6.0 !1.457
 c      A0 = -356.0 * 0.5
 
-c      print *, 'Chi?'
-c      read(5,*) chi
 
       Sky20 = chi*2.0*A0
       Yuk0 = (1.0-chi)/(2.0*pi*gamYuk**2)*A0
-
-claw
-c      print *, Sky20, Yuk0,
-c     +         0.5*Sky20 + 2.0*pi*gamYuk**2*Yuk0
 
 c      Sky20 = 0.0d0
 c      Sky30 = 0.0d0
@@ -65,7 +59,7 @@ c      Cb0   = 0.0d0
       cutYuk = 20.0
       cutCb  = 20.0
 
-      dtimestep=0.2	
+      dtimestep=0.2     
       dt  = 0.02
 c      dt2 = 0.5*dt
 c      dt6 = dt/6.0
@@ -78,7 +72,7 @@ c Reset of all indexed variables
 c
       subroutine set0
       implicit none
-      integer i, j, k
+      integer i, j
       include 'coms.f'
 
       do 10 i=1,nspl
@@ -105,166 +99,7 @@ c
         py(j)    = 0.0
         pz(j)    = 0.0
         fmass(j) = 0.0
-        do 30 k=1,nmax
-c          iPau(j,k) = .false.
-c          rjk(j,k)  = 0.0
-c          pjk(j,k)  = 0.0
-c          rxjk(j,k)  = 0.0
-c          pxjk(j,k)  = 0.0
-c          ryjk(j,k)  = 0.0
-c          pyjk(j,k)  = 0.0
-c          rzjk(j,k)  = 0.0
-c          pzjk(j,k)  = 0.0
-  30    continue
   20  continue
-      return
-      end
-
-
-      subroutine shift
-      implicit none
-      integer j
-      real*8 x_cm, y_cm, z_cm
-      real*8 px_cm, py_cm, pz_cm
-      include 'coms.f'
-
-c move center of mass to (0, 0, 0)
-      x_cm = 0.0
-      y_cm = 0.0
-      z_cm = 0.0
-      px_cm = 0.0
-      py_cm = 0.0
-      pz_cm = 0.0
-      do 10 j=1,npart
-        x_cm = x_cm + rx(j)
-        y_cm = y_cm + ry(j)
-        z_cm = z_cm + rz(j)
-        px_cm = px_cm + px(j)
-        py_cm = py_cm + py(j)
-        pz_cm = pz_cm + pz(j)
-   10 continue
-      do 20 j=1,npart
-        rx(j) = rx(j)-x_cm/dble(npart)
-        ry(j) = ry(j)-y_cm/dble(npart)
-        rz(j) = rz(j)-z_cm/dble(npart)
-        px(j) = px(j)-px_cm/dble(npart) 
-        py(j) = py(j)-py_cm/dble(npart)
-        pz(j) = pz(j)-pz_cm/dble(npart)
-   20 continue
-      end
-
-      subroutine angmom
-      implicit none
-      integer j
-      real*8 angx, angy, angz, angtot
-      real*8 Jxx, Jxy, Jxz, Jyy, Jyz, Jzz
-      include 'coms.f'
-
-      angx = 0.0
-      angy = 0.0
-      angz = 0.0
-      Jxx = 0.0
-      Jxy = 0.0
-      Jxz = 0.0
-      Jyy = 0.0
-      Jyz = 0.0
-      Jzz = 0.0
-      do 10 j=1,npart
-        angx = angx + ry(j)*pz(j)-rz(j)*py(j)
-        angy = angy + rz(j)*px(j)-rx(j)*pz(j)
-        angz = angz + rx(j)*py(j)-ry(j)*px(j)
-        Jxx = Jxx + fmass(j)*(ry(j)*ry(j)+rz(j)*rz(j))
-        Jxy = Jxy + fmass(j)*rx(j)*ry(j)
-        Jxz = Jxz + fmass(j)*rx(j)*rz(j)
-        Jyy = Jyy + fmass(j)*(rx(j)*rx(j)+rz(j)*rz(j))
-        Jyz = Jyz + fmass(j)*ry(j)*rz(j)
-        Jzz = Jzz + fmass(j)*(rx(j)*rx(j)+ry(j)*ry(j))
-   10 continue
-      angtot = sqrt(angx**2+angy**2+angz**2)/hqc
-      print 11, angx/hqc, angy/hqc, angz/hqc, angtot
-   11 format('angular momentum', 4F8.3)
-c      print *, Jxx, Jxy, Jxz, Jyy, Jyz, Jzz
-      end
-
-
-
-      subroutine denscheck
-      implicit none
-      integer j, k, l
-      real*8 radius, padius, d_t2, p_t2, rr2
-      real*8 x_t(6,0:15), y_t(6,0:15), z_t(6,0:15), rho_r(0:15,6)
-      real*8 px_t(6,0:15), py_t(6,0:15), pz_t(6,0:15), rho_p(0:15)
-      real*8 nro(0:15), nucrad
-      include 'coms.f'
-
-c move center of mass to (0, 0, 0)
-      call shift
-      
-      radius = (0.75*dble(npart)/rho0/pi)**0.33333333
-      padius = 0.3/radius
-
-      rr2 = 0.0
-      do 80 l=1,npart
-        rr2 = rr2+rx(l)**2+ry(l)**2+rz(l)**2
- 80   continue
-      rr2 = sqrt(rr2/dble(npart)+0.75/gw)
-      print *, 'RMS-Radius:', rr2
-      print *, 'nucrad:    ', nucrad(npart)    
-      do 10 j=0,15
-        nro(j) = 0.0
-        x_t(1,j) = dble(j)*0.1*radius      
-        y_t(1,j) = 0.0
-        z_t(1,j) = 0.0
-        x_t(2,j) = -(dble(j)*0.1*radius)     
-        y_t(2,j) = 0.0
-        z_t(2,j) = 0.0
-        x_t(3,j) = 0.0
-        y_t(3,j) = dble(j)*0.1*radius      
-        z_t(3,j) = 0.0
-        x_t(4,j) = 0.0
-        y_t(4,j) = -(dble(j)*0.1*radius)    
-        z_t(4,j) = 0.0
-        x_t(5,j) = 0.0
-        y_t(5,j) = 0.0
-        z_t(5,j) = dble(j)*0.1*radius      
-        x_t(6,j) = 0.0
-        y_t(6,j) = 0.0
-        z_t(6,j) = -(dble(j)*0.1*radius)
-        do 20 k=1,6
-          px_t(k,j) = x_t(k,j)*padius
-          py_t(k,j) = y_t(k,j)*padius
-          pz_t(k,j) = z_t(k,j)*padius
-   20   continue
-   10 continue
-      do 30 k=0,15
-        do 33 l=1,6
-          rho_r(k,l) = 0.0
-   33   continue
-        rho_p(k) = 0.0
-        do 40 l=1,npart
-          if (rx(l)**2+ry(l)**2+rz(l)**2.le.x_t(1,k)**2) 
-     +       nro(k) = nro(k)+1.0
-          do 50 j=1,6
-            d_t2 = (rx(l)-x_t(j,k))**2 + (ry(l)-y_t(j,k))**2 +
-     +             (rz(l)-z_t(j,k))**2
-            rho_r(k,j) = rho_r(k,j) + exp(-(2.0*gw*d_t2))
-            p_t2 = (px(l)-px_t(j,k))**2 + (py(l)-py_t(j,k))**2 +
-     +             (pz(l)-pz_t(j,k))**2
-            rho_p(k) = rho_p(k) + exp(-(0.5/gw/hqc/hqc*p_t2))
-   50     continue
-   40   continue
-        do 44 l=1,6
-          rho_r(k,l) = rho_r(k,l)*(2.0*gw/pi)**1.5 ! fm^-3
-   44   continue
-        rho_p(k) = rho_p(k)/6.0 * (0.5/gw/pi)**1.5 ! fm^3
-        nro(k) = nro(k)*0.75/pi/x_t(1,k)**3
-        print 15, dble(k)*0.1*radius, (rho_r(k,l), l=1,6)
-        write(88,15) dble(k)*0.1*radius, (rho_r(k,l), l=1,6)
-c        print 14, k, x_t(1,k), rho_r(k), nro(k), px_t(1,k), rho_p(k)
-c        write(99,14) k, x_t(1,k), rho_r(k), nro(k), px_t(1,k), rho_p(k)
-c   14   format(i4,5f10.5)
-   15   format(7f10.5)
-   30 continue
       return
       end
 
@@ -439,8 +274,6 @@ C aorx(j,?) = dH/dpx_j
       real*8 function Etot() 
       implicit none
       integer j, k, index
-claw
-c      real*8 Etot, a, b, y, drdp, tp, tr, tmp, Ekintot
       real*8 a, b, y, drdp, tp, tr, tmp, Ekintot
       real*8 Ekinbar, Ekinmes, ESky2, ESky3, EYuk, ECb, EPau, Ekin
       real*8 rxjku, ryjku, rzjku, rjku, pxjku, pyjku, pzjku, pjku
@@ -457,9 +290,8 @@ c      real*8 Etot, a, b, y, drdp, tp, tr, tmp, Ekintot
       ECb = 0.0
       EPau = 0.0
 
-c2811      call dists(rx,ry,rz,px,py,pz)
       if(EoS.eq.0) then
-csab
+
 c CASCADE mode
          Etot=Ekintot()
          return
@@ -545,7 +377,6 @@ c kinetic energies of mesons first
           end if
   50    continue
   40  continue
-cJFK      Etot = Etot/dble(nbar)
       Ekinbar = Ekinbar/dble(nbar)
       Ekinmes = Ekinmes/dble(max(1,npart-nbar))
       ESky2 = ESky2/dble(nbar)
@@ -561,15 +392,10 @@ cJFK      Etot = Etot/dble(nbar)
       subroutine cascstep(tim,dtime)
       implicit none
       real*8 tim,dtime,energ
-c     real*8 swapi
       integer j
       include 'coms.f'
       include 'boxinc.f'
       include 'options.f'
-
-cdebug
-c      write(6,'(a8,2f10.3)') '    casc', tim, dtime
-c	write(6,*) 'tim,dtime = ',tim,dtime,npart
 
       do 1 j=1,npart
          energ = sqrt(px(j)**2+py(j)**2+pz(j)**2+fmass(j)**2)
@@ -582,20 +408,17 @@ c	write(6,*) 'tim,dtime = ',tim,dtime,npart
       end
  
       subroutine proprk(tim,dtime)
-c Modifikationen von M. Hofmann: CASCADE und variable Propagationszeit
+
       implicit none
       real*8 tim,dtime,energ,dt2, dt6
-c     real*8 swapi
       integer j
+
       include 'coms.f'
       include 'boxinc.f'
       include 'options.f'
 
-c      write(6,'(a8,2f10.3)') 'prop    ', tim, dtime
-
       if (EoS.eq.0) then
 c  cascade mode
-c	write(6,*) 'tim,dtime = ',tim,dtime,npart
          do 1 j=1,npart
                energ = p0(j)    ! sqrt(px(j)**2+py(j)**2+pz(j)**2+fmass(j)**2)
                r0(j) = r0(j) + dtime
@@ -630,7 +453,6 @@ c adjust time-step parameters
         aipz(j) = pz(j)
   10  continue
         
-c2811      call dists(rx,ry,rz,px,py,pz)
       call derivs(1)
       do 20 j=1,nbar
         airx(j) = rx(j) + dt2*aorx(j,1) 
@@ -641,7 +463,6 @@ c2811      call dists(rx,ry,rz,px,py,pz)
         aipz(j) = pz(j) + dt2*aopz(j,1)
   20  continue
 
-c2811      call dists(airx,airy,airz,aipx,aipy,aipz)
       call derivs(2)
         
       do 30 j=1,nbar
@@ -653,7 +474,6 @@ c2811      call dists(airx,airy,airz,aipx,aipy,aipz)
         aipz(j) = pz(j) + dt2*aopz(j,2)
   30  continue
       
-c2811      call dists(airx,airy,airz,aipx,aipy,aipz)
       call derivs(3)
 
       do 40 j=1,nbar
@@ -665,7 +485,6 @@ c2811      call dists(airx,airy,airz,aipx,aipy,aipz)
         aipz(j) = pz(j) + dt*aopz(j,3)
   40  continue
    
-c2811      call dists(airx,airy,airz,aipx,aipy,aipz)
       call derivs(4)
 
       do 50 j=1,nbar
@@ -679,14 +498,7 @@ c2811      call dists(airx,airy,airz,aipx,aipy,aipz)
         p0(j)=sqrt(px(j)**2+py(j)**2+pz(j)**2+fmass(j)**2)
  50   continue
       end if
-c MB
-c            if ((mbox.gt.0).and.(mbflag.eq.1)) then
-c              write(*,*) 'Hallo, Welt3 !'
-c		rx(j)=swapi(rx(j),lboxhalbe)
-c		ry(j)=swapi(ry(j),lboxhalbe)
-c		rz(j)=swapi(rz(j),lboxhalbe)
-c            endif
-cc 
+
       return
       end
 
@@ -748,8 +560,6 @@ cc
      +         (3.0*b**2-1.0)*db*outPau(index+1))*fdel
         dy = dy*sqrt(2.0*dr*drPau)/drPau
         end if
-c        write(6,'(1p,4e15.5)') dr, dPaur(1,1), dy, dPaur(1,1)-dy
-c        write(6,'(1p,4e15.5)') dr, Pau(1,1), y, Pau(1,1)-y
   10  continue
       return
       end
@@ -804,8 +614,6 @@ c        write(6,'(1p,4e15.5)') dr, Pau(1,1), y, Pau(1,1)-y
      +         ((3.0*a**2-1.0)*da*outCb(index)+
      +           (3.0*b**2-1.0)*db*outCb(index+1))*fdel
         end if
-c        write(6,'(1p,4e15.5)') dr, dCb(1,2), dy, dCb(1,2)-dy
-c        write(6,'(1p,4e15.5)') dr, Cb(1,2), y, Cb(1,2)-y
   10  continue
       return
       end
@@ -859,59 +667,9 @@ c        write(6,'(1p,4e15.5)') dr, Cb(1,2), y, Cb(1,2)-y
      +        ((3.0*a**2-1.0)*da*outYuk(index)+
      +         (3.0*b**2-1.0)*db*outYuk(index+1))*fdel
         end if
-c        write(6,'(1p,4e15.5)') dr, dYuk(1,2), dy, dYuk(1,2)-dy
-c        write(6,'(1p,4e15.5)') dr, Yuk(1,2), y, Yuk(1,2)-y
   10  continue
       return
       end
-
-c      subroutine potSky
-c      implicit none
-c      integer i, ncut, index
-c      real*8 Ecut, dr, abl0, abln, a, b, y, dy
-c      include 'coms.f'
-c
-c      Ecut = 1.0E-5
-c      i = 0
-c  99  i = i+1    
-c      dr = delr*dble(i-1)
-c      rjk(1,1) = dr 
-c      spx(i) = dr
-c      spSkyy(i) = Sky(1,1)
-c      if(abs(spSkyy(i)).lt.Ecut) then
-c        spSkyy(i) = 0.0
-c        cutSky = dr
-c        abl0 = 0.0 
-c        abln = 0.0
-c        ncut = i
-c      else
-c        goto 99
-c      end if
-c      call spline(spx,spSkyy,ncut,abl0,abln,outSky)
-c
-c      write(6,*) Ecut, ncut, cutSky
-c
-c      do 10 i=0,20
-c        dr = 0.295*dble(i)
-c        rjk(1,1) = dr
-c        if(dr.gt.cutSky) then
-c          y = 0.0
-c          dy = 0.0
-c        else
-c        index = int(dr/delr)+1
-c        a = dble(index) - dr/delr
-c        b = 1.0 - a
-c        y = a*spSkyy(index)+b*spSkyy(index+1)+
-c     +     ((a**3-a)*outSky(index)+(b**3-b)*outSky(index+1))*fdel
-c        dy = da*spSkyy(index)+db*spSkyy(index+1)+
-c     +        ((3.0*a**2-1.0)*da*outSky(index)+
-c     +         (3.0*b**2-1.0)*db*outSky(index+1))*fdel
-c        end if
-cc        write(6,'(1p,4e15.5)') dr, dSky(1,1), dy, dSky(1,1)-dy
-c        write(6,'(1p,4e15.5)') dr, Sky(1,1), y, Sky(1,1)-y
-c  10  continue
-c      return
-c      end
 
 
       subroutine potdww
@@ -963,88 +721,9 @@ c      end
      +        ((3.0*a**2-1.0)*da*outdww(index)+
      +         (3.0*b**2-1.0)*db*outdww(index+1))*fdel
         end if
-c        write(6,'(1p,4e15.5)') dr, dSky(1,1), dy, dSky(1,1)-dy
-c        write(6,'(1p,4e15.5)') dr, dww(1,1), y, dww(1,1)-y
   10  continue
       return
       end
-
-c Evaluation of rjk, pjk and rww
-c
-c      subroutine dists(aarx,aary,aarz,aapx,aapy,aapz)
-c      implicit none
-c      include 'coms.f'      
-c      integer j, k, index
-c      real*8 aarx(nmax),aary(nmax),aarz(nmax),
-c     +     aapx(nmax),aapy(nmax),aapz(nmax),
-c     +     a, b, tmp, dpj
-c
-c      do 10 j=1,nbar
-c        do 20 k=j+1,nbar
-c          rjk(j,k) = sqrt((aarx(j)-aarx(k))*(aarx(j)-aarx(k))+
-c     +                    (aary(j)-aary(k))*(aary(j)-aary(k))+
-c     +                    (aarz(j)-aarz(k))*(aarz(j)-aarz(k)))
-c          pjk(j,k) = sqrt((aapx(j)-aapx(k))*(aapx(j)-aapx(k))+
-c     +                    (aapy(j)-aapy(k))*(aapy(j)-aapy(k))+
-c     +                    (aapz(j)-aapz(k))*(aapz(j)-aapz(k)))
-c          rjk(k,j) = rjk(j,k)
-c          pjk(k,j) = pjk(j,k)
-c          if (rjk(j,k).ge.1.0E-8) then
-c            rxjk(j,k) = (aarx(j)-aarx(k))/rjk(j,k)
-c            ryjk(j,k) = (aary(j)-aary(k))/rjk(j,k)
-c            rzjk(j,k) = (aarz(j)-aarz(k))/rjk(j,k)
-c          else
-c            rxjk(j,k) = 0.0
-c            ryjk(j,k) = 0.0
-c            rzjk(j,k) = 0.0
-c          end if
-c          if (pjk(j,k).ge.1.0E-8) then
-c            pxjk(j,k) = (aapx(j)-aapx(k))/pjk(j,k)
-c            pyjk(j,k) = (aapy(j)-aapy(k))/pjk(j,k)
-c            pzjk(j,k) = (aapz(j)-aapz(k))/pjk(j,k)
-c          else
-c            pxjk(j,k) = 0.0
-c            pyjk(j,k) = 0.0
-c            pzjk(j,k) = 0.0
-c          end if
-c          rxjk(k,j) = -rxjk(j,k)
-c          ryjk(k,j) = -ryjk(j,k)
-c          rzjk(k,j) = -rzjk(j,k)
-c          pxjk(k,j) = -pxjk(j,k)
-c          pyjk(k,j) = -pyjk(j,k)
-c          pzjk(k,j) = -pzjk(j,k)
-c  20    continue
-c  10  continue
-c      do 30 j=1,nbar
-c        dpj = 1.0/sqrt(aapx(j)*aapx(j)+aapy(j)*aapy(j)+aapz(j)*aapz(j)+
-c     +             fmass(j)*fmass(j)) 
-c        pxjk(j,j) = aapx(j)*dpj
-c        pyjk(j,j) = aapy(j)*dpj
-c        pzjk(j,j) = aapz(j)*dpj
-c        rww(j) = 0.0
-c        rtest(j) = 1.0
-c  30  continue
-c      do 40 j=1,nbar
-c        do 50 k=j+1,nbar
-c          rtest(j) = rtest(j) + exp(-2.0*gw*rjk(j,k)**2)
-c          rtest(k) = rtest(k) + exp(-2.0*gw*rjk(j,k)**2)
-c          if(rjk(j,k).lt.cutdww) then
-c            index = int(rjk(j,k)/delr)+1
-c            a = dble(index) - rjk(j,k)/delr
-c            b = 1.0 - a 
-c            tmp = a*spdwwy(index)+b*spdwwy(index+1)+
-c     +       ((a**3-a)*outdww(index)+(b**3-b)*outdww(index+1))*fdel
-c            rww(j) = rww(j) + tmp
-c            rww(k) = rww(k) + tmp
-c          end if
-c  50    continue
-c  40  continue
-c      do 60 j=1,nbar
-c        rtest(j) = rtest(j)*(2.0*gw/pi)**1.5
-c  60  continue  
-c      return
-c      end
-
 
 c Kinetic Energy
 c
@@ -1085,7 +764,6 @@ c
       
       dww = gw/pi*sqrt(gw/pi)*exp(-(gw*rjk(j,k)*rjk(j,k)))/
      /      rho0
-c     /      (rho0-(gw/pi)**1.5)
       return
       end
 
@@ -1100,18 +778,6 @@ cc
       Sky = Sky20*gw/pi*sqrt(gw/pi)*exp(-(gw*rjk(j,k)*rjk(j,k))) 
       return
       end
-c
-cc Derivative for Skyrme Potential
-cc
-c      function dSky(j,k)
-c      implicit none
-c      integer j, k
-c      include 'coms.f'
-c      
-c      dSky = -Sky20*gw/pi*sqrt(gw/pi)*exp(-gw*rjk(j,k)*rjk(j,k))*
-c     *       2.0*gw*rjk(j,k)
-c      return
-c      end
 
 c Coulomb Potential
 c
@@ -1272,44 +938,6 @@ c
       if (iso3(j).eq.iso3(k).and.ityp(j).eq.ityp(k)) iPau = .true.
       return
       end
-
-
-
-
-
-
-
-c $Id: proppot.f,v 1.9 1997/08/25 13:37:55 konopka Exp $
-c here are all Jens Konopka routines dealing with propagation and forces
-
-      function timing(itest)
-      integer itest, timing 
-c      integer tin, tout
-c, mclock
-c      save tin
-      
-      timing=0
-c AIX
-c      if(itest.ne.0) then
-c        tout = mclock()
-c        timing = tout-tin 
-c        tin = tout
-c      else
-c        tin = mclock()
-c      end if
-
-c PC
-c      if(itest.ne.0) then
-c        call dclock@(tout)
-c        timing = tout-tin 
-c        tin = tout
-c      else
-c        call dclock@(tin)
-c      end if
-
-      return
-      end   
-
 
 
  

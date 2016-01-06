@@ -1,9 +1,6 @@
-c $Id: string.f,v 1.10 1998/06/15 13:35:35 weber Exp $
+c $Id: string.f,v 1.23 2007/01/30 14:50:27 bleicher Exp $
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine stringdec(ityp,iz2,smass,part,ident2,npart)
-c
-c     Author   : N. Amelin, M. Bleicher, C. Spieles, L. Gerland
-c     Date     : 21/07/95
 c
 cinput smass   : Stringmass
 cinput ityp    : Particle ID
@@ -29,7 +26,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
 
 c we call the translation routine
-	call ityp2id(ityp,iz2,ifa,ifb)
+        call ityp2id(ityp,iz2,ifa,ifb)
 
         goto 1
 cspl... string fragmentation called with quark id's and energy as arguments
@@ -51,8 +48,6 @@ c corresponding part- and ident2-arrays of the newpart-common-block:
         call id2ityp(ident(i),pptcl(5,i),itypout,iz2out)
         ident2(1,i)=itypout
         ident2(2,i)=iz2out
-c        write(6,987)smass,itypout,iz2out,(pptcl(j,i),j=1,9)
-c 987     format(1x,f6.3,1x,i3,1x,i3,9f8.4)
         smem=smem-pptcl(4,i)
         do 3 j=1,9
          part(j,i)=pptcl(j,i)
@@ -70,9 +65,6 @@ c check for energy conservation:
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine strini
 c
-c     Author   : C. Spieles, M. Bleicher, L. Gerland, C. Ernst
-c     Date     : 21/09/96
-c
 c output     : via common blocks
 c
 c     {\tt strini} calculates mixing angles for the meson-multipletts
@@ -82,11 +74,11 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       implicit integer (i-n)
 
       include 'options.f'
-	include 'comres.f'
+        include 'comres.f'
       include 'comstr.f'
-	real*8 m3
-	real*8 massit
-	integer jit
+        real*8 m3
+        real*8 massit
+        integer jit
 c mixing angles of meson multiplets according to flavor SU(3) quark model:
 cspl-0795 these parameters assign the pure u/ubar,d/dbar,s/sbar states
 c  (e.g. 110,220,330) to the physical particles according to the su(3)
@@ -123,17 +115,14 @@ c probability. THEN they can be identified with physical hadrons!
          
 ce calculate probabilities of the meson multipletts
 ce according to parm=(spin degeneracy)/(average mass) *ctp(50 ff.)
-	   parm(i)=0d0
-	   m3=0d0
-	   do 102 j=0,3
-	     itp=mlt2it(4*(i-1)+j+1)
-	     m3=m3+massit(itp)
-	     jpc=jit(itp)/2
-102	   continue
-	   parm(i)=parm(i)+(2*jpc+1)/m3*4*CTParam(49+i)
-c debug
-c	   write(*,*)'strini',parm(i)
-
+           parm(i)=0d0
+           m3=0d0
+           do 102 j=0,3
+             itp=mlt2it(4*(i-1)+j+1)
+             m3=m3+massit(itp)
+             jpc=jit(itp)/2
+102        continue
+           parm(i)=parm(i)+(2*jpc+1)/m3*4*CTParam(49+i)
          
 c the mixing-angles are the same for 'string' and 'cluster':
          do 2 k=1,3            
@@ -149,15 +138,12 @@ c            write(6,*)'#',pmix1c(k,i)
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       SUBROUTINE GAUSPT(PT0,SIGQT)
 c
-c     Author   : N. Amelin
-c     Date     : 21/07/95
-c
 cinput   sigqt  : Width of Gaussian
 c
 coutput  pt0    : transverse momentum 
 c
 C     generate pt with Gaussian
-c     distribution $1/\sqrt{(\pi sigqt^2)}\exp(-pt^2/sigqt^2)$              
+c     distribution $\propto pt \exp(-pt^2/sigqt^2)$
 c
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       implicit none
@@ -171,8 +157,6 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       SUBROUTINE FLAVOR(ID,IFL1,IFL2,IFL3,JSPIN)
-c     Author   : N. Amelin, M. Bleicher, C. Spieles, L. Gerland
-c     Date     : 21/07/95
 c
 cinput ID     : quarkcode
 c
@@ -238,9 +222,6 @@ C          MESONS
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       SUBROUTINE STRING(IFL1,IFL2,AMSTR)
 c
-c     Author   : N. Amelin, M. Bleicher, C. Spieles, L. Gerland
-c     Date     : 21/07/95
-c
 cinput   amstr     : stringmass
 cinput   ifl1      : leading (di)quark (along +Z)
 cinput   ifl2      : leading (di)quark
@@ -260,9 +241,6 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       COMMON/PARTCL/ PPTCL(9,MXPTCL),nptcl,IDENT(MXPTCL),IDCAY(MXPTCL)
 
       include 'comstr.f'
-
-c      COMMON/COSPAR/ DMAS,dmass
-c      COMMON/COMPSC/ PRBS,PRBC
 
       DIMENSION PX1L(2),PY1L(2),PX1(2),PY1(2),PMTS(2),W(2),IFL(2)
       LOGICAL DIQBR,SPINT,BACK
@@ -376,13 +354,14 @@ C  Q,QBAR PAIR
 C  QQ,QQBAR PAIR
 140   IQ1=IFLAV(PU,PRBS)
       IQ2=IFLAV(PU,PRBS)
-
-c.. no single-strange diquarks (us,ds)!
-cblubb      if(max0(iq1,iq2).eq.3.and.min0(iq1,iq2).lt.3)goto 140
 c.. suppr. double strange di-quarks(ss) with certain prob. (acc. to ctp 29)
       if((IQ1.eq.3.and.IQ2.eq.3)
      &     .and.ranf(0).gt.CTParam(29))goto 140
- 
+c..  additional qs diquark suppression needed for anti-lambda suppression 
+c... single strange di-quark suppresion: 
+       if((IQ1.eq.3.and.IQ2.ne.3).or.(IQ1.ne.3.and.IQ2.eq.3)
+     &  .and.ranf(0).gt.CTParam(49))goto 140
+c
       IF(IQ1.LE.IQ2) GO TO 145
       ISWAP=IQ1
       IQ1=IQ2
@@ -648,14 +627,13 @@ c.. ZI is the z coordinate
 c.. warning if to many hadrons are produced in string
 c.. increase the particle arrays to avoid this
 9999  WRITE(6,9998) I
-9998  FORMAT(//10X,40H...STOP IN STRING..NPTCL TOO HIGH NPTCL=,I5)
-      STOP
+9998  FORMAT(//10X,40H...stop IN STRING..NPTCL TOO HIGH NPTCL=,I5)
+      stop 137
       END
+
+
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       SUBROUTINE CLUSTR(IFL1,IFL2,AMCTR,ilead)
-c
-c     Author   : N. Amelin, M. Bleicher, C. Spieles, L. Gerland
-c     Date     : 21/07/95
 c
 cinput   amctr     : stringmass, 
 cinput   ifl1      : leading quark (or diquark) along $+Z$ axis 
@@ -677,7 +655,6 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       
       PARAMETER(MXPTCL=200)
       COMMON/PARTCL/ PPTCL(9,MXPTCL),nptcl,IDENT(MXPTCL),IDCAY(MXPTCL)
-c      COMMON/FRGCPA/ PJSPNC,PMIX1C(3,5),PMIX2C(3,5),PBARC
 
       include 'comstr.f'
 
@@ -685,8 +662,6 @@ c      COMMON/FRGCPA/ PJSPNC,PMIX1C(3,5),PMIX2C(3,5),PBARC
       LOGICAL LRET
       DIMENSION IFL(2),U(3)
       LOGICAL SPINT
-c      COMMON/COSPAR/ DMAS,dmass
-c      COMMON/COMPSC/ PRBS,PRBC
       real*8 valint(1)
       common /values/ valint
 
@@ -817,23 +792,24 @@ c.. isotropic px py pz distribution
       IDCAY(I-1)=0
       IDCAY(I)=0
       NPTCL=I
+      
 c..forward/backward distribution in clustr for baryons 
 c..(no pt in the last string break!)
 c..pt for the baryon comes from parton kick in the excitation
-      if(abs(ident(i)).ge.1000.or.abs(ident(i-1)).ge.1000)then
-      PPTCL(1,I-1)=0.d0
-      PPTCL(1,I)=0.d0
-      PPTCL(2,I-1)=0.d0
-      PPTCL(2,I)=0.d0
-      PPTCL(3,I-1)=PA
-      PPTCL(3,I)=-PA
-      PA2=PA**2     
-      PPTCL(4,I-1)=SQRT(PA2+PPTCL(5,I-1)**2)
-      PPTCL(4,I)=SQRT(PA2+PPTCL(5,I)**2)
-      IDCAY(I-1)=0
-      IDCAY(I)=0    
-      NPTCL=I       
-      endif
+c      if(abs(ident(i)).ge.1000.or.abs(ident(i-1)).ge.1000)then
+c      PPTCL(1,I-1)=0.d0
+c      PPTCL(1,I)=0.d0
+c      PPTCL(2,I-1)=0.d0
+c      PPTCL(2,I)=0.d0
+c      PPTCL(3,I-1)=PA
+c      PPTCL(3,I)=-PA
+c      PA2=PA**2     
+c      PPTCL(4,I-1)=SQRT(PA2+PPTCL(5,I-1)**2)
+c      PPTCL(4,I)=SQRT(PA2+PPTCL(5,I)**2)
+c      IDCAY(I-1)=0
+c      IDCAY(I)=0    
+c      NPTCL=I       
+c      endif
 
 c..if baryon number=+-1, force the (anti-)baryon in positive
 c..z-direction (just pick the right hemisphere)
@@ -851,15 +827,12 @@ c..z-direction (just pick the right hemisphere)
       RETURN
 c.. particle array to small warning:
 9999  WRITE(6,9998) I
-9998  FORMAT(//10X,40H...STOP IN CLUSTR..NPTCL TOO HIGH NPTCL=,I5)
-      STOP
+9998  FORMAT(//10X,40H...stop IN CLUSTR..NPTCL TOO HIGH NPTCL=,I5)
+      stop 137
       END
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       integer FUNCTION IFLAV(PU,PRBS)
-c
-c     Author   : N. Amelin, M. Bleicher, C. Spieles, L. Gerland
-c     Date     : 21/07/95
 c
 cinput PU      : 1-{\tt PU}= up (down, resp.) probability
 cinput PRBS    : Strange quark suppression
@@ -884,17 +857,16 @@ c..create up quark
 c..create down quark
       IFLAV=2
       RETURN
-  2   continue
+  2   IF(RNDOM.GT.PU*(2.0+PRBS)) GO TO 3
 c..create strange quark
       IFLAV=3
       RETURN
+c..create charm quark
+  3   IFLAV=4
+      RETURN
       END
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-cbl      real*8 FUNCTION ZFRAGS(IFL,IFLN,PT2,ZMIN,ZMAX)
       real*8 FUNCTION ZFRAGS(IFL,IFLN,PT2,ZMIN,ZMAX,leading)
-c
-c     Author   : C. Spieles, M. Bleicher, N. Amelin
-c     Date     : 21/10/96
 c
 cinput IFL       : ID of existing quark 
 cinput IFLN      : ID of newly created quark
@@ -920,14 +892,9 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       PARAMETER(ALFT=0.5,ARHO=0.5,APHI=0.,APSI=-2.)
       PARAMETER(AN=-0.5,ALA=-0.75,ALAC=-1.75)
       PARAMETER(AKSI=-1.0,AUSC=-2.0,AUCC=-2.0)
-c      parameter(bffm=2d0,affm=0.77)
-   
-    
+
 c.. cto 21 chooses the fragmentation fct.
       if ((.not.leading).or.(ifln.eq.3)) then
-cbl field-feynman (taken from QM-Version):
-c         affm=0.6d0
-c         bffm=2.0d0
          affm=ctparam(47)
          bffm=ctparam(48)
  5108  ZFRAGS=ZMIN+ranf(0)*(ZMAX-ZMIN)
@@ -1059,15 +1026,12 @@ C CCCC-BARYON
       GO TO 25
       else
        write(6,*)'string.f: cto(21)=',ctoption(21),' not valid'
-       stop
+       stop 137
       end if
 
       END
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       SUBROUTINE LORTR(V,NIN,NFIN,BACK)
-c
-c     Author   : N. Amelin, M. Bleicher, C. Spieles, L. Gerland
-c     Date     : 21/07/95
 c
 cinput V         : boost velocity (3-vector)
 cinput NIN       : lower boundary in the pptcl array
@@ -1109,10 +1073,6 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       BLOCK DATA D2
 c
-c     Author   : N. Amelin, M. Bleicher, C. Spieles, L. Gerland
-c     Date     : 21/07/95
-c
-c
 c     Initial values for several common blocks
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       implicit real*8 (a-h,o-z)
@@ -1124,12 +1084,8 @@ C
       include 'comstr.f'
 
       COMMON/KAPPA/ XAP
-c      COMMON/COMPSC/ PRBS,PRBC
-c      COMMON/COSPAR/ DMAS,dmass
       COMMON/CONSTI/ CONSTI
       LOGICAL CONSTI
-C
-c      DATA CONSTI/.TRUE./
        DATA CONSTI/.FALSE./
 C
 C
@@ -1195,9 +1151,6 @@ c       DATA SIGQTS/0.65/ -> ctparam(42)
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       BLOCK DATA D4
 c
-c     Author   : N. Amelin, M. Bleicher, C. Spieles, L. Gerland
-c     Date     : 21/07/95
-c
 cinput ()      : NONE
 c
 coutput ()     : via common blocks
@@ -1217,9 +1170,6 @@ C
       END
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       integer FUNCTION IDPARS(IFL01,IFL02,SPINT,IR)
-c
-c     Author   : N. Amelin, M. Bleicher, C. Spieles, L. Gerland
-c     Date     : 21/07/95
 c
 cinput IFL01  : ID of (anti-)quarks/di-quarks 
 cinput IFL02  : ID of (anti-)quarks/di-quarks 
@@ -1315,9 +1265,6 @@ C  CONSTRUCT BARYON IDENT
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       integer FUNCTION IDPARC(IFL01,IFL02,SPINT,IR)
 c
-c     Author   : N. Amelin, M. Bleicher, C. Spieles, L. Gerland
-c     Date     : 21/07/95
-c
 cinput IFL01  : ID of (anti-)quarks/di-quarks 
 cinput IFL02  : ID of (anti-)quarks/di-quarks 
 cinput SPINT        : flag for spin assignment
@@ -1411,8 +1358,6 @@ C  CONSTRUCT BARYON IDENT
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 FUNCTION AMASS(ID)
 c
-c     Author   : M. Bleicher, C. Spieles, N. Amelin, L. Gerland
-c     Date     : 20/10/95
 c
 cinput ID      : Quark code
 c
@@ -1426,7 +1371,8 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       include 'comres.f'
       include 'comstr.f' 
 
-      real*8 mmin,mmax,m0,mminit
+      real*8 mmin,mmax,m0,mminit, massit, widit
+      integer isoit
       dimension amq(4)
       include 'options.f'
 
@@ -1441,70 +1387,89 @@ c fraction of baryonresonances
 
 c get quark masses
       if (idabs.le.4) then
-       amass=amq(idabs)
-	return
+        amass=amq(idabs)
+        return
       endif
 c get diquark masses 
       IF(ID.NE.0.AND.MOD(ID,100).EQ.0) then
-       AMASS=AMq(IABS(IFL1))+AMq(IABS(IFL2))
-	return
+        AMASS=AMq(IABS(IFL1))+AMq(IABS(IFL2))
+        return
       endif
-	
+
 c get hadron masses
 
 c get baryon masses
 c (anti-)nucleon ? 
       if ((idabs.eq.1120).or.(idabs.eq.1220)) then
-       if (ranf(0).lt.bresfrac)then
+        if (ranf(0).lt.bresfrac)then
 c.. N*
-        amass=getmass(mresmax,1)
-	return
-       else
+          amass=getmass(mresmax,1)
+          return
+        else
 c.. N
-        amass=0.938
-	return
-       endif
+          amass=0.938
+          return
+        endif
       endif
 c (anti-)delta ?
       if ((idabs.eq.1111).or.(idabs.eq.1121)
      &   .or.(idabs.eq.1221).or.(idabs.eq.2221)) then
-       if (ranf(0).lt.bresfrac)then
+        if (ranf(0).lt.bresfrac)then
 c.. D*
-        amass=getmass(mresmax,2)
-	return
-       else
-c.. Delta(1232)  
-        amass=getmass(mresmax,0)
-	return 
-       endif
+          amass=getmass(mresmax,2)
+          return
+        else
+c.. Delta(1232)
+          m0=massit(mindel)
+          w0=widit(mindel)        
+c get meson mass accord. to breit wigner distr. 
+          mmin=mminit(mindel)
+          mmax=m0+3d0*w0  
+          call getmas(m0,w0,mindel,isoit(mindel),mmin,mmax,-1d0,amass)
+          return 
+        endif
       endif
 c (other baryons)
       if(idabs-1000.ge.0) then 
-       call id2ityp(id,0.d0,ityp,iz2)
-       amass=massres(iabs(ityp))
+        call id2ityp(id,0.d0,itypin,iz2)
+c..check range and avoid double counting for explicitely treated resonances
+        if ((abs(itypin).ge.minlam.and.abs(itypin).le.maxcas).and.
+     &   (idabs.ne.1231.and.idabs.ne.1131.and.idabs.ne.2231.and.
+     &    idabs.ne.1331.and.idabs.ne.2331).and.
+     &   (ctoption(31).eq.1)) then
+c.. generate also non-groundstate ityps for strange baryons
+         call probitypres(itypin,ityp)
+        else
+           ityp=itypin
+        endif
+         amass=massit(iabs(ityp))
        return
       endif
 
 c mesons
       if(idabs.le.330+njspin-1) then
         call id2ityp(id,0.d0,ityp,iz2)
-        m0=massmes(iabs(ityp))
-        w0=widmes(iabs(ityp))        
+        m0=massit(iabs(ityp))
+        w0=widit(iabs(ityp))        
 c get meson mass accord. to breit wigner distr. 
         mmin=max(mminit(iabs(ityp)),m0-3d0*w0)
         mmax=m0+3d0*w0  
-        call getmas(m0,w0,ityp,iz2,mmin,mmax,amass)
-
-	return
-       endif
+        call getmas(m0,w0,ityp,iz2,mmin,mmax,-1d0,amass)
+        return
+      endif
+      if(idabs.ge.440.and.idabs.le.447)then
+        amass=massit(135)
+        return
+      else if(idabs.ge.340.and.idabs.le.347)then
+        amass=massit(138)
+        return
+      endif
       write(6,*)'! amass: no mass for part.id:',id
       return
       END
+
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 FUNCTION DBLPCM(A,B,C)
-c
-c     Author   : N. Amelin
-c     Date     : 21/07/95
 c
 cinput A      : Mass of particle A
 cinput B      : Mass of particle B
@@ -1531,9 +1496,6 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine ityp2id(ityp,iz2,ifa,ifb)
 c
-c     Author   : M. Bleicher, C. Spieles, L. Gerland
-c     Date     : 21/07/95
-c
 cinput ityp    : UrQMD particle ID 
 cinput iz2     : UrQMD $2\cdot I_3$ 
 c
@@ -1542,6 +1504,7 @@ coutput ifb : quarkcode (quark)
 c
 c  returns quark id from uqmd-ityp and isospin z-component (times 2) 
 c
+c  quark ids are:  1 up,  2 down,  3 strange,  4 charm
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       implicit none
       include 'comres.f'
@@ -1681,7 +1644,7 @@ c q qbar
        if(t3.eq.0) then
 c u ubar
 c all neutral triplet states:
-        if ((itypabs.eq.minmes+1)   .or.                                 
+        if ((itypabs.eq.minmes+1)   .or.      !pi0                           
      &       (itypabs.eq.minmes+4)  .or.                                 
      &       (itypabs.eq.minmes+11)  .or.                                 
      &       (itypabs.eq.minmes+14)  .or.                                 
@@ -1691,8 +1654,8 @@ c all neutral triplet states:
      &       (itypabs.eq.minmes+30)  .or.                                 
 c the gamma gets also a quark content
      &       (itypabs.eq.minmes)) then
-         ifa=2
-         ifb=-2
+         ifa=1
+         ifb=-1
          return
         endif
 c d dbar
@@ -1741,6 +1704,44 @@ c u dbar
         ifb=-2
         return
        endif
+c charm:
+       if(itypabs.ge.133.and.itypabs.lt.135) then
+c D mesons
+         if(iz2.eq.1.and.(ityp.eq.-133.or.ityp.eq.-134))then
+           ifa=-4
+           ifb=1
+           return
+         else if(iz2.eq.-1.and.(ityp.eq.133.or.ityp.eq.134))then
+           ifa=4
+           ifb=-1
+           return
+         else if(iz2.eq.1.and.(ityp.eq.133.or.ityp.eq.134))then
+           ifa=4
+           ifb=-2
+           return
+         else if(iz2.eq.-1.and.(ityp.eq.-133.or.ityp.eq.-134))then
+           ifa=-4
+           ifb=2
+           return
+         endif
+       elseif(itypabs.gt.135.and.itypabs.le.137) then
+c charmonium
+          ifa=4
+          ifb=-4
+          return
+       else if(itypabs.ge.138.and.itypabs.le.139) then
+          if(ityp.eq.138.or.ityp.eq.139) then
+            ifa=4
+            ifb=-3
+            return
+          else
+            ifa=-4
+            ifb=3
+            return
+          end if
+       endif
+
+
       endif
 
 c  in any other case we will do a mesonic string
@@ -1754,9 +1755,6 @@ c.. and a warning !
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine mquarks(if,ifa,ifb)
 c
-c     Author   : M. Bleicher, C. Spieles, L. Gerland
-c     Date     : 31/10/95
-c
 cinput if     : single quarks (array)
 c
 coutput ifa : diquark
@@ -1767,23 +1765,40 @@ c baryon to become a diquark and a quark.
 c
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       implicit none
+
+      include 'options.f'
+
       real*8 ranf
       integer if(0:2),ifa,ifb,ir
 
+      integer i,prod,inons
+ 
 
       ir=int(3.*ranf(0))
 
       ifa=1000*if(ir)+100*if(mod(ir+1,3))
       ifb=if(mod(ir+2,3))
+c.. check if heavy quark clusters are switched off (cto 37=0)
+      if (CTOption(37).eq.0)  return
 
+c.. not switched off -> clusters strange quarks to
+c.. diquark molecule, i.e. keep ss-diquark together
+c. are there 2 strange quarks
+      prod=if(0)*if(1)*if(2) 
+      if (prod.eq.9.or.prod.eq.18.or.prod.eq.27) then
+c. find the non-strange quark inons
+       inons=0
+       do i=0,2
+        if(if(i).lt.3) inons=i
+       enddo
+       ifb=if(inons)
+       ifa=1000*if(mod(inons+1,3))+100*if(mod(inons+2,3))
+      endif
       return
       end
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine id2ityp(id,mass,it,iz)
-c
-c     Author   : C. Spieles, M. Bleicher, L. Gerland
-c     Date     : 21/07/95
 c
 cinput id    : quarkcode 
 cinput mass  : mass of resonance 
@@ -1799,7 +1814,8 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       include 'comres.f'
       include 'options.f'
       integer IT,IZ,id,idabs,i,j,k,jspin,idloc,whichres
-      real*8 mass,pardelt,mminit
+      real*8 mass,pardelt,mminit,dm,dmold,massit
+      integer iit,irun
 
 c.. extract quark id's and spin
       IDABS=IABS(ID)
@@ -1838,6 +1854,42 @@ c..strange doublett (e.g. (anti-)kaon)
 c..2nd singlett (e.g. eta')
           IT=mlt2it(jspin*4+4)  !minmes+7
           return
+c...charmed mesons
+      else if(abs(j).eq.4.and.abs(k).eq.4)then
+      it=135
+      iz=0
+      return
+      else if(abs(j).eq.4.or.abs(k).eq.4)then        
+         if((j.eq.4.and.k.eq.1).or.(k.eq.4.and.j.eq.1))then
+          if(id.gt.0)then
+c..D0
+           it=133       
+           iz=-1
+           return
+          else
+c..D0Bar
+           it=-133      
+           iz=1
+           return
+          endif
+         else if((j.eq.4.and.k.eq.2).or.(k.eq.4.and.j.eq.2))then
+          if(id.gt.0)then
+c..D+     
+          it=133      
+          iz=1
+          return
+         else
+c..D-
+          it=-133      
+          iz=-1
+          return
+         endif
+        endif
+      it=133
+      iz=0
+      return
+c
+
        else
           goto 222
        endif
@@ -1865,15 +1917,48 @@ c mass below parnuc -> nucleon (ground state), mass above parnuc ->N*
          endif
        else if(idabs.eq.2130)then
 c lambda
-           IT=isign(minlam,id)
+           iit=minlam
+           if (mass.gt.1d0)then
+           dmold=1d30
+           do irun = minlam,maxlam
+              dm=abs(massit(irun)-mass)
+              if (dm.le.dmold)then
+                 dmold=dm
+                 iit=irun
+              end if
+           end do
+           end if
+           IT=isign(iit,id)
            return
        else if(idabs.eq.1230.or.idabs.eq.1130.or.idabs.eq.2230)then
 c sigma
-           IT=isign(minsig,id)
+           iit=minsig
+           if (mass.gt.1d0)then
+           dmold=1d30
+           do irun = minsig,maxsig
+              dm=abs(massit(irun)-mass)
+              if (dm.le.dmold)then
+                 dmold=dm
+                 iit=irun
+              end if
+           end do
+           end if
+           IT=isign(iit,id)
            return
        else if(idabs.eq.1330.or.idabs.eq.2330)then
 c cascade
-           IT=isign(mincas,id)
+           iit=mincas
+           if (mass.gt.1d0)then
+           dmold=1d30
+           do irun = mincas,maxcas
+              dm=abs(massit(irun)-mass)
+              if (dm.le.dmold)then
+                 dmold=dm
+                 iit=irun
+              end if
+           end do
+           endif
+           IT=isign(iit,id)
            return
        else
            goto 222
@@ -1921,5 +2006,317 @@ c higher spin baryons include here:
       RETURN
       END
 
+chp new subroutine for id2ityp
+
+      
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      subroutine id2itypnew(id,mass,it,iz)
+c
+cinput id    : quarkcode 
+cinput mass  : mass of resonance 
+c
+coutput: it : UrQMD particle ID
+coutput: iz : $2\cdot I_3$ of particle
+c
+c     returns UrQMD ID ({\tt it}) and isospin z-component (times 2) ({\tt IZ}) 
+c     from quark id
+c
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+      implicit none
+      include 'comres.f'
+      include 'options.f'
+      integer IT,IZ,id,idabs,i,j,k,jspin,idloc,itclass
+      real*8 mass,dm,dmold,massit
+      integer irun, idmin,idmax
+      
+      real*8 ranf
+      external ranf
+            
+c.. extract quark id's and spin
+      IDABS=IABS(ID)
+      I=IDABS/1000
+      J=MOD(IDABS/100,10)
+      K=MOD(IDABS/10,10)
+      JSPIN=MOD(IDABS,10)
+
+c single diquarks are not popular in urqmd:
+      IF(ID.NE.0.AND.MOD(ID,100).EQ.0) GO TO 222
+c single quarks are not popular in urqmd:
+      IF(J.EQ.0) GO TO 222
+
+      idloc=idabs-jspin
+
+c mesons:
+      if(I.EQ.0) then
+c calculate isospin from quark content:
+       IZ=0
+       if(j.lt.3) IZ=3-2*j
+       if(k.lt.3) IZ=IZ+(2*k-3)
+       IZ=isign(1,id)*IZ
+ 
+       if((idloc.eq.110).or.(idloc.eq.120))then
+c..triplett (e.g. pion)
+          itclass=1
+c          IT= mlt2it(jspin*4+1) ! minmes+1
+       else if(idloc.eq.220)then
+c..1st singlett (e.g. eta)
+          itclass=3
+c          IT= mlt2it(jspin*4+3) !minmes+2
+       else if(idloc.eq.130.or.idloc.eq.230)then
+c..strange doublett (e.g. (anti-)kaon)
+          itclass=2
+c          IT=isign(mlt2it(jspin*4+2),id)
+       else if(idloc.eq.330)then
+c..2nd singlett (e.g. eta')
+          itclass=4
+c          IT=mlt2it(jspin*4+4)  !minmes+7
+       else
+          goto 222
+       endif
+       
+c..pick up the mass-closest resonance
+       dm=abs(mass-massit(mlt2it(itclass)))
+       dmold=dm
+       do jspin=0,7
+          irun = mlt2it(jspin*4+itclass) ! minmes+1
+          if(itclass.eq.2) irun=isign(irun,id)
+          dm=abs(mass-massit(irun))
+          if(dm.le.dmold)then
+             IT=irun
+             dmold=dm
+          endif
+       enddo
+       
+       return
+
+      else
+c.. baryons:
+
+c calculate isospin from quark content:
+       IZ=0
+       if(i.lt.3) IZ=3-2*i
+       if(j.lt.3) IZ=IZ+3-2*j
+       if(k.lt.3) IZ=IZ+3-2*k
+       IZ=isign(1,id)*IZ
+      
+       if(idloc.eq.1120.or.idloc.eq.1220)then
+c N* or D*             !FIXME
+          if(ranf(0).lt.0.5)then
+c N*, ASSUME there are equal numbers of N* and D* resonances
+             idmin=minnuc
+             idmax=maxnuc
+          else
+c D+,D0
+             idmin=mindel
+             idmax=maxdel
+          endif
+       else if(idloc.eq.1110.or.idloc.eq.2220)then
+c D++,D-
+          idmin=mindel
+          idmax=maxdel
+       else if(idloc.eq.1230)then
+c L or S0              !FIXME
+          if(ranf(0).lt.0.3)then
+c Lambda !lambda is suppressed respect to sigma0?
+             idmin=minlam
+             idmax=maxlam
+          else
+c Sigma0
+             idmin=minsig
+             idmax=maxsig
+          endif
+       else if(idloc.eq.1130.or.idloc.eq.2230)then
+c Sigam+,Sigma-
+          idmin=minsig
+          idmax=maxsig
+       else if(idloc.eq.1330.or.idloc.eq.2330)then
+c Cascade
+          idmin=mincas
+          idmax=maxcas
+       else if(idloc.eq.3330)then
+c Omega
+          idmin=minome
+          idmax=minome
+       else
+          goto 222
+       endif
+ 
+c..pick up the mass-closest resonance
+       dm=abs(mass-massit(idmin))
+       dmold=dm
+       do irun=idmin,idmax
+          dm=abs(mass-massit(irun))
+          if(dm.le.dmold)then
+             IT=isign(irun,id)
+             dmold=dm
+          endif
+       enddo
+       
+       return
+      endif
+               
+ 222  continue
+      write(6,*)'! ID=',id,' can not be converted into ityp'
+      write(6,*)'I=',i,'J=',j,'K=',k,'spin=',jspin
+      RETURN
+      END
+
+chp end of changes
+
+
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      subroutine probitypres(itypin,itypout)
+c
+cinput itypin : ityp of groundstate
+c
+coutput: itypout : ityp of groundstate plus resonances 
+c
+c     returns a new ityp which also includes resonce ityps, this is
+c     necessary to include hyperon resonces as long as no proper getmass
+c     for hyperons existst.
+c     the probabilities are chooses according to a exp(delta m/b) distribution.
+c
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+      implicit none
+      include 'comres.f'
+
+      integer itypin,itypout,ss,i,itypinn
+      real*8 prob(1:200),probres,norm,deltam,massit
+
+      ss=itypin/abs(itypin)
+      itypinn=abs(itypin)
+     
+c.. the lambda 
+      if (itypinn.ge.minlam.and.itypinn.le.maxlam)then
+c get probabilities and norm
+         norm=0d0
+         do i=minlam+1,maxlam
+            deltam=abs(massit(i)-massit(minlam))
+            prob(i)=probres(deltam,massit(minlam),i)
+            norm=norm+prob(i)
+         end do
+         do i=minlam+1,maxlam
+            prob(i)=prob(i)/norm
+         end do
+         call findityp(prob,itypout,minlam+1,maxlam)
+         itypout=itypout*ss
+         return
+      end if
+
+c.. the sigma
+      if (itypinn.ge.minsig.and.itypinn.le.maxsig)then
+c get probabilities and norm
+         norm=0d0
+         do i=minsig+1,maxsig
+            deltam=abs(massit(i)-massit(minsig))
+            prob(i)=probres(deltam,massit(minsig),i)
+c... do not generate masses for minsig+1 they are treated ecplicitely
+            if (i.eq.minsig+1) prob(i)=0d0
+            norm=norm+prob(i)
+         end do
+         do i=minsig+1,maxsig
+            prob(i)=prob(i)/norm
+         end do
+         call findityp(prob,itypout,minsig+1,maxsig)
+         itypout=itypout*ss
+         return
+      end if
+
+c.. the cascades
+      if (itypinn.ge.mincas.and.itypinn.le.maxcas)then
+c get probabilities and norm
+            norm=0d0
+         do i=mincas+1,maxcas
+            deltam=abs(massit(i)-massit(mincas))
+            prob(i)=probres(deltam,massit(mincas),i)
+c... do not generate masses for mincas+1 they are treated ecplicitely
+            if (i.eq.mincas+1) prob(i)=0d0
+            norm=norm+prob(i)
+         end do
+         do i=mincas+1,maxcas
+            prob(i)=prob(i)/norm
+         end do
+         call findityp(prob,itypout,mincas+1,maxcas)
+         itypout=itypout*ss
+         return
+      end if  
+      write(*,*)'itypin, itypout',itypin,itypout
+      write(*,*)'Error in probitypres!'
+      stop 137 
+      end
+
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      real*8 function probres(dm,minmass,it)
+c
+cinput dm : mass difference to groundstate
+cinput minmass : mass of groundstate
+cinput it : ityp
+c
+coutput: probres: unnormalized probability for this state
+c
+c     returns probabilty for a higher mass state according to
+c     exponential distribution with degeneracy
+c
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+      implicit none
+      real*8 dm,minmass,j,g,T
+      integer it, getspin
+
+c.. assume temperature T=170 MeV (from statistical model, e.g. becattini,heinz)      
+      T=0.170d0
+
+c.. get spin*2
+      j=1d0*getspin(it,1)
+
+      if (j.lt.0) then
+c.. take spin into account via J= m^2 and deg. g=2j+1 (regge theory)     
+       j=2d0*(minmass+dm)**2
+      end if
+
+      g=(j+1d0)
+
+      probres=g*exp(-(dm/T))
+      return
+      end
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      subroutine findityp (p,it,mini,maxi)
+c
+cinput p : array with normalized probabilities
+cinput mini : lowest index 
+cinput maxi : largest index
+c
+coutput: it: ityp according to probability
+c
+c     returns a new ityp according to probabilties defined in p
+c
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+      implicit none
+      real*8 p(1:200),y,ranf
+      integer it,mini,maxi,ix
+      
+      it=mini
+      ix=0
+      y=0d0
+
+ 1    continue
+      ix=int(mini+int((maxi-mini+1)*ranf(0)))
+      y=ranf(0)
+      if (y.lt.p(ix)) then 
+        it=ix
+        return
+      end if
+      goto 1
+      end
+
 C---------------------------------------------------------------------------
 C                        THE END
+
+
+
+
+
+
+
+

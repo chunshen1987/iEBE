@@ -61,7 +61,7 @@ c default settings for CTParam and CTOption cccccccccccccccccccccccccccccc
       CTParam(17)=1.6d0 
       CTParam(18)=.85d0 
       CTParam(19)=1.55d0
-      CTParam(22)=1.0D0
+      CTParam(22)=1.0d0
       CTParam(25)=.9d0 
       CTParam(26)=50d0 
       CTParam(27)=1d0 
@@ -214,7 +214,7 @@ c fileheader
  301  format(a13,a13,i4,i4,a12,a13,i4,i4,a1)
 c 305  format(a36,3f10.7)
  304  format(a36,3f6.2,a31,1f9.2)
- 302  format (a7,i9,a13,i12,a9,a20,i4,a20,f5.1)
+ 302  format (a7,i9,a13,i12,a9,a20,i7,a20,f11.3)
 c 303  format(a20,i3,a15,e10.4,a15,e10.4,a15,e10.4)
  102  format(a2,15(i3,a2))
 c 103  format(a2,12(e10.4,a2))
@@ -224,11 +224,14 @@ c 103  format(a2,12(e10.4,a2))
  303  format(a20,i3,a15,e11.4,a15,e11.4,a15,e11.4)
  103  format(a2,12(e11.4,a2))
 
+
 csab changed e16.8 to D24.16
 c standard particle information vector
- 201  format(9D24.16,i5,2i3,i6,i5,i4)
-c special *thad-modified* output for cto40 (restart of old event)
- 210  format(9D24.16,i5,2i3,i6,i5,i4,11D24.16)
+ 201  format(9e16.8,i11,2i3,i9,i5,i4)
+cLHC 201  format(9e24.16,i11,2i3,i9,i5,i4)
+
+c special output for cto40 (restart of old event)
+ 210  format(9e16.8,i11,2i3,i9,i5,i10,3e16.8,i8)
 
 c collsision stats for file14
  202  format(8i8)
@@ -272,7 +275,7 @@ c cross section of the projectile-target system not given in oscar
 ccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       otime=0.d0
-      ttime=0.d0
+      ttime=0
 
       write(14,101) aa,version, sigver, laires, ab,iunit
       write(14,301) ac,pds, Ap, Zp, ad,tds, At, Zt,add       
@@ -321,10 +324,8 @@ c now write particle-output
      @        px(i),py(i),
      @        pz(i),fmass(i),
      @        ityp(i),iso3(i),charge(i),
-     @        lstcoll(i),ncoll(i),mod(origin(i),100),
-     @        dectime(i),thad(i),xtotfac(i),
-     @           frr0(i),frrx(i),frry(i),frrz(i),frp0(i),frpx(i),
-     @           frpy(i),frpz(i)
+     @        lstcoll(i),ncoll(i),origin(i),
+     @        dectime(i),thad(i),xtotfac(i)
 
  31   continue
 
@@ -390,7 +391,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       iret=1
       
       read (unit=5,fmt=903,err=299,end=299) event, npart, bimp, dummy
-      !Print*, "npart=", npart, "event=", event
 
  903  format (i10,2x,i10,2x,f8.3,2x,f8.3)
 

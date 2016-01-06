@@ -1,9 +1,6 @@
-c $Id: comwid.f,v 1.10 1998/06/15 13:35:11 weber Exp $
+c $Id: comwid.f,v 1.15 2007/01/30 14:50:24 bleicher Exp $
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
-c     Unit     : general infrastructure
-c     Author   : Henning Weber
-c     Date     : 25/11/96
 c     Revision : 1.0
 c
 c     common block for the tabulated branching ratios
@@ -24,15 +21,8 @@ c set the default values
       parameter (mintab=0.1d0)
       parameter (maxtab1=5.0d0)
       parameter (maxtab2=50.0d0)
-cc i think, widnsp=100 is a good compromise between accuracy and 
-cc memory requirements
-ce - however with 20 fixpoints more, we should be able to cover energies
-ce larger than maxtab1= 5 GeV with a reasonable efficiency
-ce if you want to extend the splines to higher sqrts, you should 
-ce increase maxtab2 and also widnsp
-
 c increase this parameter, if you make changes, which require a new table 
-      parameter (tabver=7)
+      parameter (tabver=9)
 
 c tabulated x-values (i.e. sqrt(s) of the collision)
       real*8 tabx (1:widnsp)
@@ -41,7 +31,7 @@ c derivatives of the function.
 c full baryon ratio 
       real*8 fbtaby (1:widnsp,minbar:maxbar,1:2)
 c partial baryon ratios
-      real*8 pbtaby (1:widnsp,1:2,minbar:maxbar,0:maxbrs1)
+      real*8 pbtaby (1:widnsp,1:2,minbar:maxbar,0:maxbra)
 c full meson ratio
       real*8 fmtaby (1:widnsp,minmes:maxmes,1:2)
 c partial meson ratios
@@ -49,7 +39,7 @@ c partial meson ratios
 
 c Breit-Wigner norms
 c norm of Breit-Wigner with mass dependent widths baryons/mesons
-	real*8 bwbarnorm(minbar:maxbar),bwmesnorm(minmes:maxmes)
+        real*8 bwbarnorm(minbar:maxbar),bwmesnorm(minmes:maxmes)
 
 c tabulated fppfit()
 c tabulated x-values (i.e. sqrt(s) of the collision)
@@ -64,7 +54,7 @@ c name of file containing the tables
       character*77 tabname
 
       common /decaywidth/ tabx,fbtaby,pbtaby,fmtaby,pmtaby,wtabflg
-	common /brwignorm/ bwbarnorm,bwmesnorm
-	common /xsections/ tabxnd,frrtaby
+        common /brwignorm/ bwbarnorm,bwmesnorm
+        common /xsections/ tabxnd,frrtaby
       common /tabnames/ tabname
 

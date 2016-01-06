@@ -1,12 +1,9 @@
-c $Id: colltab.f,v 1.3 1997/06/16 20:52:37 bleicher Exp $
-c
-c     Autor : Markus Hofmann, Steffen A. Bass
-c     Date  : 09/16/94
+c $Id: colltab.f,v 1.5 1999/11/24 19:47:48 ssoff Exp $
 c
 cdes  This file contains the  uqmd collision tables
 c
       integer ncollmax
-      parameter (ncollmax = 800000) ! maximum number of entries in collision table
+      parameter (ncollmax = 30000) ! maximum number of entries in collision table
       integer nct,actcol,nsav,apt
       real*8 cttime(0:ncollmax),ctsqrts(ncollmax),ctsigtot(ncollmax)
       real*8 ctcolfluc(ncollmax)
@@ -27,5 +24,6 @@ c     ctvalid : tag whether collision is {\em true} or {\em false}
 c     ctsav   : list of particles which lost their collision partner
 c     nsav    : number of entries in {\tt ctsav}
 c     apt     : mass of first particle/composite in the part. arrays 
+
       common /colltab/cttime,ctsqrts,ctsigtot,tmin,cti1,cti2,nct,actcol,
      &     ctvalid,ctsav,nsav,apt,ctcolfluc

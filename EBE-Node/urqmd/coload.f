@@ -1,10 +1,7 @@
-c $Id: coload.f,v 1.9 1998/06/15 13:35:09 weber Exp $
+c $Id: coload.f,v 1.12 2007/01/30 14:50:24 bleicher Exp $
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 function sigtot(ind1,ind2,sqrts)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass
-c     Date     : 09/16/94
 c     Revision : 1.0 
 C
 cinput ind1 : index of particle 1
@@ -121,9 +118,6 @@ c     return to caller
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine getnext(k)
 c
-c     Unit     : Collision Term
-c     Author   : Markus Hofmann, Steffen A. Bass
-c     Date     : 09/16/95
 c     Revision : 1.0
 C
 coutput k : index of next collison
@@ -142,7 +136,7 @@ C
       include 'colltab.f'
 
 c     shrink collision tables in case 80% load to counter possible overflow
-       if(dble(nct)/ncollmax.ge.0.75) call collshrink
+       if(dble(nct)/ncollmax.ge.0.8) call collshrink
 
 c
 c     set k to current collision/decay (which has already been performed and
@@ -186,8 +180,6 @@ c     collision to be perfomed
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine collshrink
 c
-c     Author   : Steffen A. Bass, add. work M. Bleicher
-c     Date     : 02/11/95
 c     Revision : 1.0
 c
 c     This subroutine deletes all entries in the collision tables between
@@ -212,17 +204,13 @@ c     recalculate number of collisions in tables
       nct=1+nct-actcol
 c     reset pointer to current collision
       actcol=1
-cdebug
-      write(6,*) '***(W) collision-tables resized'
 
       return
       end
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine colload
-c     Unit     : Collision Term
-c     Author   : Markus Hofmann, Steffen A. Bass, add. work M. Bleicher
-c     Date     : 09/16/94
+c
 c     Revision : 1.0 
 c
 c
@@ -265,9 +253,6 @@ c     call collupd for inner loop, -1: inner loop only from i+1 to npart
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine collupd(i,all)
 c
-c     Unit     : Collision Term
-c     Author   : Markus Hofmann, Steffen A. Bass, M. Brandstetter, M. Bleicher
-c     Date     : 09/16/94
 c     Revision : 1.0
 C
 cinput i   : particle to be checked for collison or decay
@@ -290,27 +275,20 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       include 'coms.f'
       include 'options.f'
       include 'colltab.f'
-c MB box
-	include 'boxinc.f'
+      include 'boxinc.f'
 
       real*8 dst2
       integer i,all
       integer j,imin,jmin,j0,A
-c MB 10/09/96
-	integer wall
-	real*8  tn, wallcoll
+      integer wall
+      integer stidx
+      logical isstable
+      real*8  tn, wallcoll
 cc
       real*8 tcoll,sqrs,sigt,sqrts,sigtot
       real*8 smin,sigmin,sigfac
 
       real*8 colfaci,colfacj,colfac,colfacmin
-
-      colfacmin=0d0
-cdebug
-cdebug
-         if(i.eq.0) write(6,*) 'i=0 !! ',npart,nbar,nmes
-
-
 
 c     number of "initial" particles in event
       A = At+Ap
@@ -322,6 +300,9 @@ c     acttime: current time
 c     time: time at beginning of timestep
 c     dtimestep: length of timestep
       tmin=dtimestep-acttime+time
+chp... test times
+c       write(*,*)'dtimestep,tmin,acttime,time',
+c     & dtimestep,tmin,acttime,time
 c
 c     other information to be stored together with tmin 
       smin = 0 ! sqrt(s) of interaction
@@ -333,42 +314,43 @@ c  check, if particle i is a resonance, that might decay within the remaining
 c  part of the timestep. 
 c  If so, than treat decay as collision (with particle 2= 0)
       if (dectime(i)-acttime.lt.tmin) then
-         tmin = dectime(i) - acttime
-         smin=fmass(i)
-         imin = i
-         jmin = 0
+         isstable = .false.
+         do 132 stidx=1,nstable
+            if (ityp(i).eq.stabvec(stidx)) then
+c               write (6,*) 'no decay of particle ',ityp(i)
+               isstable = .true.
+            endif
+ 132     enddo
+         if (.not.isstable) then 
+            tmin = dectime(i) - acttime
+            smin=fmass(i)
+            imin = i
+            jmin = 0
+         endif
       endif
 
-csab special mode which allows for propagation with decays without collisions
-      if(CTOption(16).lt.0) then
-         if(imin.gt.0) then
-            call ctupdate(imin,jmin,acttime+tmin,smin,sigmin,colfacmin)
-         endif
-         return
-      endif
 
 ccccccccccccccccccccccccccccccccc
-c MB 10/09/96
 c new walls selected if mbflag equals 2
-	if ((mbox.gt.0).and.(mbflag.eq.2)) then
+      if ((mbox.gt.0).and.(mbflag.eq.2)) then
 
 c acttime is the ACTUAL time 
 c time is the time at the BEGINNING of the timestep
 c tmin is being minimized RELATIVE to the beginning of the timestep
 
 c tn is the relativ time to the next wall colision
-	tn=wallcoll(i,wall)
-	
+        tn=wallcoll(i,wall)
+        
 c comparison wheather a particle decays before a wall colision
             if (tn.lt.tmin) then            
 c set the time
-		    tmin=tn
+                    tmin=tn
 c set the particle number
-		    imin=i
+                    imin=i
 c set the wall
-		    jmin=wall			
-	    endif
-	endif
+                    jmin=wall                   
+            endif
+        endif
 cc
 
 
@@ -387,15 +369,12 @@ c 1. avoid "self-interaction"
      &           i.ne.j
 c 2. particles which have interacted with each other in the past
 c    are only allowed to interact with each other if at least one
-c    of them has had an interaction in between.
-c    (due to string-decays the structure is a little complicated, since
-c    one particle can have multiple partners of it's last interaction) 
+c    of them has had an interaction in between. For this, check which
+c    was their last collision. Initial state particles have a lstcoll 
+c    of 0. This matters only if the lstcoll entry of both particles
+c    is 0. Thus it is enough to check for one of the entries being 0.
      &          .AND.
-     &          ((lstcoll(i).ne.j.and.lstcoll(i).ne.(nmax+strid(j)+1))
-     &           .or.
-     &           (lstcoll(j).ne.i.and.lstcoll(j).ne.(nmax+strid(i)+1))
-     &           .or.
-     &           (lstcoll(i).eq.0.and.lstcoll(j).eq.0))
+     &          ((lstcoll(i).ne.lstcoll(j)).or.(lstcoll(i).eq.0))
 c 3. Particles within the projectile or target respectively are per
 c    default only allowed to interact with each other in case they
 c    have already had an interaction with a particle of the target
@@ -449,7 +428,7 @@ c     rescale sigtot due to color fluctuations
                      colfac=colfaci*colfacj
                      sigt = sigt*colfac
 c     are we within the geometrical cross section
-                     if (sigt.gt.max(1.d-8,(10.d0*pi*dst2))) then
+           if ((sigt/CTParam(67)).gt.max(1.d-8,(10.d0*pi*dst2))) then
 c     this collision is to beat, now
                         tmin = tcoll 
                         smin = sqrs
@@ -466,6 +445,10 @@ c     this collision is to beat, now
 c  if we found something, then update table via call to ctupdate
 c  (keep in mind: tmin is relative to actual time!)
             call ctupdate(imin,jmin,acttime+tmin,smin,sigmin,colfacmin)
+            
+            
+chp test times
+c       write(*,*) 'after colload: acttime, tmin',acttime,tmin            
 c     in case of "full load mode" after every collision
 c     only the first entry in the collision table is relevant
             if(CTOption(17).ne.0) nct=1
@@ -477,10 +460,6 @@ c     only the first entry in the collision table is relevant
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
        subroutine ctupdate(i,j,t,s,sig,cfac)
 c
-c     Unit     : Collision Term
-c     Author   : Markus Hofmann, add. work M. Bleicher
-c     Date     : 09/16/94
-C
 cinput i : index of 1st colliding particle
 cinput j : index of 2nd colliding particle (0 for decay)
 cinput t : (absolut) time  of collision/decay
@@ -497,17 +476,15 @@ c of particle {\tt i} or {\tt j} {\em true} and all subsequent ones
 c as {\em false}.
 c
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
        implicit none
+
        integer i,j
        real*8 t,s,sig,cfac
        include 'colltab.f'
        integer k,tfound,ncoll1
 
        ncoll1 = nct + 1
-       if(ncoll1.ge.ncollmax) then
-          write(6,*) 'ERROR: collision table overflow!! '
-          write(6,*) ' -> increase ncollmax in colltab.f '
-       endif
        tfound = ncoll1
 c loop over all collisions in table
        do 101 k=actcol+1,nct
@@ -526,6 +503,12 @@ c make sure that collision is not already listed in the table
      &      j.eq.cti1(tfound)))) then
 c then create slot for  new entry 
              do 102 k=nct,tfound,-1
+c.. take care of array bounds
+                if ((k+1).ge.ncollmax) then
+                   write(*,*)'(E) Collision table too small.'
+                   write(*,*)'Increase ncollmax in colltab.f'
+                   stop 137
+                end if
                 cttime(k+1) = cttime(k)
                 ctsqrts(k+1) = ctsqrts(k)
                 ctsigtot(k+1) = ctsigtot(k)
@@ -575,9 +558,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
       subroutine ctset(tfound,i,j,t,s,sig,cfac)
 c
-c     Unit     : Collision Term
-c     Author   : Markus Hofmann, add. work M. Bleicher
-c     Date     : 09/16/94
 c     Revision : 1.0
 C
 cinput tfound : index in coll. array for coll. to be inserted 
@@ -592,7 +572,9 @@ c {\tt ctset} enters the collision of particles {\tt i} and {\tt j}
 c into the collision arrays at index {\tt tfound}.
 c
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
       implicit none
+
       integer tfound,i,j
 
       real*8 t,s,sig,cfac
@@ -612,9 +594,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
        real*8 function sqrts(i,j)
 c
-c     Unit     : Collision Term
-c     Author   : Markus Hofmann, modified by Steffen A. Bass
-c     Date     : 09/16/94
 c     Revision : 1.0
 c
 c     input: i,j : numbers of colliding particles 
@@ -622,7 +601,9 @@ c     output: $\sqrt{s}$ of collision as return value
 c
 c
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
        implicit none
+
        include 'coms.f'
        integer i,j
        real*8 p10,p20
@@ -643,9 +624,6 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine nxtcoll(j,k,dst,dtauc)
 c
-c     Unit     : Collision Term
-c     Author   : Jens Konopka
-c     Date     : 10/10/96
 c     Revision : 1.0
 c
 c input:  j,k   : indices of colliding particles 
@@ -667,12 +645,10 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real*8 u1(0:3), u2(0:3), p1(0:3), p2(0:3)
       real*8 dp(0:3), du(0:3), bt_com(3), bt(3)
       real*8 du2, dp2, dudp, bt_du, bt_dp, btdr, bt2
-      real*8 dst, gam_com, bt_com2, dtauc
-c      real*8 ajk1, ajk2, ajk3
-c      common /jktest/ ajk1, ajk2, ajk3
+      real*8 dst, gam_com, gam_com2, bt_com2, dtauc
 
 c
-cJK do some assignments first
+c do some assignments first
 c
       u1(0) = r0(j)
       u1(1) = rx(j)
@@ -683,19 +659,17 @@ c
       u2(2) = ry(k)
       u2(3) = rz(k)
       
-c      p1(0) = p0(j)
       p1(0) = sqrt(px(j)**2+py(j)**2+pz(j)**2+fmass(j)**2)
       p1(1) = px(j)
       p1(2) = py(j)
       p1(3) = pz(j)
-c      p2(0) = p0(k)
       p2(0) = sqrt(px(k)**2+py(k)**2+pz(k)**2+fmass(k)**2)
       p2(1) = px(k)
       p2(2) = py(k)
       p2(3) = pz(k)
 c   
-cJK -velocity and gamma-factor of the two particle center of momentum 
-cJK frame (com) measured in the computational system
+c -velocity and gamma-factor of the two particle center of momentum 
+c frame (com) measured in the computational system
 c
       bt_com2 = 0.0d0
       do 1 i=1,3 
@@ -703,8 +677,9 @@ c
         bt_com2 = bt_com2 + bt_com(i)**2
     1 continue
       gam_com = 1.0d0/sqrt(1.0d0-bt_com2)
+      gam_com2 = gam_com**2/(1.0d0+gam_com)
 c
-cJK calculate some numbers which are needed for the Lorentz-transformation
+c calculate some numbers which are needed for the Lorentz-transformation
 c
       bt_du = 0.0d0
       bt_dp = 0.0d0
@@ -713,14 +688,14 @@ c
         bt_dp = bt_dp + bt_com(i)*(p1(i) - p2(i))
     2 continue
 c
-cJK calculate bt_com square and the dotproduct bt_com*(r(j)-r(k)),
-cJK where the r's are given in the computational frame
-cJK 
-cJK perform Lorentz-transformation of relative distance and relative
-cJK momentum vectors of particles j and k into com-frame 
-cJK
-cJK use the resulting 3-vectors du and dp to obtain du and dp squared
-cJK and the dotproduct du*dp
+c calculate bt_com square and the dotproduct bt_com*(r(j)-r(k)),
+c where the r's are given in the computational frame
+c 
+c perform Lorentz-transformation of relative distance and relative
+c momentum vectors of particles j and k into com-frame 
+c
+c use the resulting 3-vectors du and dp to obtain du and dp squared
+c and the dotproduct du*dp
 c
       du2  = 0.0d0
       dp2  = 0.0d0
@@ -732,32 +707,29 @@ c
         bt2 = bt2 + bt(i)**2
         btdr = btdr + bt(i)*(u1(i)-u2(i)) ! Rechensystem
         du(i) = u1(i)-u2(i) + bt_com(i)*
-     *      (gam_com**2/(1.0d0+gam_com)*bt_du+gam_com*(u1(0)-u2(0)))
+     *      (gam_com2*bt_du+gam_com*(u1(0)-u2(0)))
         dp(i) = p1(i)-p2(i) + bt_com(i)*
-     *      (gam_com**2/(1.0d0+gam_com)*bt_dp+gam_com*(p1(0)-p2(0)))
+     *      (gam_com2*bt_dp+gam_com*(p1(0)-p2(0)))
         du2  = du2  + du(i)*du(i)
         dp2  = dp2  + dp(i)*dp(i)
         dudp = dudp + du(i)*dp(i)
     3 continue
 c
-cJK obtain collision time and impact parameter squared
+c  obtain collision time and impact parameter squared
 c      
       dtauc = -(btdr/bt2)
       dst   = du2 - dudp*dudp/dp2
 
-c      ajk1 = sqrt(dst)
-c      ajk2 = sqrt(du2)
-c      ajk3 = gam_com*(u1(0)-u2(0)+bt_du)       
       end
 
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine scantab(ind,offs)
-c      
-c     Author   : Markus Hofmann, Steffen A. Bass
-c     Date     : 09/16/94
-c     Update   : 11/21/96
-c     Revision : 1.0
+c
+c     Revision : 1.1
+c
+c     [Changes: Removed wrong counter update for nsav, introduced update of
+c      indices from previous call of {\tt scantab}]
 c
 cinput ind : index of particle
 cinput offs: offset
@@ -774,33 +746,35 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       implicit none
       include 'colltab.f'
       include 'coms.f'
-      integer ind,offs,i,k,z,x
+      integer ind,offs,i,k,x,z,control
       logical rescan
 
-c     reset counters for the rechecking of particles due to lost collision 
-c     partners
-c      nsav=0
-c      
-c     If nsav is still > 0 from previous call of scantab, the relevant
+c     nsav = counter for the rechecking of particles due to lost collision
+c     partners. If nsav is still > 0 from previous call of scantab, the relevant
 c     indices are adjusted or deleted.
+
+cccccccccc Bugfix January 2012, Wrong table update ccccccccccc
+
       if (nsav.gt.0) then
-       do 711 z=1,nsav
-713       continue
-          if ((ctsav(z).eq.ind).and.(offs.lt.0)) then
-             if (z.le.nsav) then
-               do 712 x=z+1,nsav
-                  ctsav(x-1) = ctsav(x)
-712            continue
-               nsav = nsav-1
-               goto 713
-             endif
-          endif
-          if ((ctsav(z).gt.ind).or.
-     &       ((ctsav(z).eq.ind).and.(offs.gt.0))) then
-                ctsav(z) = ctsav(z) + offs
-          endif
-711    continue
-      endif 
+        do 711 z=1,nsav
+ 713       continue
+           if ((ctsav(z).eq.ind).and.(offs.lt.0)) then
+              if (z.le.nsav) then
+                do 712 x=z+1,nsav
+                   ctsav(x-1) = ctsav(x)
+ 712            continue
+                nsav = nsav-1
+                goto 713
+              endif
+           endif
+           if ((ctsav(z).gt.ind).or.
+     &        ((ctsav(z).eq.ind).and.(offs.gt.0))) then
+                 ctsav(z) = ctsav(z) + offs
+           endif
+ 711    continue
+      endif
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       rescan=.false.
 
@@ -864,10 +838,8 @@ c     condinue procedure until all collisions have been scanned
       end
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-	subroutine printtab
+        subroutine printtab
 c
-c     Author  : Markus Hofmann
-c     Date    : 09/16/94
 c     Revision: 1.0
 c
 c     {\tt printtab} prints the contents of the collision arrays on
@@ -875,29 +847,27 @@ c     unit 6 and marks the current collision with an *. This subroutine
 c     is used for debugging purposes only.
 c
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
         implicit none
-	include 'colltab.f'
-	integer i
-	character*1 c	
+
+        include 'colltab.f'
+        integer i
+        character*1 c   
 c
-	write(6,*) 'colltab:'
-	do 101 i=1,nct
-	   c = ' '
+        write(6,*) 'colltab:'
+        do 101 i=1,nct
+           c = ' '
            if (i.eq.actcol) c = '*'
            write(6,'(i4,1x,L1,A1,2(i4,1x),4(f6.3,1x))') 
-c           write(6,*)
      &            i,ctvalid(i),c,cti1(i),cti2(i),cttime(i),ctsqrts(i)
  101    continue
-	return
-	end
+        return
+        end
 
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine colorfluc(it1,it2,ws,fac1,fac2)
 c
-c     Author   : Marcus Bleicher
-c     Date     : 06/16/1997
-c     Update   : -
 c     Revision : 1.0
 c
 cinput it1 : ityp particle 1

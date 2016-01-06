@@ -75,7 +75,7 @@ c...
 
 c 8*nmax*nmax + 40*nmax real*8        
       
-      common /frcoor/ frr0, frrx, frry, frrz, frp0, frpx, frpy, frpz         
+      common /frcoor/ frr0, frrx, frry, frrz, frp0, frpx, frpy, frpz
 
 
 

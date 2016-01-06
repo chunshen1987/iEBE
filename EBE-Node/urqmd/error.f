@@ -1,10 +1,7 @@
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine error (function_name, message, value, level)
 c
-c     Unit     : general infrastructure
-c     Author   : Henning Weber
-c     Date     : 16/08/97
-c     Revision : 0.1
+c     Revision : 1.0
 c
 c     output of errors and warnings
 c
@@ -34,7 +31,8 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       elseif (level.eq.2) then
          write (errdev,*) '*** Error in Subroutine ',function_name,':'
       else
-         write (errdev,*) '*** Fatal Error in Subroutine ',function_name,':'
+         write (errdev,*) '*** Fatal Error in Subroutine ',
+     $        function_name,':'
       endif
       write (errdev,*) '*** Message: ',message
       write (errdev,*) '*** Related Value: ',value 
@@ -42,7 +40,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       if (level.ge.3) then
          write (errdev,*)
          write (errdev,*) '*** Program stopped.'
-         stop
+         stop 137
       endif
 
       return

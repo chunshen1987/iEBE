@@ -1,11 +1,8 @@
-c $Id: getspin.f,v 1.2 1998/06/15 13:35:21 weber Exp $
+c $Id: getspin.f,v 1.5 2007/01/30 14:50:24 bleicher Exp $
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
       integer function getspin(iityp,itag)
 c
-c     Unit     : Collision Term
-c     Author   : Steffen A. Bass 
-c     Date     : 09/07/94
 c     Revision : 1.0
 c
 cinput ityp   : ID of particle
@@ -30,10 +27,15 @@ c
          jtot=Jres(ityp)
       elseif(ityp.ge.offmeson.and.ityp.le.maxmeson) then
          jtot=Jmes(ityp)
+      elseif(ityp.gt.1000.and.ityp.lt.1e8) then
+c... quick and dirty fix for PDGID+1000 codes: 
+c... needs to be modified if spin is needed
+         getspin=0
+         return                
       else
          write(6,*)'undefined total isospin in getspin:'
-         write(6,*)'ityp: ',ityp
-         stop
+         write(6,*)'ityp: ',iityp
+         stop 137
       endif
 c
       if(itag.eq.1) then
@@ -42,7 +44,7 @@ c
          getspin=jtot-2*int(ranf(0)*(jtot+1))
       else
          write(6,*)'itag-error in getspin.f'
-         stop
+         stop 137
       endif
 
       return

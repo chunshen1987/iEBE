@@ -1,8 +1,6 @@
-c $Id: dwidth.f,v 1.8 1997/08/25 08:17:17 weber Exp $
+c $Id: dwidth.f,v 1.11 2007/01/30 14:50:24 bleicher Exp $
 C####C##1#########2#########3#########4#########5#########6#########7##
       real*8 function mmean (io,m0,g,mmin,mmax) 
-c  Unit:   collison-term
-c  Author: L.A.Winckelmann
 c
 cinput  io  : flag (see bleow)
 cinput  m0  : pole mass
@@ -12,10 +10,10 @@ cinput mmax : maximal mass
 c
 c   io=0 : Yields average mass between {\rm mmin} and {\rm mmax}
 c          according to a Breit-Wigner function with constant width {\rm g}
-c          andploe {\rm m0}.
-c     =1 : Chooses a mass randomly between {\rm mmin} and {\rm mmax} 
-c	     according to a Breit-Wigner function with constant 
-c	     width {\rm g} and pole {\rm m0}.
+c          and pole {\rm m0}.\\
+c   io=1 : Chooses a mass randomly between {\rm mmin} and {\rm mmax} 
+c            according to a Breit-Wigner function with constant 
+c            width {\rm g} and pole {\rm m0}.\\
 c    else: Integral of a Breit-Wigner function from {\rm mmin} to {\rm mmax}.
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       implicit none
@@ -56,19 +54,16 @@ c... determin a mass in a given interval
           fmax=i0(mmax)
           f=fmin+(fmax-fmin)*ranf(0)
           mmean=inv(f)      
-c         write(6,*)mmean,mmin,mmax
         end if
       else
-	    mmean=i0(mmax)-i0(mmin) !this might not work for narrow part.
+            mmean=i0(mmax)-i0(mmin) !this might not work for narrow part.
       end if      
       return
       end
 
 
 C####C##1#########2#########3#########4#########5#########6#########7##
-      subroutine getmas(m0,g0,i,iz,mmin,mmax,m)
-c  Unit:   collison-term
-c  Author: L.A.Winckelmann, Christoph Ernst
+      subroutine getmas(m0,g0,i,iz,mmin,mmax,mrest,m)
 c
 cinput  m0   : pole mass of resonance
 cinput  g0   : nominal width of resonance 
@@ -78,23 +73,24 @@ cinput  mmin : minimal mass
 cinput  mmax : maximal mass
 coutput m    : actual mass of the resonance
 c
-c	{\tt getmas} (not $\rightarrow$ {\tt getmass}) first chooses the 
-c	mass {\tt m} of resonance {\tt i} between {\tt mmin} and {\tt mmax}
-c	by a call of {\tt mmean}. Since {\tt mmean} only handles Breit-Wigners
-c	with constant widths it follows 
-c	a correction such that  {\tt m} is distributed according to mass 
-c	dependent widths (corresponding to {\tt fbrwig(...,m,1)}).
+c       {\tt getmas} (not $\rightarrow$ {\tt getmass}) first chooses the 
+c       mass {\tt m} of resonance {\tt i} between {\tt mmin} and {\tt mmax}
+c       by a call of {\tt mmean}. Since {\tt mmean} only handles Breit-Wigners
+c       with constant widths it follows 
+c       a correction such that  {\tt m} is distributed according to mass 
+c       dependent widths (corresponding to {\tt fbrwig(...,m,1)}).
 c
 C####C##1#########2#########3#########4#########5#########6#########7##
       implicit none
       include 'options.f'
       include 'comres.f'
-      integer i,iz,nrej
-      real*8 m,m0,g0,mmin,mmax,x,x0,gg,f,h,pi,al,alpha,ce,mmax2
+      integer i,iz,nrej, nrejmax
+      real*8 m,m0,g0,mmin,mmax,x,x0,gg,f,g,h,pi,al,alpha,ce,mmax2
+      real*8 phi,k,k0,mrest
 c...functions
-      real*8 ranf,mmean,fbrwig,bwnorm
-      parameter(pi=3.1415927)
-      parameter(alpha=3d0, ce=2d0)
+      real*8 ranf,mmean,fbrwig,bwnorm,pcms
+      parameter(pi=3.1415926535d0)
+      parameter(alpha=3d0, ce=2d0, nrejmax=1000000)
 
 c 'broadened' Breit-Wigner function with h(x0,al)=h(x0,1)
 c normalised to alpha
@@ -108,71 +104,81 @@ c cut-off for maximum resonance mass
         m=mmean(1,m0,g0,mmin,mmax2)
         return
       else
-	  nrej=0
+          nrej=0
 
-c This is a kind of Monte Carlo rejection method, where the invertable 
+c This is a Monte Carlo rejection method, where the invertable 
 c BW-distribution with constant widths is used to limit the BW-distribution
 c with mass-dep. widths whose inverse is not known analytically.
 
-108     m=mmean(1,m0,alpha*g0,mmin,mmax2)
-
-c	  if(m.gt.(mmax+1d-8).or.m.lt.(mmin-1d-8))then
-c	     write(*,*)'getmas (W): m outside (mmin,mmax)',m,mmin,mmax
-c	     write(*,*)'called as getmas(',m0,g0,i,mmin,mmax,')'
-c	  endif
-
-	  f=fbrwig(i,iz,m,1)/bwnorm(i)
-	  
-	  if(ce*h(m,m0,g0,alpha).lt.f)then
-	     write(*,*)'(W) getmas: C h(m) not limiting at m=',m
-	     write(*,*)'->mass distribution of ',i,'might be corrupt'
-	  endif
-
-        if (nrej.lt.50.and.
-     .      ranf(0)*ce*h(m,m0,g0,alpha).gt.f)then
-	    nrej=nrej+1
-          goto 108
+108     continue
+        m=mmean(1,m0,alpha*g0,mmin,mmax2)
+        if(m.gt.(mmax2+1d-8).or.m.lt.(mmin-1d-8))then
+           write(*,*)'getmas (E): m outside (mmin,mmax2)',m,mmin,mmax2
+           write(*,*)'called as getmas(',m0,g0,i,mmin,mmax,')'
+           write(*,*)'Program stopped'
+           stop 137
+        endif
+        if ((CTOption(25).eq.1).and.(mrest.gt.0.0)) then
+           k=pcms(mmax2+mrest,mrest,m)
+           k0=pcms(mmax2+mrest,mrest,mmin)
+           phi = m*k / (mmin*k0)
+        else
+           phi = 1.0
         endif
 
-c debug
-c        write(10,*)nrej
+c Breit-Wigner with mass dependent widths and phase space correction
+
+            f=fbrwig(i,iz,m,1)*phi/bwnorm(i)
+            g=ce*h(m,m0,g0,alpha)
+
+            if(g.lt.f)then
+c              write(*,*)'(W) getmas: C h(m) not limiting at m=',m
+c              write(*,*)'->mass distribution of ',i,'might be corrupt'
+            endif
+          nrej=nrej+1
+        if (nrej.le.nrejmax.and.(ranf(0)*g).gt.f) goto 108
+        if (nrej.gt.nrejmax) then
+c           write(*,*)'(W) getmas_space: too many rejections, m= ',m
+c           write(*,*)'called with (',m0,g0,i,mmin,mmax,mrest,')'
+c           write(*,*)'->mass distribution of ',i,' might be corrupt'
+           m=mmean(1,m0,alpha*g0,mmin,mmax2)
+        endif
+        
       endif
 
       return
       end
 
 C####C##1#########2#########3#########4#########5#########6#########7##
-	real*8 function bwnorm(ires)
-c  Unit:   collison-term
-c  Author: Christoph Ernst
+        real*8 function bwnorm(ires)
 c
 cinput  ires   : itype of resonance
 c
-c	This function calculates the integral of {\tt fbrwig}
-c	between parameters {\tt mmin}(= 0~GeV) and {\tt mmax}(= 30~GeV) by
-c	calling {\tt qsimp3} resp. by table lookup. It's value shall 
-c	serve as the norm of the Breit-Wigner function of particle {\tt ires} 
-c	with mass dependent width.
+c       This function calculates the integral of {\tt fbrwig}
+c       between parameters {\tt mmin}(= 0~GeV) and {\tt mmax}(= 30~GeV) by
+c       calling {\tt qsimp3} resp. by table lookup. It's value shall 
+c       serve as the norm of the Breit-Wigner function of particle {\tt ires} 
+c       with mass dependent width.
 c
 C####C##1#########2#########3#########4#########5#########6#########7##
 
-	implicit none
-	include 'comres.f'
-	include 'comwid.f'
-	include 'options.f'
-	integer ires,iz,isoit,it
-	real*8 mmin,mmax,pole,norm1,norm2
-	real*8 widit,massit
-	parameter(mmin=0d0,mmax=50d0)
-	real*8 fbrwig
+        implicit none
+        include 'comres.f'
+        include 'comwid.f'
+        include 'options.f'
+        integer ires,iz,isoit,it
+        real*8 mmin,mmax,pole,norm1,norm2
+        real*8 widit,massit
+        parameter(mmin=0d0,mmax=50d0)
+        real*8 fbrwig
         external fbrwig
 
-	if((CTOption(36).ne.0.or.CTOption(1).ne.0).and.wtabflg.gt.1)then
-	  bwnorm=1d0
-	  return
-	endif
-	
-	it=iabs(ires)
+        if((CTOption(36).ne.0.or.CTOption(1).ne.0).and.wtabflg.gt.1)then
+          bwnorm=1d0
+          return
+        endif
+        
+        it=iabs(ires)
 
       if (wtabflg.ge.2.and.CTOption(33).eq.0) then
 c table lookup
@@ -184,39 +190,36 @@ c table lookup
            write (6,*) '*** error(bwnorm) wrong id:',it
            bwnorm=1d0
          endif
-	else
+        else
 c calculate
-	   if (widit(it).gt.1d-3)then
+           if (widit(it).gt.1d-3)then
 
            pole=massit(it)
 c arbitrary value of iz 
-	     iz=isoit(it)
+             iz=isoit(it)
 
 c     the integration is divided by the pole of the Breit-Wigner -
 c     thus two integrations with pole as upper or lower boundary
 c     respectively are necessary
 
-	     call qsimp3(fbrwig,mmin,pole,it,iz,norm1,-1)
-	     call qsimp3(fbrwig,pole,mmax,it,iz,norm2,+1)
-	     bwnorm=norm1+norm2
-	   else
-	     bwnorm=1d0
-	   endif
-	endif
-c debug
-c	write(*,*)'bwnorm returns',it,':',norm1,' + ',norm2,'=',bwnorm
-	return
-	end
+             call qsimp3(fbrwig,mmin,pole,it,iz,norm1,-1)
+             call qsimp3(fbrwig,pole,mmax,it,iz,norm2,+1)
+             bwnorm=norm1+norm2
+           else
+             bwnorm=1d0
+           endif
+        endif
+
+        return
+        end
 
 
-	
 c no physics after these routines!
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c(c) numerical receipies, adapted for f(idum1,idum2,x)
       SUBROUTINE qsimp3(func,a,b,idum1,idum2,s,flag)
 c
 c     Simpson integration via Numerical Receipies.
-c     Modified by Christoph Ernst
 c
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       implicit none
@@ -226,7 +229,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       INTEGER JMAX,j,idum1,idum2,flag
       REAL*8 a,b,func,s,EPS
       REAL*8 os,ost,st
-c      real*8 func
       PARAMETER (JMAX=100)
       external func
       if(b-a.le.1.d-4) then
@@ -246,16 +248,14 @@ c      real*8 func
             call midsql3(func,a,b,idum1,idum2,st,j)
          endif
         s=(9.*st-ost)/8.
-cdebug
-c      write(6,*)'qsimp3',s,os
 
         if (abs(s-os).le.EPS*abs(os)) return
         os=s
         ost=st
 11    continue
-cdebug
+
       write(6,*)  'too many steps in qsimp3, increase JMAX!'
-c      s=1d100
+
       return      
       END
 

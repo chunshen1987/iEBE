@@ -1,9 +1,7 @@
-c $Id: init.f,v 1.13 1998/06/15 13:35:22 weber Exp $
+c $Id: init.f,v 1.22 2007/01/30 14:50:25 bleicher Exp $
 C####C##1#########2#########3#########4#########5#########6#########7##
       subroutine uinit(io)
-c Unit     : technical/numeric initialization
-c Author   : Luke A. Winckelmann, Steffen A. Bass
-c Date     : Thu Mar 14 10:03:02 CET 1996
+c
 c Revision : 1.0
 c
 cinput io : flag for call to {\tt input(io)} 
@@ -23,6 +21,9 @@ cccccCcc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5ccccccccc6ccccccccc7cc
 
       call set0
       call params
+
+c.. display logo
+      call urqmdlogo
 
 c read input file
       call input(io)
@@ -52,7 +53,7 @@ c
       if(io.ne.0) return
 
 c     do not initialize projectile and target if old event is read in
-      if(CTOption(40).eq.1) return
+      if(CTOption(40).ne.0) return
 
       if(boxflag.eq.0) then
 c
@@ -64,7 +65,7 @@ c         if(eos.eq.0) then
             call cascinit(Zp,Ap,1)
 c         else
 c            write(6,*)'illegal EOS in init.'
-c            stop
+c            stop 137
 c         endif
          endif
 c initialize normal target
@@ -74,7 +75,7 @@ c            if(eos.eq.0) then
                call cascinit(Zt,At,2)
 c            else
 c               write(6,*)'illegal EOS in init.'
-c               stop
+c               stop 137
 c            endif
             endif
          endif
@@ -85,10 +86,7 @@ c            endif
 
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       subroutine init
-c     Unit     : Initialization
-c     Author   : Steffen A. Bass, L.Winckelmann, Mathias Brandstetter
-c     Date     : 04/10/96
-c     Update   : 04/29/97
+c
 c     Revision : 1.0
 c     This subroutine calls initialization procedures for different
 c     equations of state and calculation modi.
@@ -106,31 +104,29 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       include 'colltab.f'
 
       integer j,k,icount,npold,getspin,fchg,indsp(2),isrt,ipbm
-      real*8 nucrad,dst,dstt,dstp,pcm,eb,embeam,emtarget
+      real*8 nucrad,dstt,dstp,pcm,eb,embeam,emtarget
       real*8 massit,ranf,pcms,dectim
       real*8 gaeq,beeq,galab,belab,ppeq,pteq
       real*8 pboost
-	integer nnuc
-	parameter (nnuc=10)
-	save isrt,ipbm
+      real*8 ratio
+      integer AAp, AAt
+        integer nnuc
+        parameter (nnuc=11)
+        save isrt,ipbm
+        logical bcorr
+        common /ini/ bcorr
 
-c MB
-c i ist ein Zaehler
-c flagy 
-	integer i,flagy
-c alf ist eine Normierungsvariable
-c regula ist eine Nullstellensuchfunktion
-	real*8 alf,regula
+        integer i,flagy
+        real*8 alf,regula
 c momenta
-	 real*8 mx,my,mz	
-cc
-
+       real*8 mx,my,mz  
 c important: never change!
       npart = 0
       npold = 0
       nbar=0
       nmes=0
       apt=0
+      uid_cnt=0
 c reset counters
 c     all collisions/decays
       ctag  = 0
@@ -146,8 +142,6 @@ c     number of blocked collisions
       NBlColl=0
 c     number of elastic collisions
       NElColl=0
-c     number of strings
-      strcount=1
 c
       eb=0D0
 c icount is the number of EXTRAordinary pro/tar combinations (i.e. pion ...)
@@ -181,7 +175,7 @@ c reset particle vectors
         origin(j)=0
         tform(j)=0.0
         xtotfac(j)=1.0
-        strid(j)=0
+        uid(j)=0
          ffermpx(j) = 0.0
          ffermpy(j) = 0.0
          ffermpz(j) = 0.0
@@ -198,118 +192,96 @@ ctd
  20   continue
 
 
-      if(CTOption(40).eq.1) then
+      if(CTOption(40).ne.0) then
          call getoldevent
          return
       endif
 
 
-c boxif
-c Mathias Brandstetter
-c MB box
+      if (boxflag.eq.1) then 
+         mbpx=0
+         mbpy=0
+         mbpz=0
+         mx=0
+         my=0
+         mz=0
 
-
-	if (boxflag.eq.1) then 
-c variablen init
-
-	    mbpx=0
-	    mbpy=0
-	    mbpz=0
-	    mx=0
-	    my=0
-	    mz=0
-
-	    nbar=0
-	    nmes=0
-	    flagy=edensflag
-            ctoption(30)=0 ! no frozen fermi for box
-            do 100 cbox=1,mbox
-	       if (flagy.ge.1) then
-		  bptpmax(cbox)=edens/mbox
-	       endif	
-               call bptinit(cbox)
-100         Continue
+         nbar=0
+         nmes=0
+         flagy=edensflag
+         ctoption(30)=0         ! no frozen fermi for box
+         do 100 cbox=1,mbox
+            if (flagy.ge.1) then
+               bptpmax(cbox)=edens/mbox
+            endif       
+            call bptinit(cbox)
+ 100     Continue
 
 c prevents a collective motion in the box
-	do 143 i=1,npart
-         		mbpx=mbpx+px(i)
-			mbpy=mbpy+py(i)
-			mbpz=mbpz+pz(i)
-cdebug
-c		       	Write(*,*)'0 ', px(i), py(i),pz(i)
-143	continue
-	do 142 i=1,npart
-		px(i)=px(i)-mbpx/npart
-		py(i)=py(i)-mbpy/npart
-		pz(i)=pz(i)-mbpz/npart
-cdebug
-c		mx=mx+px(i)
-c		my=my+py(i)
-c		mz=mz+pz(i)
-c		Write(42,*) 'corP: ',i,' : ',mx,my,mz
-142	continue
-
-	    if (flagy.ge.1) then
-	 	alf=Regula(edens)
-c Normierung mit alpha
-
-	        do 42  i=1,npart
-cdebug
-c	       	Write(*,*)'1 ', px(i), py(i),pz(i)
-c	       	Write(*,*) 'alpha= ',alf
+         do 143 i=1,npart
+            mbpx=mbpx+px(i)
+            mbpy=mbpy+py(i)
+            mbpz=mbpz+pz(i)
+ 143     continue
+         do 142 i=1,npart
+            px(i)=px(i)-mbpx/npart
+            py(i)=py(i)-mbpy/npart
+            pz(i)=pz(i)-mbpz/npart
+            call setonshell(i)
+ 142     continue
+         
+         if (flagy.ge.1) then
+            alf=Regula(edens)
+            do 42  i=1,npart   
                px(i) = alf*px(i)
                py(i) = alf*py(i)
                pz(i) = alf*pz(i)
-cdebug
-c		Write(*,*)'2 ', px(i), py(i),pz(i)
-cc
                call setonshell(i)
  42         continue
-c	Write(*,*) 'Hallo, Welt2 !'
          endif
-c switch old or new walls
-c	      if (para.eq.1) then
-c		 Write(*,*) 'old walls selected'
-c		 mbflag=1
-c     else
-         Write(*,*) 'new walls selected'
+         Write(*,*) 'walls selected'
          mbflag=2
          if (solid.gt.0) Write(*,*)'solid walls selected'
-		 		
-c	      Endif		
-c		Write(*,*) para, mbox
-	
+         
          Return
       EndIf
-c End of Box
 
       if(At.ne.0) then
-         dstp = nucrad(Ap)+CTParam(41)
-         dstt = nucrad(At)+CTParam(41)
-         if(CTOption(24).eq.0)then
-            dstp=dstp+CTParam(30)
-            dstt=dstt+CTParam(30)      
+         if (CTParam(21).eq.0.0) then
+            dstp = nucrad(Ap)+CTParam(41)
+            dstt = nucrad(At)+CTParam(41)
+         else
+            ratio = sqrt((1 + 4.0*CTParam(21)/3.0) / 
+     $           (1 - 2.0*CTParam(21)/3.0) )
+            dstp = nucrad(Ap)*ratio**(2.0/3.0)+CTParam(41)
+            dstt = nucrad(At)*ratio**(2.0/3.0)+CTParam(41)
          endif
-
-            dst=0.5*(dstt+dstp)
+c add radius offset
+         dstp=dstp+CTParam(30)
+         dstt=dstt+CTParam(30)      
+c         
+c         dst=0.5d0*(dstt+dstp)
       else
-            dst=0.d0
+c            dst=0.d0
             dstp=0d0
             dstt=0d0
       endif
 
+ce For anti nuclei:
+      AAp = abs(Ap)
+      AAt = abs(At)
 
 c
 c fix masses of projectile and target for calculation of pbeam,ecm,pcm
       if(prspflg.eq.0) then
-         embeam=Ap*EMNUC
+         embeam=AAp*EMNUC
       elseif(prspflg.eq.1) then
          icount=icount+1
 c!!!  sofar only pro/tar with fixed masses allowed
          embeam=massit(spityp(1))
       endif
       if(trspflg.eq.0) then
-         emtarget=At*EMNUC
+         emtarget=AAt*EMNUC
       elseif(trspflg.eq.1) then
          icount=icount+1
          emtarget=massit(spityp(2))
@@ -317,117 +289,109 @@ c!!!  sofar only pro/tar with fixed masses allowed
 c         
 c p(equal_speed) with given elab  cccccccccccccccccccccccccccccccccccccc
 
-         if(srtflag.eq.0) then
-
-            ebeam=Ap*ebeam
-            eb=ebeam+embeam
-            pbeam=sqrt(ebeam*(ebeam+2.0d0*embeam))
-
-c p(equal_speed) with given sqrt(s) ccccccccccccccccccccccccccccccccccccc
-
-         elseif(srtflag.eq.1) then
-
+      if(srtflag.eq.0) then
+         
+         ebeam=AAp*ebeam
+         eb=ebeam+embeam
+         pbeam=sqrt(ebeam*(ebeam+2.0d0*embeam))
+         
+c     p(equal_speed) with given sqrt(s) ccccccccccccccccccccccccccccccccccccc
+         
+      elseif(srtflag.eq.1) then
+         
 c     in this mode, everything has to calculated on a per particle basis
-            embeam=embeam/dble(Ap)
-            emtarget=emtarget/dble(At)
-
-            if(emtarget+embeam.gt.srtmin)then
-               srtmin=emtarget+embeam+1d-2
-               write(6,*)' *** error:initial energy below treshold'
-               write(6,*)'     c.m. energy will be increased to:',
-     &              srtmin
-               srtmax=max(srtmax,srtmin)
-            end if
-            if(efuncflag.eq.0) then
-               ecm=srtmin
-            else                ! if(efuncflag.eq.1) then
-clw... 
-c excitation function
-               if(mod((event-1)*nsrt,nevents).eq.0
-     &              .and.firstev.gt.0)then
-                  if(efuncflag.eq.1)then 
-                     ecm=ecm+(srtmax-srtmin)/dble(nsrt-1)
-                  else if(efuncflag.eq.2)then
-                     isrt=isrt+1
-                     ecm=srtmin*exp( 
-     &                    (dlog(srtmax/srtmin)) 
-     &                    *isrt/(nsrt-1))
-c                write(6,*)exp( 
-c     &          (dlog(srtmax/srtmin)) 
-c     &           *isrt/(nsrt-1))
-                  end if
-               elseif(firstev.eq.0) then
-                  isrt=0
-                  firstev=1
-                  ecm=srtmin
-               endif
-            endif
-c
-c this is all on a per particle basis
-            pcm=pcms(ecm,embeam,emtarget)
-            ebeam=sqrt(embeam**2 + (pcm*ecm/emtarget)**2) - embeam
-            pbeam=pcm*ecm/emtarget
-c now revert to full quantities
-            ebeam=Ap*ebeam
-            pbeam=Ap*pbeam
-            embeam=embeam*Ap
-            emtarget=emtarget*At
-            eb=sqrt(embeam**2+pbeam**2)
-
-
-
-c p(equal_speed) with given plab ccccccccccccccccccccccccccccccccccc
-         elseif(srtflag.eq.2) then
-           if(efuncflag.gt.0) then
-c excitation function
-c calculate the next pbeam if number of events at current pbeam exceeds nevents/npb 
-             if (mod((event-1)*npb,nevents).eq.0
-     &              .and.firstev.gt.0) then
-c excitation function linear in pbeam
-               if (efuncflag.eq.1) then 
-                 pbeam=pbeam+(pbmax-pbmin)/dble(npb-1)
-c else use a logaritmic excitation function
-               else if(efuncflag.eq.2) then
-                 ipbm=ipbm+1
-                 pbeam=pbmin*exp( 
-     &                    (dlog(pbmax/pbmin)) 
-     &                    *ipbm/(npb-1))
+         embeam=embeam/dble(AAp)
+         emtarget=emtarget/dble(AAt)
+         
+         if(emtarget+embeam.gt.srtmin)then
+            srtmin=emtarget+embeam+1d-2
+            write(6,*)' *** error:initial energy below treshold'
+            write(6,*)'     c.m. energy will be increased to:',
+     &           srtmin
+            srtmax=max(srtmax,srtmin)
+         end if
+         if(efuncflag.eq.0) then
+            ecm=srtmin
+         else                   ! if(efuncflag.eq.1) then
+c     excitation function
+            if(mod((event-1)*nsrt,nevents).eq.0
+     &           .and.firstev.gt.0)then
+               if(efuncflag.eq.1)then 
+                  ecm=ecm+(srtmax-srtmin)/dble(nsrt-1)
+               else if(efuncflag.eq.2)then
+                  isrt=isrt+1
+                  ecm=srtmin*exp( 
+     &                 (dlog(srtmax/srtmin)) 
+     &                 *isrt/(nsrt-1))
                end if
-             else if (firstev.eq.0) then
+            elseif(firstev.eq.0) then
+               isrt=0
+               firstev=1
+               ecm=srtmin
+            endif
+         endif
+c     
+c     this is all on a per particle basis
+         pcm=pcms(ecm,embeam,emtarget)
+         ebeam=sqrt(embeam**2 + (pcm*ecm/emtarget)**2) - embeam
+         pbeam=pcm*ecm/emtarget
+c     now revert to full quantities
+         ebeam=AAp*ebeam
+         pbeam=AAp*pbeam
+         embeam=embeam*AAp
+         emtarget=emtarget*AAt
+         eb=sqrt(embeam**2+pbeam**2)
+         
+
+         
+c     p(equal_speed) with given plab ccccccccccccccccccccccccccccccccccc
+      elseif(srtflag.eq.2) then
+         if(efuncflag.gt.0) then
+c     excitation function
+c     calculate the next pbeam if number of events at current pbeam exceeds nevents/npb 
+            if (mod((event-1)*npb,nevents).eq.0
+     &           .and.firstev.gt.0) then
+c     excitation function linear in pbeam
+               if (efuncflag.eq.1) then 
+                  pbeam=pbeam+(pbmax-pbmin)/dble(npb-1)
+c     else use a logaritmic excitation function
+               else if(efuncflag.eq.2) then
+                  ipbm=ipbm+1
+                  pbeam=pbmin*exp( 
+     &                 (dlog(pbmax/pbmin)) 
+     &                 *ipbm/(npb-1))
+               end if
+            else if (firstev.eq.0) then
                ipbm=0
                firstev=1
                pbeam=pbmin
             endif
-          endif
-c input was pbeam per particle
-          pbeam=Ap*pbeam
-          eb=sqrt(embeam**2+pbeam**2)
-          ebeam=eb-embeam
-       endif   
-
-c now do the calculation of equal_speed quantities
-
-         galab=eb/embeam        ! gamma_lab
-         belab=pbeam/eb         ! beta_lab
-         gaeq=sqrt(0.5*(1+galab)) ! gamma_equal_speed
-         beeq=belab*galab/(1+galab) ! beta_equal_speed
-         ppeq=gaeq*beeq*embeam  ! p_projectile(eq)
-         pteq=-(gaeq*beeq*emtarget) ! p_target(eq)
-
-c reduce to per particle quantities
-         ppeq=ppeq/dble(Ap)
-         if(At.ne.0) then
-            pteq=pteq/dble(At)
-            emtarget=emtarget/dble(At)
          endif
-         embeam=embeam/dble(Ap)
-         pbeam=pbeam/dble(Ap)
-         ebeam=ebeam/dble(Ap)
-c the following is the NN sqrt(s)
-         ecm=sqrt(embeam**2+2*eb/dble(Ap)*emtarget+emtarget**2) 
-     
-cdebug
-c      write(6,*)'ppeq,pteq',ppeq,pteq
+c     input was pbeam per particle
+         pbeam=AAp*pbeam
+         eb=sqrt(embeam**2+pbeam**2)
+         ebeam=eb-embeam
+      endif   
+      
+c     now do the calculation of equal_speed quantities
+      galab=eb/embeam           ! gamma_lab
+      belab=pbeam/eb            ! beta_lab
+      gaeq=sqrt(0.5*(1+galab))  ! gamma_equal_speed
+      beeq=belab*galab/(1+galab) ! beta_equal_speed
+      ppeq=gaeq*beeq*embeam     ! p_projectile(eq)
+      pteq=-(gaeq*beeq*emtarget) ! p_target(eq)
+      
+c     reduce to per particle quantities
+      ppeq=ppeq/dble(AAp)
+      if(AAt.ne.0) then
+         pteq=pteq/dble(AAt)
+         emtarget=emtarget/dble(AAt)
+      endif
+      embeam=embeam/dble(AAp)
+      pbeam=pbeam/dble(AAp)
+      ebeam=ebeam/dble(AAp)
+c     the following is the NN sqrt(s)
+      ecm=sqrt(embeam**2+2*eb/dble(AAp)*emtarget+emtarget**2)  
 ccccccccccccccccccccccccccccccccccccccccccccc
 c compute transformation betas for output
 
@@ -452,41 +416,28 @@ c determine impact parameter
          if(CTOption(5).eq.0) then
             bimp=bdist
          elseif(CTOption(5).eq.1) then
-            if(bdist.gt.nucrad(Ap)+nucrad(At)) 
-     &           bdist=nucrad(Ap)+nucrad(At)
-            bimp=bmin+sqrt(ranf(0))*(bdist-bmin)
+            if(bdist.gt.(nucrad(Ap)+nucrad(At)+2*CTParam(30))) 
+     &           bdist=nucrad(Ap)+nucrad(At)+2*CTParam(30)
+            bimp=sqrt(bmin**2 + ranf(0) * (bdist**2 - bmin**2))
          elseif(CTOption(5).eq.2) then
-            if(bdist.gt.nucrad(Ap)+nucrad(At)) 
-     &           bdist=nucrad(Ap)+nucrad(At)
+            if(bdist.gt.(nucrad(Ap)+nucrad(At)+2*CTParam(30))) 
+     &           bdist=nucrad(Ap)+nucrad(At)+2*CTParam(30)
             bimp=bmin+ranf(0)*(bdist-bmin)
          else
             write(6,*)'illegal CTOption(5) :',CTOption(5)
-            stop
+            stop 137
          endif
 
          if(At.eq.0) bimp=0.d0
 
 c initialize normal projectile
          if(prspflg.eq.0) then
-c         if(eos.eq.0) then
-csab,debug
-            if(Ap.lt.100) then 
-               call cascinit_old(Zp,Ap)
-            else
-	        if(mod(event,nnuc).eq.0)then
-	          call cascinit(Zp,Ap,1)
-c	          write(*,*)'new projectile (Ap>100)',event
-              endif
-              call getnucleus(1,npart)
+            if(mod(event,nnuc).eq.0)then
+               call cascinit(Zp,Ap,1)
             endif
-csab,end
-            npart=npart+abs(Ap)
-cJFK         call clusterit(.false.)
-c         else
-c            write(6,*)'illegal EOS in init.'
-c            stop
-c         endif
-cernst change reference frame
+            call getnucleus(1,npart)
+            npart=npart+AAp
+c change reference frame
             if (CTOption(27).eq.1) then   
                pboost = -pbeam
             elseif (CTOption(27).eq.2) then
@@ -494,55 +445,57 @@ cernst change reference frame
             else
                pboost = -ppeq
             endif  
-            call boostnuc(npold+1,npold+abs(Ap),
+            call boostnuc(npold+1,npold+AAp,
      &                    pboost,0.5*bimp,-dstp)
 c save fermi motion
             if (CTOption(30).eq.1) then
-               call savefermi(npold+1,npold+abs(Ap),-pboost)
+               call savefermi(npold+1,npold+AAp,-pboost)
             endif
             npold=npart
-            nbar=nbar+abs(Ap)
+            nbar=nbar+AAp
+            if (CTParam(20).ne.0) then
+               call getnucleus(1,npart)
+               npart=npart+AAp
+               call boostnuc(npold+1,npold+AAp,
+     &              pboost,0.5*bimp,-dstp+CTParam(20))
+               if (CTOption(30).eq.1) then
+                  call savefermi(npold+1,npold+AAp,-pboost)
+               endif
+               npold=npart
+               nbar=nbar+AAp
+            endif
          endif
+
 
 c initialize normal target
          if(At.ne.0) then
             if(trspflg.eq.0) then
-c            if(eos.eq.0) then
-csab,debug
-               if(At.lt.100)then
-                  call cascinit_old(Zt,At)
-		   else
-	            if(mod(event,nnuc).eq.0)then
-	              call cascinit(Zt,At,2)
-c	              write(*,*)'new target (At>100)',event
-	            endif
-                  call getnucleus(2,npart)
+               if(mod(event,nnuc).eq.0)then
+                  call cascinit(Zt,At,2)
                endif
-csab,end
-               npart=npart+abs(At)
-c            else
-c               write(6,*)'illegal EOS in init.'
-c               stop
-c            endif
-cernst change ref. frame
+               call getnucleus(2,npart)
+               npart=npart+AAt
+c change ref. frame
                if(CTOption(27).eq.1) then  
- 		  pboost = 0.d0
+                  pboost = 0.d0
                elseif(CTOption(27).eq.2) then
-		  pboost = pbeam
+                  pboost = pbeam
                else
                   pboost = -pteq
                endif
-               call boostnuc(npold+1,npold+abs(At),
+               call boostnuc(npold+1,npold+AAt,
      &                       pboost,-(0.5*bimp),dstt)
 c save fermi motion
-               if (CTOption(30).eq.1) then            
-                  call savefermi(npold+1,npold+abs(At),-pboost)
+               if (CTOption(30).eq.1) then
+                  call savefermi(npold+1,npold+AAt,-pboost)
                endif
                npold=npart
-               nbar = nbar + abs(At)            
+               nbar = nbar + AAt
             endif
          endif
 
+c set unique ID-tag counter (is not initialized with getnucleus calls)
+         uid_cnt=npart
 
          if(icount.eq.0) then
 c set counter for collupd 
@@ -578,6 +531,8 @@ c the "regular" target sits first in the arrays
             endif
             iso3(npart) = spiso3(indsp(j))
             ityp(npart) = spityp(indsp(j))
+            uid_cnt=uid_cnt+1
+            uid(npart)=uid_cnt
             spin(npart) = getspin(ityp(npart),-1)
             charge(npart)=fchg(iso3(npart),ityp(npart))
             fmass(npart) = massit(ityp(npart))
@@ -586,7 +541,7 @@ c the "regular" target sits first in the arrays
             rz(npart) = 0.d0
             px(npart) = 0.d0 
             py(npart) = 0.d0
-c	pz ist stored in pbeam,p?eq! 
+c       pz ist stored in pbeam,p?eq! 
             pz(npart) = 0.d0
             p0(npart)=sqrt(px(npart)**2+py(npart)**2+pz(npart)**2
      &           +fmass(npart)**2)
@@ -614,9 +569,7 @@ c	pz ist stored in pbeam,p?eq!
       end
 
       subroutine savefermi(i1,i2,p)
-c     Unit     : Initialization
-c     Author   : Henning Weber
-c     Date     : 01/04/96
+c
 c     Revision : 1.0
 c     Store fermi momentum in fferm
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -629,7 +582,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       if (i1.eq.0) return
 
-      if (ncoll(i1).gt.0) return	
+      if (ncoll(i1).gt.0) return        
 
       do i=i1,i2
          ffermpx(i)=px(i)
@@ -645,9 +598,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       subroutine addfermi(ind,p)
-c     Unit     : Initialization
-c     Author   : Henning Weber
-c     Date     : 01/04/96
+c
 c     Revision : 1.0
 c     Restore fermi momentum from fferm
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
