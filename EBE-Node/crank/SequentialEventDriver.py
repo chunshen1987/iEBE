@@ -186,7 +186,7 @@ photonEmissionParameters = {
 osc2uControl = {
     'mainDir'           :   'osc2u',
     'outputFilename'    :   'fort.14',
-    'saveOSCAR'         :   True, # whether to save OSCAR file
+    'saveOSCAR'         :   False, # whether to save OSCAR file
     'executable'        :   'osc2u.e',
 }
 osc2uParameters = {}
@@ -672,7 +672,7 @@ def iSWithResonancesWithdecayPhotonWithHydroResultFiles(fileList):
         if not path.exists(aFile):
             raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
-            move(aFile, iSOperationDirectory)
+            copy(aFile, iSOperationDirectory)
     # make sure all hadrons up to 2 GeV are calculated
     copy(path.join(iSDirectory, 'EOS', 'chosen_particles_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
     # make sure to use the pdg table with tagged decay photons
@@ -851,7 +851,9 @@ def collectEbeResultsToDatabaseFrom(folder):
     elif simulationType == 'hydroEM_with_decaycocktail':
         collectorExecutable = EbeCollectorControl['executable_hydroEM_with_decaycocktail']
         executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
-    
+    elif simulationType == 'hydroEM_with_decaycocktail_with_urqmd':
+        collectorExecutable = EbeCollectorControl['executable_hydroEM_with_decaycocktail']
+        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
     elif simulationType == 'hydroEM_preEquilibrium':
         collectorExecutable = EbeCollectorControl['executable_hydroEM_with_decaycocktail']
         executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
@@ -935,6 +937,7 @@ def sequentialEventDriverShell():
         # print current progress to terminal
         stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
         stdout.flush()
+
         for aInitialConditionFile in generateSuperMCInitialConditions(controlParameterList['numberOfEvents']):
             # get the result folder name for storing results, then create it if necessary
             event_id += 1
@@ -1002,6 +1005,18 @@ def sequentialEventDriverShell():
                 h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(hydroResultFiles)
                 # perform EM radiation calculation
                 photonEmissionWithHydroResultFiles(h5file)
+            
+            elif simulationType == 'hydroEM_with_decaycocktail_with_urqmd':
+                h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(hydroResultFiles)
+                # perform EM radiation calculation
+                photonEmissionWithHydroResultFiles(h5file)
+                
+                # perform iSS calculation and return the path to the OSCAR file
+                OSCARFilePath = iSSWithHydroResultFiles(hydroResultFiles)
+                # perform osc2u
+                osc2uOutputFilePath = osc2uFromOSCARFile(OSCARFilePath)
+                # now urqmd
+                urqmdOutputFilePath = urqmdFromOsc2uOutputFile(osc2uOutputFilePath)
 
             tarfile_name = controlParameterList['eventResultDir'].split('/')[-1]
             call("tar -cf %s.tar %s" % (tarfile_name, tarfile_name), 
