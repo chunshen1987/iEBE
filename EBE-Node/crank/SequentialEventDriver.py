@@ -20,7 +20,7 @@ class ExecutionError(Exception): pass # used to signal my own exception
 # set global default parameters
 allParameterLists = [
     'controlParameterList',
-    'centralityParameters',
+    'initial_condition_control',
     'superMCControl',
     'superMCParameters',
     'preEquilibriumControl',
@@ -54,11 +54,18 @@ controlParameterList = {
     'cleanCMD'              :   'make clean',
 }
 
-centralityParameters = {
+initial_condition_control = {
     'centrality': '0-5%',  # centrality bin
-    'cut_type': 'total_entropy',
     # centrality cut variable: total_entropy or Npart
+    'cut_type': 'total_entropy',
+    'initial_condition_type': 'superMC', # type of initial conditions
+    # file path for the pre-generated initial condition files
+    'pre-generated_initial_file_path': 'initial_conditions', 
+    # name pattern for the initial condition files
+    'pre-generated_initial_file_pattern': 'sd_event_[0-9]*_block.dat',  
+    'pre-generated_initial_file_read_in_mode': 2, # read in mode for VISH2+1
 }
+
 superMCControl = {
     'mainDir'                       :   'superMC',
     'dataDir'                       :   'data', # where initial conditions are stored, relative
@@ -238,12 +245,12 @@ def translate_centrality_cut():
     translate the centrality boundaries to Npart, dS/dy, b values and update
     the parameter lists for simulations
     """
-    cut_type = centralityParameters['cut_type']
+    cut_type = initial_condition_control['cut_type']
     if cut_type not in ['total_entropy', 'Npart']:
         print "invalid centrality cut type: ", cut_type
         exit(1)
 
-    centrality_string = centralityParameters['centrality']
+    centrality_string = initial_condition_control['centrality']
     centrality_lower_bound = float(centrality_string.split('-')[0])
     centrality_upper_bound = float(
         centrality_string.split('-')[1].split('%')[0])
@@ -357,6 +364,37 @@ def translate_centrality_cut():
     return
 
 
+def get_initial_condition_list():
+    """
+        return a list of initial condition file
+    """
+    file_list = []
+    initial_type = initial_condition_control['initial_condition_type']
+    if initial_type == 'superMC':
+        nev = controlParameterList['numberOfEvents']
+        file_list = [afile for afile in generateSuperMCInitialConditions(nev)]
+    elif initial_type == 'pre-generated':
+        file_list = [
+                afile for afile in get_pre_generated_initial_conditions_list()]
+    return(file_list)
+
+
+def get_pre_generated_initial_conditions_list():
+    """
+        Yield the pre-generated initial conditions absolute path
+    """
+    # set directory strings
+    initial_condition_path = path.join(controlParameterList['rootDir'], 
+        initial_condition_control['pre-generated_initial_file_path'])
+
+    # yield initial conditions
+    file_list = glob(path.join(initial_condition_path,
+              initial_condition_control['pre-generated_initial_file_pattern']))
+    for afile in file_list:
+        # then yield it
+        yield path.join(initial_condition_path, afile)
+
+
 def generateSuperMCInitialConditions(numberOfEvents):
     """
         Generate initial conditions using superMC. It then yield the absolute
@@ -364,8 +402,10 @@ def generateSuperMCInitialConditions(numberOfEvents):
     """
     ProcessNiceness = controlParameterList['niceness']
     # set directory strings
-    superMCDirectory = path.join(controlParameterList['rootDir'], superMCControl['mainDir'])
-    superMCDataDirectory = path.join(superMCDirectory, superMCControl['dataDir'])
+    superMCDirectory = path.join(controlParameterList['rootDir'], 
+                                 superMCControl['mainDir'])
+    superMCDataDirectory = path.join(superMCDirectory, 
+                                     superMCControl['dataDir'])
     superMCExecutable = superMCControl['executable']
 
     # clean up the data subfolder for output
@@ -375,16 +415,20 @@ def generateSuperMCInitialConditions(numberOfEvents):
     checkExistenceOfExecutable(path.join(superMCDirectory, superMCExecutable))
 
     # set "nev=#" in superMCParameters
-    superMCParameters[superMCControl['numberOfEventsParameterName']] = numberOfEvents
+    superMCParameters[superMCControl['numberOfEventsParameterName']] = (
+                                                                numberOfEvents)
     # form assignment string
     assignments = formAssignmentStringFromDict(superMCParameters)
     # form executable string
-    executableString = "nice -n %d ./" % (ProcessNiceness) + superMCExecutable + assignments
+    executableString = ("nice -n %d ./" % (ProcessNiceness) 
+                        + superMCExecutable + assignments)
     # execute!
     run(executableString, cwd=superMCDirectory)
 
     # yield initial conditions
-    for aFile in glob(path.join(superMCDataDirectory, superMCControl['initialFiles'])):
+    file_list = glob(path.join(superMCDataDirectory, 
+                               superMCControl['initialFiles']))
+    for aFile in file_list:
         # then yield it
         yield path.join(superMCDataDirectory, aFile)
 
@@ -396,9 +440,12 @@ def hydroWithInitialCondition(aFile):
     """
     ProcessNiceness = controlParameterList['niceness']
     # set directory strings
-    hydroDirectory = path.join(controlParameterList['rootDir'], hydroControl['mainDir'])
-    hydroICDirectory = path.join(hydroDirectory, hydroControl['initialConditionDir'])
-    hydroResultsDirectory = path.join(hydroDirectory, hydroControl['resultDir'])
+    hydroDirectory = path.join(controlParameterList['rootDir'], 
+                               hydroControl['mainDir'])
+    hydroICDirectory = path.join(hydroDirectory, 
+                                 hydroControl['initialConditionDir'])
+    hydroResultsDirectory = path.join(hydroDirectory, 
+                                      hydroControl['resultDir'])
     hydroExecutable = hydroControl['executable']
 
     # check executable
@@ -410,19 +457,22 @@ def hydroWithInitialCondition(aFile):
 
     # check existence of the initial conditions
     if not path.exists(aFile):
-        raise ExecutionError("Hydro initial condition file %s not found!" % aFile)
+        raise ExecutionError("Hydro initial condition file %s not found!" 
+                             % aFile)
 
     # storing initial condition file
     if hydroControl['saveICFile']:
         copy(aFile, controlParameterList['eventResultDir'])
 
     # move initial condition to the designated folder
-    move(aFile, path.join(hydroICDirectory, hydroControl['initialConditionFile']))
+    move(aFile, path.join(hydroICDirectory, 
+                          hydroControl['initialConditionFile']))
 
     # form assignment string
     assignments = formAssignmentStringFromDict(hydroParameters)
     # form executable string
-    executableString = "nice -n %d ./" % (ProcessNiceness) + hydroExecutable + assignments
+    executableString = ("nice -n %d ./" % (ProcessNiceness) 
+                        + hydroExecutable + assignments)
     # execute!
     run(executableString, cwd=hydroDirectory)
 
@@ -430,7 +480,9 @@ def hydroWithInitialCondition(aFile):
     worthStoring = []
     for aGlob in hydroControl['saveResultGlobs']:
         worthStoring.extend(glob(path.join(hydroResultsDirectory, aGlob)))
-    for aFile in glob(path.join(hydroResultsDirectory, hydroControl['resultFiles'])):
+    file_list = glob(path.join(hydroResultsDirectory, 
+                               hydroControl['resultFiles']))
+    for aFile in file_list:
         # check if this file worth storing, then copy to event result folder
         if aFile in worthStoring:
             copy(aFile, controlParameterList['eventResultDir'])
@@ -932,17 +984,22 @@ def sequentialEventDriverShell():
         # get simulation type
         simulationType = controlParameterList['simulation_type']
 
-        # generate initial conditions then loop over initial conditions
         event_id = 0
+
+        # generate initial conditions then loop over initial conditions
+        initial_condition_list = get_initial_condition_list()
+        nev = len(initial_condition_list)
+
         # print current progress to terminal
-        stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
+        stdout.write("PROGRESS: %d events out of %d finished.\n" 
+                     % (event_id, nev))
         stdout.flush()
 
-        for aInitialConditionFile in generateSuperMCInitialConditions(controlParameterList['numberOfEvents']):
-            # get the result folder name for storing results, then create it if necessary
+        # loop over initial conditions
+        for aInitialConditionFile in initial_condition_list:
             event_id += 1
-            initial_id = int(aInitialConditionFile.split('/')[-1].split('_')[2])
-            eventResultDir = path.join(resultDir, controlParameterList['eventResultDirPattern'] % event_id)
+            eventResultDir = path.join(resultDir, 
+                controlParameterList['eventResultDirPattern'] % event_id)
             controlParameterList['eventResultDir'] = eventResultDir
             if path.exists(eventResultDir):
                 rmtree(eventResultDir)
@@ -950,18 +1007,32 @@ def sequentialEventDriverShell():
 
             # print current progress to terminal
             print("Starting event %d..." % event_id)
-            
-            if superMCControl['saveICFile']:
-                superMCDataDirectory = path.join(controlParameterList['rootDir'], superMCControl['mainDir'], superMCControl['dataDir'])
-                for aFile in glob(path.join(superMCDataDirectory, superMCControl['dataFiles'] % initial_id)):
-                    copy(aFile, controlParameterList['eventResultDir'])
+           
+            initial_type = initial_condition_control['initial_condition_type']
+            if initial_type == 'superMC':    # initial conditions from superMC
+                if superMCControl['saveICFile']:
+                    initial_id = int(
+                        aInitialConditionFile.split('/')[-1].split('_')[2])
+                    superMCDataDirectory = path.join(
+                        controlParameterList['rootDir'], 
+                        superMCControl['mainDir'], superMCControl['dataDir'])
+                    file_list = glob(path.join(superMCDataDirectory,
+                        superMCControl['dataFiles'] % initial_id))
+                    for aFile in file_list:
+                        copy(aFile, controlParameterList['eventResultDir'])
+            elif initial_type == 'pre-generated':  
+                # initial conditions from pre-generated files
+                copy(aInitialConditionFile, 
+                     controlParameterList['eventResultDir'])
             
             if simulationType == 'hydroEM_preEquilibrium':
-                # perform hydro calculations with pre-equilibrium evolution and get a list of all the result filenames
+                # perform hydro calculations with pre-equilibrium evolution 
+                # and get a list of all the result filenames
                 hydroResultFiles = [aFile for aFile in 
                              hydro_with_pre_equilbirium(aInitialConditionFile)]
             else:
-                # perform hydro calculations and get a list of all the result filenames
+                # perform hydro calculations and get a list of all the result 
+                # filenames
                 hydroResultFiles = [aFile for aFile in 
                               hydroWithInitialCondition(aInitialConditionFile)]
             
@@ -969,16 +1040,19 @@ def sequentialEventDriverShell():
             if simulationType == 'hybrid':
                 # perform iSS calculation and return the path to the OSCAR file
                 OSCARFilePath = iSSWithHydroResultFiles(hydroResultFiles)
-
                 # perform osc2u
                 osc2uOutputFilePath = osc2uFromOSCARFile(OSCARFilePath)
-
                 # now urqmd
-                urqmdOutputFilePath = urqmdFromOsc2uOutputFile(osc2uOutputFilePath)
+                urqmdOutputFilePath = urqmdFromOsc2uOutputFile(
+                                                           osc2uOutputFilePath)
 
-                # copy and concatnate final results from all hydro events into one file
-                combinedUrqmdFile = path.join(controlParameterList['resultDir'], controlParameterList['combinedUrqmdFile'])
-                open(combinedUrqmdFile, 'a').writelines(open(urqmdOutputFilePath).readlines())
+                # copy and concatnate final results from all hydro events 
+                # into one file
+                combinedUrqmdFile = path.join(
+                    controlParameterList['resultDir'], 
+                    controlParameterList['combinedUrqmdFile'])
+                open(combinedUrqmdFile, 'a').writelines(
+                                         open(urqmdOutputFilePath).readlines())
 
                 # bin the combined result file to get flows
                 binUrqmdResultFiles(urqmdOutputFilePath)
@@ -991,23 +1065,27 @@ def sequentialEventDriverShell():
                 iSWithResonancesWithHydroResultFiles(hydroResultFiles)
             
             elif simulationType == 'hydroEM':
-                h5file = iSSeventplaneAngleWithHydroResultFiles(hydroResultFiles)
+                h5file = iSSeventplaneAngleWithHydroResultFiles(
+                                                              hydroResultFiles)
                 # perform EM radiation calculation
                 photonEmissionWithHydroResultFiles(h5file)
     
             elif simulationType == 'hydroEM_with_decaycocktail':
-                h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(hydroResultFiles)
+                h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(
+                                                              hydroResultFiles)
                 # perform EM radiation calculation
                 photonEmissionWithHydroResultFiles(h5file)
             
             elif simulationType == 'hydroEM_preEquilibrium':
                 # perform iS calculation and resonance decays
-                h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(hydroResultFiles)
+                h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(
+                                                              hydroResultFiles)
                 # perform EM radiation calculation
                 photonEmissionWithHydroResultFiles(h5file)
             
             elif simulationType == 'hydroEM_with_decaycocktail_with_urqmd':
-                h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(hydroResultFiles)
+                h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(
+                                                              hydroResultFiles)
                 # perform EM radiation calculation
                 photonEmissionWithHydroResultFiles(h5file)
                 
@@ -1016,15 +1094,18 @@ def sequentialEventDriverShell():
                 # perform osc2u
                 osc2uOutputFilePath = osc2uFromOSCARFile(OSCARFilePath)
                 # now urqmd
-                urqmdOutputFilePath = urqmdFromOsc2uOutputFile(osc2uOutputFilePath)
+                urqmdOutputFilePath = urqmdFromOsc2uOutputFile(
+                                                           osc2uOutputFilePath)
 
-            tarfile_name = controlParameterList['eventResultDir'].split('/')[-1]
+            tarfile_name = (
+                         controlParameterList['eventResultDir'].split('/')[-1])
             call("tar -cf %s.tar %s" % (tarfile_name, tarfile_name), 
                  shell=True, cwd=resultDir)
             call("rm -fr %s" % (tarfile_name,), shell=True, cwd=resultDir)
 
             # print current progress to terminal
-            stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
+            stdout.write("PROGRESS: %d events out of %d finished.\n" 
+                         % (event_id, nev))
             stdout.flush()
 
         # collect mostly used data into a database

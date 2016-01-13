@@ -1,12 +1,22 @@
 controlParameterList = {
-    'simulation_type'       :   'hydroEM_with_decaycocktail', # 'hybrid', 'hydro', 'hydroEM', 'hydroEM_with_decaycocktail', 'hydroEM_preEquilibrium'
-    'niceness'              :   0,       # range from 0 to 19 for process priority, 0 for the highest priority
+    'simulation_type'       :   'hydroEM_with_decaycocktail', 
+    # options: 'hybrid', 'hydro', 'hydroEM', 'hydroEM_with_decaycocktail', 
+    #          'hydroEM_preEquilibrium', 'hydroEM_with_decaycocktail_with_urqmd'
+    'niceness'              :   0,  
+    # range from 0 to 19 for process priority, 0 for the highest priority
 }
 
-centralityParameters = {
+initial_condition_control = {
     'centrality': '30-40%',  # centrality bin
     'cut_type': 'total_entropy',
     # centrality cut variable: total_entropy or Npart
+    'initial_condition_type': 'pre-generated',
+    # type of initial conditions: superMC or pre-generated
+    'pre-generated_initial_file_path': 'initial_conditions', 
+    # file path for the pre-generated initial condition files
+    'pre-generated_initial_file_pattern': 'sd_event_[0-9]*_block.dat',  
+    # name pattern for the initial condition files
+    'pre-generated_initial_file_read_in_mode': 2, # read in mode for VISH2+1
 }
 
 superMCParameters = {
@@ -39,8 +49,10 @@ hydroParameters = {
     'vis'       :   0.08,
     'Ivisflag'  :   0,        # flag to use temperature dependent eta/s(T)
     'IvisBulkFlag'  :   0,    # flag for temperature dependence of bulk viscosity
-    'visbulknorm'   :   0.0,  # the overall normalization of the bulk viscosity (set to 0.0 for shear only simulation)
-    'IviscousEqsType'  :  2,  # type of evolution equations for viscous quantities (1: Israel-Stewart eq. 2: DNMR eq.)
+    'visbulknorm'   :   0.0,  # the overall normalization of the bulk viscosity 
+                              # (set to 0.0 for shear only simulation)
+    'IviscousEqsType'  :  2,  # type of evolution equations for viscous quantities 
+                              # (1: Israel-Stewart eq. 2: DNMR eq.)
     'T0'        :   0.6,      # tau_0
     'dt'        :   0.02,     # dtau
     'Edec'      :   0.18,
@@ -49,9 +61,10 @@ hydroParameters = {
                               # need to be the same as dx in superMC
     'dy'        :   0.10,     # lattice spacing in y (fm)
                               # need to be the same as dy in superMC
-    'IhydroJetoutput' :   1,  # switch for output hydro evolution history into hdf5 file
+    'IhydroJetoutput' :   1,  # switch for output hydro evolution history
     'InitialURead'    :   0,  # set it to be 1 when simulation_type == hydroEM_preEquilibrium
     'Initialpitensor' :   0,  # initialization of pi tensor
+                              # 0: initialize to 0; 1: initialze to Navier-Stock value
 }
 
 iSSParameters = {
