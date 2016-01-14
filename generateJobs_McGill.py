@@ -136,7 +136,7 @@ mv ./finalResults %s/job-%d
         open(path.join(targetWorkingFolder, "job-%d.pbs" % i), "a").write(
 """
 (cd %s
-    tar -jcf job-%d.tar.bz2 job-%d
+    tar -zcf job-%d.tar.gz job-%d
     rm -fr job-%d
 )
 """ % (resultsFolder, i, i, i)
@@ -160,7 +160,7 @@ if compressResultsFolderAnswer == "yes":
 #PBS -S /bin/bash
 cd %s
 (cd %s
-    python autoZippedResultsCombiner.py %s %d "job-(\d*).tar.bz2" 60 1> WatcherReport.txt
+    python autoZippedResultsCombiner.py %s %d "job-(\d*).tar.gz" 60 1> WatcherReport.txt
     mv WatcherReport.txt %s
 )
 """ % (walltime, cluster_name, watcherDirectory, utilitiesFolder, resultsFolder, numberOfJobs, resultsFolder)
