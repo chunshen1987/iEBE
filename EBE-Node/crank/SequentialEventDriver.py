@@ -1097,11 +1097,11 @@ def sequentialEventDriverShell():
                 urqmdOutputFilePath = urqmdFromOsc2uOutputFile(
                                                            osc2uOutputFilePath)
 
-            tarfile_name = (
-                         controlParameterList['eventResultDir'].split('/')[-1])
-            call("tar -cf %s.tar %s" % (tarfile_name, tarfile_name), 
-                 shell=True, cwd=resultDir)
-            call("rm -fr %s" % (tarfile_name,), shell=True, cwd=resultDir)
+            #tarfile_name = (
+            #             controlParameterList['eventResultDir'].split('/')[-1])
+            #call("tar -cf %s.tar %s" % (tarfile_name, tarfile_name), 
+            #     shell=True, cwd=resultDir)
+            #call("rm -fr %s" % (tarfile_name,), shell=True, cwd=resultDir)
 
             # print current progress to terminal
             stdout.write("PROGRESS: %d events out of %d finished.\n" 

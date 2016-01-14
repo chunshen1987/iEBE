@@ -540,7 +540,8 @@ class EbeCollector(object):
         # close connection to commit changes
         db.closeConnection()
     
-    def collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(self, folder, event_id, db, useSubfolder="spectra"):
+    def collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(
+        self, folder, event_id, db, useSubfolder="spectra"):
         """
             This function collects integrated and differential flows data
             and multiplicity and spectra data from "folder" into the
@@ -558,10 +559,12 @@ class EbeCollector(object):
         # add one more sub-directory
         folder = path.join(folder, useSubfolder)
 
-        # collection of file name patterns, pid, and particle name. The file format is determined from the "filename_format.dat" file
+        # collection of file name patterns, pid, and particle name. 
+        # The file format is determined from the "filename_format.dat" file
         toCollect = {
-            "Charged"       :   "charged_hydro", # string in filename, particle name
-            "Charged_eta"   :   "charged_eta_hydro", # string in filename, particle name
+            # string in filename, particle name
+            "Charged"       :   "charged_hydro", 
+            "Charged_eta"   :   "charged_eta_hydro",
             "pion_p"        :   "pion_p_hydro",
             "pion_0"        :   "pion_0_hydro",
             "Kaon_p"        :   "kaon_p_hydro",
@@ -589,29 +592,42 @@ class EbeCollector(object):
             "decay_gamma_Sigma0" : "decay_gamma_Sigma0_hydro",
             "decay_gamma_rho0" : "decay_gamma_rho0_hydro",
         }
-        filename_inte = "%s_integrated_vndata.dat" # filename for integrated flow files, %s is the "string in filename" defined in toCollect
-        filename_diff = "%s_vndata.dat" # filename for differential flow files
+        # filename for integrated flow files, 
+        # %s is the "string in filename" defined in toCollect
+        filename_inte = "%s_integrated_vndata.dat" 
+        # filename for differential flow files
+        filename_diff = "%s_vndata.dat" 
 
-        # first write the pid_lookup table, makes sure there is only one such table
-        if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
+        # first write the pid_lookup table, 
+        # makes sure there is only one such table
+        if db.createTableIfNotExists("pid_lookup", (("name","text"), 
+                                                    ("pid","integer"))):
             db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
 
         # next create various tables
-        db.createTableIfNotExists("inte_vn", (("event_id","integer"), ("pid","integer"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
-        db.createTableIfNotExists("diff_vn", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
-        db.createTableIfNotExists("multiplicities", (("event_id","integer"), ("pid","integer"), ("N","real")))
-        db.createTableIfNotExists("spectra", (("event_id","integer"), ("pid","integer"), ("pT","real"), ("N","real")))
+        db.createTableIfNotExists("inte_vn", 
+            (("event_id","integer"), ("pid","integer"), ("n","integer"), 
+             ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("diff_vn", 
+            (("event_id","integer"), ("pid","integer"), ("pT","real"), 
+             ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("multiplicities", 
+            (("event_id","integer"), ("pid","integer"), ("N","real")))
+        db.createTableIfNotExists("spectra", 
+            (("event_id","integer"), ("pid","integer"), 
+             ("pT","real"), ("N","real")))
 
         # the big loop
         for particle_string_infile in toCollect.keys():
             pid = self.pidDict[toCollect[particle_string_infile]]
 
             # first, differential flow
-            particle_filename = path.join(folder, filename_diff % particle_string_infile)
+            particle_filename = path.join(
+                folder, filename_diff % particle_string_infile)
             if path.exists(particle_filename):
                 # extract differential flow and spectra information
                 diff_flow_block = np.loadtxt(particle_filename)
-                largest_n = int(diff_flow_block.shape[1]/3) # should be an integer
+                largest_n = int(diff_flow_block.shape[1]/3)  # should be an integer
                 # write flow table
                 for aRow in diff_flow_block:
                     for n in range(1, largest_n):
@@ -625,7 +641,8 @@ class EbeCollector(object):
 
 
             # next, integrated flow
-            particle_filename = path.join(folder, filename_inte % particle_string_infile)
+            particle_filename = path.join(folder, 
+                filename_inte % particle_string_infile)
             if path.exists(particle_filename):
                 # extract integrated flow and multiplicity information
                 inte_flow_block = np.loadtxt(particle_filename)
@@ -633,12 +650,11 @@ class EbeCollector(object):
                 # write flow table
                 for n in range(1, largest_n):
                     db.insertIntoTable("inte_vn",
-                        (event_id, pid, n, inte_flow_block[n,3], inte_flow_block[n,4])
-                    )
+                        (event_id, pid, n, 
+                         inte_flow_block[n,3], inte_flow_block[n,4]))
                 # write multiplicity table
                 db.insertIntoTable("multiplicities",
-                    (event_id, pid, inte_flow_block[0,1])
-                )
+                    (event_id, pid, inte_flow_block[0,1]))
 
         # close connection to commit changes
         db.closeConnection()
@@ -1071,7 +1087,10 @@ class EbeCollector(object):
         # close connection to commit changes
         db.closeConnection()
 
-    def createDatabaseFromEventFolders(self, folder, subfolderPattern="event-(\d*)", databaseFilename="CollectedResults.db", collectMode="fromUrQMD", multiplicityFactor=1.0):
+    def createDatabaseFromEventFolders(
+        self, folder, subfolderPattern="event-\d+", 
+        databaseFilename="CollectedResults.db", collectMode="fromUrQMD", 
+        multiplicityFactor=1.0):
         """
             This function collect all results (ecc+flow) from subfolders
             whose name have pattern "subfolderPattern" to a database
@@ -1121,54 +1140,75 @@ class EbeCollector(object):
         print("Using %s mode" % collectMode)
         print("-"*60)
 
-        for file_index, file_name in enumerate(listdir(folder)):
+        file_list = listdir(folder)
+        prog = re.compile(subfolderPattern)
+        matched_list = []
+        for a in file_list:
+            b = prog.match(a)
+            if b:
+                matched_list.append(b.group(0))
+
+        for file_index, file_name in enumerate(matched_list):
+            fullPath = path.join(folder, file_name)
+            event_id = int(file_name.split('-')[1])
+            print("Collecting %s as with event-id: %d" % (fullPath, event_id))
+
             if collectMode == "fromHydro_with_IP-Glasma":
                 collect_flag = 1
-                if "event-" not in file_name: 
-                    continue  # want only event files 
-
-                fullPath = path.join(folder, file_name)
-                event_id = int(file_name.split('-')[1])
-                print("Collecting %s as with event-id: %d" % (fullPath, event_id))
                 self.insert_ecc_id_table(db)
                 self.collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(
                                 fullPath, event_id, db, useSubfolder="") 
-            else:
-                if "tar" not in file_name: 
-                    continue  # want only tar files 
-
-                call("tar -xf %s" % file_name, shell=True, cwd=folder)
-                fullPath = path.join(folder, file_name.split('.tar')[0])
-                event_id = int(file_name.split('.tar')[0].split('-')[1])
-                print("Collecting %s as with event-id: %d" % (fullPath, event_id))
-
-                if collectMode == "fromUrQMD":
-                    collect_flag = 1
-                    self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db) # collect ecc
-                    self.collectScalars(fullPath, event_id, db)  # collect scalars
-                    self.collectFLowsAndMultiplicities_urqmdBinUtilityFormat(fullPath, event_id, db, multiplicityFactor) # collect flow
-                elif collectMode == "fromPureHydro":
-                    collect_flag = 1
-                    self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=True) # collect ecc
-                    self.collectScalars(path.join(fullPath,"results"), event_id, db)  # collect scalars
-                    self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, db) # collect flow
-                elif collectMode == "fromPureHydroNewStoring":
-                    collect_flag = 1
-                    self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
-                    self.collectScalars(fullPath, event_id, db)  # collect scalars
-                    self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, db, useSubfolder="") # collect flow
-                elif collectMode == "fromHydroEM":
-                    collect_flag = 1
-                    self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
-                    self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, db, useSubfolder="") # collect hadron flow
-                    self.collectFLowsAndMultiplicities_photon(fullPath, event_id, db, useSubfolder="") # collect photon flow
-                elif collectMode == "fromHydroEM_with_decaycocktail":
-                    collect_flag = 1
-                    self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
-                    self.collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(fullPath, event_id, db, useSubfolder="") # collect hadron and decay photon flow
-                    self.collectFLowsAndMultiplicities_photon(fullPath, event_id, db, useSubfolder="") # collect thermal photon flow
-
-                call("rm -fr %s" % file_name.split('.tar')[0], shell=True, cwd=folder)
+            elif collectMode == "fromUrQMD":
+                collect_flag = 1
+                # collect ecc
+                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db) 
+                # collect scalars
+                self.collectScalars(fullPath, event_id, db)
+                # collect flow
+                self.collectFLowsAndMultiplicities_urqmdBinUtilityFormat(
+                    fullPath, event_id, db, multiplicityFactor) 
+            elif collectMode == "fromPureHydro":
+                collect_flag = 1
+                # collect ecc
+                self.collectEccentricitiesAndRIntegrals(
+                    fullPath, event_id, db, oldStyleStorage=True)
+                # collect scalars
+                self.collectScalars(path.join(fullPath,"results"), 
+                                    event_id, db)
+                # collect flow
+                self.collectFLowsAndMultiplicities_iSFormat(fullPath, 
+                                                            event_id, db) 
+            elif collectMode == "fromPureHydroNewStoring":
+                collect_flag = 1
+                # collect ecc, no subfolders
+                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, 
+                                                        oldStyleStorage=False)
+                self.collectScalars(fullPath, event_id, db)  # collect scalars
+                # collect flow
+                self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, 
+                                                            db, useSubfolder="") 
+            elif collectMode == "fromHydroEM":
+                collect_flag = 1
+                # collect ecc, no subfolders
+                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, 
+                                                        oldStyleStorage=False) 
+                # collect hadron flow
+                self.collectFLowsAndMultiplicities_iSFormat(fullPath, event_id, 
+                                                            db, useSubfolder="") 
+                # collect photon flow
+                self.collectFLowsAndMultiplicities_photon(fullPath, event_id, 
+                                                          db, useSubfolder="") 
+            elif collectMode == "fromHydroEM_with_decaycocktail":
+                collect_flag = 1
+                # collect ecc, no subfolders
+                self.collectEccentricitiesAndRIntegrals(fullPath, event_id, db, 
+                                                        oldStyleStorage=False)
+                # collect hadron and decay photon flow
+                self.collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(
+                                       fullPath, event_id, db, useSubfolder="") 
+                # collect thermal photon flow
+                self.collectFLowsAndMultiplicities_photon(fullPath, event_id, 
+                                                          db, useSubfolder="")
 
         if collectMode == "fromPureHydro11P5N":
             collect_flag = 1
