@@ -44,7 +44,7 @@ shape_of_nucleons = 2     # (1) Disk-like nucleons with width given by sigmaNN
                           # (4) Gaussian nucleons with user specified width 
                           # (5-9) Gaussian nucleons for other models (future use)
 
-shape_of_entropy = 3      # (2) Normal Gaussian nucleons
+shape_of_entropy = 2      # (2) Normal Gaussian nucleons
                           # (3) valence quark substructure 
 quark_width = 0.2         # valence quark entropy deposition width
 
