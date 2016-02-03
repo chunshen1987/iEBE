@@ -2638,16 +2638,19 @@ C====eta/s dependent on local temperature==================================
 
       TT_GeV = TT*HbarC
       Ttr = 0.18
+      eta_over_s_min = 0.08
 
       if(TT_GeV .gt. Ttr) then
           if(IVisflag .eq. 2) then
-              ViscousCTemp = - 0.289 + 0.288*TT_GeV/Ttr
-     &                       + 0.0818*(TT_GeV/Ttr)**2.
+              ViscousCTemp = eta_over_s_min
+     &                       + 0.288*(TT_GeV/Ttr - 1.)
+     &                       + 0.0818*((TT_GeV/Ttr)**2. - 1.)
           endif
-          ViscousCTemp = 0.08
+          ViscousCTemp = eta_over_s_min
       else
-          ViscousCTemp = 0.681 - 0.0594*TT_GeV/Ttr 
-     &                   - 0.544*(TT_GeV/Ttr)**2.;
+          ViscousCTemp = eta_over_s_min
+     &                   + 0.0594*(1. - TT_GeV/Ttr)
+     &                   + 0.544*(1. - (TT_GeV/Ttr)**2.)
       endif
 
       return
