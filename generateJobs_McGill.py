@@ -8,6 +8,7 @@
 from sys import argv, exit
 from os import makedirs, path, unlink
 from shutil import copytree, copy, rmtree
+from subprocess import call
 
 from check_prerequisites import checkEnvironment, checkExecutables, greetings
 
@@ -80,7 +81,7 @@ print(purple + "\n" + "-"*80 + "\n>>>>> Welcome to the event generator! <<<<<\n"
 print(green + "\n>>>>> Checking for required libraries <<<<<\n" + normal)
 if not checkEnvironment():
     print("Prerequisites not met. Install the required library first please. Aborting.")
-    exit()
+    #exit()
 
 # check existence of executables
 print(green + "\n>>>>> Checking for existence of executables <<<<<\n" + normal)
@@ -165,6 +166,16 @@ cd %s
 )
 """ % (walltime, cluster_name, watcherDirectory, utilitiesFolder, resultsFolder, numberOfJobs, resultsFolder)
     )
+
+import ParameterDict
+initial_condition_type = (
+    ParameterDict.initial_condition_control['initial_condition_type'])
+if initial_condition_type == 'pre-generated':
+    initial_file_path = (ParameterDict.initial_condition_control[
+                             'pre-generated_initial_file_path'])
+    call("./copy_pre_generated_initial_conditions.sh %d %d %s %s" 
+         % (numberOfJobs, numberOfEventsPerJob, initial_file_path, 
+            workingFolder), shell=True)
 
 print("Jobs generated. Submit them using submitJobs scripts.")
 

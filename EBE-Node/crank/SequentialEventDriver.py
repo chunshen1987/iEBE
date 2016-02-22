@@ -385,7 +385,7 @@ def get_pre_generated_initial_conditions_list():
     """
     # set directory strings
     initial_condition_path = path.join(controlParameterList['rootDir'], 
-        initial_condition_control['pre-generated_initial_file_path'])
+                                       'initial_conditions')
 
     # yield initial conditions
     file_list = glob(path.join(initial_condition_path,
