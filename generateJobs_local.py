@@ -8,6 +8,7 @@
 from sys import argv, exit
 from os import makedirs, path, unlink
 from shutil import copytree, copy, rmtree
+from subprocess import call
 
 from check_prerequisites import checkEnvironment, checkExecutables, greetings
 
