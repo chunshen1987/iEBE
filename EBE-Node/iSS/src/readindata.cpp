@@ -21,7 +21,45 @@ read_FOdata::read_FOdata(ParameterReader* paraRdr_in, string path_in)
    path = path_in;
    mode = paraRdr->getVal("hydro_mode");
    turn_on_bulk = paraRdr->getVal("turn_on_bulk");
-   turn_on_muB = paraRdr->getVal("turn_on_muB");
+   turn_on_rhob = paraRdr->getVal("turn_on_rhob");
+   turn_on_diff = paraRdr->getVal("turn_on_diff");
+
+   if(mode == 1 || mode == 2)
+   {
+       // determine read in format in surface.dat from MUSIC simulation
+       cout << "read in hyper-surface from MUSIC simulations ..." << endl;
+       ostringstream config_file;
+       config_file << path << "/music_input";
+       ifstream configuration(config_file.str().c_str());
+       string temp1;
+       string temp_name;
+       while(!configuration.eof())
+       {
+           getline(configuration, temp1);
+           stringstream ss(temp1);
+           ss >> temp_name;
+           if(temp_name == "Include_Bulk_Visc_Yes_1_No_0")
+           {
+              ss >> turn_on_bulk;
+           }
+           if(temp_name == "Include_Rhob_Yes_1_No_0")
+           {
+              ss >> turn_on_rhob;
+           }
+           if(temp_name == "turn_on_baryon_diffusion")
+           {
+              ss >> turn_on_diff;
+           }
+       }
+       configuration.close();
+       if(turn_on_bulk == 1)
+           cout << "the hyper-surface includes bulk viscosity." << endl;
+       if(turn_on_rhob == 1)
+           cout << "the hyper-surface includes net baryon density." << endl;
+       if(turn_on_diff == 1)
+           cout << "the hyper-surface includes baryon diffusion." << endl;
+   }
+
    n_eta_skip = 0;
 }
 
@@ -120,6 +158,7 @@ int read_FOdata::read_in_chemical_potentials(
               break;
            }
        }
+       configuration.close();
        ifstream particletable;
        if(IEOS_music == 2)        // s95p-v1
            N_stableparticle = 0;
@@ -151,6 +190,8 @@ int read_FOdata::read_in_chemical_potentials(
            particletable >> N_stableparticle;
            particletable.close();
        }
+       else if(IEOS_music == 7)        // s95p-v1.2 for UrQMD
+           N_stableparticle = 0;
        else if(IEOS_music == 10)
            N_stableparticle = 0;
        else
@@ -185,8 +226,8 @@ int read_FOdata::read_in_chemical_potentials(
            read_chemical_potentials_music(FO_length, surf_ptr, 
                                           N_stableparticle, particle_mu);
 
-       calculate_particle_mu(Nparticle, surf_ptr, FO_length, 
-                             particle_ptr, particle_mu);
+       calculate_particle_mu_PCE(Nparticle, surf_ptr, FO_length, 
+                                 particle_ptr, particle_mu);
        for(int i = 0; i < N_stableparticle; i++)
            delete [] particle_mu[i];
        delete [] particle_mu;
@@ -198,6 +239,7 @@ int read_FOdata::read_in_chemical_potentials(
         for(int j = 0; j < FO_length; j++)
            surf_ptr[j].particle_mu[i] = 0.0e0;
    }
+   calculate_particle_mu(Nparticle, surf_ptr, FO_length, particle_ptr);
 
    return(Nparticle);
 }
@@ -249,6 +291,11 @@ void read_FOdata::read_decdat(int length, FO_surf* surf_ptr)
          surf_ptr[i].bulkPi = temp;
      else
          surf_ptr[i].bulkPi = 0.0;
+
+     surf_ptr[i].qmu0 = 0.0e0;
+     surf_ptr[i].qmu1 = 0.0e0;
+     surf_ptr[i].qmu2 = 0.0e0;
+     surf_ptr[i].qmu3 = 0.0e0;
   }
   decdat.close();
   cout<<"done"<<endl;
@@ -307,19 +354,21 @@ void read_FOdata::read_FOsurfdat_MUSIC_boost_invariant(int length,
      surf_ptr[idx].tau = temp_tau;
      surf_ptr[idx].xpt = temp_xpt;
      surf_ptr[idx].ypt = temp_ypt;
-     surf_ptr[idx].eta = temp_eta;
+     surf_ptr[idx].eta = 0.0;
 
      // freeze out normal vectors
      ss >> surf_ptr[idx].da0;
      ss >> surf_ptr[idx].da1;
      ss >> surf_ptr[idx].da2;
      ss >> surf_ptr[idx].da3;
+     surf_ptr[idx].da3 = 0.0;
 
      // flow velocity
      ss >> surf_ptr[idx].u0;
      ss >> surf_ptr[idx].u1;
      ss >> surf_ptr[idx].u2;
      ss >> surf_ptr[idx].u3;
+     surf_ptr[idx].u3 = 0.0;
 
      // thermodynamic quantities at freeze out
      ss >> dummy;
@@ -330,7 +379,6 @@ void read_FOdata::read_FOsurfdat_MUSIC_boost_invariant(int length,
      surf_ptr[idx].muB = dummy*hbarC;
      ss >> dummy;              // (e+P)/T
      surf_ptr[idx].Pdec = dummy*surf_ptr[idx].Tdec - surf_ptr[idx].Edec;
-     surf_ptr[idx].Bn = 0.0;
      surf_ptr[idx].muS = 0.0;
 
      // dissipative quantities at freeze out
@@ -341,19 +389,19 @@ void read_FOdata::read_FOsurfdat_MUSIC_boost_invariant(int length,
      ss >> dummy;
      surf_ptr[idx].pi02 = dummy*hbarC;
      ss >> dummy;
-     surf_ptr[idx].pi03 = dummy*hbarC;
+     surf_ptr[idx].pi03 = 0.0*hbarC;
      ss >> dummy;
      surf_ptr[idx].pi11 = dummy*hbarC;
      ss >> dummy;
      surf_ptr[idx].pi12 = dummy*hbarC;
      ss >> dummy;
-     surf_ptr[idx].pi13 = dummy*hbarC;
+     surf_ptr[idx].pi13 = 0.0*hbarC;
      ss >> dummy;
      surf_ptr[idx].pi22 = dummy*hbarC;
      ss >> dummy;
-     surf_ptr[idx].pi23 = dummy*hbarC;
+     surf_ptr[idx].pi23 = 0.0*hbarC;
      ss >> dummy;
-     surf_ptr[idx].pi33 = dummy*hbarC;
+     surf_ptr[idx].pi33 = 0.0*hbarC;
      if(turn_on_bulk == 1)
      {
          ss >> dummy;
@@ -361,13 +409,34 @@ void read_FOdata::read_FOsurfdat_MUSIC_boost_invariant(int length,
      }
      else
          surf_ptr[idx].bulkPi = 0.0;
-     if(turn_on_muB == 1)
+     if(turn_on_rhob == 1)
      {
          ss >> dummy;
-         surf_ptr[idx].muB = dummy*hbarC;
+         surf_ptr[idx].Bn = dummy;   // 1/fm^3
      }
      else
-         surf_ptr[idx].muB = 0.0;
+     {
+         surf_ptr[idx].Bn = 0.0;
+     }
+     if(turn_on_diff == 1)
+     {
+         surfdat >> dummy;
+         surf_ptr[i].qmu0 = dummy*hbarC;
+         surfdat >> dummy;
+         surf_ptr[i].qmu1 = dummy*hbarC;
+         surfdat >> dummy;
+         surf_ptr[i].qmu2 = dummy*hbarC;
+         surfdat >> dummy;
+         surf_ptr[i].qmu3 = dummy*hbarC;
+     }
+     else
+     {
+         surf_ptr[i].qmu0 = 0.0e0;
+         surf_ptr[i].qmu1 = 0.0e0;
+         surf_ptr[i].qmu2 = 0.0e0;
+         surf_ptr[i].qmu3 = 0.0e0;
+     }
+
      idx++;
   }
   surfdat.close();
@@ -397,11 +466,13 @@ void read_FOdata::read_FOsurfdat_hydro_analysis_boost_invariant(
      surf_ptr[idx].tau = temp_tau;
      surf_ptr[idx].xpt = temp_xpt;
      surf_ptr[idx].ypt = temp_ypt;
+     surf_ptr[idx].eta = 0.0;
 
      // freeze out normal vectors
      ss >> surf_ptr[idx].da0;
      ss >> surf_ptr[idx].da1;
      ss >> surf_ptr[idx].da2;
+     surf_ptr[idx].da3 = 0.0;
 
      // thermodynamic quantities at freeze out
      ss >> surf_ptr[idx].Tdec;
@@ -412,11 +483,11 @@ void read_FOdata::read_FOsurfdat_hydro_analysis_boost_invariant(
      surf_ptr[idx].u0 = 1./sqrt(1. - temp_vx*temp_vx - temp_vy*temp_vy);
      surf_ptr[idx].u1 = surf_ptr[idx].u0*temp_vx;
      surf_ptr[idx].u2 = surf_ptr[idx].u0*temp_vy;
+     surf_ptr[idx].u3 = 0.0;
 
      surf_ptr[idx].Edec = 0.0;   
      surf_ptr[idx].muB = 0.0;
      surf_ptr[idx].Pdec = 0.0;
-     surf_ptr[idx].Bn = 0.0;
      surf_ptr[idx].muS = 0.0;
 
      // dissipative quantities at freeze out
@@ -432,7 +503,12 @@ void read_FOdata::read_FOsurfdat_hydro_analysis_boost_invariant(
      surf_ptr[idx].pi33 = 0.0;
 
      surf_ptr[idx].bulkPi = 0.0;
-     surf_ptr[idx].muB = 0.0;
+     surf_ptr[idx].Bn = 0.0;
+
+     surf_ptr[i].qmu0 = 0.0e0;
+     surf_ptr[i].qmu1 = 0.0e0;
+     surf_ptr[i].qmu2 = 0.0e0;
+     surf_ptr[i].qmu3 = 0.0e0;
 
      idx++;
   }
@@ -444,7 +520,7 @@ void read_FOdata::read_FOsurfdat_hydro_analysis_boost_invariant(
 
 void read_FOdata::read_FOsurfdat_MUSIC(int length, FO_surf* surf_ptr)
 {
-  cout<<" -- Read spatial positions of freeze out surface from MUSIC...";
+  cout << " -- Read spatial positions of freeze out surface from MUSIC...";
   ostringstream surfdat_stream;
   double dummy;
   surfdat_stream << path << "/surface.dat";
@@ -478,7 +554,6 @@ void read_FOdata::read_FOsurfdat_MUSIC(int length, FO_surf* surf_ptr)
      surf_ptr[i].muB = dummy*hbarC;
      surfdat >> dummy;                    //(e+p)/T
      surf_ptr[i].Pdec = dummy*surf_ptr[i].Tdec - surf_ptr[i].Edec;
-     surf_ptr[i].Bn = 0.0;
      surf_ptr[i].muS = 0.0;
 
      // dissipative quantities at freeze out
@@ -508,21 +583,44 @@ void read_FOdata::read_FOsurfdat_MUSIC(int length, FO_surf* surf_ptr)
          surf_ptr[i].bulkPi = dummy*hbarC;
      }
      else
+     {
          surf_ptr[i].bulkPi = 0.0;
-     if(turn_on_muB == 1)
+     }
+     if(turn_on_rhob == 1)
      {
          surfdat >> dummy;
-         surf_ptr[i].muB = dummy*hbarC;
+         surf_ptr[i].Bn = dummy;   // 1/fm^3
      }
      else
-         surf_ptr[i].muB = 0.0;
+     {
+         surf_ptr[i].Bn = 0.0;
+     }
+     if(turn_on_diff == 1)
+     {
+         surfdat >> dummy;
+         surf_ptr[i].qmu0 = dummy*hbarC;
+         surfdat >> dummy;
+         surf_ptr[i].qmu1 = dummy*hbarC;
+         surfdat >> dummy;
+         surf_ptr[i].qmu2 = dummy*hbarC;
+         surfdat >> dummy;
+         surf_ptr[i].qmu3 = dummy*hbarC;
+     }
+     else
+     {
+         surf_ptr[i].qmu0 = 0.0e0;
+         surf_ptr[i].qmu1 = 0.0e0;
+         surf_ptr[i].qmu2 = 0.0e0;
+         surf_ptr[i].qmu3 = 0.0e0;
+     }
   }
   surfdat.close();
   cout << "done" << endl;
   return;
 }
 
-void read_FOdata::read_decdat_mu(int FO_length, int N_stable, double** particle_mu)
+void read_FOdata::read_decdat_mu(int FO_length, int N_stable, 
+                                 double** particle_mu)
 {
   cout<<" -- Read chemical potential for stable particles...";
   ostringstream decdat_mu_stream;
@@ -651,8 +749,10 @@ int read_FOdata::read_resonances_list(particle_info* particle)
          particle[local_i].stable = particle[local_i-1].stable;
          for (int j = 0; j < particle[local_i].decays; j++)
          {
-            particle[local_i].decays_Npart[j]=particle[local_i-1].decays_Npart[j];
-            particle[local_i].decays_branchratio[j]=particle[local_i-1].decays_branchratio[j];
+            particle[local_i].decays_Npart[j] = 
+                                           particle[local_i-1].decays_Npart[j];
+            particle[local_i].decays_branchratio[j] = 
+                                     particle[local_i-1].decays_branchratio[j];
             for (int k=0; k< Maxdecaypart; k++)
             {
                if(particle[local_i-1].decays_part[j][k] == 0)
@@ -700,9 +800,9 @@ int read_FOdata::read_resonances_list(particle_info* particle)
    return(Nparticle);
 }
 
-void read_FOdata::calculate_particle_mu(int Nparticle, FO_surf* FOsurf_ptr, 
-                                        int FO_length, particle_info* particle, 
-                                        double** particle_mu)
+void read_FOdata::calculate_particle_mu_PCE(
+    int Nparticle, FO_surf* FOsurf_ptr, int FO_length, 
+    particle_info* particle, double** particle_mu)
 {
    int Nstable_particle;
    int Idummy;
@@ -762,7 +862,7 @@ void read_FOdata::calculate_particle_mu(int Nparticle, FO_surf* FOsurf_ptr,
 
    // calculating chemical potentials for unstable resonances
    print_progressbar(-1);
-   for(int i=0; i < Nparticle ; i++)
+   for(int i = 0; i < Nparticle; i++)
    {
       if(particle[i].stable==0)
       {
@@ -792,5 +892,22 @@ void read_FOdata::calculate_particle_mu(int Nparticle, FO_surf* FOsurf_ptr,
    print_progressbar(1);
 
    return;
+}
+
+void read_FOdata::calculate_particle_mu(int Nparticle, 
+                                        FO_surf* FOsurf_ptr, int FO_length, 
+                                        particle_info* particle)
+{
+    if(turn_on_rhob == 1)
+    {
+        for(int i = 0; i < Nparticle; i++)
+        {
+            int baryon = particle[i].baryon;
+            for(int m = 0; m < FO_length; m++)
+            {
+                FOsurf_ptr[m].particle_mu[i] += baryon*FOsurf_ptr[m].muB;
+            }
+        }
+    }
 }
 
