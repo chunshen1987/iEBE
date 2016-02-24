@@ -77,9 +77,9 @@ class EbeCollector(object):
             "eta"               :   51,
             "eta_prime"         :   52,
             "gamma"             :   61,
-            "omega782"         :   65,
+            "omega782"          :   65,
             "eta"               :   71,
-            "etap"          :   72,
+            "etap"              :   72,
         }
 
         for aParticle in self.pidDict.keys():
@@ -88,51 +88,67 @@ class EbeCollector(object):
             else:
                 self.pidDict[aParticle+"_hydro"] = self.pidDict[aParticle]-1000
             if self.pidDict[aParticle]>=0:
-                self.pidDict[aParticle+"_thermal"] = self.pidDict[aParticle]+2000
+                self.pidDict[aParticle+"_thermal"] = (
+                                self.pidDict[aParticle]+2000)
             else:
-                self.pidDict[aParticle+"_thermal"] = self.pidDict[aParticle]-2000
+                self.pidDict[aParticle+"_thermal"] = (
+                                self.pidDict[aParticle]-2000)
 
         self.pidDict.update({
-            "photon_total"       :  9000,
-            "photon_total_eq"    :  9001,
-            "photon_QGP_tot"     :  9002,
-            "photon_QGP_eq"      :  9003,
-            "photon_QGP_vis"     :  9004,
-            "photon_QGP_bulkvis" :  9005,
-            "photon_HG_tot"      :  9006,
-            "photon_HG_eq"       :  9007,
-            "photon_HG_vis"      :  9008,
-            "photon_HG_bulkvis"  :  9009,
+            "photon_total"        :  9000,
+            "photon_total_eq"     :  9001,
+
+            "photon_QGP_2to2_tot"     :  9002,
+            "photon_QGP_2to2_eq"      :  9003,
+            "photon_QGP_2to2_vis"     :  9004,
+            "photon_QGP_2to2_bulkvis" :  9005,
+
+            "photon_HG_meson_tot"      :  9006,
+            "photon_HG_meson_eq"       :  9007,
+            "photon_HG_meson_vis"      :  9008,
+            "photon_HG_meson_bulkvis"  :  9009,
+
             "photon_HG_pipibrem_tot"      :  9010,
             "photon_HG_pipibrem_eq"       :  9011,
             "photon_HG_pipibrem_vis"      :  9012,
             "photon_HG_pipibrem_bulkvis"  :  9013,
-            "photon_HG_rhospectral_tot"   :  9014,
-            "photon_HG_rhospectral_eq"    :  9015,
-            "photon_HG_rhospectral_vis"   :  9016,
+
+            "photon_HG_rhospectral_tot"      :  9014,
+            "photon_HG_rhospectral_eq"       :  9015,
+            "photon_HG_rhospectral_vis"      :  9016,
             "photon_HG_rhospectral_bulkvis"  :  9017,
-            "direct_gamma_shortdecay_hydro"   :  9018,
-            "decay_gamma_pi0_hydro" : 9019,
-            "decay_gamma_eta_hydro" : 9020,
-            "decay_gamma_omega_hydro" : 9021,
-            "decay_gamma_phi_hydro" : 9022,
-            "decay_gamma_etap_hydro" : 9023,
-            "decay_gamma_Sigma0_hydro" : 9024,
-            "decay_gamma_rho0_hydro" : 9025,
+
+            "direct_gamma_shortdecay_hydro"   : 9018,
+            "decay_gamma_pi0_hydro"           : 9019,
+            "decay_gamma_eta_hydro"           : 9020,
+            "decay_gamma_omega_hydro"         : 9021,
+            "decay_gamma_phi_hydro"           : 9022,
+            "decay_gamma_etap_hydro"          : 9023,
+            "decay_gamma_Sigma0_hydro"        : 9024,
+            "decay_gamma_rho0_hydro"          : 9025,
+
             "photon_HG_omega_tot"      :  9026,
             "photon_HG_omega_eq"       :  9027,
             "photon_HG_omega_vis"      :  9028,
             "photon_HG_omega_bulkvis"  :  9029,
-            "photon_QGP_vis_deltaf_restricted"     :  9104,
-            "photon_QGP_bulkvis_deltaf_restricted" :  9105,
-            "photon_HG_vis_deltaf_restricted"      :  9108,
-            "photon_HG_bulkvis_deltaf_restricted"  :  9109,
-            "photon_HG_pipibrem_vis_deltaf_restricted"      :  9112,
-            "photon_HG_pipibrem_bulkvis_deltaf_restricted"  :  9113,
-            "photon_HG_rhospectral_vis_deltaf_restricted"   :  9116,
-            "photon_HG_rhospectral_bulkvis_deltaf_restricted"  :  9117,
-            "photon_HG_omega_vis_deltaf_restricted"      :  9128,
-            "photon_HG_omega_bulkvis_deltaf_restricted"  :  9129,
+
+            "photon_QGP_AMYcollinear_tot"     :  9030,
+            "photon_QGP_AMYcollinear_eq"      :  9031,
+            "photon_QGP_AMYcollinear_vis"     :  9032,
+            "photon_QGP_AMYcollinear_bulkvis" :  9033,
+
+            "photon_QGP_2to2_vis_deltaf_restricted"             :  9104,
+            "photon_QGP_2to2_bulkvis_deltaf_restricted"         :  9105,
+            "photon_QGP_AMYcollinear_vis_deltaf_restricted"     :  9106,
+            "photon_QGP_AMYcollinear_bulkvis_deltaf_restricted" :  9107,
+            "photon_HG_meson_vis_deltaf_restricted"             :  9108,
+            "photon_HG_meson_bulkvis_deltaf_restricted"         :  9109,
+            "photon_HG_pipibrem_vis_deltaf_restricted"          :  9112,
+            "photon_HG_pipibrem_bulkvis_deltaf_restricted"      :  9113,
+            "photon_HG_rhospectral_vis_deltaf_restricted"       :  9116,
+            "photon_HG_rhospectral_bulkvis_deltaf_restricted"   :  9117,
+            "photon_HG_omega_vis_deltaf_restricted"             :  9128,
+            "photon_HG_omega_bulkvis_deltaf_restricted"         :  9129,
         })
         
         #UrQMD pid Dictionary, name conversion defined as in binUtility
@@ -198,7 +214,7 @@ class EbeCollector(object):
             333         :    "phi",
             221         :    "eta",
             331         :    "eta_prime",
-            22         :    "gamma",
+            22          :    "gamma",
         }
 
         #particle mass Dictionary (unit in GeV)
@@ -264,8 +280,8 @@ class EbeCollector(object):
             this functions fills table "ecc_id_lookup", "eccentricities", and
             "r_integrals".
 
-            Eccentricity and r-integral files will be looked for in "folder" and
-            when filling tables the specified "event_id" will be used.
+            Eccentricity and r-integral files will be looked for in "folder" 
+            and when filling tables the specified "event_id" will be used.
 
             When "oldStyleStorage" is set to True, another subfolder
             with name "results" will be appended to "folder" which will
@@ -291,7 +307,8 @@ class EbeCollector(object):
         ecc_imag_col = 1 # imag part of ecc
         r_inte_col = 3 # r-integral
 
-        # first write the ecc_id_lookup table, makes sure there is only one such table
+        # first write the ecc_id_lookup table, 
+        # makes sure there is only one such table
         if db.createTableIfNotExists(
             "ecc_id_lookup", (("ecc_id","integer"), ("ecc_type_name","text"))):
             for pattern, ecc_id, ecc_type_name in typeCollections:
@@ -791,44 +808,73 @@ class EbeCollector(object):
         # collection of file name patterns, pid, and particle name. The file format is determined from the "filename_format.dat" file
         toCollect = {
             # string in filename, particle name
-            "HG_2to2_meson_total_Spvn_eq"    :   "photon_HG_eq", 
-            "HG_2to2_meson_total_Spvn_vis"   :   "photon_HG_vis",
-            "HG_2to2_meson_total_Spvn_bulkvis"   :   "photon_HG_bulkvis",
-            "HG_2to2_meson_total_Spvn_vis_deltaf_restricted"   :   "photon_HG_vis_deltaf_restricted",
-            "HG_2to2_meson_total_Spvn_bulkvis_deltaf_restricted"   :   "photon_HG_bulkvis_deltaf_restricted",
-            "HG_2to2_meson_total_Spvn_tot"   :   "photon_HG_tot",
-            "HG_pipi_bremsstrahlung_Spvn_eq"    :   "photon_HG_pipibrem_eq",
-            "HG_pipi_bremsstrahlung_Spvn_vis"   :   "photon_HG_pipibrem_vis",
-            "HG_pipi_bremsstrahlung_Spvn_bulkvis"   :   "photon_HG_pipibrem_bulkvis",
-            "HG_pipi_bremsstrahlung_Spvn_vis_deltaf_restricted"   :   "photon_HG_pipibrem_vis_deltaf_restricted",
-            "HG_pipi_bremsstrahlung_Spvn_bulkvis_deltaf_restricted"   :   "photon_HG_pipibrem_bulkvis_deltaf_restricted",
-            "HG_pipi_bremsstrahlung_Spvn_tot"   :   "photon_HG_pipibrem_tot",
-            "HG_rho_spectralfun_Spvn_eq"    :   "photon_HG_rhospectral_eq",
-            "HG_rho_spectralfun_Spvn_vis"   :   "photon_HG_rhospectral_vis",
-            "HG_rho_spectralfun_Spvn_bulkvis"   :   "photon_HG_rhospectral_bulkvis",
-            "HG_rho_spectralfun_Spvn_vis_deltaf_restricted"   :   "photon_HG_rhospectral_vis_deltaf_restricted",
-            "HG_rho_spectralfun_Spvn_bulkvis_deltaf_restricted"   :   "photon_HG_rhospectral_bulkvis_deltaf_restricted",
-            "HG_rho_spectralfun_Spvn_tot"   :   "photon_HG_rhospectral_tot",
-            "HG_omega_Spvn_eq"    :   "photon_HG_omega_eq",
-            "HG_omega_Spvn_vis"   :   "photon_HG_omega_vis",
-            "HG_omega_Spvn_bulkvis"   :   "photon_HG_omega_bulkvis",
-            "HG_omega_Spvn_vis_deltaf_restricted"   :   "photon_HG_omega_vis_deltaf_restricted",
-            "HG_omega_Spvn_bulkvis_deltaf_restricted"   :   "photon_HG_omega_bulkvis_deltaf_restricted",
-            "HG_omega_Spvn_tot"   :   "photon_HG_omega_tot",
-            "QGP_2to2_total_Spvn_eq"  :   "photon_QGP_eq",
-            "QGP_2to2_total_Spvn_vis"  :   "photon_QGP_vis",
-            "QGP_2to2_total_Spvn_bulkvis"  :   "photon_QGP_bulkvis",
-            "QGP_2to2_total_Spvn_vis_deltaf_restricted"  :   "photon_QGP_vis_deltaf_restricted",
-            "QGP_2to2_total_Spvn_bulkvis_deltaf_restricted"  :   "photon_QGP_bulkvis_deltaf_restricted",
-            "QGP_2to2_total_Spvn_tot" :   "photon_QGP_tot",
-            "photon_total_eq_Spvn"    :   "photon_total_eq",
-            "photon_total_Spvn"       :   "photon_total",
+            "HG_2to2_meson_total_Spvn_eq": "photon_HG_meson_eq", 
+            "HG_2to2_meson_total_Spvn_vis": "photon_HG_meson_vis",
+            "HG_2to2_meson_total_Spvn_bulkvis": "photon_HG_meson_bulkvis",
+            "HG_2to2_meson_total_Spvn_tot": "photon_HG_meson_tot",
+            "HG_2to2_meson_total_Spvn_vis_deltaf_restricted":
+                "photon_HG_meson_vis_deltaf_restricted",
+            "HG_2to2_meson_total_Spvn_bulkvis_deltaf_restricted":
+                "photon_HG_meson_bulkvis_deltaf_restricted",
+
+            "HG_pipi_bremsstrahlung_Spvn_eq": "photon_HG_pipibrem_eq",
+            "HG_pipi_bremsstrahlung_Spvn_vis": "photon_HG_pipibrem_vis",
+            "HG_pipi_bremsstrahlung_Spvn_bulkvis": "photon_HG_pipibrem_bulkvis",
+            "HG_pipi_bremsstrahlung_Spvn_tot": "photon_HG_pipibrem_tot",
+            "HG_pipi_bremsstrahlung_Spvn_vis_deltaf_restricted":
+                "photon_HG_pipibrem_vis_deltaf_restricted",
+            "HG_pipi_bremsstrahlung_Spvn_bulkvis_deltaf_restricted":
+                "photon_HG_pipibrem_bulkvis_deltaf_restricted",
+
+            "HG_rho_spectralfun_Spvn_eq": "photon_HG_rhospectral_eq",
+            "HG_rho_spectralfun_Spvn_vis": "photon_HG_rhospectral_vis",
+            "HG_rho_spectralfun_Spvn_bulkvis": "photon_HG_rhospectral_bulkvis",
+            "HG_rho_spectralfun_Spvn_tot": "photon_HG_rhospectral_tot",
+            "HG_rho_spectralfun_Spvn_vis_deltaf_restricted":
+                "photon_HG_rhospectral_vis_deltaf_restricted",
+            "HG_rho_spectralfun_Spvn_bulkvis_deltaf_restricted":   
+                "photon_HG_rhospectral_bulkvis_deltaf_restricted",
+
+            "HG_omega_Spvn_eq": "photon_HG_omega_eq",
+            "HG_omega_Spvn_vis": "photon_HG_omega_vis",
+            "HG_omega_Spvn_bulkvis": "photon_HG_omega_bulkvis",
+            "HG_omega_Spvn_tot": "photon_HG_omega_tot",
+            "HG_omega_Spvn_vis_deltaf_restricted":
+                "photon_HG_omega_vis_deltaf_restricted",
+            "HG_omega_Spvn_bulkvis_deltaf_restricted":
+                "photon_HG_omega_bulkvis_deltaf_restricted",
+
+            "QGP_2to2_total_Spvn_eq": "photon_QGP_2to2_eq",
+            "QGP_2to2_total_Spvn_vis": "photon_QGP_2to2_vis",
+            "QGP_2to2_total_Spvn_bulkvis": "photon_QGP_2to2_bulkvis",
+            "QGP_2to2_total_Spvn_tot": "photon_QGP_2to2_tot",
+            "QGP_2to2_total_Spvn_vis_deltaf_restricted":
+                "photon_QGP_2to2_vis_deltaf_restricted",
+            "QGP_2to2_total_Spvn_bulkvis_deltaf_restricted":
+                "photon_QGP_2to2_bulkvis_deltaf_restricted",
+
+            "QGP_AMYcollinear_Spvn_eq": "photon_QGP_AMYcollinear_eq",
+            "QGP_AMYcollinear_Spvn_vis": "photon_QGP_AMYcollinear_vis",
+            "QGP_AMYcollinear_Spvn_bulkvis": "photon_QGP_AMYcollinear_bulkvis",
+            "QGP_AMYcollinear_Spvn_tot": "photon_QGP_AMYcollinear_tot",
+            "QGP_AMYcollinear_Spvn_vis_deltaf_restricted":
+                "photon_QGP_AMYcollinear_vis_deltaf_restricted",
+            "QGP_AMYcollinear_Spvn_bulkvis_deltaf_restricted":
+                "photon_QGP_AMYcollinear_bulkvis_deltaf_restricted",
+
+            "photon_total_eq_Spvn": "photon_total_eq",
+            "photon_total_Spvn": "photon_total",
         }
-        filename_inte = "%s_inte.dat" # filename for integrated flow files, %s is the "string in filename" defined in toCollect
-        filename_diff = "%s.dat" # filename for differential flow files
+
+        # filename for integrated flow files, 
+        # %s is the "string in filename" defined in toCollect
+        filename_inte = "%s_inte.dat" 
+        # filename for differential flow files
+        filename_diff = "%s.dat" 
 
         # first write the pid_lookup table, makes sure there is only one such table
-        if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
+        if db.createTableIfNotExists("pid_lookup", 
+                                     (("name","text"), ("pid","integer"))):
             db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
 
         # next create various tables
