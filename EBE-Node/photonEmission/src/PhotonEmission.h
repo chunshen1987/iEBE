@@ -52,8 +52,9 @@ class PhotonEmission
       double *vn_cos_tot, *vn_sin_tot;
 
       //photon production processes
-      ThermalPhoton* photon_QGP;
-      ThermalPhoton* photon_HG;
+      ThermalPhoton* photon_QGP_2_to_2;
+      ThermalPhoton* photon_QGP_collinear;
+      ThermalPhoton* photon_HG_meson;
       ThermalPhoton* photon_HG_omega;
       ThermalPhoton* photon_HG_rho_spectralfun;
       ThermalPhoton* photon_HG_pipiBremsstrahlung;
