@@ -585,8 +585,9 @@ def iSSWithHydroResultFiles(fileList):
     """
     ProcessNiceness = controlParameterList['niceness']
     # set directory strings
-    iSSDirectory = path.join(controlParameterList['rootDir'], iSSControl['mainDir'])
-    iSSOperationDirectory = path.join(iSSDirectory, iSSControl['operationDir']) # for both input & output
+    iSSDirectory = path.join(controlParameterList['rootDir'], 
+                             iSSControl['mainDir'])
+    iSSOperationDirectory = path.join(iSSDirectory, iSSControl['operationDir'])
     iSSOSCARFilepath = path.join(iSSDirectory, iSSControl['OSCARFile'])
     iSSExecutable = iSSControl['executable']
 
@@ -602,11 +603,19 @@ def iSSWithHydroResultFiles(fileList):
             raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
             move(aFile, iSSOperationDirectory)
+    
+    # make sure all hadrons up to 2 GeV are calculated
+    copy(path.join(iSSDirectory, 'EOS', 'chosen_particles_urqmd_3.3+.dat'), 
+         path.join(iSSDirectory, 'EOS', 'chosen_particles.dat'))
+    # make sure to use the pdg table with tagged decay photons
+    copy(path.join(iSSDirectory, 'EOS', 'pdg-urqmd_v3.3+.dat'), 
+         path.join(iSSDirectory, 'EOS', 'pdg.dat'))
 
     # form assignment string
     assignments = formAssignmentStringFromDict(iSSParameters)
     # form executable string
-    executableString = "nice -n %d ./" % (ProcessNiceness) + iSSExecutable + assignments
+    executableString = (
+        "nice -n %d ./" % (ProcessNiceness) + iSSExecutable + assignments)
     # execute!
     run(executableString, cwd=iSSDirectory)
 
@@ -629,13 +638,15 @@ def iSWithResonancesWithHydroResultFiles(fileList):
     """
     ProcessNiceness = controlParameterList['niceness']
     # set directory strings
-    iSDirectory = path.join(controlParameterList['rootDir'], iSControl['mainDir'])
-    iSOperationDirectory = path.join(iSDirectory, iSControl['operationDir']) # for both input & output
+    iSDirectory = path.join(controlParameterList['rootDir'], 
+                            iSControl['mainDir'])
+    iSOperationDirectory = path.join(iSDirectory, iSControl['operationDir'])
     iSExecutables = iSControl['executables']
     iSExecutionEntry = iSControl['entryShell']
 
     # check executable
-    checkExistenceOfExecutables([path.join(iSDirectory, aExe) for aExe in iSExecutables])
+    checkExistenceOfExecutables(
+                    [path.join(iSDirectory, aExe) for aExe in iSExecutables])
 
     # clean up operation folder
     cleanUpFolder(iSOperationDirectory)
@@ -646,10 +657,14 @@ def iSWithResonancesWithHydroResultFiles(fileList):
             raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
             move(aFile, iSOperationDirectory)
-    copy(path.join(iSDirectory, 'EOS', 'chosen_particles_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
+    copy(path.join(iSDirectory, 'EOS', 'chosen_particles_s95pv1.dat'), 
+         path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
+    copy(path.join(iSDirectory, 'EOS', 'pdg-s95pv1_withDecayPhotons.dat'), 
+         path.join(iSDirectory, 'EOS', 'pdg.dat'))
 
     # execute!
-    run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, cwd=iSDirectory)
+    run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, 
+        cwd=iSDirectory)
 
     # save some of the important result files
     worthStoring = []
@@ -666,8 +681,10 @@ def iSSeventplaneAngleWithHydroResultFiles(fileList):
     """
     ProcessNiceness = controlParameterList['niceness']
     # set directory strings
-    iSSDirectory = path.join(controlParameterList['rootDir'], iSSControl['mainDir'])
-    iSSOperationDirectory = path.join(iSSDirectory, iSSControl['operationDir']) # for both input & output
+    iSSDirectory = path.join(controlParameterList['rootDir'], 
+                             iSSControl['mainDir'])
+    iSSOperationDirectory = path.join(iSSDirectory, 
+                                      iSSControl['operationDir']) 
     hydroH5Filepath = path.join(iSSOperationDirectory, 'JetData.h5')
     iSSExecutable = iSSControl['executable']
 
@@ -683,12 +700,16 @@ def iSSeventplaneAngleWithHydroResultFiles(fileList):
             raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
             move(aFile, iSSOperationDirectory)
-    copy(path.join(iSSDirectory, 'EOS', 'chosen_particles_HydroEM.dat'), path.join(iSSDirectory, 'EOS', 'chosen_particles.dat'))
+    copy(path.join(iSSDirectory, 'EOS', 'chosen_particles_urqmd_3.3+.dat'), 
+         path.join(iSSDirectory, 'EOS', 'chosen_particles.dat'))
+    copy(path.join(iSSDirectory, 'EOS', 'pdg-urqmd_v3.3+.dat'), 
+         path.join(iSSDirectory, 'EOS', 'pdg.dat'))
 
     # form assignment string
     assignments = formAssignmentStringFromDict(iSSParameters)
     # form executable string
-    executableString = "nice -n %d ./" % (ProcessNiceness) + iSSExecutable + assignments
+    executableString = (
+            "nice -n %d ./" % (ProcessNiceness) + iSSExecutable + assignments)
     # execute!
     run(executableString, cwd=iSSDirectory)
 
@@ -706,18 +727,21 @@ def iSSeventplaneAngleWithHydroResultFiles(fileList):
 def iSWithResonancesWithdecayPhotonWithHydroResultFiles(fileList):
     """
         Perform iS calculation using the given list of hydro result files,
-        followed by resonance calculations and iInteSp calculations with decay photons.
+        followed by resonance calculations and iInteSp calculations with decay 
+        photons.
     """
     ProcessNiceness = controlParameterList['niceness']
     # set directory strings
-    iSDirectory = path.join(controlParameterList['rootDir'], iSControl['mainDir'])
-    iSOperationDirectory = path.join(iSDirectory, iSControl['operationDir']) # for both input & output
+    iSDirectory = path.join(controlParameterList['rootDir'], 
+                            iSControl['mainDir'])
+    iSOperationDirectory = path.join(iSDirectory, iSControl['operationDir']) 
     hydroH5Filepath = path.join(iSOperationDirectory, 'JetData.h5')
     iSExecutables = iSControl['executables']
     iSExecutionEntry = iSControl['entryShell']
 
     # check executable
-    checkExistenceOfExecutables([path.join(iSDirectory, aExe) for aExe in iSExecutables])
+    checkExistenceOfExecutables(
+                    [path.join(iSDirectory, aExe) for aExe in iSExecutables])
 
     # clean up operation folder
     cleanUpFolder(iSOperationDirectory)
@@ -728,13 +752,27 @@ def iSWithResonancesWithdecayPhotonWithHydroResultFiles(fileList):
             raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
             copy(aFile, iSOperationDirectory)
-    # make sure all hadrons up to 2 GeV are calculated
-    copy(path.join(iSDirectory, 'EOS', 'chosen_particles_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
-    # make sure to use the pdg table with tagged decay photons
-    copy(path.join(iSDirectory, 'EOS', 'pdg_decayPhotonCocktail.dat'), path.join(iSDirectory, 'EOS', 'pdg.dat'))
+
+    simulationType = controlParameterList['simulation_type']
+    if simulationType == "hydroEM_with_decaycocktail_with_urqmd":
+        # make sure all hadrons up to 2 GeV are calculated
+        copy(path.join(iSDirectory, 'EOS', 'chosen_particles_urqmd_3.3+.dat'), 
+             path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
+        # make sure to use the pdg table with tagged decay photons
+        copy(path.join(iSDirectory, 'EOS', 
+                       'pdg-urqmd_v3.3+_withDecayPhotons.dat'), 
+             path.join(iSDirectory, 'EOS', 'pdg.dat'))
+    else:
+        # make sure all hadrons up to 2 GeV are calculated
+        copy(path.join(iSDirectory, 'EOS', 'chosen_particles_s95pv1.dat'), 
+             path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
+        # make sure to use the pdg table with tagged decay photons
+        copy(path.join(iSDirectory, 'EOS', 'pdg-s95pv1_withDecayPhotons.dat'), 
+             path.join(iSDirectory, 'EOS', 'pdg.dat'))
 
     # execute!
-    run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, cwd=iSDirectory)
+    run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, 
+        cwd=iSDirectory)
 
     # save some of the important result files
     worthStoring = []
@@ -749,12 +787,15 @@ def iSWithResonancesWithdecayPhotonWithHydroResultFiles(fileList):
 
 def photonEmissionWithHydroResultFiles(fileList):
     """
-        Perform thermal photon calculation using the given list of hydro result files.
+        Perform thermal photon calculation using the given list of hydro 
+        result files.
     """
     ProcessNiceness = controlParameterList['niceness']
     # set directory strings
-    photonEmDirectory = path.join(controlParameterList['rootDir'], photonEmissionControl['mainDir'])
-    photonEmOperationDirectory = path.join(photonEmDirectory, photonEmissionControl['operationDir']) # for both input and output
+    photonEmDirectory = path.join(controlParameterList['rootDir'], 
+                                  photonEmissionControl['mainDir'])
+    photonEmOperationDirectory = path.join(
+                    photonEmDirectory, photonEmissionControl['operationDir'])
     photonEmExecutable = photonEmissionControl['executable']
 
     # check executable
@@ -773,7 +814,8 @@ def photonEmissionWithHydroResultFiles(fileList):
     # form assignment string
     assignments = formAssignmentStringFromDict(photonEmissionParameters)
     # form executable string
-    executableString = "nice -n %d ./" % (ProcessNiceness) + photonEmExecutable + assignments
+    executableString = (
+        "nice -n %d ./" % (ProcessNiceness) + photonEmExecutable + assignments)
     # execute!
     run(executableString, cwd=photonEmDirectory)
 
@@ -890,28 +932,58 @@ def collectEbeResultsToDatabaseFrom(folder):
     """
     ProcessNiceness = controlParameterList['niceness']
     # set directory strings
-    collectorDirectory = path.join(controlParameterList['rootDir'], EbeCollectorControl['mainDir'])
+    collectorDirectory = path.join(controlParameterList['rootDir'], 
+                                   EbeCollectorControl['mainDir'])
 
     # for executable string
     simulationType = controlParameterList['simulation_type']
     if simulationType == 'hybrid':
         collectorExecutable = EbeCollectorControl['executable_hybrid']
-        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %g %s %s" % (folder, 1.0/(iSSParameters['number_of_repeated_sampling']*(iSSParameters["y_RB"]-iSSParameters["y_LB"])), EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+        executableString = (
+            "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable 
+            + " %s %g %s %s" % (
+                folder, 1.0/(iSSParameters['number_of_repeated_sampling']
+                            *(iSSParameters["y_RB"] - iSSParameters["y_LB"])), 
+                EbeCollectorParameters['subfolderPattern'], 
+                EbeCollectorParameters['databaseFilename']))
     elif simulationType == 'hydro':
         collectorExecutable = EbeCollectorControl['executable_hydro']
-        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+        executableString = (
+            "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable 
+            + " %s %s %s" %  (folder, 
+                              EbeCollectorParameters['subfolderPattern'], 
+                              EbeCollectorParameters['databaseFilename']))
     elif simulationType == 'hydroEM':
         collectorExecutable = EbeCollectorControl['executable_hydroEM']
-        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+        executableString = (
+            "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable 
+            + " %s %s %s" %  (folder, 
+                              EbeCollectorParameters['subfolderPattern'], 
+                              EbeCollectorParameters['databaseFilename']))
     elif simulationType == 'hydroEM_with_decaycocktail':
-        collectorExecutable = EbeCollectorControl['executable_hydroEM_with_decaycocktail']
-        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+        collectorExecutable = (
+            EbeCollectorControl['executable_hydroEM_with_decaycocktail'])
+        executableString = (
+            "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable 
+            + " %s %s %s" %  (folder, 
+                              EbeCollectorParameters['subfolderPattern'], 
+                              EbeCollectorParameters['databaseFilename']))
     elif simulationType == 'hydroEM_with_decaycocktail_with_urqmd':
-        collectorExecutable = EbeCollectorControl['executable_hydroEM_with_decaycocktail']
-        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+        collectorExecutable = (
+            EbeCollectorControl['executable_hydroEM_with_decaycocktail'])
+        executableString = (
+            "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + 
+            " %s %s %s" %  (folder, 
+                            EbeCollectorParameters['subfolderPattern'], 
+                            EbeCollectorParameters['databaseFilename']))
     elif simulationType == 'hydroEM_preEquilibrium':
-        collectorExecutable = EbeCollectorControl['executable_hydroEM_with_decaycocktail']
-        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
+        collectorExecutable = (
+            EbeCollectorControl['executable_hydroEM_with_decaycocktail'])
+        executableString = (
+            "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable 
+            + " %s %s %s" %  (folder, 
+                              EbeCollectorParameters['subfolderPattern'], 
+                              EbeCollectorParameters['databaseFilename']))
     
     # execute
     run(executableString, cwd=collectorDirectory)
@@ -946,7 +1018,8 @@ def checkExistenceOfExecutable(executableFilename):
         run("make", cwd=exec_path)
         # if still cannot find the executable
         if not path.exists(executableFilename):
-            raise ExecutionError("Cannot generate executable %s!" % executableFilename)
+            raise ExecutionError(
+                         "Cannot generate executable %s!" % executableFilename)
 
 def checkExistenceOfExecutables(executableFilenames):
     """

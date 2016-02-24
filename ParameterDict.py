@@ -10,7 +10,7 @@ initial_condition_control = {
     'centrality': '30-40%',  # centrality bin
     'cut_type': 'total_entropy',
     # centrality cut variable: total_entropy or Npart
-    'initial_condition_type': 'pre-generated',
+    'initial_condition_type': 'superMC',
     # type of initial conditions: superMC or pre-generated
     'pre-generated_initial_file_path': 'initial_conditions', 
     # file path for the pre-generated initial condition files
@@ -85,7 +85,7 @@ photonEmissionParameters = {
     'dTau'        :   0.3,
     'tau_start'   :   0.6,
     'tau_end'     :   30.0,
-    'T_dec'       :   0.120,
+    'T_dec'       :   0.150,
     'T_cuthigh'   :   0.8,
     'T_cutlow'    :   0.1,
     'T_sw_high'   :   0.180,
