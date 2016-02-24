@@ -78,7 +78,7 @@ print(purple + "\n" + "-"*80 + "\n>>>>> Welcome to the event generator! <<<<<\n"
 print(green + "\n>>>>> Checking for required libraries <<<<<\n" + normal)
 if not checkEnvironment():
     print("Prerequisites not met. Install the required library first please. Aborting.")
-    #exit()
+    exit()
 
 # check existence of executables
 print(green + "\n>>>>> Checking for existence of executables <<<<<\n" + normal)
