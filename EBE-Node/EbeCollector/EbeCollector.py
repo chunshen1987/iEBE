@@ -98,10 +98,10 @@ class EbeCollector(object):
             "photon_total"        :  9000,
             "photon_total_eq"     :  9001,
 
-            "photon_QGP_2to2_tot"     :  9002,
-            "photon_QGP_2to2_eq"      :  9003,
-            "photon_QGP_2to2_vis"     :  9004,
-            "photon_QGP_2to2_bulkvis" :  9005,
+            "photon_QGP_scattering2to2_tot"     :  9002,
+            "photon_QGP_scattering2to2_eq"      :  9003,
+            "photon_QGP_scattering2to2_vis"     :  9004,
+            "photon_QGP_scattering2to2_bulkvis" :  9005,
 
             "photon_HG_meson_tot"      :  9006,
             "photon_HG_meson_eq"       :  9007,
@@ -137,8 +137,8 @@ class EbeCollector(object):
             "photon_QGP_AMYcollinear_vis"     :  9032,
             "photon_QGP_AMYcollinear_bulkvis" :  9033,
 
-            "photon_QGP_2to2_vis_deltaf_restricted"             :  9104,
-            "photon_QGP_2to2_bulkvis_deltaf_restricted"         :  9105,
+            "photon_QGP_scattering2to2_vis_deltaf_restricted"             :  9104,
+            "photon_QGP_scattering2to2_bulkvis_deltaf_restricted"         :  9105,
             "photon_QGP_AMYcollinear_vis_deltaf_restricted"     :  9106,
             "photon_QGP_AMYcollinear_bulkvis_deltaf_restricted" :  9107,
             "photon_HG_meson_vis_deltaf_restricted"             :  9108,
@@ -844,14 +844,14 @@ class EbeCollector(object):
             "HG_omega_Spvn_bulkvis_deltaf_restricted":
                 "photon_HG_omega_bulkvis_deltaf_restricted",
 
-            "QGP_2to2_total_Spvn_eq": "photon_QGP_2to2_eq",
-            "QGP_2to2_total_Spvn_vis": "photon_QGP_2to2_vis",
-            "QGP_2to2_total_Spvn_bulkvis": "photon_QGP_2to2_bulkvis",
-            "QGP_2to2_total_Spvn_tot": "photon_QGP_2to2_tot",
+            "QGP_2to2_total_Spvn_eq": "photon_QGP_scattering2to2_eq",
+            "QGP_2to2_total_Spvn_vis": "photon_QGP_scattering2to2_vis",
+            "QGP_2to2_total_Spvn_bulkvis": "photon_QGP_scattering2to2_bulkvis",
+            "QGP_2to2_total_Spvn_tot": "photon_QGP_scattering2to2_tot",
             "QGP_2to2_total_Spvn_vis_deltaf_restricted":
-                "photon_QGP_2to2_vis_deltaf_restricted",
+                "photon_QGP_scattering2to2_vis_deltaf_restricted",
             "QGP_2to2_total_Spvn_bulkvis_deltaf_restricted":
-                "photon_QGP_2to2_bulkvis_deltaf_restricted",
+                "photon_QGP_scattering2to2_bulkvis_deltaf_restricted",
 
             "QGP_AMYcollinear_Spvn_eq": "photon_QGP_AMYcollinear_eq",
             "QGP_AMYcollinear_Spvn_vis": "photon_QGP_AMYcollinear_vis",
