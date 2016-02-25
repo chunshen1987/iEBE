@@ -38,7 +38,8 @@ for aZipFile in listdir(parentFolder):
             commandString = ("unzip %s %s" 
                 % (aZipFile, path.join(zipFoldername, databaseFilename)))
             call(commandString, shell=True, cwd=parentFolder)
-    elif ext.lower() == ".bz2":
+    elif (ext.lower() == ".bz2" or ext.lower() == '.gz' 
+          or ext.lower() == '.tar'):
         zipFoldername = zipFoldername.split('.tar')[0]
         zipFolder = path.join(parentFolder, zipFoldername)
         if path.exists(zipFolder):

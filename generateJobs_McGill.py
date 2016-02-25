@@ -8,6 +8,7 @@
 from sys import argv, exit
 from os import makedirs, path, unlink
 from shutil import copytree, copy, rmtree
+from subprocess import call
 
 from check_prerequisites import checkEnvironment, checkExecutables, greetings
 
@@ -136,7 +137,7 @@ mv ./finalResults %s/job-%d
         open(path.join(targetWorkingFolder, "job-%d.pbs" % i), "a").write(
 """
 (cd %s
-    tar -jcf job-%d.tar.bz2 job-%d
+    tar -zcf job-%d.tar.gz job-%d
     rm -fr job-%d
 )
 """ % (resultsFolder, i, i, i)
@@ -160,11 +161,21 @@ if compressResultsFolderAnswer == "yes":
 #PBS -S /bin/bash
 cd %s
 (cd %s
-    python autoZippedResultsCombiner.py %s %d "job-(\d*).tar.bz2" 60 1> WatcherReport.txt
+    python autoZippedResultsCombiner.py %s %d "job-(\d*).tar.gz" 60 1> WatcherReport.txt
     mv WatcherReport.txt %s
 )
 """ % (walltime, cluster_name, watcherDirectory, utilitiesFolder, resultsFolder, numberOfJobs, resultsFolder)
     )
+
+import ParameterDict
+initial_condition_type = (
+    ParameterDict.initial_condition_control['initial_condition_type'])
+if initial_condition_type == 'pre-generated':
+    initial_file_path = (ParameterDict.initial_condition_control[
+                             'pre-generated_initial_file_path'])
+    call("./copy_pre_generated_initial_conditions.sh %d %d %s %s" 
+         % (numberOfJobs, numberOfEventsPerJob, initial_file_path, 
+            workingFolder), shell=True)
 
 print("Jobs generated. Submit them using submitJobs scripts.")
 

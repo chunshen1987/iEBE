@@ -6,3 +6,5 @@
 results/
 obj/
 tests/
+*.pyc
+*.txt

@@ -1208,3 +1208,4 @@ void get_bin_average_and_count(istream& is, ostream& os, vector<double>* bins, l
   }
 
 }
+

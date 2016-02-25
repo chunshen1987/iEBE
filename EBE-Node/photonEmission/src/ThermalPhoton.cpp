@@ -676,9 +676,9 @@ void ThermalPhoton::readEmissionrate(string emissionProcess)
     for(int i=0; i<EmissionrateTb_sizeX; i++)
        for(int j=0; j<EmissionrateTb_sizeY; j++)
        {
-           Emission_eqrateTb_ptr[i][j] = log(Photonemission_eqrateTable_ptr->getTbdata(i,j));  
-           Emission_viscous_rateTb_ptr[i][j] = Photonemission_viscous_rateTable_ptr->getTbdata(i,j)/Photonemission_eqrateTable_ptr->getTbdata(i,j);
-           Emission_bulkvis_rateTb_ptr[i][j] = Photonemission_bulkvis_rateTable_ptr->getTbdata(i,j)/Photonemission_eqrateTable_ptr->getTbdata(i,j);
+           Emission_eqrateTb_ptr[i][j] = log(Photonemission_eqrateTable_ptr->getTbdata(i,j) + 1e-30);  
+           Emission_viscous_rateTb_ptr[i][j] = Photonemission_viscous_rateTable_ptr->getTbdata(i,j)/(Photonemission_eqrateTable_ptr->getTbdata(i,j) + 1e-30);
+           Emission_bulkvis_rateTb_ptr[i][j] = Photonemission_bulkvis_rateTable_ptr->getTbdata(i,j)/(Photonemission_eqrateTable_ptr->getTbdata(i,j) + 1e-30);
        }
 
     return;
