@@ -605,7 +605,7 @@ def iSSWithHydroResultFiles(fileList):
             move(aFile, iSSOperationDirectory)
     
     # make sure all hadrons up to 2 GeV are calculated
-    copy(path.join(iSSDirectory, 'EOS', 'chosen_particles_urqmd_3.3+.dat'), 
+    copy(path.join(iSSDirectory, 'EOS', 'chosen_particles_urqmd_v3.3+.dat'), 
          path.join(iSSDirectory, 'EOS', 'chosen_particles.dat'))
     # make sure to use the pdg table with tagged decay photons
     copy(path.join(iSSDirectory, 'EOS', 'pdg-urqmd_v3.3+.dat'), 
@@ -700,7 +700,7 @@ def iSSeventplaneAngleWithHydroResultFiles(fileList):
             raise ExecutionError("Hydro result file %s not found!" % aFile)
         else:
             move(aFile, iSSOperationDirectory)
-    copy(path.join(iSSDirectory, 'EOS', 'chosen_particles_urqmd_3.3+.dat'), 
+    copy(path.join(iSSDirectory, 'EOS', 'chosen_particles_urqmd_v3.3+.dat'), 
          path.join(iSSDirectory, 'EOS', 'chosen_particles.dat'))
     copy(path.join(iSSDirectory, 'EOS', 'pdg-urqmd_v3.3+.dat'), 
          path.join(iSSDirectory, 'EOS', 'pdg.dat'))
@@ -756,7 +756,7 @@ def iSWithResonancesWithdecayPhotonWithHydroResultFiles(fileList):
     simulationType = controlParameterList['simulation_type']
     if simulationType == "hydroEM_with_decaycocktail_with_urqmd":
         # make sure all hadrons up to 2 GeV are calculated
-        copy(path.join(iSDirectory, 'EOS', 'chosen_particles_urqmd_3.3+.dat'), 
+        copy(path.join(iSDirectory, 'EOS', 'chosen_particles_urqmd_v3.3+.dat'), 
              path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
         # make sure to use the pdg table with tagged decay photons
         copy(path.join(iSDirectory, 'EOS', 
