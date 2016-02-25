@@ -236,7 +236,7 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
                   if(bulk_deltaf_kind == 0)
                       bulkPi = surf->bulkPi;
                   else
-                      bulkPi = surf->bulkPi/hbarC;   // need unit in fm^-4 for the parameterization
+                      bulkPi = surf->bulkPi/hbarC;   // unit in fm^-4
                   getbulkvisCoefficients(Tdec, bulkvisCoefficients);
               }
 
@@ -247,74 +247,102 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
                   double pt = mT*hypertrig_etas_table[k][0];
                   double pz = mT*hypertrig_etas_table[k][1];
 
+                  //thermal equilibrium distributions
                   double pdotu = pt*gammaT - px*ux - py*uy;
                   double expon = (pdotu - mu - baryon*muB) / Tdec;
-                  double f0 = 1./(exp(expon)+sign);       //thermal equilibrium distributions
+                  double f0 = 1./(exp(expon)+sign);   
 
-                  // Must adjust this to be correct for the p*del \tau term.  The plus sign is
-                  // due to the fact that the DA# variables are for the covariant surface integration
+                  // Must adjust this to be correct for the p*del \tau term.  
+                  // The plus sign is due to the fact that the DA# variables 
+                  // are for the covariant surface integration
                   double pdsigma = pt*da0 + px*da1 + py*da2;
 
                   //viscous corrections
                   double delta_f_shear = 0.0;
                   if(INCLUDE_DELTAF)
                   {
-                      double Wfactor = pt*pt*pi00 - 2.0*pt*px*pi01 - 2.0*pt*py*pi02 + px*px*pi11 + 2.0*px*py*pi12 + py*py*pi22 + pz*pz*pi33;
-                      delta_f_shear = (1 - F0_IS_NOT_SMALL*sign*f0)*Wfactor*deltaf_prefactor;
+                      double Wfactor = (
+                          pt*pt*pi00 - 2.0*pt*px*pi01 - 2.0*pt*py*pi02 
+                          + px*px*pi11 + 2.0*px*py*pi12 + py*py*pi22 
+                          + pz*pz*pi33);
+                      delta_f_shear = ((1 - F0_IS_NOT_SMALL*sign*f0)
+                                       *Wfactor*deltaf_prefactor);
                   }
                   double delta_f_bulk = 0.0;
                   if (INCLUDE_BULKDELTAF == 1)
                   {
                       if(bulk_deltaf_kind == 0)
-                          delta_f_bulk = -(1. - F0_IS_NOT_SMALL*sign*f0)*bulkPi*(bulkvisCoefficients[0]*mass*mass + bulkvisCoefficients[1]*pdotu + bulkvisCoefficients[2]*pdotu*pdotu);
+                          delta_f_bulk = (
+                              - (1. - F0_IS_NOT_SMALL*sign*f0)*bulkPi
+                                *(bulkvisCoefficients[0]*mass*mass 
+                                  + bulkvisCoefficients[1]*pdotu 
+                                  + bulkvisCoefficients[2]*pdotu*pdotu));
                       else if (bulk_deltaf_kind == 1)
                       {
 
                           double E_over_T = pdotu/Tdec;
                           double mass_over_T = mass/Tdec;
-                          delta_f_bulk = -1.0*(1.-sign*f0)/E_over_T*bulkvisCoefficients[0]*(mass_over_T*mass_over_T/3. - bulkvisCoefficients[1]*E_over_T*E_over_T)*bulkPi;
+                          delta_f_bulk = (
+                              -1.0*(1.-sign*f0)/E_over_T*bulkvisCoefficients[0]
+                              *(mass_over_T*mass_over_T/3. 
+                                - bulkvisCoefficients[1]*E_over_T*E_over_T)
+                              *bulkPi);
                       }
                       else if (bulk_deltaf_kind == 2)
                       {
                           double E_over_T = pdotu/Tdec;
-                          delta_f_bulk = -1.*(1.-sign*f0)*(-bulkvisCoefficients[0] + bulkvisCoefficients[1]*E_over_T)*bulkPi;
+                          delta_f_bulk = (-1.*(1.-sign*f0)
+                                          *(-bulkvisCoefficients[0] 
+                                            + bulkvisCoefficients[1]*E_over_T)
+                                          *bulkPi);
                       }
                       else if (bulk_deltaf_kind == 3)
                       {
                           double E_over_T = pdotu/Tdec;
-                          delta_f_bulk = -1.0*(1.-sign*f0)/sqrt(E_over_T)*(-bulkvisCoefficients[0] + bulkvisCoefficients[1]*E_over_T)*bulkPi;
+                          delta_f_bulk = (-1.0*(1.-sign*f0)/sqrt(E_over_T)
+                                          *(-bulkvisCoefficients[0] 
+                                            + bulkvisCoefficients[1]*E_over_T)
+                                          *bulkPi);
                       }
                       else if (bulk_deltaf_kind == 4)
                       {
                           double E_over_T = pdotu/Tdec;
-                          delta_f_bulk = -1.0*(1.-sign*f0)*(bulkvisCoefficients[0] - bulkvisCoefficients[1]/E_over_T)*bulkPi;
+                          delta_f_bulk = (-1.0*(1.-sign*f0)
+                                          *(bulkvisCoefficients[0] 
+                                            - bulkvisCoefficients[1]/E_over_T)
+                                          *bulkPi);
                       }
                   }
 
+                  double ratio = min(1., 
+                                     fabs(1./(delta_f_shear + delta_f_bulk)));
                   double result;
-                  //if(1. + delta_f_shear + delta_f_bulk < 0.0) //set results to zero when delta f turns whole expression to negative
-                  //   result = 0.0;
-                  //else
-                     result = prefactor*degen*f0*(1. + delta_f_shear + delta_f_bulk)*pdsigma*tau;
+                  result = (prefactor*degen*pdsigma*tau*f0
+                            *(1. + (delta_f_shear + delta_f_bulk)*ratio));
 
                   dN_ptdptdphidy_tmp += result*delta_eta;
-                  if(CALCULATEDED3P == 1) dE_ptdptdphidy_tmp += result*delta_eta*mT;
+                  if(CALCULATEDED3P == 1)
+                      dE_ptdptdphidy_tmp += result*delta_eta*mT;
               } // k
           } // l
 
           dN_ptdptdphidy_tab[i][j] = dN_ptdptdphidy_tmp;
-          if (CALCULATEDED3P == 1) dE_ptdptdphidy_tab[i][j] = dE_ptdptdphidy_tmp;
-          if (AMOUNT_OF_OUTPUT>0) print_progressbar((i*phi_tab_length+j)/progress_total);
+          if (CALCULATEDED3P == 1)
+              dE_ptdptdphidy_tab[i][j] = dE_ptdptdphidy_tmp;
+          if (AMOUNT_OF_OUTPUT>0)
+              print_progressbar((i*phi_tab_length+j)/progress_total);
       }
   //cout << int(100.0*(i+1)/pT_tab_length) << "% completed" << endl;
   }
-  if (AMOUNT_OF_OUTPUT>0) print_progressbar(1);
+  if (AMOUNT_OF_OUTPUT>0)
+      print_progressbar(1);
 
   for (int i=0; i<pT_tab_length; i++)
   for (int j=0; j<phi_tab_length; j++)
   {
     dN_ptdptdphidy->set(i+1,j+1,dN_ptdptdphidy_tab[i][j]);
-    if(CALCULATEDED3P == 1) dE_ptdptdphidy->set(i+1,j+1,dE_ptdptdphidy_tab[i][j]);
+    if(CALCULATEDED3P == 1)
+        dE_ptdptdphidy->set(i+1,j+1,dE_ptdptdphidy_tab[i][j]);
   }
 
   delete [] bulkvisCoefficients;

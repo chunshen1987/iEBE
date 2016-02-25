@@ -499,14 +499,14 @@ int main()
     Table gamma_Sigma0_total_N(pT_tab_length, phi_tab_length);
     perform_eta_integration(&gamma_Sigma0_total_N, gamma_Sigma0_dN_dy, mass);
     calculate_and_output_spectra_and_vn(gamma_Sigma0_dN_dy, gamma_Sigma0_total_N, particle_name, mass);
-    
-    //Sigma0 decay photons
+    //rho0 decay photons
     mass = gamma_mass;
     particle_name = "decay_gamma_rho0";
     Table gamma_rho0_dN_dy("results/spec_15.dat");
     Table gamma_rho0_total_N(pT_tab_length, phi_tab_length);
     perform_eta_integration(&gamma_rho0_total_N, gamma_rho0_dN_dy, mass);
     calculate_and_output_spectra_and_vn(gamma_rho0_dN_dy, gamma_rho0_total_N, particle_name, mass);
+
 
     //----------------------------------
     // Next, for all charged particles

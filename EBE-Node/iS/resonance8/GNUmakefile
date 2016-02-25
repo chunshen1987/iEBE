@@ -11,7 +11,7 @@
 ##  
 
 CC := $(shell ../../crank/configure_compiler_C++.sh)
-CFLAGS= $(shell ../../crank/configure_compiler_C++_Flags.sh)
+CFLAGS= -O3 -Wall
 
 RM		=	rm -f
 O               =       .o
