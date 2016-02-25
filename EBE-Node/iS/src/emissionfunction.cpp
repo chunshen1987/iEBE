@@ -115,7 +115,7 @@ EmissionFunctionArray::EmissionFunctionArray(ParameterReader* paraRdr_in, double
   last_particle_idx = -1;
 
   //arrays for bulk delta f coefficients
-  bulkdf_coeff = new Table ("EOS/BulkDf_Coefficients_Hadrons_s95p-v0-PCE.dat");
+  bulkdf_coeff = new Table ("tables/BulkDf_Coefficients_Hadrons_s95p-v0-PCE.dat");
 }
 
 
