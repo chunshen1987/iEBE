@@ -381,10 +381,27 @@ C====Input the initial condition from file====
             End Do
             End Do
           End If ! IEin==0
+        elseif (IInit.eq.3) then
+C====Input the initial condition from IP-Glasma file====
+            OPEN(2,file='Initial/Initial_ed_and_u.dat',status='old')
+
+            do I = NXPhy0, NXPhy, 1
+              do J = NYPhy0, NYPhy, 1
+                read(2,*) dummy, dummy, Ed(I,J,NZ0),
+     &                    U1(I,J,NZ0), U2(I,J,NZ0)
+                U0(I,J,NZ0)  = sqrt(1.0+U1(I,J,NZ0)**2+U2(I,J,NZ0)**2)
+
+                PU1(I,J,NZ0) = U1(I,J,NZ0)
+                PU2(I,J,NZ0) = U2(I,J,NZ0)
+                PU0(I,J,NZ0) = U0(I,J,NZ0)
+              enddo
+            enddo
+            Ed=Ed/HbarC
+            close(2)
         else
             Print*,'Init=',IInit,' is not supported by this version.'! ---Zhi-Changes---
             Stop
-      end if
+        endif
 
 
       Ed = Ed + 1D-10
@@ -440,7 +457,8 @@ C *************************J.Liu changes end********************************
       do 2571 I = NX0,NX
       do 2571 J = NY0,NY
         Temp0(I,J,K)   = Temp(I,J,K)
-        etaTtp0(I,J,K) = (Ed(I,J,K)+PL(I,J,K))*Temp(I,J,K)/(6.0*VisBeta) !extra (eta T)/tau_pi terms in I-S eqn 02/2008
+        etaTtp0(I,J,K) = (Ed(I,J,K)+PL(I,J,K))*Temp(I,J,K)/(6.0*VisBeta)
+        !extra (eta T)/tau_pi terms in I-S eqn 02/2008
  2571 continue
 
 
@@ -483,7 +501,7 @@ C Read in pi_mu nu and overwrite what TransportPi6() gives. Then scale this tens
             OPEN(222,file='Initial/Pi22_kln.dat',
      &         status='old', FORM = 'FORMATTED')            
             OPEN(232,file='Initial/BulkPi_kln.dat',
-     &         status='old', FORM = 'FORMATTED')                            
+     &         status='old', FORM = 'FORMATTED')                  
             do 206 I = NXPhy0,NXPhy
               read(200,*)  (Pi00(I,J,NZ0), J=NYPhy0, NYPhy)
               read(201,*)  (Pi01(I,J,NZ0), J=NYPhy0, NYPhy)
@@ -624,13 +642,13 @@ C C ****************************J.Liu changes end****************************
 
 
        call dpSc8(TT00,TT01,TT02,ScT00,ScT01,ScT02,Vx,Vy,
-     &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22, PScT00,PScT01,PScT02,PScT33,
-     &  PScT11,PScT12,PScT22,etaTtp0,etaTtp,  PPI,PISc, XiTtP0,XiTtP,
-     &  U0,U1,U2, PU0,PU1,PU2,SxyT, Stotal,StotalBv,StotalSv,
-     &  Ed,PL,Bd,Sd,Temp0,Temp,CMu, T00,T01,T02, IAA,CofAA,Time,DX,DY,
+     &  Pi00,Pi01,Pi02,Pi33,Pi11,Pi12,Pi22,PScT00,PScT01,PScT02,PScT33,
+     &  PScT11,PScT12,PScT22,etaTtp0,etaTtp,PPI,PISc, XiTtP0,XiTtP,
+     &  U0,U1,U2, PU0,PU1,PU2,SxyT,Stotal,StotalBv,StotalSv,
+     &  Ed,PL,Bd,Sd,Temp0,Temp,CMu,T00,T01,T02, IAA,CofAA,Time,DX,DY,
      &  DZ,DT,NXPhy0,NYPhy0,NXPhy,NYPhy,NX0,NX,NY0,NY,NZ0,NZ,PNEW,NNEW)
 
-    !EPS0 = 1.0d0
+      !EPS0 = 1.0d0
       DO 2600 J = NYPhy0-2,NYPhy+2
       DO 2600 I = NXPhy0-2,NXPhy+2
         EPS0(I,J) = Ed(I,J,NZ0)*HbarC
