@@ -289,10 +289,13 @@ CSHEN===END================================================================
       CALL UNLINK ('results/surface.dat')
       CALL UNLINK ('results/decdat2.dat')
       CALL UNLINK ('results/decdat_mu.dat')   !CSHEN chemical potential for PCE
+      CALL UNLINK ('results/surface_frezout.dat')
 
       OPEN(98,FILE='results/surface.dat',FORM='FORMATTED',
      &        STATUS='REPLACE')
       OPEN(99,FILE='results/decdat2.dat',FORM='FORMATTED',
+     &        STATUS='REPLACE')
+      OPEN(1099,FILE='results/surface_frezout.dat',FORM='FORMATTED',
      &        STATUS='REPLACE')
 
 CSHEN======================================================================
@@ -305,11 +308,11 @@ C======output the chemical potential information at freeze out surface.====
      &     STATUS='REPLACE')         !output the freeze-out surface along y-axis
       open(91,File='results/Temp.dat',status='REPLACE')
       open(93,File='results/Temp_evo.dat',status='REPLACE')
-      open(2293, File='results/PPI_over_PL_evo.dat', 
-     &     STATUS='REPLACE')
-      open(2294, File='results/PPI_NS_evo.dat', 
-     &     STATUS='REPLACE')
-      open(2295, File='results/pi_evo.dat', status='REPLACE')
+!      open(2293, File='results/PPI_over_PL_evo.dat', 
+!     &     STATUS='REPLACE')
+!      open(2294, File='results/PPI_NS_evo.dat', 
+!     &     STATUS='REPLACE')
+!      open(2295, File='results/pi_evo.dat', status='REPLACE')
       open(90,File='results/APi.dat',status='REPLACE')
       open(89,File='results/AScource.dat',status='REPLACE')
       open(88,File='results/AScource2.dat',status='REPLACE')
@@ -379,15 +382,16 @@ CSHEN======set up output file for hydro evolution history===================
 
       Close(98)
       Close(99)
+      Close(1099)
       Close(93)
       Close(81)
       Close(82)
       Close(83)
       close(IOSCARWrite)
       Close(377)
-      Close(2293)
-      Close(2294)
-      Close(2295)
+!      Close(2293)
+!      Close(2294)
+!      Close(2295)
       if(outputMovie) then 
          close(3773)
       endif
@@ -759,6 +763,22 @@ CSHEN===EOS from tables end====================================================
 
           WRITE(98,'(99E20.8)') Time, TM, XM,YM,
      &                  Sqrt(XM**2+YM**2), R0,Aeps    !surface    
+          u_tau_local = 1./Sqrt(1. - Vx(I, J, 1)**2. - Vy(I, J, 1)**2.)
+          u_x_local = Vx(I, J, 1)*u_tau_local
+          u_y_local = Vy(I, J, 1)*u_tau_local
+          WRITE(1099,'(99E20.8E3)') Time, XM, YM, 0.0d0,
+     &                              DA0, DA1, DA2, 0.0d0,
+     &                              u_tau_local, u_x_local, u_y_local,
+     &                              0.0d0,
+     &                              Ed(I,J,1)*HbarC, BN,
+     &                              Temp(I,J,1)*HbarC, BAMU, SMU,
+     &                              PDec2*HbarC,
+     &                              CPi00*HbarC, CPi01*HbarC,
+     &                              CPi02*HbarC, 0.0d0,
+     &                              CPi11*HbarC, CPi12*HbarC, 0.0d0,
+     &                              CPi22*HbarC, 0.0d0,
+     &                              CPi33*HbarC,
+     &                              CPPI*HbarC
         
 
           EDEC2 = Ed(I,J,1)*HbarC
@@ -1114,16 +1134,16 @@ CSHEN====END====================================================================
      &  Ed,PL,Bd,Sd,Temp0,Temp,CMu, T00,T01,T02, IAA,CofAA,Time,DX,DY,
      &  DZ,DT,NXPhy0,NYPhy0,NXPhy,NYPhy,NX0,NX,NY0,NY,NZ0,NZ,PNEW,NNEW)  !PNEW NNEW  related to root finding
 
-      Do J=0,NXPhy,NXPhy+1
-      Do I=NYPhy0,NYPhy,10
-        write(2295, '(12e15.5)')Time, I*DX, J*DY, 
-     &                  Ed(I,J,NZ0)*Hbarc,   Temp(I,J,NZ0)*Hbarc, 
-     &                  PI00(I,J,NZ0)*Hbarc, PI01(I,J,NZ0)*Hbarc, 
-     &                  PI02(I,J,NZ0)*Hbarc, PI11(I,J,NZ0)*Hbarc, 
-     &                  PI12(I,J,NZ0)*Hbarc, PI22(I,J,NZ0)*Hbarc, 
-     &                  pi33(I,J,NZ0)*Hbarc
-      enddo
-      enddo
+!      Do J=0,NXPhy,NXPhy+1
+!      Do I=NYPhy0,NYPhy,10
+!        write(2295, '(12e15.5)')Time, I*DX, J*DY, 
+!     &                  Ed(I,J,NZ0)*Hbarc,   Temp(I,J,NZ0)*Hbarc, 
+!     &                  PI00(I,J,NZ0)*Hbarc, PI01(I,J,NZ0)*Hbarc, 
+!     &                  PI02(I,J,NZ0)*Hbarc, PI11(I,J,NZ0)*Hbarc, 
+!     &                  PI12(I,J,NZ0)*Hbarc, PI22(I,J,NZ0)*Hbarc, 
+!     &                  pi33(I,J,NZ0)*Hbarc
+!      enddo
+!      enddo
 
         DIFFC = 0.125D0
         !DIFFC = 0D0
@@ -1323,13 +1343,13 @@ CSHEN===end=====================================================================
       enddo
       enddo
 
-      Do J=0,NXPhy,NXPhy+1
-      Do I=NYPhy0,NYPhy,10
-        write(2293, '(5e15.5)')Time, I*DX, J*DY, 
-     &                  PPI(I,J,NZ0)/Dmax1(1e-30, PL(I,J,NZ0)), 
-     &                  Ed(I,J,NZ0)*Hc
-      enddo
-      enddo
+!      Do J=0,NXPhy,NXPhy+1
+!      Do I=NYPhy0,NYPhy,10
+!        write(2293, '(5e15.5)')Time, I*DX, J*DY, 
+!     &                  PPI(I,J,NZ0)/Dmax1(1e-30, PL(I,J,NZ0)), 
+!     &                  Ed(I,J,NZ0)*Hc
+!      enddo
+!      enddo
       
       DO 203 I=0,NXPhy,20
          Write(*,'(500e12.3)')(Temp(I,J,NZ0)*Hc,J=0,NYPhy,20 )
@@ -1873,6 +1893,7 @@ C###############################################################################
       integer :: NXFUL, NYFUL
       double precision :: Tmid, Xmid, Ymid
       double precision :: v1mid, v2mid
+      double precision :: utau_mid, ux_mid, uy_mid
       double precision :: CPi00, CPi01, CPi02
       double precision :: CPi11, CPi12, CPi22, CPi33
       double precision :: CPPI
@@ -2021,6 +2042,20 @@ CSHEN======================================================================
      &                      CPi00*HbarC,CPi01*HbarC,CPi02*HbarC,
      &                      CPi11*HbarC,CPi12*HbarC,CPi22*HbarC,
      &                      CPPI*HbarC
+             ! write to surface_frezout.dat
+             utau_mid = 1./Sqrt(1. - v1mid*v1mid - v2mid*v2mid)
+             ux_mid = v1mid*utau_mid
+             uy_mid = v2mid*utau_mid
+             WRITE(1099,2556) Tmid, Xmid, Ymid, 0.0d0,
+     &                        DA0, DA1, DA2, 0.0d0,
+     &                        utau_mid, ux_mid, uy_mid, 0.0d0,
+     &                        Edec, BN, Tdec, BAMU, SMU, Pdec,
+     &                        CPi00*HbarC, CPi01*HbarC, CPi02*HbarC,
+     &                        0.0d0, 
+     &                        CPi11*HbarC, CPi12*HbarC, 0.0d0,
+     &                        CPi22*HbarC, 0.0d0,
+     &                        CPi33*HbarC,
+     &                        CPPI*HbarC
              IF (WRITINGX) THEN  !write to SurfaceX.dat
                 write(82,2553) Tmid, Sqrt(Xmid**2+Ymid**2),
      &                Sqrt(v1mid**2+v2mid**2), Xmid, v1mid, Ymid, v2mid
@@ -2058,6 +2093,7 @@ CSHEN======================================================================
 
 2553   FORMAT(8F20.8)
 2555   FORMAT(20E20.8E3)
+2556   FORMAT(29E20.8E3)
 2565   FORMAT(14E14.6)
 
       Return
@@ -4686,13 +4722,13 @@ C            Print *, 'time',time,'Stotal', Stotal,StotalSv,StotalBv
      &  -difPixy*GV, -APL*GV, -APLdx*GV, -APLdy*GV,
      &   AP11dx*GV, AP22dy*GV
 
-      Do J=0,NXPhy,NXPhy+1
-      Do I=NYPhy0,NYPhy,10
-        PPI_NS = (-1.0)*VBulk(I,J,NZ0)*SiLoc(I,J,NZ0) ! Navier-Stokes limit
-        write(2294, '(6e15.5)')Time, I*DX, J*DY, 
-     &           PPI_NS*Hbarc, PL(I,J,K)*Hbarc, Ed(I,J,NZ0)*Hbarc
-      enddo
-      enddo
+!      Do J=0,NXPhy,NXPhy+1
+!      Do I=NYPhy0,NYPhy,10
+!        PPI_NS = (-1.0)*VBulk(I,J,NZ0)*SiLoc(I,J,NZ0) ! Navier-Stokes limit
+!        write(2294, '(6e15.5)')Time, I*DX, J*DY, 
+!     &           PPI_NS*Hbarc, PL(I,J,K)*Hbarc, Ed(I,J,NZ0)*Hbarc
+!      enddo
+!      enddo
 
 !     Checking codes deleted
 !     See previous versions
