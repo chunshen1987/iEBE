@@ -18,164 +18,185 @@ using namespace std;
 // place two colliding nuclei on the grid, determine their thickness
 // generate lookup table for dN/dy as fct of T_A(rt), T_B(rt)
 
-MCnucl::MCnucl(ParameterReader* paraRdr_in)
-{
-  paraRdr = paraRdr_in;
+MCnucl::MCnucl(ParameterReader* paraRdr_in) {
+    paraRdr = paraRdr_in;
 
-  // default Alpha is Glauber model: sd = (1-Alpha)WN + (Alpha)BC
-  Alpha = paraRdr->getVal("alpha");
+    // default Alpha is Glauber model: sd = (1-Alpha)WN + (Alpha)BC
+    Alpha = paraRdr->getVal("alpha");
 
-  // tmax-1 is max # of locally overlapping nucleons, upper limit in dNdy table
-  tmax = paraRdr->getVal("tmax");
+    // tmax-1 is max # of locally overlapping nucleons,
+    // upper limit in dNdy table
+    tmax = paraRdr->getVal("tmax");
 
-  // fix grid properties
-  Xmax = paraRdr->getVal("maxx");
-  Ymax = paraRdr->getVal("maxy");
-  Xmin = -Xmax;
-  Ymin = -Ymax;
-  dx = paraRdr->getVal("dx");
-  dy = paraRdr->getVal("dy");
-  Maxx=(int)((Xmax-Xmin)/dx+0.1)+1;
-  Maxy=(int)((Ymax-Ymin)/dy+0.1)+1;
+    // fix grid properties
+    Xmax = paraRdr->getVal("maxx");
+    Ymax = paraRdr->getVal("maxy");
+    Xmin = -Xmax;
+    Ymin = -Ymax;
+    dx = paraRdr->getVal("dx");
+    dy = paraRdr->getVal("dy");
+    Maxx=(int)((Xmax-Xmin)/dx+0.1)+1;
+    Maxy=(int)((Ymax-Ymin)/dy+0.1)+1;
 
-  // default npart cutoff
-  NpartMax = paraRdr->getVal("Npmax");
-  NpartMin = paraRdr->getVal("Npmin");
+    // default npart cutoff
+    NpartMax = paraRdr->getVal("Npmax");
+    NpartMin = paraRdr->getVal("Npmin");
 
-  // Unintegrated PT optns
-  PTinte = paraRdr->getVal("PT_flag");
-  PTmax  = paraRdr->getVal("PT_Max");
-  PTmin  = paraRdr->getVal("PT_Min");
-  dpt = paraRdr->getVal("d_PT");
-  MaxPT=(int)((PTmax-PTmin)/dpt+0.1)+1;
-  if(PTinte<0)
-      PT_order = paraRdr->getVal("PT_order");   
-  else
-      PT_order = 1; //does not apply when there is no PT integration
+    // Unintegrated PT optns
+    PTinte = paraRdr->getVal("PT_flag");
+    PTmax  = paraRdr->getVal("PT_Max");
+    PTmin  = paraRdr->getVal("PT_Min");
+    dpt = paraRdr->getVal("d_PT");
+    MaxPT=(int)((PTmax-PTmin)/dpt+0.1)+1;
+    if (PTinte < 0)
+        PT_order = paraRdr->getVal("PT_order");   
+    else
+        PT_order = 1;  // does not apply when there is no PT integration
   
-  //.... NN cross sections in mb
-  double ecm = paraRdr->getVal("ecm");
-  double sig = hadronxsec::totalXsection(200.0,0);
-  double sigel = hadronxsec::elasticXsection(sig,200.0,0,0);
-  siginNN200 = sig - sigel;
-  sig = hadronxsec::totalXsection(ecm,0);
-  sigel = hadronxsec::elasticXsection(sig,ecm,0,0);
-  siginNN = sig - sigel;
+    //.... NN cross sections in mb
+    double ecm = paraRdr->getVal("ecm");
+    double sig = hadronxsec::totalXsection(200.0,0);
+    double sigel = hadronxsec::elasticXsection(sig,200.0,0,0);
+    siginNN200 = sig - sigel;
+    sig = hadronxsec::totalXsection(ecm,0);
+    sigel = hadronxsec::elasticXsection(sig,ecm,0,0);
+    siginNN = sig - sigel;
 
-  // Include additional CC fluctution?
-  CCFluctuationModel = paraRdr->getVal("cc_fluctuation_model");
-  CCFluctuationK = paraRdr->getVal("cc_fluctuation_k");
-  if (CCFluctuationModel) nbd = new NBD;
-  if (CCFluctuationModel > 5)
-  {
-     gsl_rng_env_setup();
-     gslRngType = gsl_rng_default;
-     gslRng = gsl_rng_alloc(gslRngType);
-     timeval a;
-     gettimeofday(&a, 0);
-     int randomSeed=a.tv_usec; // randomSeed use CPU clock
-     gsl_rng_set (gslRng, (unsigned long int) randomSeed); //initialize random generator
-     ccFluctuationGammaTheta = paraRdr->getVal("cc_fluctuation_Gamma_theta");
-  }
-
-
-  which_mc_model = paraRdr->getVal("which_mc_model");
-  sub_model = paraRdr->getVal("sub_model");
-  shape_of_nucleons = paraRdr->getVal("shape_of_nucleons");
-  
-
-  gaussCal = NULL;
-  entropy_gaussian_width = 0.0;
-  paraRdr->setVal("siginNN", siginNN);
-  gaussCal = new GaussianNucleonsCal(paraRdr); // for Gaussian-shaped nucleons calculations
-  entropy_gaussian_width = gaussCal->entropy_gaussian_width;
-  entropy_gaussian_width_sq = entropy_gaussian_width*entropy_gaussian_width;
-
-  // adding quark substructure Fluctuations (from Kevin Welsh)
-  shape_of_entropy = paraRdr->getVal("shape_of_entropy"); //For separation of entropy to collision detection (Kevin)
-  if(shape_of_entropy==3)
-  {
-    quark_width = paraRdr->getVal("quark_width");
-    double nucleon_width = gaussCal->width;
-    quark_dist_width = sqrt(nucleon_width*nucleon_width - quark_width*quark_width);
-    gaussDist = new GaussianDistribution(0, quark_dist_width);
-  }
-
-  dndyTable=0;    // lookup table pointers not valid yet
-  dndydptTable=0;
-  overSample=1;  // default: no oversampling
-  binRapidity = paraRdr->getVal("ny");
-  rapMin = paraRdr->getVal("rapMin");
-  rapMax = paraRdr->getVal("rapMax");
-  rapidity = 0.0;
-
-  dsq = 0.1*siginNN/M_PI/overSample;
-
-  kln=0;  // pointer to class for small-x gluons
-  val=0;  // pointer to class for large-x (x>x0) partons
-
-  TA1 = new double* [Maxx];    // 2d grid for proj/targ. thickness functions
-  TA2 = new double* [Maxx];
-  rho_binary = new double* [Maxx];  // 2d grid for the binary density
-  for(int ix=0;ix<Maxx;ix++)
-  {
-    TA1[ix] = new double [Maxy];
-    TA2[ix] = new double [Maxy];
-    rho_binary[ix] = new double [Maxy];
-    for(int iy = 0; iy < Maxy; iy++)
-    {
-       TA1[ix][iy] = 0;
-       TA2[ix][iy] = 0;
-       rho_binary[ix][iy] = 0;
+    // Include additional CC fluctution?
+    CCFluctuationModel = paraRdr->getVal("cc_fluctuation_model");
+    CCFluctuationK = paraRdr->getVal("cc_fluctuation_k");
+    if (CCFluctuationModel) nbd = new NBD;
+    if (CCFluctuationModel > 5) {
+        gsl_rng_env_setup();
+        gslRngType = gsl_rng_default;
+        gslRng = gsl_rng_alloc(gslRngType);
+        timeval a;
+        gettimeofday(&a, 0);
+        // randomSeed use CPU clock
+        int randomSeed=a.tv_usec;
+        //initialize random generator
+        gsl_rng_set (gslRng, (unsigned long int) randomSeed);
+        ccFluctuationGammaTheta = paraRdr->getVal("cc_fluctuation_Gamma_theta");
     }
-  }
 
-  rho = new GlueDensity(Xmax,Ymax,PTmin,PTmax,dx,dy,dpt,binRapidity,rapMin,rapMax);
+    which_mc_model = paraRdr->getVal("which_mc_model");
+    sub_model = paraRdr->getVal("sub_model");
+    shape_of_nucleons = paraRdr->getVal("shape_of_nucleons");
 
-  Xcm=0.0, Ycm=0.0, angPart=0.0;
+    gaussCal = NULL;
+    entropy_gaussian_width = 0.0;
+    paraRdr->setVal("siginNN", siginNN);
+    // for Gaussian-shaped nucleons calculations
+    gaussCal = new GaussianNucleonsCal(paraRdr);
+    entropy_gaussian_width = gaussCal->entropy_gaussian_width;
+    entropy_gaussian_width_sq = entropy_gaussian_width*entropy_gaussian_width;
 
-  // flag to include nucleon-nucleon correlation when sampled the nucleon positions
-  flag_NN_correlation = paraRdr->getVal("include_NN_correlation");
+    // adding quark substructure Fluctuations (from Kevin Welsh)
+    shape_of_entropy = paraRdr->getVal("shape_of_entropy");
+    // For separation of entropy to collision detection (Kevin)
+    if (shape_of_entropy == 3) {
+        quark_width = paraRdr->getVal("quark_width");
+        double nucleon_width = gaussCal->width;
+        quark_dist_width = sqrt(nucleon_width*nucleon_width - quark_width*quark_width);
+        gaussDist = new GaussianDistribution(0, quark_dist_width);
+    }
 
+    dndyTable=0;    // lookup table pointers not valid yet
+    dndydptTable=0;
+    overSample=1;  // default: no oversampling
+    binRapidity = paraRdr->getVal("ny");
+    rapMin = paraRdr->getVal("rapMin");
+    rapMax = paraRdr->getVal("rapMax");
+    rapidity = 0.0;
+
+    dsq = 0.1*siginNN/M_PI/overSample;
+
+    kln=0;  // pointer to class for small-x gluons
+    val=0;  // pointer to class for large-x (x>x0) partons
+
+    TA1 = new double* [Maxx];    // 2d grid for proj/targ. thickness functions
+    TA2 = new double* [Maxx];
+    sd_TA1 = new double* [Maxx];
+    sd_TA2 = new double* [Maxx];
+    rho_binary = new double* [Maxx];  // 2d grid for the binary density
+    // 2d grid for spectator density from nucleus 1
+    spectator_1 = new double* [Maxx];
+    // 2d grid for spectator density from nucleus 2
+    spectator_2 = new double* [Maxx];
+    for (int ix = 0; ix < Maxx; ix++) {
+        TA1[ix] = new double[Maxy];
+        TA2[ix] = new double[Maxy];
+        sd_TA1[ix] = new double[Maxy];
+        sd_TA2[ix] = new double[Maxy];
+        rho_binary[ix] = new double[Maxy];
+        spectator_1[ix] = new double[Maxy];
+        spectator_2[ix] = new double[Maxy];
+        for (int iy = 0; iy < Maxy; iy++) {
+            TA1[ix][iy] = 0;
+            TA2[ix][iy] = 0;
+            sd_TA1[ix][iy] = 0;
+            sd_TA2[ix][iy] = 0;
+            rho_binary[ix][iy] = 0;
+            spectator_1[ix][iy] = 0.;
+            spectator_2[ix][iy] = 0.;
+        }
+    }
+
+    rho = new GlueDensity(Xmax, Ymax, PTmin, PTmax,
+                          dx, dy, dpt, binRapidity, rapMin,rapMax);
+
+    Xcm=0.0, Ycm=0.0, angPart=0.0;
+
+    // flag to include nucleon-nucleon correlation 
+    // when sampled the nucleon positions
+    flag_NN_correlation = paraRdr->getVal("include_NN_correlation");
 }
 
 
-MCnucl::~MCnucl()
-{
-  for(int ix = 0; ix < Maxx; ix++)
-  {
-    delete [] TA1[ix];
-    delete [] TA2[ix];
-    delete [] rho_binary[ix];
-  }
-  delete [] TA1;
-  delete [] TA2;
-  delete [] rho_binary;
-
-  delete  rho;
-
-  if(dndyTable) {
-    for(int iy=0;iy<binRapidity;iy++) {
-      for(int j=0;j<tmax;j++) delete [] dndyTable[iy][j];
-      delete [] dndyTable[iy];
+MCnucl::~MCnucl() {
+    for (int ix = 0; ix < Maxx; ix++) {
+        delete [] TA1[ix];
+        delete [] TA2[ix];
+        delete [] sd_TA1[ix];
+        delete [] sd_TA2[ix];
+        delete [] rho_binary[ix];
+        delete [] spectator_1[ix];
+        delete [] spectator_2[ix];
     }
-    delete [] dndyTable;
-  }
+    delete [] TA1;
+    delete [] TA2;
+    delete [] sd_TA1;
+    delete [] sd_TA2;
+    delete [] rho_binary;
+    delete [] spectator_1;
+    delete [] spectator_2;
 
-  if(dndydptTable) {
-    for (int iy=0; iy<binRapidity; iy++) {
-      for (int j=0; j<tmaxPt; j++) {
-        for (int i=0; i<tmaxPt; i++) delete [] dndydptTable[iy][j][i];
-        delete [] dndydptTable[iy][j];
-      }
-      delete [] dndydptTable[iy];
+    delete rho;
+
+    if (dndyTable) {
+        for (int iy = 0; iy < binRapidity; iy++) {
+            for(int j = 0; j < tmax; j++)
+                delete [] dndyTable[iy][j];
+            delete [] dndyTable[iy];
+        }
+        delete [] dndyTable;
     }
-    delete [] dndydptTable;
-  }
 
-  if(CCFluctuationModel > 5) gsl_rng_free(gslRng);
+    if (dndydptTable) {
+        for (int iy = 0; iy < binRapidity; iy++) {
+            for (int j = 0; j < tmaxPt; j++) {
+                for (int i = 0; i < tmaxPt; i++)
+                    delete [] dndydptTable[iy][j][i];
+                delete [] dndydptTable[iy][j];
+            }
+            delete [] dndydptTable[iy];
+        }
+        delete [] dndydptTable;
+    }
 
-  if (gaussCal) delete gaussCal;
+    if (CCFluctuationModel > 5) gsl_rng_free(gslRng);
+
+    if (gaussCal) delete gaussCal;
 }
 
 
@@ -592,115 +613,109 @@ int MCnucl::CentralityCut()
 
 // --- determine thickness of proj+targ nuclei over 2d transv. grid,
 //     for given MC event ---
-void MCnucl::getTA2()
-{
-  int npart = participant.size();
-  double areai = 10.0/siginNN;
-  int imax=0;
+void MCnucl::getTA2() {
+    int npart = participant.size();
+    double areai = 10.0/siginNN;
+    int imax = 0;
 
-  double nucleon_width;
-  if (shape_of_nucleons>=2 && shape_of_nucleons<=9) nucleon_width = gaussCal->width;
-  double dc_sq_max_gaussian = 25.*nucleon_width*nucleon_width;
-  double d_max;
-  if (shape_of_nucleons == 1)
-      d_max = 2.*sqrt(dsq);
-  if (shape_of_nucleons >= 2 && shape_of_nucleons <=9)
-      d_max = 5.*nucleon_width;
-  double *part_x, *part_y;
-  part_x = new double [npart];
-  part_y = new double [npart];
-  for(int i = 0; i < npart; i++)
-  {
-      part_x[i] = participant[i]->getX();
-      part_y[i] = participant[i]->getY();
-  }
+    double nucleon_width;
+    if (shape_of_nucleons >= 2 && shape_of_nucleons <= 9)
+        nucleon_width = gaussCal->width;
+    double dc_sq_max_gaussian = 25.*nucleon_width*nucleon_width;
+    double d_max;
+    if (shape_of_nucleons == 1)
+        d_max = 2.*sqrt(dsq);
+    if (shape_of_nucleons >= 2 && shape_of_nucleons <=9)
+        d_max = 5.*nucleon_width;
+    double *part_x, *part_y;
+    part_x = new double [npart];
+    part_y = new double [npart];
+    for (int i = 0; i < npart; i++) {
+        part_x[i] = participant[i]->getX();
+        part_y[i] = participant[i]->getY();
+    }
 
-  for(int ix=0;ix<Maxx;ix++)
-      for(int iy=0;iy<Maxy;iy++)
-      {
-          TA1[ix][iy]=0.0;
-          TA2[ix][iy]=0.0;
-      }
+    for (int ix = 0; ix < Maxx; ix++) {
+        for (int iy = 0; iy < Maxy; iy++) {
+            TA1[ix][iy] = 0.0;
+            TA2[ix][iy] = 0.0;
+            sd_TA1[ix][iy] = 0.0;
+            sd_TA2[ix][iy] = 0.0;
+        }
+    }
 
     // loop over nucleons which overlap the grid point (xg,yg)
-  for(unsigned int ipart=0; ipart<npart; ipart++)
-  {
-    double x = part_x[ipart];
-    double y = part_y[ipart];
-    int x_idx_left = (int)((x - d_max - Xmin)/dx);
-    int x_idx_right = (int)((x + d_max - Xmin)/dx);
-    int y_idx_left = (int)((y - d_max - Ymin)/dy);
-    int y_idx_right = (int)((y + d_max - Ymin)/dy);
-    x_idx_left = max(0, x_idx_left);
-    x_idx_right = min(Maxx, x_idx_right);
-    y_idx_left = max(0, y_idx_left);
-    y_idx_right = min(Maxy, y_idx_right);
-    for(int ix = x_idx_left; ix < x_idx_right; ix++)
-    {
-       double xg = Xmin + ix*dx;
-       for(int iy = y_idx_left; iy < y_idx_right; iy++)
-       {
-           double yg = Ymin + iy*dy;
-           double dc = (x-xg)*(x-xg) + (y-yg)*(y-yg);
-           if (shape_of_nucleons==1) // "Checker" nucleons:
-           {
-             if(dc>dsq) continue;
-             if(participant[ipart]->isNucl() == 1)
-             {
-                 TA1[ix][iy] += areai;
-             } 
-             else if(participant[ipart]->isNucl() == 2)
-             {
-                 TA2[ix][iy] += areai;
-             }
-             else
-             {
-                 cout << " Error in getTA2() " << endl;
-                 exit(1);
-             }
-           }
-           else if (shape_of_nucleons>=2 && shape_of_nucleons<=9) // Gaussian nucleons:
-           {
-             // skip distant nucleons, speeds things up; one may need to relax
-             if (dc>dc_sq_max_gaussian) continue;
-             double density = GaussianNucleonsCal::get2DHeightFromWidth(nucleon_width)*exp(-dc/(2.*nucleon_width*nucleon_width)); // width given from GaussianNucleonsCal class, height from the requirement that density should normalized to 1
-             if(participant[ipart]->isNucl() == 1)
-             {
-                 TA1[ix][iy] += density;
-             }
-             else if(participant[ipart]->isNucl() == 2)
-             {
-                 TA2[ix][iy] += density;
-             }
-             else
-             {
-                 cout << " Error in getTA2() " << endl;
-                 exit(1);
-             }
-           }
-       }
+    for (unsigned int ipart=0; ipart<npart; ipart++) {
+        double x = part_x[ipart];
+        double y = part_y[ipart];
+        double fluctfactor = participant[ipart]->getfluctfactor();
+        int x_idx_left = (int)((x - d_max - Xmin)/dx);
+        int x_idx_right = (int)((x + d_max - Xmin)/dx);
+        int y_idx_left = (int)((y - d_max - Ymin)/dy);
+        int y_idx_right = (int)((y + d_max - Ymin)/dy);
+        x_idx_left = max(0, x_idx_left);
+        x_idx_right = min(Maxx, x_idx_right);
+        y_idx_left = max(0, y_idx_left);
+        y_idx_right = min(Maxy, y_idx_right);
+        for (int ix = x_idx_left; ix < x_idx_right; ix++) {
+            double xg = Xmin + ix*dx;
+            for (int iy = y_idx_left; iy < y_idx_right; iy++) {
+                double yg = Ymin + iy*dy;
+                double dc = (x-xg)*(x-xg) + (y-yg)*(y-yg);
+                if (shape_of_nucleons == 1) {
+                    // "Checker" nucleons:
+                    if (dc>dsq) continue;
+                    if (participant[ipart]->isNucl() == 1) {
+                        TA1[ix][iy] += areai;
+                        sd_TA1[ix][iy] += areai*fluctfactor;
+                    } 
+                    else if (participant[ipart]->isNucl() == 2) {
+                        TA2[ix][iy] += areai;
+                        sd_TA2[ix][iy] += areai*fluctfactor;
+                    } else {
+                        cout << " Error in getTA2() " << endl;
+                        exit(1);
+                    }
+                } else if (shape_of_nucleons >= 2
+                           && shape_of_nucleons <= 9) {
+                    // Gaussian nucleons:
+                    // skip distant nucleons, speeds things up; 
+                    // one may need to relax
+                    if (dc>dc_sq_max_gaussian) continue;
+                    double density = GaussianNucleonsCal::get2DHeightFromWidth(nucleon_width)*exp(-dc/(2.*nucleon_width*nucleon_width)); // width given from GaussianNucleonsCal class, height from the requirement that density should normalized to 1
+                    if (participant[ipart]->isNucl() == 1) {
+                        TA1[ix][iy] += density;
+                        sd_TA1[ix][iy] += density*fluctfactor;
+                    } else if (participant[ipart]->isNucl() == 2) {
+                        TA2[ix][iy] += density;
+                        sd_TA2[ix][iy] += density*fluctfactor;
+                    } else {
+                        cout << " Error in getTA2() " << endl;
+                        exit(1);
+                    }
+                }
+            }
+        }
     }
-  }
-
-  for(int ix=0;ix<Maxx;ix++)
-      for(int iy=0;iy<Maxy;iy++)
-      {
-          int i = int((TA1[ix][iy])/areai+0.5);  // keep track of highest density
-          int j = int((TA2[ix][iy])/areai+0.5);
-          imax = max(imax,i);
-          imax = max(imax,j);
-      }
-
-  if(which_mc_model == 1)
-  {
-     if(imax>=tmax) {
-       cout  << "# WARNING: in MCnucl::getTA2() : imax=" << imax
-             << " should be less than tmax=" << tmax << endl;
-       exit(0);
-     }
-  }
-  delete [] part_x;
-  delete [] part_y;
+    
+    for (int ix = 0; ix < Maxx; ix++) {
+        for (int iy = 0; iy < Maxy; iy++) {
+            // keep track of highest density
+            int i = int((TA1[ix][iy])/areai+0.5);
+            int j = int((TA2[ix][iy])/areai+0.5);
+            imax = max(imax,i);
+            imax = max(imax,j);
+        }
+    }
+    if (which_mc_model == 1) {
+        if (imax>=tmax) {
+            cout << "# WARNING: in MCnucl::getTA2() : imax=" << imax
+                 << " should be less than tmax=" << tmax << endl;
+            exit(0);
+        }
+    }
+    delete [] part_x;
+    delete [] part_y;
 }
 
 // calculate the binary collision density in the transverse plane
@@ -761,6 +776,97 @@ void MCnucl::calculate_rho_binary()
    }
    delete [] binary_x;
    delete [] binary_y;
+}
+
+// calculate the spectator density in the transverse plane
+void MCnucl::calculate_spectator_density()
+{
+   int n_nucleon = spectators.size();
+   double dc_sq_max_gaussian = 25.*entropy_gaussian_width_sq;
+   double d_max;
+   if (shape_of_nucleons == 1)
+       d_max = 2.*sqrt(dsq);
+   if (shape_of_nucleons >= 2 && shape_of_nucleons <=9)
+       d_max = 5.*entropy_gaussian_width;
+   double *spectator_x, *spectator_y, *spectator_rap;
+   spectator_x = new double [n_nucleon];
+   spectator_y = new double [n_nucleon];
+   spectator_rap = new double [n_nucleon];
+   for(int inucleon = 0; inucleon < n_nucleon; inucleon++)
+   {
+       spectator_x[inucleon] = spectators[inucleon]->getX();
+       spectator_y[inucleon] = spectators[inucleon]->getY();
+       spectator_rap[inucleon] = spectators[inucleon]->getRapidity_Y();
+   }
+   for(int ir = 0; ir < Maxx; ir++)
+   {
+       for(int jr = 0; jr < Maxy; jr++)
+       {
+           spectator_1[ir][jr] = 0.0;
+           spectator_2[ir][jr] = 0.0;
+       }
+   }
+
+   for(int inucleon = 0; inucleon < n_nucleon; inucleon++)
+   {
+       double x = spectator_x[inucleon];
+       double y = spectator_y[inucleon];
+       int nucleus_id = 0;
+       if(spectator_rap[inucleon] > 0.)
+           nucleus_id = 1;
+       else
+           nucleus_id = 2;
+
+       int x_idx_left = (int)((x - d_max - Xmin)/dx);
+       int x_idx_right = (int)((x + d_max - Xmin)/dx);
+       int y_idx_left = (int)((y - d_max - Ymin)/dy);
+       int y_idx_right = (int)((y + d_max - Ymin)/dy);
+       x_idx_left = max(0, x_idx_left);
+       x_idx_right = min(Maxx, x_idx_right);
+       y_idx_left = max(0, y_idx_left);
+       y_idx_right = min(Maxy, y_idx_right);
+       for(int ir = x_idx_left; ir < x_idx_right; ir++)
+       {
+          double xg = Xmin + ir*dx;
+          for(int jr = y_idx_left; jr < y_idx_right; jr++)
+          {
+             double yg = Ymin + jr*dy;
+             double dc = (x-xg)*(x-xg) + (y-yg)*(y-yg);
+             if (shape_of_nucleons == 1)
+             {
+                if(dc <= dsq) 
+                {
+                   if(nucleus_id == 1)
+                       spectator_1[ir][jr] += (10.0/siginNN);
+                   else
+                       spectator_2[ir][jr] += (10.0/siginNN);
+                }
+             }
+             else if (shape_of_nucleons>=2 && shape_of_nucleons<=9)
+             {
+                if (dc > dc_sq_max_gaussian) 
+                   continue; // skip small numbers to speed up
+
+                if(nucleus_id == 1)
+                    spectator_1[ir][jr] += GaussianNucleonsCal::get2DHeightFromWidth(entropy_gaussian_width)*exp(-dc/(2*entropy_gaussian_width_sq)); 
+                    // this density is normalized to 1, to be consistent with the disk-like treatment; 
+                 else
+                    spectator_2[ir][jr] += GaussianNucleonsCal::get2DHeightFromWidth(entropy_gaussian_width)*exp(-dc/(2*entropy_gaussian_width_sq)); 
+             }
+          }
+       }
+   }
+   delete [] spectator_x;
+   delete [] spectator_y;
+   delete [] spectator_rap;
+}
+
+double MCnucl::get_spectator_density(int nucleus_id, int x, int y)
+{
+    if(nucleus_id == 1)
+        return(spectator_1[x][y]);
+    else
+        return(spectator_2[x][y]);
 }
 
 // --- initializes dN/dyd2rt (or dEt/...) on 2d grid for rapidity slice iy
@@ -1264,14 +1370,14 @@ double MCnucl::Angle(const double x,const double y)
 void MCnucl::recenterGrid(int iy, int n)
 {
   rho->getCMAngle(iy, n);
-  rho->recenterParticle(participant, binaryCollision, iy);
+  rho->recenterParticle(participant, binaryCollision, spectators, iy);
 }
 
 void MCnucl::rotateGrid(int iy, int n)
 {
   rho->getCMAngle(iy, n);
-  rho->recenterParticle(participant, binaryCollision, iy);
-  rho->rotateParticle(participant, binaryCollision, iy);
+  rho->recenterParticle(participant, binaryCollision, spectators, iy);
+  rho->rotateParticle(participant, binaryCollision, spectators, iy);
 }
 
 
@@ -1337,9 +1443,10 @@ void MCnucl::dumpparticipantTable(char filename[])
   {
     x = participant[idx]->getX();
     y = participant[idx]->getY();
-    of  << setprecision(3) << setw(10) << x
-        << setprecision(3) << setw(10) << y
-        << endl;
+    int id = participant[idx]->isNucl();
+    of  << setprecision(3) << setw(10) << x << "   "
+        << setprecision(3) << setw(10) << y << "   " 
+        << id << endl;
   }
   of.close();
 }

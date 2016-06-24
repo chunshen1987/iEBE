@@ -21,6 +21,8 @@ class Spectator
       double getX() {return(x);};
       double getY() {return(y);};
       double getRapidity_Y() {return(rapidity_Y);};
+      void setX(double x_in) { x = x_in;};
+      void setY(double y_in) { y = y_in;};
       
 };
 

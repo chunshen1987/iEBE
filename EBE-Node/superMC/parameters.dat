@@ -23,13 +23,13 @@ tmax_subdivision = 3      # Its reciprocal gives the step used to generate the T
 
 
 # Glauber Optns
-alpha = 0.0             # Alpha defining WN and BC mixture: (1-alpha)/2*WN + alpha*BC
+alpha = 0.0               # Alpha defining WN and BC mixture: (1-alpha)/2*WN + alpha*BC
 glb_entropy_width = 0.5   # User specified gaussian width for the deposition of entropy 
                           # in the Glauber model 
 
 # Nucleus Optns
-Aproj = 1               # Projectile atomic number
-Atarg = 1               # Target atomic number
+Aproj = 208               # Projectile atomic number
+Atarg = 208               # Target atomic number
 proj_deformed = 0         # (0) Spherical nucleus; (1) Deformed nucleus (see OverLap.cpp)
 targ_deformed = 0         # (0) Spherical nucleus; (1) Deformed nucleus (see OverLap.cpp) 
 
@@ -54,9 +54,9 @@ gauss_nucl_width = 0.5    # 4-> User specified width for Gaussian nucleons
 
 # Collision Optns
 ecm = 200                 # Beam Energy sqrt(s) in GeV
-bmin = 0.0                  # Minimum sampled impact parameter
-bmax = 2.0                  # Maximum sampled impact parameter
-Npmin = 2                 # Minimum participant nucleon cut
+bmin = 6.0                  # Minimum sampled impact parameter
+bmax = 8.0                  # Maximum sampled impact parameter
+Npmin = 1                 # Minimum participant nucleon cut
 Npmax = 500               # Maximum participant nucleon cut
 
 cutdSdy = 0               # cut centrality with additional requirements on total entropy density (without normalization factor)
@@ -65,13 +65,13 @@ cutdSdy_upperBound =  889.53       # upper bound of the allowed total entropy de
 
 
 # Monte Carlo Optns
-nev = 10                   # Number of collision events simulated
+nev = 5                   # Number of collision events simulated
 randomSeed = -1           # If randomSeed < 0 then CPU time is used to seed
 backup_number = 100000     # Backs up the averaged profile every "n" events. 0 means 
                           # every step. Use a neg number to turn it off
 
 # Operation Mode Optns
-operation = 1             # (1) Generate n transverse density profiles for n events 
+operation = 2             # (1) Generate n transverse density profiles for n events 
                           # (input for event-by-event hydro)
                           # (2) Generate n transverse density profiles for n events 
                           # and their corresponding binary collision table and eccentricities
@@ -95,7 +95,7 @@ ecc_to_order = 9          # 9-> Calculate the eccentricity of the profile for ea
 # Print to File Optns
 use_sd = 1                # Boolean toggle to print the raw CGC and Glauber output 
                           # (CGC: gluon density; Glb: (1-alpha)/2*WN + alpha*BC) 
-use_ed = 1                # Boolean toggle to covert the entropy profile using the 
+use_ed = 0                # Boolean toggle to covert the entropy profile using the 
                           # EOS and print the energy profile (do not use if Et=1)
 use_4col = 0              # Boolean toggle to print 4 column format (rap, x, y, data)
 use_block = 1             # Boolean toggle to print matrix format (good for matlab)
@@ -112,26 +112,24 @@ PT_order = 2              # =1 output the usual entropy/energy density profile; 
 d_PT = 0.1                # Step size of PT in GeV
 
 # Grid Optns
-maxx = 10                 # Max grid value along x direction in fm
-maxy = 10                 # Max grid value along y direction in fm 
-dx = 0.05                  # Step size along x direction in fm
-dy = 0.05                  # Step size along y direction in fm
+maxx = 13                 # Max grid value along x direction in fm
+maxy = 13                 # Max grid value along y direction in fm 
+dx = 0.1                  # Step size along x direction in fm
+dy = 0.1                  # Step size along y direction in fm
 ny = 1                    # Number of rapidity bins (do not set to zero)
 ymax = 0                  # Maximum rapidity value (symmetric -ymax to ymax)
 
 # CC fluctions
 cc_fluctuation_model = 6  # 0: no fluctuations; 1: NBD constant k; 2: NBD use TA TB to determine n; 6: MCGlb: Gamma distribution for each collision and wounded nucleon
 cc_fluctuation_k = 0.75   # constant k; used when cc_fluctuation_model is set to 1.
-cc_fluctuation_Gamma_theta = 0.75    # the scale parameter for Gamma distribution theta
-                                     # theta = 0.75 (sqrt{s} = 5.02 TeV)
-                                     # theta = 0.73 (sqrt{s} = 2.76 TeV)
-                                     # theta = 0.61 (sqrt{s} = 200 GeV)
+cc_fluctuation_Gamma_theta = 0.73    # the scale parameter for Gamma distribution theta = 0.9175 (from KNO scaling)
 
 # For jet calculations
 output_TATB = 1           # 1: output; 0: no output; only effective when generating averaged profiles
 output_rho_binary = 1     # 1: output binary collision density
 output_TA = 1             # 1: output nuclear thickness function
 output_rhob = 1           # 1: output net baryon density profile
+output_spectator_density = 1           # 1: output spectator density 
 
 generate_reaction_plane_avg_profile = 0    # switch to generate smooth event-averaged 
                                            # profile with respect to reaction plane defined 

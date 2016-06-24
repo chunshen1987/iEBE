@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     double grid_dy = 0.1;
     double grid_deta = 0.1;
 
-    double ecm = 200;
+    double ecm = 19.6;
     // flag to turn on fluctuation
     int random_flag = 1;
     

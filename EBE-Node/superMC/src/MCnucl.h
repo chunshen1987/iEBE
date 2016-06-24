@@ -32,7 +32,9 @@ protected:
     GaussianNucleonsCal *gaussCal; // for Gaussian shaped nucleons calculations
     Large_x* val;
     double **TA1,**TA2;
+    double **sd_TA1, **sd_TA2;
     double **rho_binary;
+    double **spectator_1, **spectator_2;
     GlueDensity *rho;
     int tmax, tmaxPt;
     double dT;
@@ -95,6 +97,8 @@ public:
 
     double getTA1(int x,int y) {return TA1[x][y];}
     double getTA2(int x,int y) {return TA2[x][y];}
+    double get_sdTA1(int x,int y) {return sd_TA1[x][y];}
+    double get_sdTA2(int x,int y) {return sd_TA2[x][y];}
     double get_rho_binary(int x, int y) {return rho_binary[x][y];}
     double getRho(int i, int x,int y) {return rho->getDensity(i,x,y);}
     double getRho(int i, int x,int y, int pt) {return rho->getDensity(i,x,y,pt);}
@@ -135,6 +139,8 @@ public:
     void dumpBinaryTable(char filename[]);
 
     int getSpectators();
+    void calculate_spectator_density();
+    double get_spectator_density(int nucleus_id, int x, int y);
     void dumpSpectatorsTable(int event);
 
     double sampleFluctuationFactorforParticipant();

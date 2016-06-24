@@ -4,6 +4,7 @@
 #include <vector>
 #include "Participant.h"
 #include "CollisionPair.h"
+#include "Spectator.h"
 
 class GlueDensity
 {
@@ -47,9 +48,11 @@ public:
     //void rotateGrid(const int ix, const int iy);
     void rotateParticle(std::vector<Participant*> participant,
 			std::vector<CollisionPair*> binaryCollision,
+                  std::vector<Spectator*> spectators,
 			const int iy);
     void recenterParticle(std::vector<Participant*> participant,
-                          std::vector<CollisionPair*> binaryCollision, const int iy);
+                          std::vector<CollisionPair*> binaryCollision, 
+                          std::vector<Spectator*> spectators, const int iy);
 
 };
 

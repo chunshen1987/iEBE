@@ -125,6 +125,7 @@ void GlueDensity::getCMAngle(const int iy, int n)
             exit(0);
     }
     int rand_orientation = rand() % n; //random integer from 0 to n-1
+    if(n == 2) rand_orientation = 0;
     AngleG[iy] = -atan2(-Num_imag, -Num_real)/n + 2*M_PI*rand_orientation/n; //AngleG takes the range from -pi to pi
     // cout << "imag=" << Num_imag << "," << "real=" << Num_real << endl;
     // cout << "new: " << AngleG[iy] << "," << "order=" << n << endl;
@@ -132,7 +133,8 @@ void GlueDensity::getCMAngle(const int iy, int n)
 
 
 void GlueDensity::rotateParticle(vector<Participant*> participant,
-    vector<CollisionPair*> binaryCollision, const int iy)
+    vector<CollisionPair*> binaryCollision, vector<Spectator*> spectators,
+    const int iy)
 {
     double ang0 = AngleG[iy];
 
@@ -159,11 +161,24 @@ void GlueDensity::rotateParticle(vector<Participant*> participant,
       binaryCollision[icoll]->setX(x0);
       binaryCollision[icoll]->setY(y0);
     }
-
+    
+    int n_spectator = spectators.size();
+    for(int ispectator = 0; ispectator < n_spectator; ispectator++)
+    {
+      double x = spectators[ispectator]->getX();
+      double y = spectators[ispectator]->getY();
+      double ang = MCnucl::Angle(x,y);
+      double r=sqrt(x*x+y*y);
+      double x0 = r*cos(ang+ang0);
+      double y0 = r*sin(ang+ang0);
+      spectators[ispectator]->setX(x0);
+      spectators[ispectator]->setY(y0);
+    }
 }
 
 void GlueDensity::recenterParticle(vector<Participant*> participant,
-    vector<CollisionPair*> binaryCollision, const int iy)
+    vector<CollisionPair*> binaryCollision, vector<Spectator*> spectators,
+    const int iy)
 {
     double xcm=Xcm[iy];
     double ycm=Ycm[iy];
@@ -182,6 +197,15 @@ void GlueDensity::recenterParticle(vector<Participant*> participant,
       double y_shifted = binaryCollision[icoll]->getY()-ycm;
       binaryCollision[icoll]->setX(x_shifted);
       binaryCollision[icoll]->setY(y_shifted);
+    }
+
+    int n_spectator = spectators.size();
+    for(int ispectator = 0; ispectator < n_spectator; ispectator++)
+    {
+      double x_shifted = spectators[ispectator]->getX()-xcm;
+      double y_shifted = spectators[ispectator]->getY()-ycm;
+      spectators[ispectator]->setX(x_shifted);
+      spectators[ispectator]->setY(y_shifted);
     }
 
 }
