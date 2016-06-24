@@ -134,8 +134,8 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in) {
         for (int iy = 0; iy < Maxy; iy++) {
             TA1[ix][iy] = 0;
             TA2[ix][iy] = 0;
-            sd_TA1[ix][iy] = 0;
-            sd_TA2[ix][iy] = 0;
+            sd_TA1[ix][iy] = 0.;
+            sd_TA2[ix][iy] = 0.;
             rho_binary[ix][iy] = 0;
             spectator_1[ix][iy] = 0.;
             spectator_2[ix][iy] = 0.;
@@ -639,8 +639,6 @@ void MCnucl::getTA2() {
         for (int iy = 0; iy < Maxy; iy++) {
             TA1[ix][iy] = 0.0;
             TA2[ix][iy] = 0.0;
-            sd_TA1[ix][iy] = 0.0;
-            sd_TA2[ix][iy] = 0.0;
         }
     }
 
@@ -648,7 +646,6 @@ void MCnucl::getTA2() {
     for (unsigned int ipart=0; ipart<npart; ipart++) {
         double x = part_x[ipart];
         double y = part_y[ipart];
-        double fluctfactor = participant[ipart]->getfluctfactor();
         int x_idx_left = (int)((x - d_max - Xmin)/dx);
         int x_idx_right = (int)((x + d_max - Xmin)/dx);
         int y_idx_left = (int)((y - d_max - Ymin)/dy);
@@ -667,11 +664,8 @@ void MCnucl::getTA2() {
                     if (dc>dsq) continue;
                     if (participant[ipart]->isNucl() == 1) {
                         TA1[ix][iy] += areai;
-                        sd_TA1[ix][iy] += areai*fluctfactor;
-                    } 
-                    else if (participant[ipart]->isNucl() == 2) {
+                    } else if (participant[ipart]->isNucl() == 2) {
                         TA2[ix][iy] += areai;
-                        sd_TA2[ix][iy] += areai*fluctfactor;
                     } else {
                         cout << " Error in getTA2() " << endl;
                         exit(1);
@@ -681,14 +675,12 @@ void MCnucl::getTA2() {
                     // Gaussian nucleons:
                     // skip distant nucleons, speeds things up; 
                     // one may need to relax
-                    if (dc>dc_sq_max_gaussian) continue;
+                    if (dc > dc_sq_max_gaussian) continue;
                     double density = GaussianNucleonsCal::get2DHeightFromWidth(nucleon_width)*exp(-dc/(2.*nucleon_width*nucleon_width)); // width given from GaussianNucleonsCal class, height from the requirement that density should normalized to 1
                     if (participant[ipart]->isNucl() == 1) {
                         TA1[ix][iy] += density;
-                        sd_TA1[ix][iy] += density*fluctfactor;
                     } else if (participant[ipart]->isNucl() == 2) {
                         TA2[ix][iy] += density;
-                        sd_TA2[ix][iy] += density*fluctfactor;
                     } else {
                         cout << " Error in getTA2() " << endl;
                         exit(1);
@@ -962,6 +954,8 @@ void MCnucl::setDensity(int iy, int ipt)
           {
               rhop[ir][jr] = 0.0;
               tab[ir][jr] = 0.0;
+              sd_TA1[ir][jr] = 0.0;
+              sd_TA2[ir][jr] = 0.0;
           }
       }
       // wounded nucleon treatment:
@@ -973,7 +967,7 @@ void MCnucl::setDensity(int iy, int ipt)
           {
             double x = part_x[ipart];
             double y = part_y[ipart];
-            if(CCFluctuationModel > 5)
+            if (CCFluctuationModel > 5)
                fluctfactor = participant[ipart]->getfluctfactor();
             int x_idx_left = (int)((x - d_max - Xmin)/dx);
             int x_idx_right = (int)((x + d_max - Xmin)/dx);
@@ -990,26 +984,33 @@ void MCnucl::setDensity(int iy, int ipt)
                {
                    double yg = Ymin + jr*dy;
                    double dc = (x-xg)*(x-xg) + (y-yg)*(y-yg);
-                   if (shape_of_entropy==1) // "Checker" nucleons:
+                   if (shape_of_entropy == 1) // "Checker" nucleons:
                    {
                      if(dc>dsq) continue;
                      double areai = 10.0/siginNN;
                      rhop[ir][jr] += fluctfactor*areai;
+                     if (participant[ipart]->isNucl() == 1) {
+                         sd_TA1[ir][jr] += fluctfactor*areai;
+                     } else if (participant[ipart]->isNucl() == 2) {
+                         sd_TA2[ir][jr] += fluctfactor*areai;
+                     }
                    }
                    else if (shape_of_entropy>=2 && shape_of_entropy<=9) // Gaussian nucleons:
                    {
                      // skip distant nucleons, speeds things up; one may need to relax
                      if (dc>dc_sq_max_gaussian) continue;
                      double density;
-                     if (shape_of_entropy == 3)
-                     {
+                     if (shape_of_entropy == 3) {
                         density = participant[ipart]->getParticle()->getInternalStructDensity(xg, yg, quark_width, gaussDist); // width given from GaussianNucleonsCal class, height from the requirement that density should normalized to 1
-                     }
-                     else
-                     {
+                     } else {
                         density = fluctfactor*GaussianNucleonsCal::get2DHeightFromWidth(entropy_gaussian_width)*exp(-dc/(2.*entropy_gaussian_width_sq)); // width given from GaussianNucleonsCal class, height from the requirement that density should normalized to 1
                      }
                      rhop[ir][jr] += density;
+                     if (participant[ipart]->isNucl() == 1) {
+                         sd_TA1[ir][jr] += density;
+                     } else if (participant[ipart]->isNucl() == 2) {
+                         sd_TA2[ir][jr] += density;
+                     }
                    }
                }
             }
