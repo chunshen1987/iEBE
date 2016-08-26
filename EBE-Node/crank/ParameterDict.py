@@ -70,9 +70,9 @@ hydroParameters = {
 iSSParameters = {
     'turn_on_bulk'                  :   0,
     'include_deltaf_bulk'           :   0,
-    'include_deltaf_shear'          :   0,
-    'calculate_vn'                  :   1,
-    'MC_sampling'                   :   0,
+    'include_deltaf_shear'          :   1,
+    'calculate_vn'                  :   0,
+    'MC_sampling'                   :   2,
     'number_of_repeated_sampling'   :   10,
     'y_LB'                          :   -2.5,
     'y_RB'                          :   2.5,
