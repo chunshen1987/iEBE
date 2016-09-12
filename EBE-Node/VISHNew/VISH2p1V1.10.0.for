@@ -2643,7 +2643,8 @@ CSHEN======end=================================================================
           Print*,'IRelaxBulk'
           Stop
         end if
-        VCBeta0(i,j,k)=VisBulkBeta*6.0/(Sd(i,j,k)*Temp(i,j,k))
+        !VCBeta0(i,j,k)=VisBulkBeta*6.0/(Sd(i,j,k)*Temp(i,j,k))
+        VCBeta0(i,j,k)=0.0
         XiTtP(i,j,k)=(VBulk(i,j,k)*Temp(i,j,k))*VRelaxT0(i,j,k)  !(Xi T/tau_Pi)  for extra term in full I-S
 
         VBulk(i,j,k)=VBulk(i,j,k)*ff
@@ -3818,7 +3819,7 @@ C--------------------------------------
         U0_guess = 1./sqrt(1. - VP_local*VP_local)
         U0_low_boundary = dmax1(1.0, 0.5*U0_guess)
         U0_upper_boundary = 1.5*U0_guess
-        U0_local = findU0Hook(0.0D0)
+        U0_local = findU0Hook(1.0D0)
         Call invertFunctionH(findU0Hook, U0_low_boundary, 
      &                       U0_upper_boundary, 0.0, 1D-6,
      &                       U0_local)
@@ -5169,6 +5170,7 @@ C----------------------------------------------------------------
 
       Double Precision A ! temporary variables
 
+      v = sqrt(U0**2. - 1.)/U0
       RSee = RSDM0 - v*RSDM
       cstilde2=PEPS(0.0d0, RSee*Hbarc)/dmax1(abs(RSee),zero)/Hbarc
       A=RSDM0*(1+cstilde2)+RSPPI
