@@ -5169,8 +5169,8 @@ C----------------------------------------------------------------
       Double Precision, Parameter :: HbarC=0.19733d0 !for changing between fm and GeV ! Hbarc=0.19733=GeV*fm
 
       Double Precision A ! temporary variables
-
-      v = sqrt(U0**2. - 1.)/U0
+    
+      v = sqrt(1. - 1./dmax1(U0, 1d0)**2)
       RSee = RSDM0 - v*RSDM
       cstilde2=PEPS(0.0d0, RSee*Hbarc)/dmax1(abs(RSee),zero)/Hbarc
       A=RSDM0*(1+cstilde2)+RSPPI
