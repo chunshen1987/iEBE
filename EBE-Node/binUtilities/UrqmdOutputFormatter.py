@@ -31,29 +31,36 @@ def formatUrqmdOutputFile(urqmdOutputFilePath, formattedFilePath):
     header_count = 1 # the first read line is already part of the header line
     data_row_count = 0
     for aLine in open(urqmdOutputFilePath):
-        if read_mode=="header_first_part":
-            if header_count <= 14: # skip first 14 lines
+        if read_mode == "header_first_part":
+            #if header_count <= 14:  # skip first 14 lines (UrQMD v2.3)
+            if header_count <= 17:  # skip first 14 lines (UrQMD v3.4)
                 header_count += 1
                 continue
             # now at 15th line
-            assert header_count==15, "No no no... Stop here."
+            #assert header_count==15, "No no no... Stop here."  # (UrQMD v2.3)
+            assert header_count==18, "No no no... Stop here."  # (UrQMD v3.4)
             try:
                 data_row_count = int(aLine.split()[0])
             except ValueError as e:
-                print("The file "+urqmdOutputFilePath+" does not have a valid urqmd output file header!")
+                print("The file " + urqmdOutputFilePath
+                      + " does not have a valid urqmd output file header!")
                 print(e)
                 return False
             read_mode = "header_second_part"
-        elif read_mode=="header_second_part":
+        elif read_mode == "header_second_part":
             # skip current line by switching to data reading mode
             read_mode = "data_part"
-        elif read_mode=="data_part":
+        elif read_mode == "data_part":
             if data_row_count>0:
                 # still have data to read
                 try:
-                    p0, px, py, pz = map(lambda x: float(x.replace("D","E")), aLine[98:193].split())
-                    isospin2 = int(aLine[222:224])
-                    pid = int(aLine[216:222])
+                    #p0, px, py, pz = map(lambda x: float(x.replace("D","E")), aLine[98:193].split())
+                    #isospin2 = int(aLine[222:224])
+                    #pid = int(aLine[216:222])
+                    p0, px, py, pz = map(lambda x: float(x.replace("D","E")),
+                                         aLine[65:128].split())
+                    isospin2 = int(aLine[155:159])
+                    pid = int(aLine[150:155])
                     pT = sqrt(px*px + py*py)
                     phi = atan2(py, px)
                     E = p0
