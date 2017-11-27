@@ -250,7 +250,7 @@ def translate_centrality_cut():
     """
     cut_type = initial_condition_control['cut_type']
     if cut_type not in ['total_entropy', 'Npart']:
-        print "invalid centrality cut type: ", cut_type
+        print("invalid centrality cut type: ", cut_type)
         exit(1)
 
     centrality_string = initial_condition_control['centrality']
@@ -259,12 +259,12 @@ def translate_centrality_cut():
         centrality_string.split('-')[1].split('%')[0])
 
     if superMCParameters['model_name'] == 'MCGlb':
-        superMCParameters['which_mc_model'] == 5
-        superMCParameters['sub_model'] == 1
+        superMCParameters['which_mc_model'] = 5
+        superMCParameters['sub_model'] = 1
         model_name = 'MCGlb'
     elif superMCParameters['model_name'] == 'MCKLN':
-        superMCParameters['which_mc_model'] == 1
-        superMCParameters['sub_model'] == 7
+        superMCParameters['which_mc_model'] = 1
+        superMCParameters['sub_model'] = 7
         model_name = 'MCKLN'
 
     if superMCParameters['cc_fluctuation_model'] != 0:
@@ -308,8 +308,8 @@ def translate_centrality_cut():
             path.join(path.abspath('../centrality_cut_tables'),
                       centrality_cut_file_name))
     except IOError:
-        print "Can not find the centrality cut table for the collision system"
-        print centrality_cut_file_name
+        print("Can not find the centrality cut table for the collision system")
+        print(centrality_cut_file_name)
         exit(1)
 
     lower_idx = (
@@ -353,17 +353,17 @@ def translate_centrality_cut():
     superMCParameters['bmin'] = b_min
 
     #print out information
-    print '-'*80
+    print('-'*80)
     print('%s collisions at sqrt{s} = %s A GeV with %s initial conditions'
           % (nucleus_name , collision_energy, model_name))
     print("Centrality : %g - %g"
           % (centrality_lower_bound, centrality_upper_bound) + r"%")
-    print 'centrality cut on ', cut_type
+    print('centrality cut on ', cut_type)
     if cut_type == 'total_entropy':
-        print 'dS/dy :', cut_value_low, '-', cut_value_upper
-    print "Npart: ", npart_min, '-', npart_max
-    print "b: ", b_min, '-', b_max, ' fm'
-    print '-'*80
+        print('dS/dy :', cut_value_low, '-', cut_value_upper)
+    print("Npart: ", npart_min, '-', npart_max)
+    print("b: ", b_min, '-', b_max, ' fm')
+    print('-'*80)
     return
 
 
