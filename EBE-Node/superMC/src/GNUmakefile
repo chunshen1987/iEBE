@@ -11,7 +11,7 @@
 ##  
 
 CC := $(shell ../../crank/configure_compiler_C++.sh)
-CFLAGS= $(shell ../../crank/configure_compiler_C++_Flags.sh) $(shell gsl-config --cflags)
+CFLAGS= $(shell ../../crank/configure_compiler_C++_Flags.sh) --std=c++98 $(shell gsl-config --cflags)
 
 RM		=	rm -f
 O               =       .o
