@@ -52,7 +52,7 @@ class DataBinner():
             with 0) the sample belongs to.
         """
         if bin_idx<0: return # a bin_idx<0 can be used to skip samples
-        if self.binAvgBuffer[bin_idx] == None:
+        if type(self.binAvgBuffer[bin_idx]) == type(None):
             self.binAvgBuffer[bin_idx] = numpy.copy(sample)
             self.binStdBuffer[bin_idx] = numpy.copy(sample*sample)
             self.countBuffer[bin_idx] = 1
