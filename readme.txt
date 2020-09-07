@@ -7,6 +7,8 @@ The iEBE package is a convenience package to automate event-by-event hybrid calc
 
 The main programs are contained in the subfolder "EBE-Node", which is used to perform one job, and which will be duplicated when multiple jobs are desired. The package needs two locations to perform multi-job calculations: one folder is used to store duplications of "EBE-Node" and intermediate results generated during the calculation (refer to as "working folder" in the following), and another folder is used to store final results (refer to as "result folder" in the following). By default the working folder is named as "PlayGround" and the result folder is named as "RESULTS", both in the root directory of the package.
 
+If you have any questions, please email to the google group iebe@googlegroups.com
+
 ------------------------------------------------------------------
 <<1>> How to use the package to perform multi-job calculations
 ------------------------------------------------------------------
