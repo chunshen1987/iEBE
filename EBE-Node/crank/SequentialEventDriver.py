@@ -372,9 +372,12 @@ def translate_centrality_cut():
           % (centrality_lower_bound, centrality_upper_bound) + r"%")
     print('centrality cut on ', cut_type)
     if cut_type == 'total_entropy':
-        print('dS/dy :', cut_value_low, '-', cut_value_upper)
-    print("Npart: ", npart_min, '-', npart_max)
-    print("b: ", b_min, '-', b_max, ' fm')
+        print('dS/dy :', superMCParameters["cutdSdy_lowerBound"], '-',
+              superMCParameters["cutdSdy_upperBound"])
+    print("Npart: ", superMCParameters["Npmin"], '-',
+          superMCParameters["Npmax"])
+    print("b: ", superMCParameters["bmin"], '-', superMCParameters["bmax"],
+          ' fm')
     print('-'*80)
     return
 
