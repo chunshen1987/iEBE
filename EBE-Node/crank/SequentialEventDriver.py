@@ -271,12 +271,12 @@ def translate_centrality_cut():
         multiplicity_fluctuation = 'withMultFluct'
     else:
         multiplicity_fluctuation = 'noMultFluct'
-    
+
     if superMCParameters['include_NN_correlation'] != 0:
         NNcorrelation = 'withNNcorrelation'
     else:
         NNcorrelation = 'd0.9'
-    
+
     collision_energy = str(superMCParameters['ecm'])
 
     Aproj = superMCParameters['Aproj']
@@ -303,6 +303,7 @@ def translate_centrality_cut():
            NNcorrelation, multiplicity_fluctuation)
     )
 
+    centrality_table_status = True
     try:
         centrality_cut_file = np.loadtxt(
             path.join(path.abspath('../centrality_cut_tables'),
@@ -310,47 +311,58 @@ def translate_centrality_cut():
     except IOError:
         print("Can not find the centrality cut table for the collision system")
         print(centrality_cut_file_name)
-        exit(1)
+        print("Perform minimum bias simulations instead.")
+        centrality_table_status = False
+        #exit(1)
 
-    lower_idx = (
-        centrality_cut_file[:, 0].searchsorted(centrality_lower_bound+1e-30))
-    upper_idx = (
-        centrality_cut_file[:, 0].searchsorted(centrality_upper_bound))
-
-    cut_value_upper = (
-        (centrality_cut_file[lower_idx-1, 1]
-         - centrality_cut_file[lower_idx, 1])
-        /(centrality_cut_file[lower_idx-1, 0]
-          - centrality_cut_file[lower_idx, 0])
-        *(centrality_lower_bound - centrality_cut_file[lower_idx-1, 0])
-        + centrality_cut_file[lower_idx-1, 1]
-    )
-    cut_value_low = (
-        (centrality_cut_file[upper_idx-1, 1]
-         - centrality_cut_file[upper_idx, 1])
-        /(centrality_cut_file[upper_idx-1, 0]
-          - centrality_cut_file[upper_idx, 0])
-        *(centrality_upper_bound - centrality_cut_file[upper_idx-1, 0])
-        + centrality_cut_file[upper_idx-1, 1]
-    )
-    if cut_type == 'total_entropy':
-        superMCParameters['cutdSdy'] = 1
-        npart_min = min(centrality_cut_file[lower_idx-1:upper_idx+1, 2])
-        npart_max = max(centrality_cut_file[lower_idx-1:upper_idx+1, 3])
-        b_min = min(centrality_cut_file[lower_idx-1:upper_idx+1, 4])
-        b_max = max(centrality_cut_file[lower_idx-1:upper_idx+1, 5])
-        superMCParameters['cutdSdy_lowerBound'] = cut_value_low
-        superMCParameters['cutdSdy_upperBound'] = cut_value_upper
-    elif cut_type == 'Npart':
-        superMCParameters['cutdSdy'] = 0
-        b_min = min(centrality_cut_file[lower_idx-1:upper_idx+1, 2])
-        b_max = max(centrality_cut_file[lower_idx-1:upper_idx+1, 3])
-        npart_min = cut_value_low
-        npart_max = cut_value_upper
-    superMCParameters['Npmax'] = npart_max
-    superMCParameters['Npmin'] = npart_min
-    superMCParameters['bmax'] = b_max
-    superMCParameters['bmin'] = b_min
+    if centrality_table_status:
+        lower_idx = (centrality_cut_file[:, 0].searchsorted(
+                                            centrality_lower_bound+1e-30))
+        upper_idx = (centrality_cut_file[:, 0].searchsorted(
+                                            centrality_upper_bound))
+        cut_value_upper = (
+            (centrality_cut_file[lower_idx-1, 1]
+             - centrality_cut_file[lower_idx, 1])
+            /(centrality_cut_file[lower_idx-1, 0]
+              - centrality_cut_file[lower_idx, 0])
+            *(centrality_lower_bound - centrality_cut_file[lower_idx-1, 0])
+            + centrality_cut_file[lower_idx-1, 1]
+        )
+        cut_value_low = (
+            (centrality_cut_file[upper_idx-1, 1]
+             - centrality_cut_file[upper_idx, 1])
+            /(centrality_cut_file[upper_idx-1, 0]
+              - centrality_cut_file[upper_idx, 0])
+            *(centrality_upper_bound - centrality_cut_file[upper_idx-1, 0])
+            + centrality_cut_file[upper_idx-1, 1]
+        )
+        if cut_type == 'total_entropy':
+            superMCParameters['cutdSdy'] = 1
+            npart_min = min(centrality_cut_file[lower_idx-1:upper_idx+1, 2])
+            npart_max = max(centrality_cut_file[lower_idx-1:upper_idx+1, 3])
+            b_min = min(centrality_cut_file[lower_idx-1:upper_idx+1, 4])
+            b_max = max(centrality_cut_file[lower_idx-1:upper_idx+1, 5])
+            superMCParameters['cutdSdy_lowerBound'] = cut_value_low
+            superMCParameters['cutdSdy_upperBound'] = cut_value_upper
+        elif cut_type == 'Npart':
+            superMCParameters['cutdSdy'] = 0
+            b_min = min(centrality_cut_file[lower_idx-1:upper_idx+1, 2])
+            b_max = max(centrality_cut_file[lower_idx-1:upper_idx+1, 3])
+            npart_min = cut_value_low
+            npart_max = cut_value_upper
+        superMCParameters['Npmax'] = npart_max
+        superMCParameters['Npmin'] = npart_min
+        superMCParameters['bmax'] = b_max
+        superMCParameters['bmin'] = b_min
+    else:
+        centrality_lower_bound = 0.
+        centrality_upper_bound = 100.
+        superMCParameters['cutdSdy_lowerBound'] = 0.
+        superMCParameters['cutdSdy_upperBound'] = 1e7
+        superMCParameters['Npmax'] = 500
+        superMCParameters['Npmin'] = 0.
+        superMCParameters['bmax'] = 20.
+        superMCParameters['bmin'] = 0.
 
     #print out information
     print('-'*80)
@@ -360,9 +372,12 @@ def translate_centrality_cut():
           % (centrality_lower_bound, centrality_upper_bound) + r"%")
     print('centrality cut on ', cut_type)
     if cut_type == 'total_entropy':
-        print('dS/dy :', cut_value_low, '-', cut_value_upper)
-    print("Npart: ", npart_min, '-', npart_max)
-    print("b: ", b_min, '-', b_max, ' fm')
+        print('dS/dy :', superMCParameters["cutdSdy_lowerBound"], '-',
+              superMCParameters["cutdSdy_upperBound"])
+    print("Npart: ", superMCParameters["Npmin"], '-',
+          superMCParameters["Npmax"])
+    print("b: ", superMCParameters["bmin"], '-', superMCParameters["bmax"],
+          ' fm')
     print('-'*80)
     return
 
