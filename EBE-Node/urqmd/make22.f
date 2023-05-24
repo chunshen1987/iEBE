@@ -68,7 +68,7 @@ c.. pythia particle list
 
 c.. Needed for strangeness exchange process
       integer channel
-      integer dummy
+      real*8 dummy
       real*8 rdummy
       real*8 sig1,sig2,sig3,sig4
       real*8 STREXCHANGE
